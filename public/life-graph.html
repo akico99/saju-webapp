@@ -50,6 +50,17 @@
   }
   .lg-granularity button.active { background: var(--ink); color: #fff; border-color: var(--ink); }
 
+  /* 공유·저장 버튼 줄 — 예전엔 .lg-granularity를 재사용했는데, 그 클래스를 대운/세운
+     토글 버튼에 이벤트를 연결하는 JS 셀렉터로도 쓰고 있어서 공유·저장 버튼까지 같이
+     걸려버렸다(눌렀을 때 몰래 setMode(undefined)가 같이 실행되는 버그의 원인이었음).
+     레이아웃만 그대로 가져오고, 클래스는 완전히 분리한다. */
+  .lg-actions { display: flex; gap: 6px; margin-top: 24px; }
+  .lg-actions button {
+    flex: 1; width: auto; margin: 0; padding: 9px; font-size: 12.5px; font-weight: 700;
+    background: var(--surface); color: var(--muted); border: 1px solid var(--line); border-radius: var(--radius-btn);
+    box-shadow: none; cursor: pointer; font-family: inherit;
+  }
+
   .lg-basis {
     margin-top: 22px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
     padding: 12px 14px; font-size: 11.5px; color: var(--muted); line-height: 1.7;
@@ -217,7 +228,7 @@
         <div class="race-legend" id="raceLegend"></div>
       </div>
 
-      <div class="lg-granularity" style="margin-top:24px;">
+      <div class="lg-actions">
         <button type="button" id="lgShareBtn">링크로 공유하기</button>
         <button type="button" id="lgSaveBtn">이미지로 저장</button>
       </div>
@@ -381,7 +392,7 @@
 
   function setMode(next) {
     mode = next;
-    document.querySelectorAll('.lg-granularity button').forEach((b) => {
+    document.querySelectorAll('.lg-granularity button[data-mode]').forEach((b) => {
       b.classList.toggle('active', b.dataset.mode === mode);
     });
     points = mode === 'year' ? rawData.yearPoints : rawData.decadePoints;
@@ -485,7 +496,7 @@
     renderRaceFrame(Number(e.target.value));
   });
 
-  document.querySelectorAll('.lg-granularity button').forEach((btn) => {
+  document.querySelectorAll('.lg-granularity button[data-mode]').forEach((btn) => {
     btn.addEventListener('click', () => setMode(btn.dataset.mode));
   });
 
