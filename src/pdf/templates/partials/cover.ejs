@@ -1,0 +1,30 @@
+<section class="cover">
+  <div class="eyebrow">命 式 關 係 圖</div>
+  <h1><%= person.name || '평생사주' %> 님의<br>평생사주</h1>
+  <div class="subtitle">추측이 아니라, 계산입니다 — 실제 만세력 엔진으로 완성한 당신의 명식</div>
+
+  <div class="starchart-wrap"><%- starChartSvg %></div>
+  <p class="diagram-caption">
+    연주·월주·일주·시주 — 태어난 해·달·날·시, 네 기둥의 자리입니다. 점을 잇는 선은
+    실제로 계산된 합·충(合沖) 관계를 그대로 나타낸 것입니다.
+  </p>
+  <div class="legend">
+    <span><i style="background:#6f9376"></i>木</span>
+    <span><i style="background:#b5573f"></i>火</span>
+    <span><i style="background:#c7a13a"></i>土</span>
+    <span><i style="background:#aab0ba"></i>金</span>
+    <span><i style="background:#4d6f92"></i>水</span>
+  </div>
+  <p class="diagram-caption">오행(五行) — 목·화·토·금·수, 사주를 이루는 다섯 가지 기운입니다.</p>
+
+  <div class="meta">
+    생년월일 &nbsp;<b><%= person.birthDisplay %></b><br>
+    성별 &nbsp;<b><%= person.gender === '여' ? '여자' : '남자' %></b> · 작성일 &nbsp;<%= generatedDate %><br>
+    일간 &nbsp;<b><%= engine.ilgan.char %>(<%= engine.ilgan.ko %>)</b> · 격국 &nbsp;<b><%= engine.kyukguk.name %></b> · 용신 &nbsp;<b><%= engine.yongshin.final.main %></b>
+  </div>
+  <div class="disclaimer-mini">
+    이 리포트는 명리학적 통계 경향에 근거한 참고 자료이며, 의학적·법적·재정적 조언을 대체하지 않습니다.
+    인생은 당신의 선택으로 바뀝니다.
+  </div>
+  <div class="imprint">길잡이 여울</div>
+</section>

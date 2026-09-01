@@ -1,0 +1,32 @@
+<section class="chapter page-break" id="ch-<%= chapter.id %>">
+  <div class="chapter-num">
+    <svg class="chapter-star" width="10" height="10" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 2l2.9 6.9L22 9.3l-5.5 4.8L18 21l-6-4-6 4 1.5-6.9L2 9.3l7.1-.4L12 2z" fill="#c7a13a"/>
+    </svg>
+    第 <%= String(chapter.id).padStart(2,'0') %> 章
+  </div>
+  <h2><%= chapter.title %></h2>
+  <% chapter.text.split(/\n\n+/).forEach(function(para) { if (para.trim()) { %>
+  <p><%- renderMarkup(para.trim()) %></p>
+  <% } }) %>
+  <% if (chapter.id === 7) { %>
+  <% var firstDaewoon = engine.daewoon.find(function(d) { return d.ganZhi; }); %>
+  <div class="chart-container avoid-break">
+    <canvas id="daewoonChart" width="500" height="360"></canvas>
+    <p class="chart-caption">
+      <b>왜 <%= firstDaewoon.startAge %>세부터 시작하나요</b> — 대운은 10년 단위로
+      바뀌는 운의 흐름인데, 그 시작 나이(대운수)는 태어난 순간부터 가장 가까운 절기(입춘·경칩
+      같은 24절기)까지의 날짜 수를 3으로 나눠 정해집니다. 이 값은 태어난 날짜와 성별에 따라
+      사람마다 달라서(보통 1~10세 사이), 이 사주는 계산 결과 <%= firstDaewoon.startAge %>세부터
+      첫 대운이 시작됩니다.<br>
+      <b>읽는 법</b> — 이 점수는 그 10년(대운)의 기운이 이 사주에 필요한 기운(용신)과
+      얼마나 맞는지를 0~100점으로 환산한 참고 지표입니다. 높을수록 순리대로 풀리기 쉬운
+      시기, 낮을수록 신중한 판단이 필요한 시기라는 뜻이며, 특정 사건이나 결과를 확정하는
+      수치는 아닙니다.
+    </p>
+  </div>
+  <% } %>
+  <% if (chapter.id === 18) { %>
+  <p class="disclaimer">사주는 통계적 경향이자 참고이며, 인생은 본인의 선택으로 바뀝니다.</p>
+  <% } %>
+</section>

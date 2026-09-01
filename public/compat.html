@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>길잡이 여울 — 궁합 리포트 생성</title>
+<link rel="stylesheet" href="/theme.css">
+</head>
+<body>
+<div class="app no-nav">
+  <header>
+    <a class="back" href="/">←</a>
+    <div class="ttl">궁합 리포트</div>
+  </header>
+  <main>
+  <div class="brand-tag">길잡이 여울</div>
+  <h1>궁합 리포트 생성</h1>
+  <p class="lead">두 사람의 생년월일시를 입력하면 실제 만세력 엔진으로 두 명식을 계산하고, 합·충 관계에 근거한 궁합 리포트 PDF를 만들어드립니다.</p>
+
+  <div class="point-notice" id="pointNotice">가격 확인 중...</div>
+
+  <form id="compatForm">
+    <h2 class="section-title">본인</h2>
+    <div class="field">
+      <label>이름</label>
+      <input type="text" name="aName" placeholder="예: 홍길동">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>생년월일</label>
+        <div class="date-inputs">
+          <input type="number" name="aYear" placeholder="년" min="1900" max="2100" required>
+          <input type="number" name="aMonth" placeholder="월" min="1" max="12" required>
+          <input type="number" name="aDay" placeholder="일" min="1" max="31" required>
+        </div>
+      </div>
+      <div class="field">
+        <label>양력/음력</label>
+        <select name="aCalendar">
+          <option value="양력">양력</option>
+          <option value="음력">음력</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label>태어난 시각</label>
+      <div class="date-inputs">
+        <input type="number" name="aHour" placeholder="시(0-23)" min="0" max="23">
+        <input type="number" name="aMinute" placeholder="분" min="0" max="59">
+      </div>
+      <label class="checkbox-field"><input type="checkbox" name="aHourUnknown"> 시각 모름 (정오로 가정)</label>
+    </div>
+    <div class="field">
+      <label>성별</label>
+      <select name="aGender">
+        <option value="남">남자</option>
+        <option value="여">여자</option>
+      </select>
+    </div>
+
+    <h2 class="section-title">상대방</h2>
+    <div class="field">
+      <label>이름</label>
+      <input type="text" name="bName" placeholder="예: 김영희">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>생년월일</label>
+        <div class="date-inputs">
+          <input type="number" name="bYear" placeholder="년" min="1900" max="2100" required>
+          <input type="number" name="bMonth" placeholder="월" min="1" max="12" required>
+          <input type="number" name="bDay" placeholder="일" min="1" max="31" required>
+        </div>
+      </div>
+      <div class="field">
+        <label>양력/음력</label>
+        <select name="bCalendar">
+          <option value="양력">양력</option>
+          <option value="음력">음력</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label>태어난 시각</label>
+      <div class="date-inputs">
+        <input type="number" name="bHour" placeholder="시(0-23)" min="0" max="23">
+        <input type="number" name="bMinute" placeholder="분" min="0" max="59">
+      </div>
+      <label class="checkbox-field"><input type="checkbox" name="bHourUnknown"> 시각 모름 (정오로 가정)</label>
+    </div>
+    <div class="field">
+      <label>성별</label>
+      <select name="bGender">
+        <option value="여">여자</option>
+        <option value="남">남자</option>
+      </select>
+    </div>
+
+    <button type="submit" id="submitBtn">궁합 리포트 생성 시작</button>
+  </form>
+
+  <div id="result" class="result hidden">
+    <div id="progressBlock">
+      <h3>궁합 리포트 생성 중...</h3>
+      <p id="progressText">잠시만 기다려주세요 (1분 내외)</p>
+    </div>
+
+    <div id="downloadBlock" class="hidden">
+      <a id="downloadLink" href="#" class="download-btn">PDF 다운로드</a>
+    </div>
+
+    <div id="errorBlock" class="hidden error-box"></div>
+  </div>
+
+  <p class="lead"><a href="/lifetime-report.html">← 평생사주(본편) 생성으로 돌아가기</a></p>
+  </main>
+</div>
+
+<script>window.POINT_NOTICE_PRICE = 4900; window.POINT_NOTICE_LABEL = '궁합 리포트';</script>
+<script src="/point-notice.js"></script>
+<script src="/compat-app.js"></script>
+</body>
+</html>

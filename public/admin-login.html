@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>사주보는 수달 — 관리자 로그인</title>
+<link rel="stylesheet" href="/theme.css">
+<style>
+  body { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+</style>
+</head>
+<body>
+<div class="wrap narrow">
+  <h1><svg class="otter-mark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="7" cy="7" r="2.4" fill="currentColor"/><circle cx="17" cy="7" r="2.4" fill="currentColor"/><ellipse cx="12" cy="13.5" rx="8" ry="7" fill="currentColor"/><circle cx="9" cy="12.5" r="1.1" fill="var(--paper)"/><circle cx="15" cy="12.5" r="1.1" fill="var(--paper)"/><ellipse cx="12" cy="16" rx="1.6" ry="1.1" fill="var(--paper)"/></svg> 관리자</h1>
+  <p class="lead">포인트 충전 승인 페이지입니다.</p>
+  <div class="error-box hidden" id="errorBox"></div>
+  <form id="form">
+    <div class="field">
+      <input type="password" name="password" placeholder="관리자 비밀번호" required>
+    </div>
+    <button type="submit">입장</button>
+  </form>
+</div>
+<script>
+  document.getElementById('form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const errorBox = document.getElementById('errorBox');
+    errorBox.classList.add('hidden');
+    const res = await fetch('/api/admin/login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: fd.get('password') })
+    });
+    const data = await res.json();
+    if (!res.ok) { errorBox.textContent = data.error; errorBox.classList.remove('hidden'); return; }
+    location.href = '/admin.html';
+  });
+</script>
+</body>
+</html>

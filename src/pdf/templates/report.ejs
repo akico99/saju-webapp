@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title><%= person.name || '평생사주' %> 평생사주</title>
+<style><%- reportCss %></style>
+</head>
+<body>
+
+<%- include('partials/cover', { person, generatedDate, engine, starChartSvg }) %>
+<%- include('partials/toc', { chapters }) %>
+<%- include('partials/myeongsik-table', { engine }) %>
+
+<% chapters.forEach(function(chapter) { %>
+<%- include('partials/chapter', { chapter, engine }) %>
+<% }) %>
+
+<script><%- chartJsSource %></script>
+<script>
+(function () {
+  var configs = <%- JSON.stringify({ ohaeng: ohaengConfig, shipsin: shipsinConfig, daewoon: daewoonConfig }) %>;
+  var pending = 0;
+  function onDone() {
+    pending--;
+    if (pending <= 0) window.__chartsReady = true;
+  }
+  function mount(canvasId, config) {
+    var el = document.getElementById(canvasId);
+    if (!el) return;
+    pending++;
+    config.options = config.options || {};
+    config.options.animation = false;
+    config.plugins = [{
+      id: 'doneSignal-' + canvasId,
+      afterRender: function () { onDone(); }
+    }];
+    new Chart(el.getContext('2d'), config);
+  }
+  window.__chartsReady = false;
+  mount('ohaengChart', configs.ohaeng);
+  mount('shipsinChart', configs.shipsin);
+  mount('daewoonChart', configs.daewoon);
+  // 캔버스가 하나도 없는 극단적 상황 대비 안전장치
+  setTimeout(function () { window.__chartsReady = true; }, 3000);
+})();
+</script>
+</body>
+</html>

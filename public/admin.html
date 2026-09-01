@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>사주보는 수달 — 포인트 충전 승인</title>
+<link rel="stylesheet" href="/theme.css">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1><svg class="otter-mark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="7" cy="7" r="2.4" fill="currentColor"/><circle cx="17" cy="7" r="2.4" fill="currentColor"/><ellipse cx="12" cy="13.5" rx="8" ry="7" fill="currentColor"/><circle cx="9" cy="12.5" r="1.1" fill="var(--paper)"/><circle cx="15" cy="12.5" r="1.1" fill="var(--paper)"/><ellipse cx="12" cy="16" rx="1.6" ry="1.1" fill="var(--paper)"/></svg> 포인트 충전 승인</h1>
+    <div style="display:flex;align-items:center;gap:14px;">
+      <a href="/admin-banners.html" style="font-size:12.5px;color:var(--muted);text-decoration:none;">배너 이미지 위치 조정 →</a>
+      <button class="logout" id="logoutBtn">관리자 로그아웃</button>
+    </div>
+  </header>
+  <div class="tabs">
+    <button class="tab active" data-view="pending">승인 대기</button>
+    <button class="tab" data-view="all">전체 내역</button>
+  </div>
+  <table>
+    <thead><tr><th>일시</th><th>회원</th><th>금액</th><th>입금자명</th><th>상태</th><th>처리</th></tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+  <div class="empty hidden" id="empty">표시할 내역이 없습니다.</div>
+</div>
+
+<script>
+  const tbody = document.getElementById('tbody');
+  const empty = document.getElementById('empty');
+  const STATUS_LABEL = { pending: '대기', approved: '승인', rejected: '거절' };
+  let currentView = 'pending';
+
+  async function checkAdmin() {
+    const res = await fetch('/api/admin/me');
+    const data = await res.json();
+    if (!data.isAdmin) { location.href = '/admin-login.html'; return false; }
+    return true;
+  }
+
+  function row(r) {
+    const tr = document.createElement('tr');
+    const actions = r.status === 'pending'
+      ? `<button class="approve-btn" data-id="${r.id}" data-action="approve">승인</button>
+         <button class="reject-btn" data-id="${r.id}" data-action="reject">거절</button>`
+      : (r.admin_note || '-');
+    tr.innerHTML = `
+      <td>${r.created_at.slice(0, 16).replace('T', ' ')}</td>
+      <td>${r.name || '-'}<br><span style="color:var(--muted);font-size:11px;">${r.email}</span></td>
+      <td>${Number(r.amount_krw).toLocaleString('ko-KR')}원 (${Number(r.points).toLocaleString('ko-KR')}P)</td>
+      <td>${r.depositor_name || '-'}</td>
+      <td><span class="status ${r.status}">${STATUS_LABEL[r.status]}</span></td>
+      <td class="actions">${actions}</td>
+    `;
+    return tr;
+  }
+
+  async function load() {
+    const url = currentView === 'pending' ? '/api/admin/points/pending' : '/api/admin/points/all';
+    const res = await fetch(url);
+    const data = await res.json();
+    tbody.innerHTML = '';
+    if (!data.requests.length) { empty.classList.remove('hidden'); return; }
+    empty.classList.add('hidden');
+    data.requests.forEach((r) => tbody.appendChild(row(r)));
+  }
+
+  tbody.addEventListener('click', async (e) => {
+    const btn = e.target.closest('button[data-action]');
+    if (!btn) return;
+    const id = btn.dataset.id, action = btn.dataset.action;
+    if (action === 'reject' && !confirm('이 신청을 거절할까요?')) return;
+    const res = await fetch(`/api/admin/points/${id}/${action}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    const data = await res.json();
+    if (!res.ok) { alert(data.error || '처리 실패'); return; }
+    load();
+  });
+
+  document.querySelectorAll('.tab').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach((t) => t.classList.remove('active'));
+      tab.classList.add('active');
+      currentView = tab.dataset.view;
+      load();
+    });
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    await fetch('/api/admin/logout', { method: 'POST' });
+    location.href = '/admin-login.html';
+  });
+
+  (async () => {
+    if (!(await checkAdmin())) return;
+    load();
+  })();
+</script>
+</body>
+</html>

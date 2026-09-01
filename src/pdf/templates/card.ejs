@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>요약 카드</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  html, body { width: 1080px; height: 1920px; background: #0f1420; overflow: hidden; }
+  body {
+    font-family: '맑은 고딕', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+    color: #d7dae8;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 90px 80px;
+  }
+  .eyebrow { font-size: 26px; letter-spacing: 0.3em; color: #c7a13a; margin-bottom: 18px; }
+  .name-line { font-size: 40px; color: #ece2c4; font-family: 'Batang', '바탕', serif; margin-bottom: 70px; }
+  .name-line b { color: #fff; }
+
+  .score-label { font-size: 26px; color: #8d96b8; margin-bottom: 8px; }
+  .score-num { font-size: 220px; font-weight: 700; color: #c7a13a; line-height: 1; font-variant-numeric: tabular-nums; }
+  .score-sub { font-size: 24px; color: #8d96b8; margin-top: 14px; margin-bottom: 60px; }
+
+  .chart-wrap { margin-bottom: 60px; }
+
+  .keywords { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; margin-bottom: 50px; }
+  .keyword-pill {
+    border: 1px solid #c7a13a; color: #ece2c4; border-radius: 40px;
+    padding: 16px 32px; font-size: 26px; background: rgba(199,161,58,0.08);
+  }
+
+  .tagline { font-size: 30px; color: #d7dae8; text-align: center; line-height: 1.6; margin-bottom: 130px; }
+
+  .footer { font-size: 22px; color: #8d96b8; text-align: center; letter-spacing: 0.05em; }
+  .footer .brand { color: #c7a13a; font-size: 26px; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+  <div class="eyebrow">命 式 關 係 圖</div>
+  <div class="name-line"><b><%= name %></b> 님의 사주 흐름</div>
+
+  <div class="score-label">지금 이 흐름 (<%= scoreAge %>~<%= scoreAgeRangeEnd %>세, <%= scoreYear %>년~) 점수</div>
+  <div class="score-num"><%= score %></div>
+  <div class="score-sub">평생 평균 <%= avgScore %>점 · 100점 만점(용신 기준)</div>
+
+  <div class="chart-wrap">
+    <canvas id="miniChart" width="820" height="420"></canvas>
+  </div>
+
+  <div class="keywords">
+    <% keywords.forEach(function(k) { %>
+    <div class="keyword-pill"><%= k %></div>
+    <% }) %>
+  </div>
+
+  <div class="tagline"><%= tagline %></div>
+
+  <div class="footer">
+    <div class="brand">길잡이 여울 · 평생사주</div>
+    전체 100페이지 리포트에서 이어집니다
+  </div>
+
+<script><%- chartJsSource %></script>
+<script>
+(function () {
+  var config = <%- JSON.stringify(miniChartConfig) %>;
+  var el = document.getElementById('miniChart');
+  config.options = config.options || {};
+  config.options.animation = false;
+  config.plugins = [{ id: 'doneSignal', afterRender: function () { window.__chartReady = true; } }];
+  new Chart(el.getContext('2d'), config);
+  window.__chartReady = false;
+  setTimeout(function () { window.__chartReady = true; }, 3000);
+})();
+</script>
+</body>
+</html>

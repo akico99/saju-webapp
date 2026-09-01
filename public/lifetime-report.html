@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>길잡이 여울 — 평생사주 PDF 생성</title>
+<link rel="stylesheet" href="/theme.css">
+</head>
+<body>
+<div class="app no-nav">
+  <header>
+    <a class="back" href="/">←</a>
+    <div class="ttl">평생사주 100p</div>
+  </header>
+  <main>
+  <div class="brand-tag">길잡이 여울</div>
+  <h1>평생사주 PDF 생성</h1>
+  <p class="lead">생년월일시를 입력하면 실제 만세력 엔진으로 명식을 계산하고, 그 데이터에 근거한 18장짜리 평생사주 PDF를 만들어드립니다.</p>
+
+  <div class="point-notice" id="pointNotice">가격 확인 중...</div>
+
+  <form id="sajuForm">
+    <div class="field">
+      <label>이름</label>
+      <input type="text" name="name" placeholder="예: 홍길동">
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>생년월일</label>
+        <div class="date-inputs">
+          <input type="number" name="year" placeholder="년" min="1900" max="2100" required>
+          <input type="number" name="month" placeholder="월" min="1" max="12" required>
+          <input type="number" name="day" placeholder="일" min="1" max="31" required>
+        </div>
+      </div>
+      <div class="field">
+        <label>양력/음력</label>
+        <select name="calendar">
+          <option value="양력">양력</option>
+          <option value="음력">음력</option>
+        </select>
+      </div>
+    </div>
+    <div class="field checkbox-field">
+      <label><input type="checkbox" name="isLeap"> 음력 윤달</label>
+    </div>
+
+    <div class="field">
+      <label>태어난 시각</label>
+      <div class="date-inputs">
+        <input type="number" name="hour" placeholder="시(0-23)" min="0" max="23">
+        <input type="number" name="minute" placeholder="분" min="0" max="59">
+      </div>
+      <label class="checkbox-field"><input type="checkbox" name="hourUnknown"> 시각 모름 (정오로 가정)</label>
+    </div>
+
+    <div class="field">
+      <label>성별</label>
+      <select name="gender">
+        <option value="남">남자</option>
+        <option value="여">여자</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>출생지 (진태양시 보정용, 모르면 서울 기준)</label>
+      <select name="city">
+        <option value="">서울(기본)</option>
+        <option value="인천">인천</option><option value="수원">수원</option>
+        <option value="대전">대전</option><option value="대구">대구</option>
+        <option value="부산">부산</option><option value="광주">광주</option>
+        <option value="울산">울산</option><option value="제주">제주</option>
+      </select>
+      <label class="checkbox-field"><input type="checkbox" name="noLonCorrection"> 경도 보정 끄기 (표준시 그대로)</label>
+    </div>
+
+    <button type="submit" id="submitBtn">평생사주 생성 시작</button>
+  </form>
+
+  <div id="result" class="result hidden">
+    <h2>명식 미리보기</h2>
+    <div id="engineSummary"></div>
+
+    <div id="progressBlock">
+      <h3>PDF 생성 진행 중...</h3>
+      <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
+      <p id="progressText">0 / 18</p>
+    </div>
+
+    <div id="downloadBlock" class="hidden">
+      <a id="downloadLink" href="#" class="download-btn">PDF 다운로드</a>
+      <a id="downloadCardLink" href="#" class="download-btn card-btn">3초 요약 카드 다운로드</a>
+      <button type="button" id="shareCardBtn" class="download-btn card-btn">요약 카드 공유하기</button>
+    </div>
+
+    <div id="errorBlock" class="hidden error-box"></div>
+  </div>
+
+  <p class="lead"><a href="/compat.html">→ 둘이 보는 궁합 리포트 생성하기</a></p>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>window.POINT_NOTICE_PRICE = 14900; window.POINT_NOTICE_LABEL = '평생사주 100p 정식 리포트';</script>
+<script src="/point-notice.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>

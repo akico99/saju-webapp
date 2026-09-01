@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>사주보는 수달 — 회원가입</title>
+<link rel="stylesheet" href="/theme.css">
+</head>
+<body>
+<div class="app">
+  <header>
+    <a class="back" href="/">←</a>
+    <div class="ttl">사주보는 수달 회원가입</div>
+  </header>
+  <main>
+    <h1>오늘의 운세를 무료로 받아보려면</h1>
+    <p class="lead">생년월일시를 등록해두면 매일 아침 나만의 오늘의 운세를 볼 수 있어요.</p>
+
+    <div id="errorBox" class="error-box hidden"></div>
+
+    <div class="social-login">
+      <button type="button" class="social-btn kakao" data-provider="카카오">카카오로 시작하기<span class="social-badge">준비중</span></button>
+      <a class="social-btn naver" href="/api/auth/naver/start">네이버로 시작하기</a>
+      <button type="button" class="social-btn google" data-provider="구글">구글로 시작하기<span class="social-badge">준비중</span></button>
+    </div>
+    <div class="divider"><span>또는 이메일로 가입</span></div>
+
+    <form id="signupForm">
+      <div class="section-ttl">계정 정보</div>
+      <div class="field">
+        <label>이메일</label>
+        <input type="email" name="email" required placeholder="you@example.com">
+      </div>
+      <div class="field">
+        <label>비밀번호 (8자 이상)</label>
+        <input type="password" name="password" required minlength="8">
+      </div>
+      <div class="field">
+        <label>이름</label>
+        <input type="text" name="name" placeholder="예: 홍길동">
+      </div>
+
+      <div class="section-ttl">생년월일시 (오늘의 운세·사주 계산용)</div>
+      <div class="field-row">
+        <div class="field">
+          <label>성별</label>
+          <select name="gender">
+            <option value="남">남자</option>
+            <option value="여">여자</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>양력/음력</label>
+          <select name="calendar">
+            <option value="양력">양력</option>
+            <option value="음력">음력</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>생년월일</label>
+        <div class="field-row3">
+          <input type="number" name="year" placeholder="년" min="1900" max="2100" required>
+          <input type="number" name="month" placeholder="월" min="1" max="12" required>
+          <input type="number" name="day" placeholder="일" min="1" max="31" required>
+        </div>
+      </div>
+      <div class="checkbox-row"><input type="checkbox" name="isLeap" id="isLeap"><label for="isLeap">음력 윤달</label></div>
+
+      <div class="field" style="margin-top:14px;">
+        <label>태어난 시각</label>
+        <div class="field-row">
+          <input type="number" name="hour" placeholder="시(0-23)" min="0" max="23">
+          <input type="number" name="minute" placeholder="분" min="0" max="59">
+        </div>
+      </div>
+      <div class="checkbox-row"><input type="checkbox" name="hourUnknown" id="hourUnknown"><label for="hourUnknown">시각 모름 (정오로 가정)</label></div>
+
+      <div class="field" style="margin-top:14px;">
+        <label>출생지 (선택 — 진태양시 보정용)</label>
+        <select name="city">
+          <option value="">서울(기본)</option>
+          <option value="인천">인천</option><option value="수원">수원</option>
+          <option value="대전">대전</option><option value="대구">대구</option>
+          <option value="부산">부산</option><option value="광주">광주</option>
+          <option value="울산">울산</option><option value="제주">제주</option>
+        </select>
+      </div>
+
+      <button type="submit">가입하고 시작하기</button>
+    </form>
+    <p class="switch-link">이미 계정이 있으신가요? <a href="/login.html">로그인</a></p>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(window.__toastTimer);
+    window.__toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
+  }
+
+  document.querySelectorAll('.social-btn').forEach((btn) => {
+    btn.addEventListener('click', () => showToast(`${btn.dataset.provider} 회원가입은 준비 중이에요 — 이메일로 가입해주세요.`));
+  });
+
+  const form = document.getElementById('signupForm');
+  const errorBox = document.getElementById('errorBox');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorBox.classList.add('hidden');
+    const fd = new FormData(form);
+    const body = Object.fromEntries(fd.entries());
+    body.isLeap = fd.get('isLeap') === 'on';
+    body.hourUnknown = fd.get('hourUnknown') === 'on';
+
+    try {
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (!res.ok) { errorBox.textContent = data.error || '가입 실패'; errorBox.classList.remove('hidden'); return; }
+      location.href = '/mypage.html';
+    } catch (err) {
+      errorBox.textContent = '요청 실패: ' + err.message;
+      errorBox.classList.remove('hidden');
+    }
+  });
+</script>
+</body>
+</html>

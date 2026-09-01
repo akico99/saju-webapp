@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>사주보는 수달 — 로그인</title>
+<link rel="stylesheet" href="/theme.css">
+</head>
+<body>
+<div class="app">
+  <header>
+    <a class="back" href="/">←</a>
+    <div class="ttl">사주보는 수달 로그인</div>
+  </header>
+  <main>
+    <h1>다시 오셨네요</h1>
+    <p class="lead">로그인하고 오늘의 운세와 포인트를 확인하세요.</p>
+
+    <div id="errorBox" class="error-box hidden"></div>
+
+    <div class="social-login">
+      <button type="button" class="social-btn kakao" data-provider="카카오">카카오로 로그인<span class="social-badge">준비중</span></button>
+      <a class="social-btn naver" href="/api/auth/naver/start">네이버로 로그인</a>
+      <button type="button" class="social-btn google" data-provider="구글">구글로 로그인<span class="social-badge">준비중</span></button>
+    </div>
+    <div class="divider"><span>또는 이메일로 로그인</span></div>
+
+    <form id="loginForm">
+      <div class="field">
+        <label>이메일</label>
+        <input type="email" name="email" required>
+      </div>
+      <div class="field">
+        <label>비밀번호</label>
+        <input type="password" name="password" required>
+      </div>
+      <button type="submit">로그인</button>
+    </form>
+    <p class="switch-link">계정이 없으신가요? <a href="/signup.html">회원가입</a></p>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(window.__toastTimer);
+    window.__toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
+  }
+
+  document.querySelectorAll('.social-btn').forEach((btn) => {
+    btn.addEventListener('click', () => showToast(`${btn.dataset.provider} 로그인은 준비 중이에요 — 이메일로 로그인해주세요.`));
+  });
+
+  const form = document.getElementById('loginForm');
+  const errorBox = document.getElementById('errorBox');
+  const params = new URLSearchParams(location.search);
+  const redirect = params.get('redirect') || '/mypage.html';
+  if (params.get('error')) {
+    errorBox.textContent = params.get('error');
+    errorBox.classList.remove('hidden');
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorBox.classList.add('hidden');
+    const fd = new FormData(form);
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: fd.get('email'), password: fd.get('password') })
+      });
+      const data = await res.json();
+      if (!res.ok) { errorBox.textContent = data.error || '로그인 실패'; errorBox.classList.remove('hidden'); return; }
+      location.href = redirect;
+    } catch (err) {
+      errorBox.textContent = '요청 실패: ' + err.message;
+      errorBox.classList.remove('hidden');
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>사주보는 수달 — 오늘의 운세 무료 체험</title>
+<link rel="stylesheet" href="/theme.css">
+</head>
+<body>
+<div class="app">
+  <header>
+    <a class="back" href="/">←</a>
+    <div class="ttl">오늘의 운세 무료 체험</div>
+  </header>
+  <main>
+    <h1>로그인 없이 바로 보기</h1>
+    <p class="lead">
+      생년월일만 입력하면 오늘 하루의 흐름을 바로 확인할 수 있어요. 매일 아침 자동으로
+      받아보고 싶으면 나중에 회원가입해서 저장해두면 됩니다.
+    </p>
+
+    <form id="tpForm">
+      <div class="field-row">
+        <div class="field">
+          <label>성별</label>
+          <select name="gender">
+            <option value="남">남자</option>
+            <option value="여">여자</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>양력/음력</label>
+          <select name="calendar">
+            <option value="양력">양력</option>
+            <option value="음력">음력</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>생년월일</label>
+        <div class="date-inputs">
+          <input type="number" name="year" placeholder="년" min="1900" max="2100" required>
+          <input type="number" name="month" placeholder="월" min="1" max="12" required>
+          <input type="number" name="day" placeholder="일" min="1" max="31" required>
+        </div>
+      </div>
+      <button type="submit">오늘의 운세 보기</button>
+    </form>
+
+    <div id="errorBox" class="error-box hidden"></div>
+
+    <div class="card fortune-card hidden" id="fortuneResult">
+      <div class="eyebrow" id="tpDate">오늘의 운세</div>
+      <h2 id="tpTitle"></h2>
+      <p id="tpDesc"></p>
+    </div>
+
+    <div class="card hidden" id="signupPrompt">
+      <h3>매일 자동으로 받아보고 싶다면</h3>
+      <p class="lead" style="margin-bottom:14px;">회원가입하면 생년월일을 한 번만 등록해두고, 매일 아침 새로 입력할 필요 없이 볼 수 있어요.</p>
+      <a href="/signup.html" class="download-btn">회원가입하고 저장하기</a>
+    </div>
+  </main>
+</div>
+
+<script>
+  document.getElementById('tpForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errorBox = document.getElementById('errorBox');
+    errorBox.classList.add('hidden');
+    const fd = new FormData(e.target);
+    const body = Object.fromEntries(fd.entries());
+
+    try {
+      const res = await fetch('/api/today-fortune-preview', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (!res.ok) { errorBox.textContent = data.error || '계산 실패'; errorBox.classList.remove('hidden'); return; }
+
+      document.getElementById('tpDate').textContent = `${data.fortune.date} · ${data.fortune.gapja}`;
+      document.getElementById('tpTitle').textContent = data.fortune.title;
+      document.getElementById('tpDesc').textContent = data.fortune.desc;
+      document.getElementById('fortuneResult').classList.remove('hidden');
+      document.getElementById('signupPrompt').classList.remove('hidden');
+    } catch (err) {
+      errorBox.textContent = '요청 실패: ' + err.message;
+      errorBox.classList.remove('hidden');
+    }
+  });
+</script>
+</body>
+</html>

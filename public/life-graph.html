@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>사주보는 수달 — 인생 그래프</title>
+<link rel="stylesheet" href="/theme.css">
+<style>
+  :root {
+    --up: #E5484D;
+    --up-soft: rgba(229,72,77,0.14);
+    --down: #3182F6;
+    --down-soft: rgba(49,130,246,0.14);
+  }
+  .lg-intro { padding: 0 20px; }
+  .lg-intro .lead { margin-bottom: 22px; }
+
+  #lgResult { padding: 0 20px; display: none; }
+
+  .lg-headline { margin-bottom: 4px; }
+  .lg-headline .range { font-size: 13px; color: var(--muted); font-weight: 600; }
+  .lg-headline .score-row { display: flex; align-items: baseline; gap: 8px; margin-top: 4px; }
+  .lg-headline .score { font-size: 40px; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .lg-headline .trend { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 2px; }
+  .lg-headline .desc { font-size: 13.5px; color: var(--muted); margin-top: 6px; }
+
+  .lg-chart-wrap { position: relative; margin: 22px 0 6px; touch-action: pan-y; user-select: none; }
+  .lg-chart-wrap svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .lg-axis { display: flex; justify-content: space-between; padding: 0 2px; margin-top: 2px; }
+  .lg-axis span { font-size: 10.5px; color: var(--muted-2); font-variant-numeric: tabular-nums; }
+  .lg-axis span.today { color: var(--ink); font-weight: 800; }
+
+  .lg-today-badge {
+    position: absolute; transform: translate(-50%, -100%); margin-top: -10px;
+    background: var(--ink); color: #fff; font-size: 10.5px; font-weight: 700;
+    padding: 3px 8px; border-radius: var(--radius-pill); white-space: nowrap; pointer-events: none;
+  }
+
+  .lg-hint { font-size: 11.5px; color: var(--muted-2); text-align: center; margin-top: 14px; }
+
+  .lg-legend { display: flex; justify-content: center; gap: 16px; margin-top: 18px; }
+  .lg-legend .lg-item { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--muted); }
+  .lg-legend .sw { width: 8px; height: 8px; border-radius: 50%; }
+
+  .lg-granularity { display: flex; gap: 6px; margin-top: 18px; }
+  .lg-granularity button {
+    flex: 1; width: auto; margin: 0; padding: 9px; font-size: 12.5px; font-weight: 700;
+    background: var(--surface); color: var(--muted); border: 1px solid var(--line); border-radius: var(--radius-btn);
+    box-shadow: none; cursor: pointer; font-family: inherit;
+  }
+  .lg-granularity button.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+  .lg-basis {
+    margin-top: 22px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+    padding: 12px 14px; font-size: 11.5px; color: var(--muted); line-height: 1.7;
+  }
+  .lg-basis b { color: var(--ink); }
+
+  /* ---------- 오행 바 차트 레이스 ---------- */
+  .race-wrap { margin-top: 40px; padding-top: 28px; border-top: 1px solid var(--line); }
+  .race-intro { font-size: 12.5px; color: var(--muted); line-height: 1.75; margin-bottom: 18px; }
+  .race-label-row { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }
+  .race-label-row .frame-label { font-size: 14.5px; font-weight: 800; color: var(--ink); }
+  .race-label-row .frame-sub { font-size: 11.5px; color: var(--muted); }
+
+  .race-chart { position: relative; height: 220px; margin-bottom: 14px; }
+  .race-row {
+    position: absolute; left: 0; right: 0; height: 38px;
+    display: flex; align-items: center; gap: 10px; transition: top 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .race-row .oh-label {
+    width: 22px; flex-shrink: 0; text-align: center; font-size: 13px; font-weight: 800; color: #fff;
+    height: 24px; line-height: 24px; border-radius: 6px;
+  }
+  .race-row .oh-keyword { width: 58px; flex-shrink: 0; font-size: 10.5px; color: var(--muted); line-height: 1.3; }
+  .race-row .oh-track { flex: 1; background: var(--surface); border-radius: 6px; height: 24px; overflow: hidden; }
+  .race-row .oh-fill {
+    height: 100%; border-radius: 6px; transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; box-sizing: border-box;
+  }
+  .race-row .oh-value { font-size: 11.5px; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; }
+
+  .race-controls { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .race-controls button { flex: 0 0 auto; width: auto; margin: 0; padding: 9px 16px; font-size: 12.5px; }
+  .race-controls input[type="range"] { flex: 1; }
+
+  .race-legend { display: flex; flex-wrap: wrap; gap: 10px; }
+  .race-legend .lg-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); }
+  .race-legend .sw { width: 9px; height: 9px; border-radius: 2px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <a class="back" href="/">←</a>
+    <div class="ttl">인생 그래프</div>
+  </header>
+  <main>
+    <div class="lg-intro">
+      <h1>내 인생, 흐름으로 보기</h1>
+      <p class="lead">
+        태어난 순간 정해진 기운을 기준으로, 해마다(또는 10년마다) 바뀌는 운이 그 기운을
+        얼마나 도와주는지 그래프 하나로 봅니다. 숫자가 높을수록 나에게 유리하게 흘러가는
+        시기라는 뜻이에요. 10년 단위/1년 단위는 그래프 아래 버튼으로 바꿀 수 있어요.
+      </p>
+    </div>
+
+    <form id="lgForm">
+      <div class="field-row">
+        <div class="field">
+          <label>성별</label>
+          <select name="gender">
+            <option value="남">남자</option>
+            <option value="여">여자</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>양력/음력</label>
+          <select name="calendar">
+            <option value="양력">양력</option>
+            <option value="음력">음력</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>생년월일</label>
+        <div class="date-inputs">
+          <input type="number" name="year" placeholder="년" min="1900" max="2100" required>
+          <input type="number" name="month" placeholder="월" min="1" max="12" required>
+          <input type="number" name="day" placeholder="일" min="1" max="31" required>
+        </div>
+      </div>
+      <div class="field">
+        <label>태어난 시각</label>
+        <div class="date-inputs">
+          <input type="number" name="hour" placeholder="시(0-23)" min="0" max="23">
+          <input type="number" name="minute" placeholder="분" min="0" max="59">
+        </div>
+        <label class="checkbox-field"><input type="checkbox" name="hourUnknown"> 시각 모름 (정오로 가정)</label>
+      </div>
+      <button type="submit">내 인생 그래프 보기</button>
+    </form>
+
+    <div id="errorBox" class="error-box hidden"></div>
+
+    <section id="lgResult">
+      <div class="lg-headline">
+        <div class="range" id="lgRange"></div>
+        <div class="score-row">
+          <span class="score" id="lgScore">-</span>
+          <span class="trend" id="lgTrend"></span>
+        </div>
+        <div class="desc" id="lgDesc"></div>
+      </div>
+
+      <div class="lg-chart-wrap" id="lgChartWrap">
+        <div class="lg-today-badge hidden" id="lgTodayBadge">오늘</div>
+        <svg id="lgSvg" viewBox="0 0 640 220" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="lgFillUp" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#E5484D" stop-opacity="0.22"/>
+              <stop offset="100%" stop-color="#E5484D" stop-opacity="0"/>
+            </linearGradient>
+            <linearGradient id="lgFillDown" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#3182F6" stop-opacity="0.22"/>
+              <stop offset="100%" stop-color="#3182F6" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <line id="lgBaseline" x1="0" y1="110" x2="640" y2="110" stroke="#000" stroke-opacity="0.08" stroke-width="1" stroke-dasharray="4 4"/>
+          <path id="lgFillPath" fill="url(#lgFillUp)" stroke="none"/>
+          <path id="lgLinePath" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <line id="lgCursorLine" x1="0" y1="0" x2="0" y2="220" stroke="#000" stroke-opacity="0.15" stroke-width="1" style="display:none;"/>
+          <circle id="lgCursorDot" r="5" stroke="#fff" stroke-width="2" style="display:none;"/>
+        </svg>
+      </div>
+      <div class="lg-axis" id="lgAxis"></div>
+      <p class="lg-hint">그래프를 좌우로 눌러서 밀면 시기별로 확인할 수 있어요</p>
+
+      <div class="lg-legend">
+        <span class="lg-item"><span class="sw" style="background:var(--up)"></span>50점 이상 — 유리한 흐름</span>
+        <span class="lg-item"><span class="sw" style="background:var(--down)"></span>50점 미만 — 조심할 흐름</span>
+      </div>
+
+      <div class="lg-granularity">
+        <button type="button" class="active" data-mode="decade">10년 단위 (대운)</button>
+        <button type="button" data-mode="year">1년 단위 (세운)</button>
+      </div>
+
+      <div class="lg-basis">
+        <b>점수는 이렇게 나와요.</b> 태어날 때 정해진 내 사주를 도와주는 오행을 "용신"이라고
+        불러요. 각 시기(10년 단위 대운, 또는 1년 단위 세운)의 오행이 이 용신과 같거나
+        도와주면 점수가 높게, 용신을 눌러버리면 낮게 나옵니다. 그래프는 0~100점 기준이지만
+        실제 계산값은 <b>5~95점</b> 사이로만 나오게 되어 있어요(양쪽 끝 극단값은 만들지 않음).
+      </div>
+
+      <div class="race-wrap">
+        <div class="section-head"><h2>이 시기엔 어떤 기운이 강할까</h2></div>
+        <p class="race-intro">
+          사주는 나무(木)·불(火)·흙(土)·쇠(金)·물(水), 다섯 가지 기운(오행)이 서로 어우러진
+          모습이에요. 각 기운은 성격·행동으로 풀면 대략 이런 느낌이에요 —
+          <b>木 성장·기획</b>, <b>火 표현·열정</b>, <b>土 안정·신뢰</b>, <b>金 결단·규율</b>,
+          <b>水 지혜·유연</b>. 아래 막대는 위에서 고른 시기(대운·세운)마다 이 다섯 기운이 내 사주
+          안에서 얼마나 강해지는지를 보여줘요. <b>막대가 가장 긴 기운</b>이 그 시기를 대표하는
+          성향이라고 보면 되고, 반대로 <b>막대가 거의 안 보이는 기운</b>은 그 시기에 의식적으로
+          채워주면 좋은 부분이에요. 순위가 뒤바뀌는 것도 함께 보면 흐름이 더 잘 보여요.
+        </p>
+
+        <div class="race-label-row">
+          <span class="frame-label" id="raceFrameLabel"></span>
+          <span class="frame-sub" id="raceFrameSub"></span>
+        </div>
+        <div class="race-chart" id="raceChart"></div>
+        <div class="race-controls">
+          <button type="button" id="racePlayBtn" class="primary">재생</button>
+          <input type="range" id="raceSeek" min="0" max="0" value="0">
+        </div>
+        <div class="race-legend" id="raceLegend"></div>
+      </div>
+
+      <div class="lg-granularity" style="margin-top:24px;">
+        <button type="button" id="lgShareBtn">링크로 공유하기</button>
+        <button type="button" id="lgSaveBtn">이미지로 저장</button>
+      </div>
+      <p class="lg-hint" style="margin-top:8px;">링크로 공유하면 상대방이 내 그래프 전체를 직접 드래그해서 볼 수 있어요. 이미지로 저장하면 지금 보고 있는 시점의 그래프와 오행 균형이 한 장에 함께 담겨요.</p>
+    </section>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+  const CHART_W = 640, CHART_H = 220, PAD_TOP = 14, PAD_BOTTOM = 14;
+
+  let rawData = null;
+  let points = [];
+  let currentAge = null;
+  let selected = 0;
+  let mode = 'decade';
+
+  const svg = document.getElementById('lgSvg');
+  const linePath = document.getElementById('lgLinePath');
+  const fillPath = document.getElementById('lgFillPath');
+  const cursorLine = document.getElementById('lgCursorLine');
+  const cursorDot = document.getElementById('lgCursorDot');
+  const todayBadge = document.getElementById('lgTodayBadge');
+  const chartWrap = document.getElementById('lgChartWrap');
+
+  function scoreToDesc(score) {
+    if (score >= 80) return '이 시기엔 흐름이 크게 도와주는 편이에요';
+    if (score >= 65) return '나쁘지 않게 흘러가는 시기예요';
+    if (score >= 40) return '무난하게 흘러가는 시기예요';
+    if (score >= 25) return '조금 조심하면 더 좋은 시기예요';
+    return '특히 신중하게 움직이면 좋은 시기예요';
+  }
+
+  function xOf(i) { return (i / (points.length - 1)) * CHART_W; }
+  function yOf(score) {
+    const usable = CHART_H - PAD_TOP - PAD_BOTTOM;
+    return PAD_TOP + usable - (score / 100) * usable;
+  }
+
+  function smoothPath(pts) {
+    if (pts.length < 2) return '';
+    let d = `M ${pts[0].x} ${pts[0].y}`;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[i - 1] || pts[i];
+      const p1 = pts[i];
+      const p2 = pts[i + 1];
+      const p3 = pts[i + 2] || p2;
+      const c1x = p1.x + (p2.x - p0.x) / 6, c1y = p1.y + (p2.y - p0.y) / 6;
+      const c2x = p2.x - (p3.x - p1.x) / 6, c2y = p2.y - (p3.y - p1.y) / 6;
+      d += ` C ${c1x} ${c1y}, ${c2x} ${c2y}, ${p2.x} ${p2.y}`;
+    }
+    return d;
+  }
+
+  function nearestDaewoonIndex(age) {
+    let idx = 0;
+    for (let i = 0; i < points.length; i++) {
+      if (points[i].age <= age) idx = i;
+    }
+    return idx;
+  }
+
+  function render() {
+    const xy = points.map((p, i) => ({ x: xOf(i), y: yOf(p.score) }));
+    const linePathD = smoothPath(xy);
+    linePath.setAttribute('d', linePathD);
+    fillPath.setAttribute('d', `${linePathD} L ${xy[xy.length - 1].x} ${CHART_H} L ${xy[0].x} ${CHART_H} Z`);
+
+    const axis = document.getElementById('lgAxis');
+    const todayIdx = nearestDaewoonIndex(currentAge);
+    // 1년 단위는 점이 70~90개라 전부 라벨을 못 넣는다 — 대략 8칸 간격으로만 나이를 보여준다.
+    const step = Math.max(1, Math.ceil(points.length / 8));
+    axis.innerHTML = points.map((p, i) => {
+      const show = i === todayIdx || i === 0 || i === points.length - 1 || i % step === 0;
+      const cls = i === todayIdx ? 'today' : '';
+      return `<span class="${cls}">${show ? p.age + '세' : ''}</span>`;
+    }).join('');
+
+    selectPoint(nearestDaewoonIndex(currentAge), xy);
+  }
+
+  function selectPoint(i, xy) {
+    xy = xy || points.map((p, idx) => ({ x: xOf(idx), y: yOf(p.score) }));
+    selected = i;
+    const p = points[i];
+    const isUp = p.score >= 50;
+    const color = isUp ? '#E5484D' : '#3182F6';
+
+    linePath.setAttribute('stroke', color);
+    fillPath.setAttribute('fill', isUp ? 'url(#lgFillUp)' : 'url(#lgFillDown)');
+
+    cursorLine.style.display = 'block';
+    cursorLine.setAttribute('x1', xy[i].x); cursorLine.setAttribute('x2', xy[i].x);
+    cursorDot.style.display = 'block';
+    cursorDot.setAttribute('cx', xy[i].x); cursorDot.setAttribute('cy', xy[i].y);
+    cursorDot.setAttribute('fill', color);
+
+    const next = points[i + 1];
+    const prev = points[i - 1];
+    const unit = mode === 'year' ? '세운' : '대운';
+    let rangeText;
+    if (mode === 'year') {
+      rangeText = `${p.age}세 (${p.year}년)`;
+    } else {
+      const rangeEnd = next ? `${next.age - 1}세` : '그 이후';
+      rangeText = `${p.age}세 ~ ${rangeEnd}`;
+    }
+    document.getElementById('lgRange').textContent = `${rangeText} · ${p.ganZhiKo || ''}${unit}`;
+    document.getElementById('lgScore').textContent = p.score;
+    document.getElementById('lgScore').style.color = color;
+    document.getElementById('lgDesc').textContent = scoreToDesc(p.score);
+
+    const trend = document.getElementById('lgTrend');
+    if (prev) {
+      const delta = p.score - prev.score;
+      trend.style.color = delta >= 0 ? 'var(--up)' : 'var(--down)';
+      trend.textContent = (delta >= 0 ? '▲ ' : '▼ ') + Math.abs(delta);
+    } else {
+      trend.textContent = '';
+    }
+
+    // 오늘 배지 — 지금 나이가 이 구간 안에 있을 때만 표시
+    const inRange = currentAge >= p.age && (!next || currentAge < next.age);
+    if (inRange) {
+      todayBadge.classList.remove('hidden');
+      const wrapWidth = chartWrap.clientWidth || CHART_W;
+      todayBadge.style.left = ((xy[i].x / CHART_W) * wrapWidth) + 'px';
+    } else {
+      todayBadge.classList.add('hidden');
+    }
+  }
+
+  function pointerToIndex(clientX) {
+    const rect = svg.getBoundingClientRect();
+    const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+    return Math.round(ratio * (points.length - 1));
+  }
+
+  let dragging = false;
+  chartWrap.addEventListener('pointerdown', (e) => {
+    dragging = true;
+    selectPoint(pointerToIndex(e.clientX));
+  });
+  window.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    selectPoint(pointerToIndex(e.clientX));
+  });
+  window.addEventListener('pointerup', () => { dragging = false; });
+
+  function setMode(next) {
+    mode = next;
+    document.querySelectorAll('.lg-granularity button').forEach((b) => {
+      b.classList.toggle('active', b.dataset.mode === mode);
+    });
+    points = mode === 'year' ? rawData.yearPoints : rawData.decadePoints;
+    render();
+    initRace();
+  }
+
+  /* ---------- 오행 바 차트 레이스 — 위 line-graph와 같은 points(대운/세운 토글 그대로 따름) ---------- */
+  const OHAENG_ORDER = ['木', '火', '土', '金', '水'];
+  const OHAENG_KO = { '木': '목', '火': '화', '土': '토', '金': '금', '水': '수' };
+  const OHAENG_KEYWORD = { '木': '성장·기획', '火': '표현·열정', '土': '안정·신뢰', '金': '결단·규율', '水': '지혜·유연' };
+  const OHAENG_COLOR = { '木': '#6f9376', '火': '#b5573f', '土': '#c7a13a', '金': '#8b93a0', '水': '#4d6f92' };
+  const RACE_ROW_H = 44;
+  let raceTimer = null;
+  let raceIndex = 0;
+
+  function buildRaceLegend() {
+    document.getElementById('raceLegend').innerHTML = OHAENG_ORDER.map((k) =>
+      `<span class="lg-item"><span class="sw" style="background:${OHAENG_COLOR[k]}"></span>${k}(${OHAENG_KO[k]}) · ${OHAENG_KEYWORD[k]}</span>`
+    ).join('');
+  }
+
+  function buildRaceRows() {
+    document.getElementById('raceChart').innerHTML = OHAENG_ORDER.map((k) => `
+      <div class="race-row" data-oh="${k}">
+        <div class="oh-label" style="background:${OHAENG_COLOR[k]}">${k}</div>
+        <div class="oh-keyword">${OHAENG_KEYWORD[k]}</div>
+        <div class="oh-track"><div class="oh-fill" style="background:${OHAENG_COLOR[k]}"><span class="oh-value"></span></div></div>
+      </div>
+    `).join('');
+  }
+
+  function raceMaxVal() {
+    return Math.max(1, ...points.flatMap((p) => Object.values(p.ohaeng)));
+  }
+
+  function renderRaceFrame(i) {
+    if (!points.length) return;
+    raceIndex = Math.max(0, Math.min(points.length - 1, i));
+    const p = points[raceIndex];
+    const maxVal = raceMaxVal();
+    const chart = document.getElementById('raceChart');
+
+    const ranked = OHAENG_ORDER.slice().sort((a, b) => p.ohaeng[b] - p.ohaeng[a]);
+    ranked.forEach((k, rank) => {
+      const row = chart.querySelector(`.race-row[data-oh="${k}"]`);
+      if (!row) return;
+      row.style.top = (rank * RACE_ROW_H) + 'px';
+      const val = p.ohaeng[k] || 0;
+      const fill = row.querySelector('.oh-fill');
+      fill.style.width = Math.max(6, (val / maxVal) * 100) + '%';
+      fill.querySelector('.oh-value').textContent = val;
+    });
+
+    const unit = mode === 'year' ? '세운' : '대운';
+    document.getElementById('raceFrameLabel').textContent = `${p.age}세 · ${p.ganZhiKo || ''}${unit}`;
+    document.getElementById('raceFrameSub').textContent = mode === 'year' ? `${p.year}년` : '';
+    document.getElementById('raceSeek').value = raceIndex;
+  }
+
+  function stopRace() {
+    clearInterval(raceTimer);
+    raceTimer = null;
+    const btn = document.getElementById('racePlayBtn');
+    if (btn) btn.textContent = '재생';
+  }
+
+  function startRace() {
+    stopRace();
+    if (raceIndex >= points.length - 1) raceIndex = 0;
+    document.getElementById('racePlayBtn').textContent = '일시정지';
+    raceTimer = setInterval(() => {
+      raceIndex++;
+      if (raceIndex >= points.length) { stopRace(); return; }
+      renderRaceFrame(raceIndex);
+    }, 1300);
+  }
+
+  function initRace() {
+    stopRace();
+    buildRaceLegend();
+    buildRaceRows();
+    document.getElementById('raceSeek').max = Math.max(0, points.length - 1);
+    renderRaceFrame(0);
+  }
+
+  document.getElementById('racePlayBtn').addEventListener('click', () => {
+    if (raceTimer) stopRace(); else startRace();
+  });
+  document.getElementById('raceSeek').addEventListener('input', (e) => {
+    stopRace();
+    renderRaceFrame(Number(e.target.value));
+  });
+
+  document.querySelectorAll('.lg-granularity button').forEach((btn) => {
+    btn.addEventListener('click', () => setMode(btn.dataset.mode));
+  });
+
+  function showToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(window.__toastTimer);
+    window.__toastTimer = setTimeout(() => toast.classList.remove('show'), 1800);
+  }
+
+  // 그래프만 딱 잘라서 내보내면 받는 사람은 이게 뭔지 전혀 알 수 없다(숫자·설명·브랜드
+  // 다 화면에는 있는데 그래프 자체엔 없음) — 그래서 지금 화면에 떠 있는 "몇 세, 몇 점,
+  // 무슨 뜻인지" 텍스트까지 같이 카드 형태로 그려서 내보낸다. 정적 이미지라 마우스를
+  // 올려볼 수 없으니, 지금 선택된 지점의 정보를 아예 이미지 안에 박아넣는 방식.
+  const CARD_W = 640, CARD_H = 760, CARD_PAD = 36;
+
+  function drawRoundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  function loadImage(src) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error('이미지 로드 실패'));
+      img.src = src;
+    });
+  }
+
+  async function buildShareCard() {
+    const scale = 2;
+    const canvas = document.createElement('canvas');
+    canvas.width = CARD_W * scale;
+    canvas.height = CARD_H * scale;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(scale, scale);
+    ctx.textBaseline = 'alphabetic';
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, CARD_W, CARD_H);
+
+    let cursorY = CARD_PAD;
+    try {
+      const logoImg = await loadImage('/logo.png');
+      const logoH = 28, logoW = logoH * (logoImg.naturalWidth / logoImg.naturalHeight);
+      ctx.drawImage(logoImg, CARD_PAD, cursorY, logoW, logoH);
+      cursorY += logoH;
+    } catch (e) { /* 로고 없어도 카드 자체는 만든다 */ }
+    cursorY += 34;
+
+    ctx.fillStyle = '#14171C';
+    ctx.font = '800 22px "Malgun Gothic", sans-serif';
+    ctx.fillText('내 인생 그래프', CARD_PAD, cursorY);
+    cursorY += 28;
+
+    ctx.fillStyle = '#5B6472';
+    ctx.font = '600 13px "Malgun Gothic", sans-serif';
+    ctx.fillText(document.getElementById('lgRange').textContent, CARD_PAD, cursorY);
+    cursorY += 50;
+
+    ctx.fillStyle = document.getElementById('lgScore').style.color || '#14171C';
+    ctx.font = '800 46px "Malgun Gothic", sans-serif';
+    ctx.fillText(document.getElementById('lgScore').textContent + '점', CARD_PAD, cursorY);
+    cursorY += 34;
+
+    ctx.fillStyle = '#14171C';
+    ctx.font = '500 15px "Malgun Gothic", sans-serif';
+    ctx.fillText(document.getElementById('lgDesc').textContent, CARD_PAD, cursorY);
+    cursorY += 34;
+
+    const svgString = new XMLSerializer().serializeToString(svg);
+    const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+    const svgUrl = URL.createObjectURL(svgBlob);
+    try {
+      const chartImg = await loadImage(svgUrl);
+      const chartW = CARD_W - CARD_PAD * 2;
+      const chartH = chartW * (CHART_H / CHART_W);
+      ctx.drawImage(chartImg, CARD_PAD, cursorY, chartW, chartH);
+      cursorY += chartH;
+    } finally {
+      URL.revokeObjectURL(svgUrl);
+    }
+    cursorY += 40;
+
+    // 라인 그래프 밑에 지금 이 시점의 오행 균형(바 차트 레이스의 현재 프레임)도 같이 찍어서,
+    // 그래프 따로 오행 따로가 아니라 "지금 이 시기"를 한 장에 담는다.
+    const racePoint = points[raceIndex];
+    if (racePoint) {
+      ctx.fillStyle = '#14171C';
+      ctx.font = '800 15px "Malgun Gothic", sans-serif';
+      ctx.fillText('이 시기엔 어떤 기운이 강할까', CARD_PAD, cursorY);
+      cursorY += 26;
+
+      const maxVal = raceMaxVal();
+      const ranked = OHAENG_ORDER.slice().sort((a, b) => racePoint.ohaeng[b] - racePoint.ohaeng[a]);
+      const rowH = 34, chipSize = 22, keywordW = 74, trackX = CARD_PAD + chipSize + 10 + keywordW;
+      const trackW = CARD_W - CARD_PAD - trackX;
+      ranked.forEach((k) => {
+        const val = racePoint.ohaeng[k] || 0;
+        const rowY = cursorY;
+
+        ctx.fillStyle = OHAENG_COLOR[k];
+        drawRoundRect(ctx, CARD_PAD, rowY, chipSize, chipSize, 6);
+        ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '800 12px "Malgun Gothic", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(k, CARD_PAD + chipSize / 2, rowY + chipSize / 2 + 4);
+        ctx.textAlign = 'left';
+
+        ctx.fillStyle = '#8A93A0';
+        ctx.font = '600 11px "Malgun Gothic", sans-serif';
+        ctx.fillText(OHAENG_KEYWORD[k], CARD_PAD + chipSize + 10, rowY + chipSize / 2 + 4);
+
+        ctx.fillStyle = '#EEF1F5';
+        drawRoundRect(ctx, trackX, rowY, trackW, chipSize, 6);
+        ctx.fill();
+
+        const fillW = Math.max(18, (val / maxVal) * trackW);
+        ctx.fillStyle = OHAENG_COLOR[k];
+        drawRoundRect(ctx, trackX, rowY, fillW, chipSize, 6);
+        ctx.fill();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '700 11px "Malgun Gothic", sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(String(val), trackX + fillW - 8, rowY + chipSize / 2 + 4);
+        ctx.textAlign = 'left';
+
+        cursorY += rowH;
+      });
+      cursorY += 14;
+    }
+
+    ctx.fillStyle = '#8A93A0';
+    ctx.font = '600 12px "Malgun Gothic", sans-serif';
+    ctx.fillText('사주보는 수달 · 990원부터 보는 오늘의 사주', CARD_PAD, cursorY);
+
+    return new Promise((resolve, reject) => {
+      canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('이미지 변환 실패'))));
+    });
+  }
+
+  document.getElementById('lgSaveBtn').addEventListener('click', async () => {
+    if (!points.length) return;
+    try {
+      const blob = await buildShareCard();
+      const link = document.createElement('a');
+      link.download = '사주보는수달-인생그래프.png';
+      link.href = URL.createObjectURL(blob);
+      link.click();
+    } catch (e) {
+      showToast('이미지 저장 실패: ' + e.message);
+    }
+  });
+
+  async function shareOrCopy(shareData) {
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+        return; // 네이티브 공유창이 뜨고 처리를 넘김 — 정상 종료
+      } catch (e) {
+        if (e.name === 'AbortError') return; // 사용자가 공유창에서 취소함 — 정상, 조용히 종료
+        // 그 외(권한 문제 등 진짜 실패)는 아래 클립보드 폴백으로 이어간다.
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(shareData.url);
+      showToast('링크를 복사했어요');
+    } catch (e) {
+      showToast('공유하기를 지원하지 않는 브라우저예요');
+    }
+  }
+
+  // 이미지는 "지금 보고 있는 한 점"만 찍힌 스냅샷이라, 상대방이 내 그래프 전체를 직접
+  // 만져볼 수 없다. 그래서 공유는 기본적으로 "링크"를 보낸다 — URL에 생년월일 정보를
+  // 담아두고(아래 encodeStateToUrl), 링크를 받은 사람이 열면 내 그래프가 그대로 재현되어
+  // 처음부터 끝까지 드래그해서 다 볼 수 있다. 이미지는 "이미지로 저장" 버튼으로 따로 남긴다.
+  document.getElementById('lgShareBtn').addEventListener('click', async () => {
+    if (!points.length) { showToast('먼저 생년월일을 입력해주세요'); return; }
+    await shareOrCopy({
+      title: '사주보는 수달 — 인생 그래프',
+      text: '내 인생 그래프, 궁금하면 너도 직접 드래그해서 봐봐',
+      url: location.href
+    });
+  });
+
+  document.getElementById('lgForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errorBox = document.getElementById('errorBox');
+    errorBox.classList.add('hidden');
+    const fd = new FormData(e.target);
+    const body = Object.fromEntries(fd.entries());
+    body.hourUnknown = fd.get('hourUnknown') === 'on';
+
+    try {
+      const res = await fetch('/api/life-graph', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (!res.ok) { errorBox.textContent = data.error || '계산 실패'; errorBox.classList.remove('hidden'); return; }
+
+      rawData = data;
+      currentAge = data.currentAge;
+      document.getElementById('lgResult').style.display = 'block';
+      setMode('decade');
+      encodeStateToUrl(body);
+    } catch (err) {
+      errorBox.textContent = '요청 실패: ' + err.message;
+      errorBox.classList.remove('hidden');
+    }
+  });
+
+  // 결과가 나오면 그 조건을 주소창(URL)에 담아둔다 — 이 주소 자체가 "내 그래프"가 되고,
+  // 이걸 그대로 공유하면 상대방이 열었을 때 아래 initFromUrl()이 똑같이 재현해서 보여준다.
+  function encodeStateToUrl(body) {
+    const params = new URLSearchParams();
+    ['year', 'month', 'day', 'hour', 'minute', 'gender', 'calendar'].forEach((k) => {
+      if (body[k] !== undefined && body[k] !== null && body[k] !== '') params.set(k, body[k]);
+    });
+    if (body.hourUnknown) params.set('hourUnknown', '1');
+    history.replaceState(null, '', location.pathname + '?' + params.toString());
+  }
+
+  (function initFromUrl() {
+    const params = new URLSearchParams(location.search);
+    if (!params.get('year')) return;
+    const form = document.getElementById('lgForm');
+    ['year', 'month', 'day', 'hour', 'minute'].forEach((k) => {
+      if (params.get(k)) form[k].value = params.get(k);
+    });
+    if (params.get('gender')) form.gender.value = params.get('gender');
+    if (params.get('calendar')) form.calendar.value = params.get('calendar');
+    if (params.get('hourUnknown')) form.hourUnknown.checked = true;
+    if (form.requestSubmit) form.requestSubmit();
+    else form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+node_modules/
+output/*
+!output/.gitkeep
+.env
+*.log
+data/*.db
+data/*.db-journal
+data/*.db-wal
+data/*.db-shm
+결과물.mp4
+data/banner-positions.json

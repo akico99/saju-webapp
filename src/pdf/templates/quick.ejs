@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title><%= person.name || '' %> · <%= topicTitle %></title>
+<style><%- reportCss %></style>
+<style>
+  /* 마이크로 리딩 전용 — 표지 한 장을 통째로 쓰기엔 아까운 짧은 분량이라,
+     상단에 압축된 헤더 블록만 두고 바로 본문으로 들어간다. */
+  .quick-header { text-align: center; padding-bottom: 10mm; border-bottom: 1px solid var(--line); margin-bottom: 10mm; }
+  .quick-header .eyebrow { font-size: 10pt; letter-spacing: 0.24em; color: var(--gold); margin-bottom: 6mm; }
+  .quick-header h1 { font-family: 'Batang','바탕',serif; font-size: 22pt; color: var(--star); margin: 0 0 4mm; }
+  .quick-header .meta { font-size: 10pt; color: var(--muted); }
+  .quick-header .meta b { color: var(--gold); }
+</style>
+</head>
+<body>
+
+<section class="chapter">
+  <div class="quick-header">
+    <div class="eyebrow">命 式 關 係 圖 · 빠른 리딩</div>
+    <h1><%= person.name || '' %> 님의 <%= topicTitle %></h1>
+    <div class="meta">
+      생년월일 <b><%= person.birthDisplay %></b> ·
+      일간 <b><%= engine.ilgan.char %>(<%= engine.ilgan.ko %>)</b> ·
+      격국 <b><%= engine.kyukguk.name %></b> · 용신 <b><%= engine.yongshin.final.main %></b>
+    </div>
+  </div>
+
+  <% text.split(/\n\n+/).forEach(function(para) { if (para.trim()) { %>
+  <p><%- renderMarkup(para.trim()) %></p>
+  <% } }) %>
+
+  <p class="disclaimer">
+    이 리포트는 명리학적 통계 경향에 근거한 참고 자료이며, 의학적·법적·재정적 조언을 대체하지 않습니다.
+    더 깊은 이야기가 궁금하시다면 100페이지 평생사주 전체 리포트를 확인해보세요.
+  </p>
+  <div class="imprint" style="margin-top:6mm; text-align:center;">길잡이 여울</div>
+</section>
+
+<script>window.__chartsReady = true;</script>
+</body>
+</html>

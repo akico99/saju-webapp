@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>사주보는 수달 — 재회 가능성</title>
+<link rel="stylesheet" href="/theme.css">
+<style>
+  .rc-result { padding: 0 20px; display: none; }
+  .rc-score-card { background: var(--ink); color: #fff; border-radius: var(--radius-card); padding: 22px; text-align: center; margin-bottom: 18px; }
+  .rc-score-card .num { font-size: 40px; font-weight: 800; }
+  .rc-score-card .num .unit { font-size: 16px; opacity: 0.7; margin-left: 2px; }
+  .rc-score-card .label { font-size: 13px; opacity: 0.8; margin-top: 4px; }
+
+  .rc-block { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); padding: 16px 18px; margin-bottom: 14px; }
+  .rc-block .ttl { font-size: 12px; font-weight: 700; color: var(--muted-2); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+  .rc-block p { font-size: 14px; color: var(--ink); line-height: 1.75; margin: 0 0 6px; }
+  .rc-block p:last-child { margin-bottom: 0; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <a class="back" href="/">←</a>
+    <div class="ttl">재회 가능성</div>
+  </header>
+  <main>
+    <h1>다시 만날 수 있을까</h1>
+    <p class="lead">
+      두 사람의 사주가 서로 어떤 관계인지, 그리고 지금이 다시 이어지기 좋은 시기인지를
+      함께 봅니다.
+    </p>
+
+    <div class="point-notice" id="pointNotice">가격 확인 중...</div>
+
+    <form id="rcForm">
+      <div class="section-title">나</div>
+      <div class="field-row">
+        <div class="field"><label>성별</label>
+          <select name="aGender"><option value="남">남자</option><option value="여">여자</option></select>
+        </div>
+        <div class="field"><label>양력/음력</label>
+          <select name="aCalendar"><option value="양력">양력</option><option value="음력">음력</option></select>
+        </div>
+      </div>
+      <div class="field">
+        <label>생년월일</label>
+        <div class="date-inputs">
+          <input type="number" name="aYear" placeholder="년" min="1900" max="2100" required>
+          <input type="number" name="aMonth" placeholder="월" min="1" max="12" required>
+          <input type="number" name="aDay" placeholder="일" min="1" max="31" required>
+        </div>
+      </div>
+      <div class="field">
+        <label>태어난 시각</label>
+        <div class="date-inputs">
+          <input type="number" name="aHour" placeholder="시(0-23)" min="0" max="23">
+          <input type="number" name="aMinute" placeholder="분" min="0" max="59">
+        </div>
+        <label class="checkbox-field"><input type="checkbox" name="aHourUnknown"> 시각 모름 (정오로 가정)</label>
+      </div>
+
+      <div class="section-title">상대방</div>
+      <div class="field-row">
+        <div class="field"><label>성별</label>
+          <select name="bGender"><option value="여">여자</option><option value="남">남자</option></select>
+        </div>
+        <div class="field"><label>양력/음력</label>
+          <select name="bCalendar"><option value="양력">양력</option><option value="음력">음력</option></select>
+        </div>
+      </div>
+      <div class="field">
+        <label>생년월일</label>
+        <div class="date-inputs">
+          <input type="number" name="bYear" placeholder="년" min="1900" max="2100" required>
+          <input type="number" name="bMonth" placeholder="월" min="1" max="12" required>
+          <input type="number" name="bDay" placeholder="일" min="1" max="31" required>
+        </div>
+      </div>
+      <div class="field">
+        <label>태어난 시각</label>
+        <div class="date-inputs">
+          <input type="number" name="bHour" placeholder="시(0-23)" min="0" max="23">
+          <input type="number" name="bMinute" placeholder="분" min="0" max="59">
+        </div>
+        <label class="checkbox-field"><input type="checkbox" name="bHourUnknown"> 시각 모름 (정오로 가정)</label>
+      </div>
+
+      <button type="submit" id="submitBtn">재회 가능성 보기</button>
+    </form>
+
+    <div id="errorBox" class="error-box hidden"></div>
+
+    <section class="rc-result" id="rcResult">
+      <div class="rc-score-card">
+        <div class="num" id="rcScore">-<span class="unit">점</span></div>
+        <div class="label" id="rcScoreText"></div>
+      </div>
+      <div class="rc-block">
+        <div class="ttl">가장 중요한 자리</div>
+        <p id="rcDayRelation"></p>
+      </div>
+      <div class="rc-block">
+        <div class="ttl">서로에게 어떤 존재인지</div>
+        <p id="rcPartnerToMe"></p>
+        <p id="rcMeToPartner"></p>
+      </div>
+      <div class="rc-block">
+        <div class="ttl" id="rcYearTtl"></div>
+        <p id="rcYearText"></p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>window.POINT_NOTICE_PRICE = 990; window.POINT_NOTICE_LABEL = '재회 가능성';</script>
+<script src="/point-notice.js"></script>
+<script>
+  const form = document.getElementById('rcForm');
+  const errorBox = document.getElementById('errorBox');
+
+  function setFormBusy(busy) {
+    form.querySelectorAll('input, select, button').forEach((el) => { el.disabled = busy; });
+  }
+
+  function render(data) {
+    document.getElementById('rcScore').innerHTML = `${data.compat.score}<span class="unit">점</span>`;
+    document.getElementById('rcScoreText').textContent = data.plain.scoreText;
+    document.getElementById('rcDayRelation').textContent = data.plain.dayRelationText;
+    document.getElementById('rcPartnerToMe').textContent = data.plain.partnerToMeText
+      ? `상대방은 나에게 — ${data.plain.partnerToMeText}` : '';
+    document.getElementById('rcMeToPartner').textContent = data.plain.meToPartnerText
+      ? `나는 상대방에게 — ${data.plain.meToPartnerText}` : '';
+
+    if (data.thisYearSignal) {
+      document.getElementById('rcYearTtl').textContent = `${data.thisYearSignal.year}년(올해) 흐름`;
+      document.getElementById('rcYearText').textContent = data.thisYearSignal.text;
+    }
+
+    document.getElementById('rcResult').style.display = 'block';
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorBox.classList.add('hidden');
+
+    const fd = new FormData(form);
+    const body = Object.fromEntries(fd.entries());
+    body.aHourUnknown = fd.get('aHourUnknown') === 'on';
+    body.bHourUnknown = fd.get('bHourUnknown') === 'on';
+    setFormBusy(true);
+
+    try {
+      const res = await fetch('/api/reunion-check', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setFormBusy(false);
+        if (res.status === 401) { location.href = '/login.html?redirect=' + encodeURIComponent(location.pathname); return; }
+        if (res.status === 402) { alert(`포인트가 부족합니다 (필요 ${data.required}P / 보유 ${data.balance}P). 마이페이지에서 충전해주세요.`); location.href = '/mypage.html'; return; }
+        errorBox.textContent = data.error || '요청 실패';
+        errorBox.classList.remove('hidden');
+        return;
+      }
+      render(data);
+      setFormBusy(false);
+    } catch (err) {
+      setFormBusy(false);
+      errorBox.textContent = '요청 실패: ' + err.message;
+      errorBox.classList.remove('hidden');
+    }
+  });
+</script>
+</body>
+</html>

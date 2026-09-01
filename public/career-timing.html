@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>사주보는 수달 — 이직 시기</title>
+<link rel="stylesheet" href="/theme.css">
+<style>
+  .ct-result { padding: 0 20px; display: none; }
+  .ct-best { background: var(--ink); color: #fff; border-radius: var(--radius-card); padding: 20px; margin-bottom: 18px; }
+  .ct-best .eyebrow { font-size: 11px; opacity: 0.65; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+  .ct-best .year { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
+  .ct-best .desc { font-size: 13.5px; opacity: 0.85; line-height: 1.7; }
+
+  .ct-row {
+    display: flex; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--line);
+  }
+  .ct-row:last-child { border-bottom: none; }
+  .ct-row .yr { width: 52px; flex-shrink: 0; font-size: 13px; font-weight: 800; color: var(--ink); }
+  .ct-row .bar-wrap { flex: 1; }
+  .ct-row .bar-track { background: var(--surface); border-radius: 999px; height: 8px; overflow: hidden; margin-bottom: 6px; }
+  .ct-row .bar-fill { height: 100%; border-radius: 999px; background: var(--accent); }
+  .ct-row .bar-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
+  .ct-row .score { width: 34px; flex-shrink: 0; text-align: right; font-size: 13px; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <a class="back" href="/">←</a>
+    <div class="ttl">이직 시기</div>
+  </header>
+  <main>
+    <h1>지금이 이직하기 좋은 때일까</h1>
+    <p class="lead">
+      해마다 나에게 들어오는 기운이 조금씩 달라요. "새로운 자리를 얻는 기운"이 강한
+      해가 있고, "지금 자리를 지키는 게 더 잘 맞는" 해가 있어요. 앞으로 5년을 순서대로
+      보여드려요.
+    </p>
+
+    <div class="point-notice" id="pointNotice">가격 확인 중...</div>
+
+    <form id="ctForm">
+      <div class="field-row">
+        <div class="field">
+          <label>성별</label>
+          <select name="gender">
+            <option value="남">남자</option>
+            <option value="여">여자</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>양력/음력</label>
+          <select name="calendar">
+            <option value="양력">양력</option>
+            <option value="음력">음력</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>생년월일</label>
+        <div class="date-inputs">
+          <input type="number" name="year" placeholder="년" min="1900" max="2100" required>
+          <input type="number" name="month" placeholder="월" min="1" max="12" required>
+          <input type="number" name="day" placeholder="일" min="1" max="31" required>
+        </div>
+      </div>
+      <div class="field">
+        <label>태어난 시각</label>
+        <div class="date-inputs">
+          <input type="number" name="hour" placeholder="시(0-23)" min="0" max="23">
+          <input type="number" name="minute" placeholder="분" min="0" max="59">
+        </div>
+        <label class="checkbox-field"><input type="checkbox" name="hourUnknown"> 시각 모름 (정오로 가정)</label>
+      </div>
+      <button type="submit" id="submitBtn">이직 시기 보기</button>
+    </form>
+
+    <div id="errorBox" class="error-box hidden"></div>
+
+    <section class="ct-result" id="ctResult">
+      <div class="ct-best" id="ctBest"></div>
+      <div id="ctTimeline"></div>
+    </section>
+  </main>
+</div>
+
+<script>window.POINT_NOTICE_PRICE = 990; window.POINT_NOTICE_LABEL = '이직 시기';</script>
+<script src="/point-notice.js"></script>
+<script>
+  const form = document.getElementById('ctForm');
+  const submitBtn = document.getElementById('submitBtn');
+  const errorBox = document.getElementById('errorBox');
+
+  function setFormBusy(busy) {
+    form.querySelectorAll('input, select, button').forEach((el) => { el.disabled = busy; });
+  }
+
+  function render(data) {
+    const best = document.getElementById('ctBest');
+    best.innerHTML = `
+      <div class="eyebrow">가장 좋은 시기</div>
+      <div class="year">${data.best.year}년 (${data.best.age}세) · ${data.best.ganZhiKo}</div>
+      <div class="desc">${data.best.desc}</div>
+    `;
+
+    const maxScore = Math.max(...data.timeline.map((t) => t.score));
+    document.getElementById('ctTimeline').innerHTML = data.timeline.map((t) => `
+      <div class="ct-row">
+        <div class="yr">${t.year}</div>
+        <div class="bar-wrap">
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.max(6, (t.score / maxScore) * 100)}%"></div></div>
+          <div class="bar-desc">${t.desc}</div>
+        </div>
+        <div class="score">${t.score}</div>
+      </div>
+    `).join('');
+
+    document.getElementById('ctResult').style.display = 'block';
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorBox.classList.add('hidden');
+
+    const fd = new FormData(form);
+    const body = Object.fromEntries(fd.entries());
+    body.hourUnknown = fd.get('hourUnknown') === 'on';
+    setFormBusy(true);
+
+    try {
+      const res = await fetch('/api/career-timing', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setFormBusy(false);
+        if (res.status === 401) { location.href = '/login.html?redirect=' + encodeURIComponent(location.pathname); return; }
+        if (res.status === 402) { alert(`포인트가 부족합니다 (필요 ${data.required}P / 보유 ${data.balance}P). 마이페이지에서 충전해주세요.`); location.href = '/mypage.html'; return; }
+        errorBox.textContent = data.error || '요청 실패';
+        errorBox.classList.remove('hidden');
+        return;
+      }
+      render(data);
+      setFormBusy(false);
+    } catch (err) {
+      setFormBusy(false);
+      errorBox.textContent = '요청 실패: ' + err.message;
+      errorBox.classList.remove('hidden');
+    }
+  });
+</script>
+</body>
+</html>

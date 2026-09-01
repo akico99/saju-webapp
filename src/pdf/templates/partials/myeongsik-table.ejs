@@ -1,0 +1,78 @@
+<section class="myeongsik page-break" id="myeongsik">
+  <div class="eyebrow">命 式</div>
+  <h2>명식 원국표</h2>
+  <table class="myeongsik-table">
+    <thead>
+      <tr><th></th><th>연주(年)</th><th>월주(月)</th><th>일주(日)</th><th>시주(時)</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th>천간</th>
+        <% ['year','month','day','hour'].forEach(function(k) { %>
+        <td class="<%= k === 'day' ? 'ilgan-col' : '' %>"><span class="ganji"><%= engine.manse[k].stemKo %></span><br><%= engine.manse[k].stem %></td>
+        <% }) %>
+      </tr>
+      <tr>
+        <th>지지</th>
+        <% ['year','month','day','hour'].forEach(function(k) { %>
+        <td class="<%= k === 'day' ? 'ilgan-col' : '' %>"><span class="ganji"><%= engine.manse[k].branchKo %></span><br><%= engine.manse[k].branch %></td>
+        <% }) %>
+      </tr>
+      <tr>
+        <th>천간 십신</th>
+        <% ['year','month','day','hour'].forEach(function(k) { %>
+        <td><%= engine.manse[k].stemShipsinKo || (k === 'day' ? '일간(나)' : '-') %></td>
+        <% }) %>
+      </tr>
+      <tr>
+        <th>지지 십신</th>
+        <% ['year','month','day','hour'].forEach(function(k) { %>
+        <td><%= engine.manse[k].branchShipsinKo || '-' %></td>
+        <% }) %>
+      </tr>
+      <tr>
+        <th>12운성</th>
+        <% ['year','month','day','hour'].forEach(function(k) { %>
+        <td><%= engine.manse[k].unseong %></td>
+        <% }) %>
+      </tr>
+      <tr>
+        <th>신살</th>
+        <% ['year','month','day','hour'].forEach(function(k) { %>
+        <td>
+          <% (engine.manse[k].shinsals || []).forEach(function(s) { %><span class="tag"><%= s %></span><% }) %>
+          <% if (!engine.manse[k].shinsals || !engine.manse[k].shinsals.length) { %>-<% } %>
+        </td>
+        <% }) %>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="myeongsik-summary">
+    일간(나) <b><%= engine.ilgan.char %>(<%= engine.ilgan.ko %>)</b> ·
+    신강신약 <b><%= engine.strength.verdict %></b> ·
+    격국 <b><%= engine.kyukguk.name %></b> ·
+    용신 <b><%= engine.yongshin.final.main %></b>
+  </div>
+
+  <div class="chart-container avoid-break">
+    <canvas id="ohaengChart" width="500" height="280"></canvas>
+    <p class="chart-caption">
+      <b>오행이란</b> — 木(목)=성장·기획·유연한 추진력, 火(화)=표현력·열정·명예욕,
+      土(토)=안정·신뢰·중재, 金(금)=결단력·원칙·재물, 水(수)=지혜·유연성·휴식을
+      상징하는 다섯 기운입니다.<br>
+      <b>읽는 법</b> — 오각형이 원 모양에 가깝고 고르게 클수록 오행이 골고루 갖춰진 사주,
+      한쪽 꼭짓점이 유난히 뾰족하게 튀어나오거나 점이 한가운데(0개)에 붙어 있으면
+      그 기운이 과하거나 아예 없는 사주라는 뜻입니다.
+    </p>
+  </div>
+  <div class="chart-container avoid-break">
+    <canvas id="shipsinChart" width="420" height="320"></canvas>
+    <p class="chart-caption">
+      <b>읽는 법</b> — 십신은 나(일간)를 기준으로 나머지 글자들이 하는 역할을 다섯 그룹으로
+      나눈 것입니다. 비겁=자립·경쟁, 식상=표현·활동력, 재성=재물·성과, 관성=책임·조직력,
+      인성=학문·보호를 뜻합니다. 도넛에서 큰 조각을 차지하는 그룹일수록 삶에서 두드러지게
+      작동하는 영역입니다.
+    </p>
+  </div>
+</section>

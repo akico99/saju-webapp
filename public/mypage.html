@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>사주보는 수달 — 마이페이지</title>
+<link rel="stylesheet" href="/theme.css">
+</head>
+<body>
+<div class="app">
+  <header>
+    <a class="back" href="/">←</a>
+    <div class="ttl"><svg class="otter-mark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="7" cy="7" r="2.4" fill="currentColor"/><circle cx="17" cy="7" r="2.4" fill="currentColor"/><ellipse cx="12" cy="13.5" rx="8" ry="7" fill="currentColor"/><circle cx="9" cy="12.5" r="1.1" fill="var(--paper)"/><circle cx="15" cy="12.5" r="1.1" fill="var(--paper)"/><ellipse cx="12" cy="16" rx="1.6" ry="1.1" fill="var(--paper)"/></svg> 마이페이지</div>
+    <button class="logout" id="logoutBtn">로그아웃</button>
+  </header>
+  <main>
+
+    <div class="card fortune-card" id="fortuneCard">
+      <div class="eyebrow" id="fortuneDate">오늘의 운세</div>
+      <h2 id="fortuneTitle">불러오는 중...</h2>
+      <p id="fortuneDesc"></p>
+    </div>
+
+    <div class="card" id="birthCard">
+      <h3>생년월일시</h3>
+      <p class="hint" id="birthHint">오늘의 운세·사주 계산에 쓰여요. 아직 등록 안 하셨네요.</p>
+      <form id="birthForm">
+        <div class="field-row">
+          <div class="field">
+            <label>성별</label>
+            <select name="gender">
+              <option value="남">남자</option>
+              <option value="여">여자</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>양력/음력</label>
+            <select name="calendar">
+              <option value="양력">양력</option>
+              <option value="음력">음력</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>생년월일</label>
+          <div class="field-row3">
+            <input type="number" name="year" placeholder="년" min="1900" max="2100" required>
+            <input type="number" name="month" placeholder="월" min="1" max="12" required>
+            <input type="number" name="day" placeholder="일" min="1" max="31" required>
+          </div>
+        </div>
+        <div class="checkbox-row"><input type="checkbox" name="isLeap" id="isLeap"><label for="isLeap">음력 윤달</label></div>
+
+        <div class="field" style="margin-top:14px;">
+          <label>태어난 시각</label>
+          <div class="field-row">
+            <input type="number" name="hour" placeholder="시(0-23)" min="0" max="23">
+            <input type="number" name="minute" placeholder="분" min="0" max="59">
+          </div>
+        </div>
+        <div class="checkbox-row"><input type="checkbox" name="hourUnknown" id="hourUnknown"><label for="hourUnknown">시각 모름 (정오로 가정)</label></div>
+
+        <div class="field" style="margin-top:14px;">
+          <label>출생지 (선택 — 진태양시 보정용)</label>
+          <select name="city">
+            <option value="">서울(기본)</option>
+            <option value="인천">인천</option><option value="수원">수원</option>
+            <option value="대전">대전</option><option value="대구">대구</option>
+            <option value="부산">부산</option><option value="광주">광주</option>
+            <option value="울산">울산</option><option value="제주">제주</option>
+          </select>
+        </div>
+
+        <button type="submit" class="primary">저장하기</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="balance-row">
+        <span class="label">내 포인트</span>
+        <span class="value"><span id="balanceValue">0</span><span class="unit">P</span></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>포인트 충전 신청</h3>
+      <div class="deposit-note" id="depositNote">불러오는 중...</div>
+      <div class="chip-row">
+        <button type="button" class="chip" data-amount="10000">10,000원</button>
+        <button type="button" class="chip" data-amount="30000">30,000원</button>
+        <button type="button" class="chip" data-amount="50000">50,000원</button>
+        <button type="button" class="chip" data-amount="100000">100,000원</button>
+      </div>
+      <form id="chargeForm">
+        <div class="field">
+          <label>충전 금액(원)</label>
+          <input type="number" name="amountKrw" id="amountInput" min="1000" step="1000" required>
+        </div>
+        <div class="field">
+          <label>입금자명 (본인 이름과 다르면 꼭 입력)</label>
+          <input type="text" name="depositorName" placeholder="예: 홍길동">
+        </div>
+        <button type="submit" class="primary">충전 신청하기</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h3>충전 신청 내역</h3>
+      <div class="table-scroll">
+        <table id="requestTable">
+          <thead><tr><th>일시</th><th>금액</th><th>상태</th></tr></thead>
+          <tbody id="requestBody"></tbody>
+        </table>
+      </div>
+      <div class="empty hidden" id="requestEmpty">아직 신청 내역이 없습니다.</div>
+    </div>
+
+    <div class="card">
+      <h3>다시보기 — 내가 만든 리포트</h3>
+      <div class="table-scroll">
+        <table id="orderTable">
+          <thead><tr><th>상품</th><th>신청일</th><th>상태</th><th></th></tr></thead>
+          <tbody id="orderBody"></tbody>
+        </table>
+      </div>
+      <div class="empty hidden" id="orderEmpty">아직 만든 리포트가 없습니다.</div>
+    </div>
+
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(window.__toastTimer);
+    window.__toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  async function requireLogin() {
+    const res = await fetch('/api/auth/me');
+    const data = await res.json();
+    if (!data.user) {
+      location.href = '/login.html?redirect=' + encodeURIComponent(location.pathname);
+      return null;
+    }
+    return data.user;
+  }
+
+  function fillBirthForm(user) {
+    const form = document.getElementById('birthForm');
+    if (user.gender) form.gender.value = user.gender;
+    if (!user.birth) return;
+    form.calendar.value = user.birth.isLunar ? '음력' : '양력';
+    form.year.value = user.birth.year;
+    form.month.value = user.birth.month;
+    form.day.value = user.birth.day;
+    form.isLeap.checked = !!user.birth.isLeap;
+    if (user.birth.hour != null) {
+      form.hour.value = user.birth.hour;
+      form.minute.value = user.birth.minute;
+    } else {
+      form.hourUnknown.checked = true;
+    }
+    if (user.birth.city) form.city.value = user.birth.city;
+    document.getElementById('birthHint').textContent = '저장된 정보예요 — 필요하면 수정 후 다시 저장하세요.';
+  }
+
+  document.getElementById('birthForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const body = Object.fromEntries(fd.entries());
+    body.isLeap = fd.get('isLeap') === 'on';
+    body.hourUnknown = fd.get('hourUnknown') === 'on';
+    try {
+      const res = await fetch('/api/auth/profile/birth', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (!res.ok) { showToast(data.error || '저장 실패'); return; }
+      showToast('생년월일이 저장됐어요.');
+      document.getElementById('birthHint').textContent = '저장된 정보예요 — 필요하면 수정 후 다시 저장하세요.';
+      loadFortune();
+    } catch (err) {
+      showToast('요청 실패: ' + err.message);
+    }
+  });
+
+  async function loadFortune() {
+    try {
+      const res = await fetch('/api/today-fortune');
+      const data = await res.json();
+      if (!res.ok) {
+        document.getElementById('fortuneTitle').textContent = '생년월일 정보가 없어요';
+        document.getElementById('fortuneDesc').textContent = data.error;
+        return;
+      }
+      document.getElementById('fortuneDate').textContent = `${data.fortune.date} · ${data.fortune.gapja}`;
+      document.getElementById('fortuneTitle').textContent = data.fortune.title;
+      document.getElementById('fortuneDesc').textContent = data.fortune.desc;
+    } catch (e) {
+      document.getElementById('fortuneTitle').textContent = '오늘의 운세를 불러오지 못했어요';
+    }
+  }
+
+  async function loadDepositInfo() {
+    const res = await fetch('/api/points/deposit-info');
+    const data = await res.json();
+    document.getElementById('depositNote').innerHTML =
+      `<b>입금 계좌:</b> ${data.account}<br><b>포인트 비율:</b> ${data.pointRate}<br>${data.notice}`;
+  }
+
+  const STATUS_LABEL = { pending: '승인 대기', approved: '승인 완료', rejected: '거절됨' };
+
+  async function loadMine() {
+    const res = await fetch('/api/points/mine');
+    const data = await res.json();
+    document.getElementById('balanceValue').textContent = data.balance.toLocaleString('ko-KR');
+
+    const body = document.getElementById('requestBody');
+    const empty = document.getElementById('requestEmpty');
+    body.innerHTML = '';
+    if (!data.requests.length) {
+      empty.classList.remove('hidden');
+    } else {
+      empty.classList.add('hidden');
+      data.requests.forEach((r) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${r.created_at.slice(0, 16).replace('T', ' ')}</td>
+          <td>${Number(r.amount_krw).toLocaleString('ko-KR')}원</td>
+          <td><span class="status ${r.status}">${STATUS_LABEL[r.status] || r.status}</span></td>
+        `;
+        body.appendChild(tr);
+      });
+    }
+  }
+
+  const ORDER_STATUS_CLASS = { pending: 'pending', done: 'approved', error: 'rejected' };
+
+  let ordersPollTimer = null;
+
+  async function loadOrders() {
+    clearTimeout(ordersPollTimer);
+    const res = await fetch('/api/orders/mine');
+    const data = await res.json();
+    const body = document.getElementById('orderBody');
+    const empty = document.getElementById('orderEmpty');
+    body.innerHTML = '';
+    if (!data.orders.length) {
+      empty.classList.remove('hidden');
+      return;
+    }
+    empty.classList.add('hidden');
+    data.orders.forEach((o) => {
+      const tr = document.createElement('tr');
+      const action = o.status === 'done'
+        ? `<a href="/api/download/${o.jobId}">다운로드</a>`
+        : (o.status === 'pending' ? '생성 중...' : '-');
+      tr.innerHTML = `
+        <td>${o.label || o.productKey}</td>
+        <td>${o.createdAt.slice(0, 16).replace('T', ' ')}</td>
+        <td><span class="status ${ORDER_STATUS_CLASS[o.status] || ''}">${o.statusLabel}</span></td>
+        <td>${action}</td>
+      `;
+      body.appendChild(tr);
+    });
+
+    // "생성 중..."인 주문이 있으면 몇 초마다 자동으로 다시 확인해서, 완료되면 새로고침 없이
+    // 바로 다운로드 링크로 바뀌게 한다. 다 끝나면(더 이상 pending이 없으면) 자동으로 멈춘다.
+    const hasPending = data.orders.some((o) => o.status === 'pending');
+    if (hasPending) {
+      ordersPollTimer = setTimeout(loadOrders, 5000);
+    }
+  }
+
+  document.querySelectorAll('.chip').forEach((chip) => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.chip').forEach((c) => c.classList.remove('active'));
+      chip.classList.add('active');
+      document.getElementById('amountInput').value = chip.dataset.amount;
+    });
+  });
+
+  document.getElementById('chargeForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    try {
+      const res = await fetch('/api/points/request', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amountKrw: fd.get('amountKrw'), depositorName: fd.get('depositorName') })
+      });
+      const data = await res.json();
+      if (!res.ok) { showToast(data.error || '신청 실패'); return; }
+      showToast('충전 신청 완료 — 입금 확인 후 포인트가 지급됩니다.');
+      e.target.reset();
+      document.querySelectorAll('.chip').forEach((c) => c.classList.remove('active'));
+      loadMine();
+    } catch (err) {
+      showToast('요청 실패: ' + err.message);
+    }
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    location.href = '/';
+  });
+
+  (async () => {
+    const user = await requireLogin();
+    if (!user) return;
+    fillBirthForm(user);
+    loadFortune();
+    loadDepositInfo();
+    loadMine();
+    loadOrders();
+  })();
+</script>
+</body>
+</html>

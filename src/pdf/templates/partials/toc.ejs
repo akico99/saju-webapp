@@ -1,0 +1,10 @@
+<section class="toc page-break">
+  <div class="eyebrow">目 次</div>
+  <h2>목차</h2>
+  <ol>
+    <li><a href="#myeongsik"><span class="num">◦</span>명식 원국표</a></li>
+    <% chapters.forEach(function(ch) { %>
+    <li><a href="#ch-<%= ch.id %>"><span class="num"><%= String(ch.id).padStart(2,'0') %></span><%= ch.title %></a></li>
+    <% }) %>
+  </ol>
+</section>
