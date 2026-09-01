@@ -9,16 +9,23 @@
   .profile-list { margin-bottom: 20px; }
   .profile-item {
     background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-card);
-    padding: 14px 16px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 14px 16px; margin-bottom: 10px;
   }
+  .profile-item.is-primary { border-color: var(--ink); }
+  .profile-item .label-row { display: flex; align-items: center; gap: 6px; }
   .profile-item .info .label { font-size: 14px; font-weight: 800; color: var(--ink); }
   .profile-item .info .sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
-  .profile-item .actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .profile-item .primary-badge {
+    font-size: 10.5px; font-weight: 800; color: #fff; background: var(--ink);
+    border-radius: 999px; padding: 2px 8px;
+  }
+  .profile-item .actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
   .profile-item .actions button {
     padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface);
     color: var(--ink); font-size: 11.5px; font-weight: 700; cursor: pointer; font-family: inherit;
   }
   .profile-item .actions button.del { color: var(--danger); border-color: var(--danger-soft); background: var(--danger-soft); }
+  .profile-item .actions button.primary-btn { color: var(--accent); border-color: var(--accent-soft); background: var(--accent-soft); }
   .empty-note { text-align: center; padding: 30px 20px; color: var(--muted); font-size: 13px; }
   #profileForm .checkbox-row { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
   #formTitle { font-size: 15px; font-weight: 800; margin: 0 0 4px; }
@@ -128,17 +135,24 @@
     empty.classList.add('hidden');
     data.profiles.forEach((p) => {
       const div = document.createElement('div');
-      div.className = 'profile-item';
+      div.className = 'profile-item' + (p.isPrimary ? ' is-primary' : '');
       div.innerHTML = `
         <div class="info">
-          <div class="label">${p.label}${p.name ? ' · ' + p.name : ''}</div>
+          <div class="label-row">
+            <span class="label">${p.label}${p.name ? ' · ' + p.name : ''}</span>
+            ${p.isPrimary ? '<span class="primary-badge">내 정보 · 오늘의 운세</span>' : ''}
+          </div>
           <div class="sub">${summarize(p)}</div>
         </div>
         <div class="actions">
+          ${p.isPrimary ? '' : '<button type="button" data-action="primary" class="primary-btn">내 정보로 설정</button>'}
           <button type="button" data-action="edit">수정</button>
           <button type="button" data-action="del" class="del">삭제</button>
         </div>
       `;
+      if (!p.isPrimary) {
+        div.querySelector('[data-action="primary"]').addEventListener('click', () => setPrimary(p.id));
+      }
       div.querySelector('[data-action="edit"]').addEventListener('click', () => startEdit(p));
       div.querySelector('[data-action="del"]').addEventListener('click', () => removeProfile(p.id));
       list.appendChild(div);
@@ -185,6 +199,13 @@
     if (!res.ok) { showToast('삭제 실패'); return; }
     showToast('삭제했어요.');
     if (editingId === id) resetForm();
+    loadList();
+  }
+
+  async function setPrimary(id) {
+    const res = await fetch(`/api/profiles/${id}/primary`, { method: 'POST' });
+    if (!res.ok) { showToast('설정 실패'); return; }
+    showToast('내 정보로 설정했어요 — 오늘의 운세도 이 정보로 계산돼요.');
     loadList();
   }
 

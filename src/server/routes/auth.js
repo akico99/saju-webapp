@@ -70,17 +70,6 @@ router.get('/auth/me', (req, res) => {
   res.json({ user: users.toPublicUser(row) });
 });
 
-router.post('/auth/profile/birth', (req, res) => {
-  if (!req.session || !req.session.userId) return res.status(401).json({ error: '로그인이 필요합니다.' });
-  try {
-    const birth = parseBirth(req.body);
-    const row = users.updateBirth(req.session.userId, birth);
-    res.json({ user: users.toPublicUser(row) });
-  } catch (e) {
-    res.status(400).json({ error: e.message });
-  }
-});
-
 /* ---------- 네이버 로그인 ---------- */
 router.get('/auth/naver/start', (req, res) => {
   if (!process.env.NAVER_CLIENT_ID) {

@@ -22,7 +22,7 @@
 
     <div class="card">
       <h3>저장된 인물</h3>
-      <p class="hint">나·배우자·자녀 등 여러 명의 생년월일을 저장해두고, 궁합·인생그래프 같은 서비스에서 바로 불러올 수 있어요.</p>
+      <p class="hint">나·배우자·자녀 등 여러 명의 생년월일을 저장해두고, 궁합·인생그래프 같은 서비스에서 바로 불러올 수 있어요. "내 정보"로 지정한 인물 기준으로 아래 오늘의 운세도 계산돼요.</p>
       <a href="/profiles.html" class="btn-primary" style="display:block;text-align:center;text-decoration:none;box-sizing:border-box;margin-top:8px;">저장된 인물 관리하기 →</a>
     </div>
 
@@ -35,60 +35,6 @@
       <p id="fortuneDesc"></p>
       <p class="fortune-tip hidden" id="fortuneTip"></p>
       <a class="fortune-cta hidden" id="fortuneCta" href="#">더 보기 →</a>
-    </div>
-
-    <div class="card" id="birthCard">
-      <h3>생년월일시</h3>
-      <p class="hint" id="birthHint">오늘의 운세·사주 계산에 쓰여요. 아직 등록 안 하셨네요.</p>
-      <form id="birthForm">
-        <div class="field-row">
-          <div class="field">
-            <label>성별</label>
-            <select name="gender">
-              <option value="남">남자</option>
-              <option value="여">여자</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>양력/음력</label>
-            <select name="calendar">
-              <option value="양력">양력</option>
-              <option value="음력">음력</option>
-            </select>
-          </div>
-        </div>
-        <div class="field">
-          <label>생년월일</label>
-          <div class="field-row3">
-            <input type="number" name="year" placeholder="년" min="1900" max="2100" required>
-            <input type="number" name="month" placeholder="월" min="1" max="12" required>
-            <input type="number" name="day" placeholder="일" min="1" max="31" required>
-          </div>
-        </div>
-        <div class="checkbox-row"><input type="checkbox" name="isLeap" id="isLeap"><label for="isLeap">음력 윤달</label></div>
-
-        <div class="field" style="margin-top:14px;">
-          <label>태어난 시각</label>
-          <div class="field-row">
-            <input type="number" name="hour" placeholder="시(0-23)" min="0" max="23">
-            <input type="number" name="minute" placeholder="분" min="0" max="59">
-          </div>
-        </div>
-        <div class="checkbox-row"><input type="checkbox" name="hourUnknown" id="hourUnknown"><label for="hourUnknown">시각 모름 (정오로 가정)</label></div>
-
-        <div class="field" style="margin-top:14px;">
-          <label>출생지 (선택 — 진태양시 보정용)</label>
-          <select name="city">
-            <option value="">서울(기본)</option>
-            <option value="인천">인천</option><option value="수원">수원</option>
-            <option value="대전">대전</option><option value="대구">대구</option>
-            <option value="부산">부산</option><option value="광주">광주</option>
-            <option value="울산">울산</option><option value="제주">제주</option>
-          </select>
-        </div>
-
-        <button type="submit" class="primary">저장하기</button>
-      </form>
     </div>
 
     <div class="card">
@@ -133,52 +79,17 @@
     return data.user;
   }
 
-  function fillBirthForm(user) {
-    const form = document.getElementById('birthForm');
-    if (user.gender) form.gender.value = user.gender;
-    if (!user.birth) return;
-    form.calendar.value = user.birth.isLunar ? '음력' : '양력';
-    form.year.value = user.birth.year;
-    form.month.value = user.birth.month;
-    form.day.value = user.birth.day;
-    form.isLeap.checked = !!user.birth.isLeap;
-    if (user.birth.hour != null) {
-      form.hour.value = user.birth.hour;
-      form.minute.value = user.birth.minute;
-    } else {
-      form.hourUnknown.checked = true;
-    }
-    if (user.birth.city) form.city.value = user.birth.city;
-    document.getElementById('birthHint').textContent = '저장된 정보예요 — 필요하면 수정 후 다시 저장하세요.';
-  }
-
-  document.getElementById('birthForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const fd = new FormData(e.target);
-    const body = Object.fromEntries(fd.entries());
-    body.isLeap = fd.get('isLeap') === 'on';
-    body.hourUnknown = fd.get('hourUnknown') === 'on';
-    try {
-      const res = await fetch('/api/auth/profile/birth', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
-      });
-      const data = await res.json();
-      if (!res.ok) { showToast(data.error || '저장 실패'); return; }
-      showToast('생년월일이 저장됐어요.');
-      document.getElementById('birthHint').textContent = '저장된 정보예요 — 필요하면 수정 후 다시 저장하세요.';
-      loadFortune();
-    } catch (err) {
-      showToast('요청 실패: ' + err.message);
-    }
-  });
-
   async function loadFortune() {
     try {
       const res = await fetch('/api/today-fortune');
       const data = await res.json();
       if (!res.ok) {
-        document.getElementById('fortuneTitle').textContent = '생년월일 정보가 없어요';
+        document.getElementById('fortuneTitle').textContent = '내 정보를 등록하면 오늘의 운세가 열려요';
         document.getElementById('fortuneDesc').textContent = data.error;
+        const cta = document.getElementById('fortuneCta');
+        cta.href = '/profiles.html';
+        cta.textContent = '저장된 인물 등록하러 가기 →';
+        cta.classList.remove('hidden');
         return;
       }
       document.getElementById('fortuneDate').textContent = `${data.fortune.date} · ${data.fortune.gapja}`;
@@ -252,7 +163,6 @@
     const user = await requireLogin();
     if (!user) return;
     document.getElementById('accountEmail').textContent = user.email;
-    fillBirthForm(user);
     loadFortune();
     loadMine();
     loadOrders();

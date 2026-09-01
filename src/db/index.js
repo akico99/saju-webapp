@@ -83,9 +83,18 @@ db.exec(`
     is_lunar INTEGER NOT NULL DEFAULT 0,
     is_leap INTEGER NOT NULL DEFAULT 0,
     city TEXT,
+    is_primary INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
 `);
+
+/* saved_profiles.is_primary — 나중에 추가된 컬럼(마이페이지 "생년월일시 저장"을 대체하며
+   "오늘의 운세"가 어느 저장된 인물을 쓸지 표시하는 용도). 기존 saved_profiles 테이블이
+   이미 있는 배포본에서도 없을 때만 추가되도록 같은 패턴으로 처리. */
+const spColumns = db.prepare('PRAGMA table_info(saved_profiles)').all().map((c) => c.name);
+if (!spColumns.includes('is_primary')) {
+  db.exec('ALTER TABLE saved_profiles ADD COLUMN is_primary INTEGER NOT NULL DEFAULT 0');
+}
 /* 세션 테이블(sessions)은 better-sqlite3-session-store가 자체 스키마로 직접 생성한다
    (sid/sess/expire) — 여기서 미리 만들지 않는다(컬럼 충돌 방지). */
 
