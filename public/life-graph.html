@@ -349,6 +349,10 @@
     } else {
       todayBadge.classList.add('hidden');
     }
+
+    // 라인 그래프에서 고른 지점을 바 차트 레이스에도 그대로 반영 — 두 컨트롤이 항상
+    // 같은 시점을 가리키게 한다(레이스가 아직 안 만들어졌으면 updateRaceUI 안에서 조용히 무시됨).
+    if (typeof updateRaceUI === 'function') updateRaceUI(p);
   }
 
   function pointerToIndex(clientX) {
@@ -385,8 +389,12 @@
   const OHAENG_COLOR = { '木': '#6f9376', '火': '#b5573f', '土': '#c7a13a', '金': '#8b93a0', '水': '#4d6f92' };
   const RACE_ROW_H = 44;
   let raceTimer = null;
-  let raceIndex = 0;
 
+  // 라인 그래프를 드래그해서 고른 시점과, 바 차트 레이스의 재생/탐색 위치가 서로 다른
+  // state(selected vs raceIndex)로 따로 놀아서 "그래프에서 고른 지점과 레이스가 서로
+  // 다른 시점을 보여준다"는 혼란이 있었다 — 실제로는 이미지 저장 버그가 아니라, 두
+  // 컨트롤이 애초에 하나로 안 묶여 있던 게 원인이었다. 이제는 selected 하나만 쓰고,
+  // 라인 그래프를 옮기든 레이스 시크바를 옮기든 항상 같은 지점을 함께 가리킨다.
   function buildRaceLegend() {
     document.getElementById('raceLegend').innerHTML = OHAENG_ORDER.map((k) =>
       `<span class="lg-item"><span class="sw" style="background:${OHAENG_COLOR[k]}"></span>${k}(${OHAENG_KO[k]}) · ${OHAENG_KEYWORD[k]}</span>`
@@ -407,10 +415,7 @@
     return Math.max(1, ...points.flatMap((p) => Object.values(p.ohaeng)));
   }
 
-  function renderRaceFrame(i) {
-    if (!points.length) return;
-    raceIndex = Math.max(0, Math.min(points.length - 1, i));
-    const p = points[raceIndex];
+  function updateRaceUI(p) {
     const maxVal = raceMaxVal();
     const chart = document.getElementById('raceChart');
 
@@ -428,7 +433,14 @@
     const unit = mode === 'year' ? '세운' : '대운';
     document.getElementById('raceFrameLabel').textContent = `${p.age}세 · ${p.ganZhiKo || ''}${unit}`;
     document.getElementById('raceFrameSub').textContent = mode === 'year' ? `${p.year}년` : '';
-    document.getElementById('raceSeek').value = raceIndex;
+    document.getElementById('raceSeek').value = selected;
+  }
+
+  // 레이스 시크바/재생 버튼에서 호출하는 진입점 — 라인 그래프의 selectPoint와 완전히
+  // 같은 지점을 가리키도록 selectPoint를 그대로 호출한다(레이스 전용 상태를 따로 안 둠).
+  function renderRaceFrame(i) {
+    if (!points.length) return;
+    selectPoint(Math.max(0, Math.min(points.length - 1, i)));
   }
 
   function stopRace() {
@@ -440,12 +452,12 @@
 
   function startRace() {
     stopRace();
-    if (raceIndex >= points.length - 1) raceIndex = 0;
+    if (selected >= points.length - 1) selectPoint(0);
     document.getElementById('racePlayBtn').textContent = '일시정지';
     raceTimer = setInterval(() => {
-      raceIndex++;
-      if (raceIndex >= points.length) { stopRace(); return; }
-      renderRaceFrame(raceIndex);
+      const next = selected + 1;
+      if (next >= points.length) { stopRace(); return; }
+      renderRaceFrame(next);
     }, 1300);
   }
 
@@ -454,7 +466,8 @@
     buildRaceLegend();
     buildRaceRows();
     document.getElementById('raceSeek').max = Math.max(0, points.length - 1);
-    renderRaceFrame(0);
+    updateRaceUI(points[selected]);
+    document.getElementById('raceSeek').value = selected;
   }
 
   document.getElementById('racePlayBtn').addEventListener('click', () => {
@@ -558,10 +571,8 @@
     cursorY += 40;
 
     // 라인 그래프 밑에 지금 이 시점의 오행 균형도 같이 찍어서, 그래프 따로 오행 따로가
-    // 아니라 "지금 이 시기"를 한 장에 담는다. 바 차트 레이스는 재생/탐색용으로 자기만의
-    // raceIndex를 따로 갖고 있어서(위 라인 그래프를 드래그해도 안 바뀜), 그걸 그대로 쓰면
-    // 사용자가 그래프에서 고른 지점과 다른 시점이 찍히는 버그가 난다 — 반드시 라인 그래프의
-    // 실제 선택 지점(selected)을 써야 이미지 안의 점수·설명·오행이 서로 일치한다.
+    // 아니라 "지금 이 시기"를 한 장에 담는다. 라인 그래프와 바 차트 레이스는 이제 selected
+    // 하나를 공유하므로(selectPoint↔renderRaceFrame이 서로 호출) 항상 같은 시점을 가리킨다.
     const racePoint = points[selected];
     if (racePoint) {
       ctx.fillStyle = '#14171C';
