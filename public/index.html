@@ -278,10 +278,10 @@
       const fRes = await fetch('/api/today-fortune');
       const fData = await fRes.json();
       if (fRes.ok) {
-        tfTitle.textContent = fData.fortune.title;
-        tfDesc.textContent = fData.fortune.desc;
-        tfCta.textContent = '마이페이지에서 더 보기 →';
-        tfCta.href = '/mypage.html';
+        tfTitle.textContent = `${fData.fortune.score}점 · ${fData.fortune.title}`;
+        tfDesc.textContent = fData.fortune.tip;
+        tfCta.textContent = `오늘 ${fData.fortune.topicLabel} 더 보기 →`;
+        tfCta.href = `/quick.html?topic=${fData.fortune.topic}`;
       }
     } catch (e) {
       // 계정 상태 확인 실패해도 스토어 자체는 정상 노출

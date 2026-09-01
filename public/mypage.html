@@ -21,9 +21,14 @@
     </div>
 
     <div class="card fortune-card" id="fortuneCard">
-      <div class="eyebrow" id="fortuneDate">오늘의 운세</div>
+      <div class="row-top">
+        <div class="eyebrow" id="fortuneDate">오늘의 운세</div>
+        <span class="fortune-score" id="fortuneScore"></span>
+      </div>
       <h2 id="fortuneTitle">불러오는 중...</h2>
       <p id="fortuneDesc"></p>
+      <p class="fortune-tip hidden" id="fortuneTip"></p>
+      <a class="fortune-cta hidden" id="fortuneCta" href="#">더 보기 →</a>
     </div>
 
     <div class="card" id="birthCard">
@@ -171,8 +176,18 @@
         return;
       }
       document.getElementById('fortuneDate').textContent = `${data.fortune.date} · ${data.fortune.gapja}`;
+      document.getElementById('fortuneScore').textContent = data.fortune.score + '점';
       document.getElementById('fortuneTitle').textContent = data.fortune.title;
-      document.getElementById('fortuneDesc').textContent = data.fortune.desc;
+      document.getElementById('fortuneDesc').textContent = `${data.fortune.desc} ${data.fortune.scoreNote}`;
+
+      const tip = document.getElementById('fortuneTip');
+      tip.innerHTML = `<b>TIP</b> ${data.fortune.tip}`;
+      tip.classList.remove('hidden');
+
+      const cta = document.getElementById('fortuneCta');
+      cta.href = `/quick.html?topic=${data.fortune.topic}`;
+      cta.textContent = `오늘 ${data.fortune.topicLabel} 더 자세히 보기 →`;
+      cta.classList.remove('hidden');
     } catch (e) {
       document.getElementById('fortuneTitle').textContent = '오늘의 운세를 불러오지 못했어요';
     }
