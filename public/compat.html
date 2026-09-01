@@ -21,6 +21,7 @@
 
   <form id="compatForm">
     <h2 class="section-title">본인</h2>
+    <div class="profile-picker hidden" id="profilePickerA"></div>
     <div class="field">
       <label>이름</label>
       <input type="text" name="aName" placeholder="예: 홍길동">
@@ -59,6 +60,7 @@
     </div>
 
     <h2 class="section-title">상대방</h2>
+    <div class="profile-picker hidden" id="profilePickerB"></div>
     <div class="field">
       <label>이름</label>
       <input type="text" name="bName" placeholder="예: 김영희">
@@ -118,6 +120,7 @@
 
 <script>window.POINT_NOTICE_PRICE = 4900; window.POINT_NOTICE_LABEL = '궁합 리포트';</script>
 <script src="/point-notice.js"></script>
+<script src="/profile-picker.js"></script>
 <script src="/compat-app.js"></script>
 </body>
 </html>

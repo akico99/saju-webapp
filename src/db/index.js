@@ -68,6 +68,23 @@ db.exec(`
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     finished_at TEXT
   );
+
+  CREATE TABLE IF NOT EXISTS saved_profiles (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    label TEXT NOT NULL,
+    name TEXT,
+    gender TEXT,
+    birth_year INTEGER NOT NULL,
+    birth_month INTEGER NOT NULL,
+    birth_day INTEGER NOT NULL,
+    birth_hour INTEGER,
+    birth_minute INTEGER,
+    is_lunar INTEGER NOT NULL DEFAULT 0,
+    is_leap INTEGER NOT NULL DEFAULT 0,
+    city TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
 `);
 /* 세션 테이블(sessions)은 better-sqlite3-session-store가 자체 스키마로 직접 생성한다
    (sid/sess/expire) — 여기서 미리 만들지 않는다(컬럼 충돌 방지). */

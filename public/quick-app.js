@@ -74,6 +74,10 @@ if (presetTopic && [...topicSelect.options].some((o) => o.value === presetTopic)
   topicSelect.value = presetTopic;
 }
 
+if (window.ProfilePicker) {
+  window.ProfilePicker.mount(document.getElementById('profilePicker'), form);
+}
+
 function showError(msg) {
   errorBlock.textContent = msg;
   errorBlock.classList.remove('hidden');

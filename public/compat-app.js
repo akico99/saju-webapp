@@ -1,6 +1,10 @@
 'use strict';
 
 const form = document.getElementById('compatForm');
+if (window.ProfilePicker) {
+  window.ProfilePicker.mount(document.getElementById('profilePickerA'), form, { prefix: 'a' });
+  window.ProfilePicker.mount(document.getElementById('profilePickerB'), form, { prefix: 'b' });
+}
 const submitBtn = document.getElementById('submitBtn');
 const result = document.getElementById('result');
 const progressBlock = document.getElementById('progressBlock');

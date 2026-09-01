@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>사주보는 수달 — 저장된 인물</title>
+<link rel="stylesheet" href="/theme.css">
+<style>
+  .profile-list { margin-bottom: 20px; }
+  .profile-item {
+    background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-card);
+    padding: 14px 16px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  }
+  .profile-item .info .label { font-size: 14px; font-weight: 800; color: var(--ink); }
+  .profile-item .info .sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .profile-item .actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .profile-item .actions button {
+    padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface);
+    color: var(--ink); font-size: 11.5px; font-weight: 700; cursor: pointer; font-family: inherit;
+  }
+  .profile-item .actions button.del { color: var(--danger); border-color: var(--danger-soft); background: var(--danger-soft); }
+  .empty-note { text-align: center; padding: 30px 20px; color: var(--muted); font-size: 13px; }
+  #profileForm .checkbox-row { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+  #formTitle { font-size: 15px; font-weight: 800; margin: 0 0 4px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <a class="back" href="/mypage.html">←</a>
+    <div class="ttl">저장된 인물</div>
+  </header>
+  <main>
+    <p class="lead">나·배우자·자녀 등 자주 보는 사람의 생년월일시를 저장해두면, 궁합·인생그래프 같은 서비스에서 매번 다시 입력하지 않고 바로 불러올 수 있어요. 최대 12명까지 저장할 수 있습니다.</p>
+
+    <div class="profile-list" id="profileList"></div>
+    <div class="empty-note hidden" id="emptyNote">아직 저장된 인물이 없어요. 아래에서 추가해보세요.</div>
+
+    <div class="card">
+      <h3 id="formTitle">인물 추가하기</h3>
+      <form id="profileForm">
+        <input type="hidden" name="id" id="profileId">
+        <div class="field">
+          <label>구분(별명)</label>
+          <input type="text" name="label" placeholder="예: 나, 배우자, 첫째" required maxlength="20">
+        </div>
+        <div class="field">
+          <label>이름 (선택)</label>
+          <input type="text" name="name" placeholder="예: 홍길동" maxlength="30">
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>성별</label>
+            <select name="gender"><option value="남">남자</option><option value="여">여자</option></select>
+          </div>
+          <div class="field">
+            <label>양력/음력</label>
+            <select name="calendar"><option value="양력">양력</option><option value="음력">음력</option></select>
+          </div>
+        </div>
+        <div class="field">
+          <label>생년월일</label>
+          <div class="field-row3">
+            <input type="number" name="year" placeholder="년" min="1900" max="2100" required>
+            <input type="number" name="month" placeholder="월" min="1" max="12" required>
+            <input type="number" name="day" placeholder="일" min="1" max="31" required>
+          </div>
+        </div>
+        <div class="checkbox-row"><input type="checkbox" name="isLeap" id="isLeap"><label for="isLeap">음력 윤달</label></div>
+        <div class="field">
+          <label>태어난 시각</label>
+          <div class="field-row">
+            <input type="number" name="hour" placeholder="시(0-23)" min="0" max="23">
+            <input type="number" name="minute" placeholder="분" min="0" max="59">
+          </div>
+        </div>
+        <div class="checkbox-row"><input type="checkbox" name="hourUnknown" id="hourUnknown"><label for="hourUnknown">시각 모름</label></div>
+
+        <button type="submit" class="btn-primary" id="submitBtn">추가하기</button>
+        <button type="button" class="btn-primary hidden" id="cancelEditBtn" style="background:var(--surface);color:var(--muted);box-shadow:none;">취소</button>
+      </form>
+    </div>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(window.__toastTimer);
+    window.__toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
+  }
+
+  const form = document.getElementById('profileForm');
+  const submitBtn = document.getElementById('submitBtn');
+  const cancelBtn = document.getElementById('cancelEditBtn');
+  const formTitle = document.getElementById('formTitle');
+  let editingId = null;
+
+  async function requireLogin() {
+    const res = await fetch('/api/auth/me');
+    const data = await res.json();
+    if (!data.user) {
+      location.href = '/login.html?redirect=' + encodeURIComponent(location.pathname);
+      return null;
+    }
+    return data.user;
+  }
+
+  function summarize(p) {
+    const cal = p.isLunar ? '음력' : '양력';
+    const time = p.birthHour != null ? `${String(p.birthHour).padStart(2, '0')}:${String(p.birthMinute || 0).padStart(2, '0')}` : '시각모름';
+    return `${p.birthYear}.${String(p.birthMonth).padStart(2, '0')}.${String(p.birthDay).padStart(2, '0')} (${cal}) · ${time}${p.gender ? ' · ' + p.gender + '자' : ''}`;
+  }
+
+  async function loadList() {
+    const res = await fetch('/api/profiles');
+    const data = await res.json();
+    const list = document.getElementById('profileList');
+    const empty = document.getElementById('emptyNote');
+    list.innerHTML = '';
+    if (!data.profiles.length) {
+      empty.classList.remove('hidden');
+      return;
+    }
+    empty.classList.add('hidden');
+    data.profiles.forEach((p) => {
+      const div = document.createElement('div');
+      div.className = 'profile-item';
+      div.innerHTML = `
+        <div class="info">
+          <div class="label">${p.label}${p.name ? ' · ' + p.name : ''}</div>
+          <div class="sub">${summarize(p)}</div>
+        </div>
+        <div class="actions">
+          <button type="button" data-action="edit">수정</button>
+          <button type="button" data-action="del" class="del">삭제</button>
+        </div>
+      `;
+      div.querySelector('[data-action="edit"]').addEventListener('click', () => startEdit(p));
+      div.querySelector('[data-action="del"]').addEventListener('click', () => removeProfile(p.id));
+      list.appendChild(div);
+    });
+  }
+
+  function startEdit(p) {
+    editingId = p.id;
+    form.label.value = p.label;
+    form.name.value = p.name || '';
+    form.gender.value = p.gender || '남';
+    form.calendar.value = p.isLunar ? '음력' : '양력';
+    form.year.value = p.birthYear;
+    form.month.value = p.birthMonth;
+    form.day.value = p.birthDay;
+    form.isLeap.checked = !!p.isLeap;
+    if (p.birthHour != null) {
+      form.hour.value = p.birthHour;
+      form.minute.value = p.birthMinute || 0;
+      form.hourUnknown.checked = false;
+    } else {
+      form.hour.value = '';
+      form.minute.value = '';
+      form.hourUnknown.checked = true;
+    }
+    formTitle.textContent = '인물 정보 수정';
+    submitBtn.textContent = '수정 완료';
+    cancelBtn.classList.remove('hidden');
+    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function resetForm() {
+    editingId = null;
+    form.reset();
+    formTitle.textContent = '인물 추가하기';
+    submitBtn.textContent = '추가하기';
+    cancelBtn.classList.add('hidden');
+  }
+  cancelBtn.addEventListener('click', resetForm);
+
+  async function removeProfile(id) {
+    if (!confirm('삭제하시겠습니까?')) return;
+    const res = await fetch(`/api/profiles/${id}`, { method: 'DELETE' });
+    if (!res.ok) { showToast('삭제 실패'); return; }
+    showToast('삭제했어요.');
+    if (editingId === id) resetForm();
+    loadList();
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(form);
+    const body = Object.fromEntries(fd.entries());
+    body.isLunar = body.calendar === '음력';
+    body.isLeap = fd.get('isLeap') === 'on';
+    const hourUnknown = fd.get('hourUnknown') === 'on';
+    body.birthYear = body.year; body.birthMonth = body.month; body.birthDay = body.day;
+    body.birthHour = hourUnknown ? null : body.hour;
+    body.birthMinute = hourUnknown ? null : (body.minute || 0);
+
+    const url = editingId ? `/api/profiles/${editingId}` : '/api/profiles';
+    const method = editingId ? 'PUT' : 'POST';
+    const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const data = await res.json();
+    if (!res.ok) { showToast(data.error || '저장 실패'); return; }
+    showToast(editingId ? '수정했어요.' : '추가했어요.');
+    resetForm();
+    loadList();
+  });
+
+  (async () => {
+    if (!(await requireLogin())) return;
+    loadList();
+  })();
+</script>
+</body>
+</html>

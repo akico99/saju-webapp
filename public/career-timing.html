@@ -41,6 +41,7 @@
     <div class="point-notice" id="pointNotice">가격 확인 중...</div>
 
     <form id="ctForm">
+      <div class="profile-picker hidden" id="profilePicker"></div>
       <div class="field-row">
         <div class="field">
           <label>성별</label>
@@ -87,10 +88,15 @@
 
 <script>window.POINT_NOTICE_PRICE = 990; window.POINT_NOTICE_LABEL = '이직 시기';</script>
 <script src="/point-notice.js"></script>
+<script src="/profile-picker.js"></script>
 <script>
   const form = document.getElementById('ctForm');
   const submitBtn = document.getElementById('submitBtn');
   const errorBox = document.getElementById('errorBox');
+
+  if (window.ProfilePicker) {
+    window.ProfilePicker.mount(document.getElementById('profilePicker'), form);
+  }
 
   function setFormBusy(busy) {
     form.querySelectorAll('input, select, button').forEach((el) => { el.disabled = busy; });

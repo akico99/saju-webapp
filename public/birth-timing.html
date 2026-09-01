@@ -60,6 +60,7 @@
       <details class="bt-optional">
         <summary>부모님 생년월일 입력하기 (선택 — 부모님과 부딪히는 날짜를 걸러드려요)</summary>
         <div class="section-title" style="margin-top:14px;">부모 1</div>
+        <div class="profile-picker hidden" id="profilePickerA"></div>
         <div class="field">
           <label>생년월일</label>
           <div class="date-inputs">
@@ -78,6 +79,7 @@
         </div>
 
         <div class="section-title">부모 2 (선택)</div>
+        <div class="profile-picker hidden" id="profilePickerB"></div>
         <div class="field">
           <label>생년월일</label>
           <div class="date-inputs">
@@ -110,8 +112,13 @@
 
 <script>window.POINT_NOTICE_PRICE = 2900; window.POINT_NOTICE_LABEL = '출산택일';</script>
 <script src="/point-notice.js"></script>
+<script src="/profile-picker.js"></script>
 <script>
   const form = document.getElementById('btForm');
+  if (window.ProfilePicker) {
+    window.ProfilePicker.mount(document.getElementById('profilePickerA'), form, { prefix: 'a', placeholder: '직접 입력' });
+    window.ProfilePicker.mount(document.getElementById('profilePickerB'), form, { prefix: 'b', placeholder: '직접 입력' });
+  }
   const errorBox = document.getElementById('errorBox');
   const WEEKDAY_KO = ['일', '월', '화', '수', '목', '금', '토'];
 

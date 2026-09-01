@@ -1,6 +1,9 @@
 'use strict';
 
 const form = document.getElementById('sajuForm');
+if (window.ProfilePicker) {
+  window.ProfilePicker.mount(document.getElementById('profilePicker'), form);
+}
 const submitBtn = document.getElementById('submitBtn');
 const result = document.getElementById('result');
 const engineSummaryEl = document.getElementById('engineSummary');
