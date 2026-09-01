@@ -361,15 +361,22 @@
     return Math.round(ratio * (points.length - 1));
   }
 
+  // 드래그 중 포인터가 브라우저 창 밖으로 나가버리면(빠르게 끝까지 드래그하는 경우 등)
+  // 일부 환경에서 pointerup이 안 잡히고 dragging이 true로 눌어붙는 경우가 있었다 —
+  // 그 상태에서 마우스를 저장 버튼 쪽으로 옮기기만 해도 pointermove가 계속 selectPoint를
+  // 불러서 엉뚱한(때로는 기본값에 가까운) 지점으로 선택이 바뀌어버렸다. setPointerCapture로
+  // 포인터를 chartWrap에 확실히 붙잡아 pointerup/cancel이 항상 잡히게 한다.
   let dragging = false;
   chartWrap.addEventListener('pointerdown', (e) => {
     dragging = true;
+    try { chartWrap.setPointerCapture(e.pointerId); } catch (err) { /* 캡처 실패해도 드래그 자체는 계속 동작 */ }
     selectPoint(pointerToIndex(e.clientX));
   });
   window.addEventListener('pointermove', (e) => {
     if (!dragging) return;
     selectPoint(pointerToIndex(e.clientX));
   });
+  window.addEventListener('pointercancel', () => { dragging = false; });
   window.addEventListener('pointerup', () => { dragging = false; });
 
   function setMode(next) {
@@ -516,6 +523,20 @@
   }
 
   async function buildShareCard() {
+    // 이 함수 안에 await(로고/차트 이미지 로딩)가 여러 번 있다 — 그 사이에 사용자가 다른
+    // 조작을 하거나(드물지만) 다른 코드가 selectPoint를 다시 부르면, 뒤쪽 await 이후에
+    // DOM에서 값을 읽는 코드가 "저장 버튼 눌렀을 때와 다른" 값을 읽어버릴 수 있다.
+    // 그래서 함수 맨 처음, await가 하나도 실행되기 전에 지금 화면 상태를 한 번에
+    // 스냅샷으로 떠두고, 이후로는 전부 이 스냅샷만 쓴다 — 중간에 뭐가 바뀌든 영향 없음.
+    const snapshot = {
+      selected,
+      rangeText: document.getElementById('lgRange').textContent,
+      scoreText: document.getElementById('lgScore').textContent,
+      scoreColor: document.getElementById('lgScore').style.color || '#14171C',
+      descText: document.getElementById('lgDesc').textContent,
+      svgString: new XMLSerializer().serializeToString(svg)
+    };
+
     const scale = 2;
     const canvas = document.createElement('canvas');
     canvas.width = CARD_W * scale;
@@ -543,21 +564,20 @@
 
     ctx.fillStyle = '#5B6472';
     ctx.font = '600 13px "Malgun Gothic", sans-serif';
-    ctx.fillText(document.getElementById('lgRange').textContent, CARD_PAD, cursorY);
+    ctx.fillText(snapshot.rangeText, CARD_PAD, cursorY);
     cursorY += 50;
 
-    ctx.fillStyle = document.getElementById('lgScore').style.color || '#14171C';
+    ctx.fillStyle = snapshot.scoreColor;
     ctx.font = '800 46px "Malgun Gothic", sans-serif';
-    ctx.fillText(document.getElementById('lgScore').textContent + '점', CARD_PAD, cursorY);
+    ctx.fillText(snapshot.scoreText + '점', CARD_PAD, cursorY);
     cursorY += 34;
 
     ctx.fillStyle = '#14171C';
     ctx.font = '500 15px "Malgun Gothic", sans-serif';
-    ctx.fillText(document.getElementById('lgDesc').textContent, CARD_PAD, cursorY);
+    ctx.fillText(snapshot.descText, CARD_PAD, cursorY);
     cursorY += 34;
 
-    const svgString = new XMLSerializer().serializeToString(svg);
-    const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+    const svgBlob = new Blob([snapshot.svgString], { type: 'image/svg+xml;charset=utf-8' });
     const svgUrl = URL.createObjectURL(svgBlob);
     try {
       const chartImg = await loadImage(svgUrl);
@@ -573,7 +593,7 @@
     // 라인 그래프 밑에 지금 이 시점의 오행 균형도 같이 찍어서, 그래프 따로 오행 따로가
     // 아니라 "지금 이 시기"를 한 장에 담는다. 라인 그래프와 바 차트 레이스는 이제 selected
     // 하나를 공유하므로(selectPoint↔renderRaceFrame이 서로 호출) 항상 같은 시점을 가리킨다.
-    const racePoint = points[selected];
+    const racePoint = points[snapshot.selected];
     if (racePoint) {
       ctx.fillStyle = '#14171C';
       ctx.font = '800 15px "Malgun Gothic", sans-serif';
@@ -632,6 +652,7 @@
 
   document.getElementById('lgSaveBtn').addEventListener('click', async () => {
     if (!points.length) return;
+    dragging = false; // 혹시 드래그 종료 처리가 안 된 채 남아있어도 저장은 항상 깨끗한 상태에서 시작
     try {
       const blob = await buildShareCard();
       const link = document.createElement('a');
