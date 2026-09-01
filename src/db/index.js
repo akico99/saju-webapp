@@ -83,4 +83,9 @@ if (!userColumns.includes('provider_id')) {
 }
 db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_provider ON users(provider, provider_id) WHERE provider_id IS NOT NULL');
 
+/* 관리자 회원관리(정지 처리)용 컬럼 — 기존과 같은 방식으로 없을 때만 추가 */
+if (!userColumns.includes('status')) {
+  db.exec("ALTER TABLE users ADD COLUMN status TEXT NOT NULL DEFAULT 'active'");
+}
+
 module.exports = db;

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>사주보는 수달 — 배너 이미지 위치 조정</title>
+<title>사주보는 수달 — 배너 편집</title>
 <link rel="stylesheet" href="/theme.css">
 <style>
   /* 실제 메인 페이지 배너(.banner-slide, theme.css)와 픽셀 단위로 정확히 같아야
@@ -12,25 +12,43 @@
      페이지와 동일한 .app(모바일 480px, 패딩 없음) 컨테이너를 그대로 쓴다 — .banner-slide가
      그 안에서 padding 없이 바로 자식으로 붙어야 실제 폭(.app 전체 폭)과 일치한다. */
   .app { padding-bottom: 30px; }
-  .banner-row { margin-bottom: 28px; }
+  .banner-row { margin-bottom: 32px; }
   .banner-row h3 { font-size: 13px; font-weight: 800; margin: 0 0 10px; color: var(--muted); padding: 0 20px; }
-  .pos-controls { padding: 0 20px; margin-top: 10px; }
+  .banner-row .banner-slide { pointer-events: none; }
+  .edit-panel { padding: 0 20px; margin-top: 12px; }
+  .edit-panel .field { margin-bottom: 10px; }
+  .edit-panel label { display: block; font-size: 11.5px; color: var(--muted); margin-bottom: 4px; }
+  .edit-panel input[type="text"] {
+    width: 100%; box-sizing: border-box; padding: 9px 11px; border: 1px solid var(--line);
+    border-radius: 8px; font-size: 13px; font-family: inherit;
+  }
+  .pos-controls { margin-top: 6px; }
   .pos-controls label { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--muted); margin-bottom: 8px; }
   .pos-controls input[type="range"] { flex: 1; }
   .pos-controls .val { width: 40px; text-align: right; font-weight: 700; color: var(--ink); }
+  .align-row { display: flex; gap: 6px; margin-bottom: 10px; }
+  .align-row button {
+    flex: 1; padding: 8px 4px; font-size: 11.5px; border: 1px solid var(--line); border-radius: 8px;
+    background: var(--paper); color: var(--muted); cursor: pointer; font-family: inherit;
+  }
+  .align-row button.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .align-group-ttl { font-size: 11px; color: var(--muted-2); margin: 10px 0 4px; }
 </style>
 </head>
 <body>
 <div class="app">
   <header>
     <a class="back" href="/admin.html">←</a>
-    <div class="ttl">배너 이미지 위치 조정</div>
+    <div class="ttl">배너 편집</div>
   </header>
-  <p class="lead" style="padding:16px 20px 0;margin-bottom:0;">사진이 카드 틀에 맞춰 잘리는 위치를 슬라이더로 옮길 수 있어요. 아래 미리보기는 실제 메인 페이지 배너와 폭·높이가 완전히 동일합니다.</p>
+  <p class="lead" style="padding:16px 20px 0;margin-bottom:0;">
+    메인 페이지 배너의 문구·이미지 위치·텍스트 정렬과 크기를 자유롭게 조정할 수 있어요.
+    아래 미리보기는 실제 메인 페이지 배너와 폭·높이가 완전히 동일합니다.
+  </p>
 
   <div id="rows"></div>
   <div style="padding:0 20px;">
-    <button type="button" class="primary" id="saveAllBtn">전체 저장</button>
+    <button type="button" class="btn-primary" id="saveAllBtn">전체 저장</button>
   </div>
 </div>
 <div class="toast" id="toast"></div>
@@ -46,8 +64,10 @@
 
   const SLIDE_LABELS = {
     1: '1번 — 오늘의 나 총평', 2: '2번 — 애정운', 3: '3번 — 궁합',
-    4: '4번 — 재물운', 5: '5번 — 직업·적성운', 6: '6번 — 평생사주 100p'
+    4: '4번 — 재물운', 5: '5번 — 인생 그래프', 6: '6번 — 평생사주 100p'
   };
+  const H_ALIGNS = [['left', '왼쪽'], ['center', '가운데'], ['right', '오른쪽']];
+  const V_ALIGNS = [['top', '위'], ['center', '가운데'], ['bottom', '아래']];
 
   async function checkAdmin() {
     const res = await fetch('/api/admin/me');
@@ -56,33 +76,113 @@
     return true;
   }
 
-  function parsePos(str) {
-    const m = /^(\d{1,3})% (\d{1,3})%$/.exec(str || '50% 50%');
-    return m ? { x: Number(m[1]), y: Number(m[2]) } : { x: 50, y: 50 };
+  function applyPreview(row) {
+    const cfg = row.dataset;
+    const slide = row.querySelector('.banner-slide');
+    const img = row.querySelector('img');
+    img.style.objectPosition = cfg.imagePosition;
+    slide.style.alignItems = cfg.textValign === 'top' ? 'flex-start' : cfg.textValign === 'center' ? 'center' : 'flex-end';
+    const copy = row.querySelector('.banner-copy');
+    copy.style.textAlign = cfg.textAlign;
+    const scale = Number(cfg.textScale) || 1;
+    row.querySelector('.eyebrow').textContent = row.querySelector('input[data-field="eyebrow"]').value;
+    row.querySelector('.eyebrow').style.fontSize = (11 * scale) + 'px';
+    row.querySelector('.headline').textContent = row.querySelector('input[data-field="headline"]').value;
+    row.querySelector('.headline').style.fontSize = (18 * scale) + 'px';
+    row.querySelector('.price').textContent = row.querySelector('input[data-field="price"]').value;
+    row.querySelector('.price').style.fontSize = (13 * scale) + 'px';
   }
 
-  function buildRow(id, posStr) {
-    const { x, y } = parsePos(posStr);
+  function buildAlignRow(row, key, options, label) {
+    const wrap = document.createElement('div');
+    wrap.innerHTML = `<div class="align-group-ttl">${label}</div>`;
+    const btnRow = document.createElement('div');
+    btnRow.className = 'align-row';
+    options.forEach(([value, text]) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = text;
+      btn.classList.toggle('active', row.dataset[key] === value);
+      btn.addEventListener('click', () => {
+        row.dataset[key] = value;
+        btnRow.querySelectorAll('button').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        applyPreview(row);
+      });
+      btnRow.appendChild(btn);
+    });
+    wrap.appendChild(btnRow);
+    return wrap;
+  }
+
+  function buildRow(id, cfg) {
+    const m = /^(\d{1,3})% (\d{1,3})%$/.exec(cfg.imagePosition || '50% 50%');
+    const x = m ? Number(m[1]) : 50, y = m ? Number(m[2]) : 50;
+
     const row = document.createElement('div');
     row.className = 'banner-row';
     row.dataset.slide = id;
+    row.dataset.imagePosition = `${x}% ${y}%`;
+    row.dataset.textAlign = cfg.textAlign || 'left';
+    row.dataset.textValign = cfg.textVAlign || 'bottom';
+    row.dataset.textScale = cfg.textScale || 1;
+
     row.innerHTML = `
       <h3>${SLIDE_LABELS[id] || (id + '번')}</h3>
-      <div class="banner-slide"><img src="/banners/${id}.png" alt="" style="object-position:${x}% ${y}%;"></div>
-      <div class="pos-controls">
-        <label>가로 위치 <input type="range" min="0" max="100" value="${x}" data-axis="x"> <span class="val">${x}%</span></label>
-        <label>세로 위치 <input type="range" min="0" max="100" value="${y}" data-axis="y"> <span class="val">${y}%</span></label>
+      <div class="banner-slide">
+        <img src="/banners/${id}.png" alt="">
+        <div class="banner-copy">
+          <span class="eyebrow"></span>
+          <div class="headline"></div>
+          <div class="price"></div>
+        </div>
+      </div>
+      <div class="edit-panel">
+        <div class="field"><label>eyebrow (짧은 라벨)</label><input type="text" data-field="eyebrow" value="${(cfg.eyebrow || '').replace(/"/g, '&quot;')}" maxlength="30"></div>
+        <div class="field"><label>제목</label><input type="text" data-field="headline" value="${(cfg.headline || '').replace(/"/g, '&quot;')}" maxlength="60"></div>
+        <div class="field"><label>부제/가격</label><input type="text" data-field="price" value="${(cfg.price || '').replace(/"/g, '&quot;')}" maxlength="60"></div>
+        <div class="field"><label>연결 링크</label><input type="text" data-field="href" value="${(cfg.href || '').replace(/"/g, '&quot;')}" maxlength="200"></div>
+
+        <div class="align-group-ttl">텍스트 크기</div>
+        <div class="pos-controls">
+          <label>배율 <input type="range" min="70" max="160" value="${Math.round((cfg.textScale || 1) * 100)}" data-field="scaleRange"> <span class="val scale-val">${Math.round((cfg.textScale || 1) * 100)}%</span></label>
+        </div>
+
+        <div class="align-placeholder-h"></div>
+        <div class="align-placeholder-v"></div>
+
+        <div class="align-group-ttl">이미지 위치</div>
+        <div class="pos-controls">
+          <label>가로 <input type="range" min="0" max="100" value="${x}" data-axis="x"> <span class="val">${x}%</span></label>
+          <label>세로 <input type="range" min="0" max="100" value="${y}" data-axis="y"> <span class="val">${y}%</span></label>
+        </div>
       </div>
     `;
-    const img = row.querySelector('img');
-    row.querySelectorAll('input[type="range"]').forEach((input) => {
+
+    row.querySelector('.align-placeholder-h').replaceWith(buildAlignRow(row, 'textAlign', H_ALIGNS, '텍스트 가로 위치'));
+    row.querySelector('.align-placeholder-v').replaceWith(buildAlignRow(row, 'textValign', V_ALIGNS, '텍스트 세로 위치'));
+
+    row.querySelectorAll('input[data-field="eyebrow"], input[data-field="headline"], input[data-field="price"]').forEach((input) => {
+      input.addEventListener('input', () => applyPreview(row));
+    });
+
+    row.querySelector('input[data-field="scaleRange"]').addEventListener('input', (e) => {
+      row.dataset.textScale = Number(e.target.value) / 100;
+      row.querySelector('.scale-val').textContent = e.target.value + '%';
+      applyPreview(row);
+    });
+
+    row.querySelectorAll('input[data-axis]').forEach((input) => {
       input.addEventListener('input', () => {
         const xVal = row.querySelector('input[data-axis="x"]').value;
         const yVal = row.querySelector('input[data-axis="y"]').value;
-        img.style.objectPosition = `${xVal}% ${yVal}%`;
+        row.dataset.imagePosition = `${xVal}% ${yVal}%`;
         input.nextElementSibling.textContent = `${input.value}%`;
+        applyPreview(row);
       });
     });
+
+    applyPreview(row);
     return row;
   }
 
@@ -99,9 +199,16 @@
   document.getElementById('saveAllBtn').addEventListener('click', async () => {
     const positions = {};
     document.querySelectorAll('.banner-row').forEach((row) => {
-      const x = row.querySelector('input[data-axis="x"]').value;
-      const y = row.querySelector('input[data-axis="y"]').value;
-      positions[row.dataset.slide] = `${x}% ${y}%`;
+      positions[row.dataset.slide] = {
+        imagePosition: row.dataset.imagePosition,
+        eyebrow: row.querySelector('input[data-field="eyebrow"]').value,
+        headline: row.querySelector('input[data-field="headline"]').value,
+        price: row.querySelector('input[data-field="price"]').value,
+        href: row.querySelector('input[data-field="href"]').value,
+        textAlign: row.dataset.textAlign,
+        textVAlign: row.dataset.textValign,
+        textScale: Number(row.dataset.textScale)
+      };
     });
     const res = await fetch('/api/admin/banners', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },

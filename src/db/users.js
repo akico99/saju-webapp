@@ -78,6 +78,49 @@ function adjustPointBalance(userId, delta) {
   stmts.adjustBalance.run(delta, userId);
 }
 
+/* ---------- 관리자 회원관리 ---------- */
+function toAdminUser(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    email: row.email,
+    name: row.name,
+    pointBalance: row.point_balance,
+    provider: row.provider,
+    status: row.status,
+    createdAt: row.created_at
+  };
+}
+
+function countAll({ search } = {}) {
+  const like = `%${search || ''}%`;
+  const row = search
+    ? db.prepare('SELECT COUNT(*) AS c FROM users WHERE email LIKE ? OR name LIKE ?').get(like, like)
+    : db.prepare('SELECT COUNT(*) AS c FROM users').get();
+  return row.c;
+}
+
+function listAll({ search, limit = 50, offset = 0 } = {}) {
+  const like = `%${search || ''}%`;
+  const rows = search
+    ? db.prepare('SELECT * FROM users WHERE email LIKE ? OR name LIKE ? ORDER BY id DESC LIMIT ? OFFSET ?').all(like, like, limit, offset)
+    : db.prepare('SELECT * FROM users ORDER BY id DESC LIMIT ? OFFSET ?').all(limit, offset);
+  return rows.map(toAdminUser);
+}
+
+function setStatus(id, status) {
+  if (status !== 'active' && status !== 'suspended') throw new Error('알 수 없는 상태입니다: ' + status);
+  db.prepare('UPDATE users SET status = ? WHERE id = ?').run(status, id);
+  return toAdminUser(stmts.findById.get(id));
+}
+
+function adminStats() {
+  const totalUsers = db.prepare('SELECT COUNT(*) AS c FROM users').get().c;
+  const todaySignups = db.prepare("SELECT COUNT(*) AS c FROM users WHERE date(created_at) = date('now')").get().c;
+  const totalRevenue = db.prepare("SELECT COALESCE(SUM(amount_krw), 0) AS s FROM point_requests WHERE status = 'approved'").get().s;
+  return { totalUsers, todaySignups, totalRevenue };
+}
+
 function updateBirth(id, { gender, birthYear, birthMonth, birthDay, birthHour, birthMinute, isLunar, isLeap, city }) {
   stmts.updateBirth.run({
     id, gender: gender || null,
@@ -90,5 +133,6 @@ function updateBirth(id, { gender, birthYear, birthMonth, birthDay, birthHour, b
 
 module.exports = {
   createUser, findByEmail, findById, adjustPointBalance, updateBirth, toPublicUser,
-  findByProvider, createSocialUser
+  findByProvider, createSocialUser,
+  listAll, countAll, setStatus, adminStats, toAdminUser
 };

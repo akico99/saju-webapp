@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>사주보는 수달 — 회원관리</title>
+<link rel="stylesheet" href="/theme.css">
+<style>
+  .stat-row { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+  .stat-box { flex: 1; min-width: 140px; background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; }
+  .stat-box .num { font-size: 22px; font-weight: 800; color: var(--ink); }
+  .stat-box .lbl { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .search-row { display: flex; gap: 8px; margin-bottom: 16px; }
+  .search-row input { flex: 1; padding: 10px 14px; border: 1px solid var(--line); border-radius: 10px; font-size: 13px; font-family: inherit; }
+  .search-row button { padding: 10px 18px; border-radius: 10px; border: 1px solid var(--ink); background: var(--paper); color: var(--ink); font-weight: 700; cursor: pointer; font-family: inherit; }
+  .status-badge { padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+  .status-badge.active { background: var(--success-soft); color: var(--success); }
+  .status-badge.suspended { background: var(--danger-soft); color: var(--danger); }
+  .row-actions button { padding: 6px 11px; border-radius: 999px; border: none; font-size: 11.5px; font-weight: 700; cursor: pointer; font-family: inherit; margin-right: 6px; margin-bottom: 4px; }
+  .pager { display: flex; justify-content: center; gap: 10px; align-items: center; margin-top: 16px; font-size: 13px; color: var(--muted); }
+  .pager button { padding: 7px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--paper); cursor: pointer; font-family: inherit; }
+  .pager button:disabled { opacity: 0.4; cursor: not-allowed; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1><svg class="otter-mark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="7" cy="7" r="2.4" fill="currentColor"/><circle cx="17" cy="7" r="2.4" fill="currentColor"/><ellipse cx="12" cy="13.5" rx="8" ry="7" fill="currentColor"/><circle cx="9" cy="12.5" r="1.1" fill="var(--paper)"/><circle cx="15" cy="12.5" r="1.1" fill="var(--paper)"/><ellipse cx="12" cy="16" rx="1.6" ry="1.1" fill="var(--paper)"/></svg> 회원관리</h1>
+    <div style="display:flex;align-items:center;gap:14px;">
+      <a href="/admin.html" style="font-size:12.5px;color:var(--muted);text-decoration:none;">← 포인트 승인으로</a>
+      <button class="logout" id="logoutBtn">관리자 로그아웃</button>
+    </div>
+  </header>
+
+  <div class="stat-row">
+    <div class="stat-box"><div class="num" id="statTotal">-</div><div class="lbl">전체 회원 수</div></div>
+    <div class="stat-box"><div class="num" id="statToday">-</div><div class="lbl">오늘 가입</div></div>
+    <div class="stat-box"><div class="num" id="statRevenue">-</div><div class="lbl">누적 승인된 충전 금액</div></div>
+  </div>
+
+  <div class="search-row">
+    <input type="text" id="searchInput" placeholder="이메일 또는 이름으로 검색">
+    <button type="button" id="searchBtn">검색</button>
+  </div>
+
+  <table>
+    <thead><tr><th>회원</th><th>가입일</th><th>포인트</th><th>가입경로</th><th>상태</th><th>관리</th></tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+  <div class="empty hidden" id="empty" style="text-align:center;padding:30px;color:var(--muted);">검색 결과가 없습니다.</div>
+
+  <div class="pager">
+    <button type="button" id="prevBtn">← 이전</button>
+    <span id="pageLabel">1 / 1</span>
+    <button type="button" id="nextBtn">다음 →</button>
+  </div>
+</div>
+
+<script>
+  const PROVIDER_LABEL = { local: '이메일', naver: '네이버' };
+  let currentPage = 1;
+  let currentSearch = '';
+
+  async function checkAdmin() {
+    const res = await fetch('/api/admin/me');
+    const data = await res.json();
+    if (!data.isAdmin) { location.href = '/admin-login.html'; return false; }
+    return true;
+  }
+
+  async function loadStats() {
+    const res = await fetch('/api/admin/stats');
+    const data = await res.json();
+    document.getElementById('statTotal').textContent = data.totalUsers.toLocaleString('ko-KR');
+    document.getElementById('statToday').textContent = data.todaySignups.toLocaleString('ko-KR');
+    document.getElementById('statRevenue').textContent = data.totalRevenue.toLocaleString('ko-KR') + '원';
+  }
+
+  function row(u) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${u.name || '-'}<br><span style="color:var(--muted);font-size:11px;">${u.email}</span></td>
+      <td>${u.createdAt.slice(0, 10)}</td>
+      <td>${u.pointBalance.toLocaleString('ko-KR')}P</td>
+      <td>${PROVIDER_LABEL[u.provider] || u.provider}</td>
+      <td><span class="status-badge ${u.status}">${u.status === 'suspended' ? '정지됨' : '활성'}</span></td>
+      <td class="row-actions">
+        <button type="button" class="approve-btn" data-action="points" data-id="${u.id}">포인트 조정</button>
+        <button type="button" class="${u.status === 'suspended' ? 'approve-btn' : 'reject-btn'}" data-action="toggle-status" data-id="${u.id}" data-current="${u.status}">
+          ${u.status === 'suspended' ? '정지 해제' : '정지'}
+        </button>
+      </td>
+    `;
+    return tr;
+  }
+
+  async function loadUsers() {
+    const res = await fetch(`/api/admin/users?page=${currentPage}&search=${encodeURIComponent(currentSearch)}`);
+    const data = await res.json();
+    const body = document.getElementById('tbody');
+    const empty = document.getElementById('empty');
+    body.innerHTML = '';
+    if (!data.users.length) {
+      empty.classList.remove('hidden');
+    } else {
+      empty.classList.add('hidden');
+      data.users.forEach((u) => body.appendChild(row(u)));
+    }
+    document.getElementById('pageLabel').textContent = `${data.page} / ${data.pageCount}`;
+    document.getElementById('prevBtn').disabled = data.page <= 1;
+    document.getElementById('nextBtn').disabled = data.page >= data.pageCount;
+  }
+
+  document.getElementById('searchBtn').addEventListener('click', () => {
+    currentSearch = document.getElementById('searchInput').value.trim();
+    currentPage = 1;
+    loadUsers();
+  });
+  document.getElementById('searchInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('searchBtn').click();
+  });
+  document.getElementById('prevBtn').addEventListener('click', () => { currentPage--; loadUsers(); });
+  document.getElementById('nextBtn').addEventListener('click', () => { currentPage++; loadUsers(); });
+
+  document.getElementById('tbody').addEventListener('click', async (e) => {
+    const btn = e.target.closest('button[data-action]');
+    if (!btn) return;
+    const id = btn.dataset.id;
+
+    if (btn.dataset.action === 'points') {
+      const deltaStr = prompt('조정할 포인트를 입력하세요 (지급은 양수, 차감은 음수. 예: 5000 또는 -1000)');
+      if (deltaStr === null || deltaStr.trim() === '') return;
+      const delta = Number(deltaStr);
+      if (!Number.isInteger(delta) || delta === 0) { alert('올바른 정수를 입력해주세요.'); return; }
+      const reason = prompt('조정 사유를 입력하세요 (회원에게는 보이지 않고 내부 기록용입니다)') || '관리자 수동 조정';
+      const res = await fetch(`/api/admin/users/${id}/points`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ delta, reason })
+      });
+      const data = await res.json();
+      if (!res.ok) { alert(data.error || '조정 실패'); return; }
+      loadUsers();
+      return;
+    }
+
+    if (btn.dataset.action === 'toggle-status') {
+      const next = btn.dataset.current === 'suspended' ? 'active' : 'suspended';
+      if (next === 'suspended' && !confirm('이 회원을 정지시키겠습니까? 로그인 및 서비스 이용이 즉시 차단됩니다.')) return;
+      const res = await fetch(`/api/admin/users/${id}/status`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: next })
+      });
+      const data = await res.json();
+      if (!res.ok) { alert(data.error || '처리 실패'); return; }
+      loadUsers();
+      return;
+    }
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    await fetch('/api/admin/logout', { method: 'POST' });
+    location.href = '/admin-login.html';
+  });
+
+  (async () => {
+    if (!(await checkAdmin())) return;
+    loadStats();
+    loadUsers();
+  })();
+</script>
+</body>
+</html>

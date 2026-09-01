@@ -65,6 +65,7 @@
     <div class="menu-section">
       <div class="menu-section-ttl">내 계정</div>
       <a href="/mypage.html">마이페이지</a>
+      <a href="/charge.html">포인트 충전</a>
     </div>
   </nav>
 
@@ -403,11 +404,29 @@
       const res = await fetch('/api/banners');
       const data = await res.json();
       document.querySelectorAll('.banner-slide img[data-slide]').forEach((img) => {
-        const pos = data.positions[img.dataset.slide];
-        if (pos) img.style.objectPosition = pos;
+        const cfg = data.positions[img.dataset.slide];
+        if (!cfg) return;
+        img.style.objectPosition = cfg.imagePosition;
+
+        const slide = img.closest('.banner-slide');
+        if (cfg.href) slide.setAttribute('href', cfg.href);
+        slide.style.alignItems = cfg.textVAlign === 'top' ? 'flex-start' : cfg.textVAlign === 'center' ? 'center' : 'flex-end';
+
+        const copy = slide.querySelector('.banner-copy');
+        copy.style.textAlign = cfg.textAlign || 'left';
+        const scale = Number(cfg.textScale) || 1;
+        const eyebrow = copy.querySelector('.eyebrow');
+        eyebrow.textContent = cfg.eyebrow;
+        eyebrow.style.fontSize = (11 * scale) + 'px';
+        const headline = copy.querySelector('.headline');
+        headline.textContent = cfg.headline;
+        headline.style.fontSize = (18 * scale) + 'px';
+        const price = copy.querySelector('.price');
+        price.textContent = cfg.price;
+        price.style.fontSize = (13 * scale) + 'px';
       });
     } catch (e) {
-      // 실패해도 기본 위치(50% 50%)로 그대로 보임
+      // 실패해도 기본 문구·위치(50% 50%)로 그대로 보임 — 배너용 하드코딩 값이 그대로 폴백
     }
   }
   loadBannerPositions();

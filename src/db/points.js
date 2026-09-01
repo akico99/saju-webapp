@@ -69,6 +69,21 @@ function refund(userId, amount, reason) {
   tx();
 }
 
+/** 관리자가 회원관리 화면에서 포인트를 수동으로 더하거나 뺀다(보너스 지급, 오류 정정 등). */
+function adminAdjust(userId, delta, reason) {
+  if (!Number.isInteger(delta) || delta === 0) throw new Error('조정 값이 올바르지 않습니다.');
+  const user = findById(userId);
+  if (!user) throw new Error('회원을 찾을 수 없습니다.');
+  if (delta < 0 && user.point_balance + delta < 0) throw new Error('보유 포인트보다 많이 차감할 수 없습니다.');
+
+  const tx = db.transaction(() => {
+    stmts.insertTx.run({ userId, delta, reason: reason || '관리자 수동 조정', refType: 'admin_adjust', refId: null });
+    adjustPointBalance(userId, delta);
+  });
+  tx();
+  return findById(userId).point_balance;
+}
+
 function createRequest({ userId, amountKrw, depositorName }) {
   const points = amountKrw; // 1P = 1원
   const info = stmts.insertRequest.run({ userId, amountKrw, points, depositorName: depositorName || null });
@@ -114,7 +129,7 @@ function listMyTransactions(userId) {
 }
 
 module.exports = {
-  PRICES, chargeForProduct, refund,
+  PRICES, chargeForProduct, refund, adminAdjust,
   createRequest, listMyRequests, listPendingRequests, listAllRequests,
   approveRequest, rejectRequest, listMyTransactions
 };

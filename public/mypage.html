@@ -85,39 +85,7 @@
         <span class="label">내 포인트</span>
         <span class="value"><span id="balanceValue">0</span><span class="unit">P</span></span>
       </div>
-    </div>
-
-    <div class="card">
-      <h3>포인트 충전 신청</h3>
-      <div class="deposit-note" id="depositNote">불러오는 중...</div>
-      <div class="chip-row">
-        <button type="button" class="chip" data-amount="10000">10,000원</button>
-        <button type="button" class="chip" data-amount="30000">30,000원</button>
-        <button type="button" class="chip" data-amount="50000">50,000원</button>
-        <button type="button" class="chip" data-amount="100000">100,000원</button>
-      </div>
-      <form id="chargeForm">
-        <div class="field">
-          <label>충전 금액(원)</label>
-          <input type="number" name="amountKrw" id="amountInput" min="1000" step="1000" required>
-        </div>
-        <div class="field">
-          <label>입금자명 (본인 이름과 다르면 꼭 입력)</label>
-          <input type="text" name="depositorName" placeholder="예: 홍길동">
-        </div>
-        <button type="submit" class="primary">충전 신청하기</button>
-      </form>
-    </div>
-
-    <div class="card">
-      <h3>충전 신청 내역</h3>
-      <div class="table-scroll">
-        <table id="requestTable">
-          <thead><tr><th>일시</th><th>금액</th><th>상태</th></tr></thead>
-          <tbody id="requestBody"></tbody>
-        </table>
-      </div>
-      <div class="empty hidden" id="requestEmpty">아직 신청 내역이 없습니다.</div>
+      <a href="/charge.html" class="btn-primary" style="display:block;text-align:center;text-decoration:none;box-sizing:border-box;">충전하러 가기 →</a>
     </div>
 
     <div class="card">
@@ -210,37 +178,10 @@
     }
   }
 
-  async function loadDepositInfo() {
-    const res = await fetch('/api/points/deposit-info');
-    const data = await res.json();
-    document.getElementById('depositNote').innerHTML =
-      `<b>입금 계좌:</b> ${data.account}<br><b>포인트 비율:</b> ${data.pointRate}<br>${data.notice}`;
-  }
-
-  const STATUS_LABEL = { pending: '승인 대기', approved: '승인 완료', rejected: '거절됨' };
-
   async function loadMine() {
     const res = await fetch('/api/points/mine');
     const data = await res.json();
     document.getElementById('balanceValue').textContent = data.balance.toLocaleString('ko-KR');
-
-    const body = document.getElementById('requestBody');
-    const empty = document.getElementById('requestEmpty');
-    body.innerHTML = '';
-    if (!data.requests.length) {
-      empty.classList.remove('hidden');
-    } else {
-      empty.classList.add('hidden');
-      data.requests.forEach((r) => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${r.created_at.slice(0, 16).replace('T', ' ')}</td>
-          <td>${Number(r.amount_krw).toLocaleString('ko-KR')}원</td>
-          <td><span class="status ${r.status}">${STATUS_LABEL[r.status] || r.status}</span></td>
-        `;
-        body.appendChild(tr);
-      });
-    }
   }
 
   const ORDER_STATUS_CLASS = { pending: 'pending', done: 'approved', error: 'rejected' };
@@ -281,33 +222,6 @@
     }
   }
 
-  document.querySelectorAll('.chip').forEach((chip) => {
-    chip.addEventListener('click', () => {
-      document.querySelectorAll('.chip').forEach((c) => c.classList.remove('active'));
-      chip.classList.add('active');
-      document.getElementById('amountInput').value = chip.dataset.amount;
-    });
-  });
-
-  document.getElementById('chargeForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const fd = new FormData(e.target);
-    try {
-      const res = await fetch('/api/points/request', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amountKrw: fd.get('amountKrw'), depositorName: fd.get('depositorName') })
-      });
-      const data = await res.json();
-      if (!res.ok) { showToast(data.error || '신청 실패'); return; }
-      showToast('충전 신청 완료 — 입금 확인 후 포인트가 지급됩니다.');
-      e.target.reset();
-      document.querySelectorAll('.chip').forEach((c) => c.classList.remove('active'));
-      loadMine();
-    } catch (err) {
-      showToast('요청 실패: ' + err.message);
-    }
-  });
-
   document.getElementById('logoutBtn').addEventListener('click', async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
     location.href = '/';
@@ -319,7 +233,6 @@
     document.getElementById('accountEmail').textContent = user.email;
     fillBirthForm(user);
     loadFortune();
-    loadDepositInfo();
     loadMine();
     loadOrders();
   })();

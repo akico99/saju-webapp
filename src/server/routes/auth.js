@@ -52,6 +52,10 @@ router.post('/auth/login', async (req, res) => {
   const ok = await bcrypt.compare(password || '', row.password_hash);
   if (!ok) return res.status(401).json({ error: '이메일 또는 비밀번호가 올바르지 않습니다.' });
 
+  if (row.status === 'suspended') {
+    return res.status(403).json({ error: '이용이 제한된 계정입니다. 문의: sooky2001@gmail.com' });
+  }
+
   req.session.userId = row.id;
   res.json({ user: users.toPublicUser(row) });
 });
@@ -135,6 +139,10 @@ router.get('/auth/naver/callback', async (req, res) => {
           provider: 'naver', providerId: naverProfile.id
         });
       }
+    }
+
+    if (user.status === 'suspended') {
+      return res.redirect('/login.html?error=' + encodeURIComponent('이용이 제한된 계정입니다. 문의: sooky2001@gmail.com'));
     }
 
     req.session.userId = user.id;
