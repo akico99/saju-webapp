@@ -15,6 +15,11 @@
   </header>
   <main>
 
+    <div class="card">
+      <h3>계정 정보</h3>
+      <p class="hint">로그인 이메일: <span id="accountEmail">-</span></p>
+    </div>
+
     <div class="card fortune-card" id="fortuneCard">
       <div class="eyebrow" id="fortuneDate">오늘의 운세</div>
       <h2 id="fortuneTitle">불러오는 중...</h2>
@@ -311,6 +316,7 @@
   (async () => {
     const user = await requireLogin();
     if (!user) return;
+    document.getElementById('accountEmail').textContent = user.email;
     fillBirthForm(user);
     loadFortune();
     loadDepositInfo();
