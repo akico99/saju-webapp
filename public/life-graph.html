@@ -18,7 +18,7 @@
   #lgResult { padding: 0 20px; display: none; }
 
   .lg-headline { margin-bottom: 4px; }
-  .lg-headline .range { font-size: 13px; color: var(--muted); font-weight: 600; }
+  .lg-headline .range { font-size: 17px; color: var(--ink); font-weight: 800; }
   .lg-headline .score-row { display: flex; align-items: baseline; gap: 8px; margin-top: 4px; }
   .lg-headline .score { font-size: 40px; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
   .lg-headline .trend { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 2px; }
@@ -512,7 +512,7 @@
   // 다 화면에는 있는데 그래프 자체엔 없음) — 그래서 지금 화면에 떠 있는 "몇 세, 몇 점,
   // 무슨 뜻인지" 텍스트까지 같이 카드 형태로 그려서 내보낸다. 정적 이미지라 마우스를
   // 올려볼 수 없으니, 지금 선택된 지점의 정보를 아예 이미지 안에 박아넣는 방식.
-  const CARD_W = 640, CARD_H = 760, CARD_PAD = 36;
+  const CARD_W = 640, CARD_H = 790, CARD_PAD = 36;
 
   function drawRoundRect(ctx, x, y, w, h, r) {
     ctx.beginPath();
@@ -541,6 +541,8 @@
     // 스냅샷으로 떠두고, 이후로는 전부 이 스냅샷만 쓴다 — 중간에 뭐가 바뀌든 영향 없음.
     const snapshot = {
       selected,
+      mode,
+      modeLabel: mode === 'year' ? '1년 단위 · 세운' : '10년 단위 · 대운',
       rangeText: document.getElementById('lgRange').textContent,
       scoreText: document.getElementById('lgScore').textContent,
       scoreColor: document.getElementById('lgScore').style.color || '#14171C',
@@ -571,12 +573,28 @@
     ctx.fillStyle = '#14171C';
     ctx.font = '800 22px "Malgun Gothic", sans-serif';
     ctx.fillText('내 인생 그래프', CARD_PAD, cursorY);
+
+    // 공유받은 사람은 이게 10년 단위(대운)인지 1년 단위(세운)인지 전혀 모른 채 "을미대운"
+    // 같은 한자어만 보게 된다 — 제목 옆에 배지로 단위를 못 박아서 최소한의 맥락을 준다.
+    ctx.font = '700 11px "Malgun Gothic", sans-serif';
+    const badgeText = snapshot.modeLabel;
+    const badgeW = ctx.measureText(badgeText).width + 20;
+    const badgeH = 22;
+    const badgeX = CARD_W - CARD_PAD - badgeW;
+    const badgeY = cursorY - 16;
+    ctx.fillStyle = '#EEF1F5';
+    drawRoundRect(ctx, badgeX, badgeY, badgeW, badgeH, 11);
+    ctx.fill();
+    ctx.fillStyle = '#5B6472';
+    ctx.textAlign = 'center';
+    ctx.fillText(badgeText, badgeX + badgeW / 2, badgeY + 15);
+    ctx.textAlign = 'left';
     cursorY += 28;
 
-    ctx.fillStyle = '#5B6472';
-    ctx.font = '600 13px "Malgun Gothic", sans-serif';
+    ctx.fillStyle = '#14171C';
+    ctx.font = '800 17px "Malgun Gothic", sans-serif';
     ctx.fillText(snapshot.rangeText, CARD_PAD, cursorY);
-    cursorY += 50;
+    cursorY += 52;
 
     ctx.fillStyle = snapshot.scoreColor;
     ctx.font = '800 46px "Malgun Gothic", sans-serif';
@@ -586,7 +604,14 @@
     ctx.fillStyle = '#14171C';
     ctx.font = '500 15px "Malgun Gothic", sans-serif';
     ctx.fillText(snapshot.descText, CARD_PAD, cursorY);
-    cursorY += 34;
+    cursorY += 24;
+
+    // 이 카드를 링크나 메신저로 받은 사람은 사주를 전혀 몰라도 이해할 수 있어야 한다 —
+    // 점수·단위가 무슨 뜻인지 한 줄로 짧게 못 박아둔다.
+    ctx.fillStyle = '#8A93A0';
+    ctx.font = '500 11.5px "Malgun Gothic", sans-serif';
+    ctx.fillText('※ 점수는 이 시기 기운이 타고난 사주와 얼마나 잘 맞는지를 나타내요', CARD_PAD, cursorY);
+    cursorY += 26;
 
     const svgBlob = new Blob([snapshot.svgString], { type: 'image/svg+xml;charset=utf-8' });
     const svgUrl = URL.createObjectURL(svgBlob);
