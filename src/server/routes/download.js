@@ -10,7 +10,11 @@ const router = express.Router();
 const NAME_BY_PRODUCT = {
   full: '길잡이여울_평생사주.pdf',
   compat: '길잡이여울_궁합리포트.pdf',
-  quick: '길잡이여울_빠른리딩.pdf'
+  quick: '길잡이여울_빠른리딩.pdf',
+  date_select_moving: '길잡이여울_이사리포트.pdf',
+  date_select_opening: '길잡이여울_개업리포트.pdf',
+  date_select_wedding: '길잡이여울_결혼리포트.pdf',
+  date_select_birth: '길잡이여울_임신출산리포트.pdf'
 };
 
 router.get('/download/:jobId', (req, res) => {

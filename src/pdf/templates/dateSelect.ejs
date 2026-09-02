@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title><%= title %></title>
+<style><%- reportCss %></style>
+<style>
+  .quick-header { text-align: center; padding-bottom: 10mm; border-bottom: 1px solid var(--line); margin-bottom: 10mm; }
+  .quick-header .eyebrow { font-size: 10pt; letter-spacing: 0.24em; color: var(--gold); margin-bottom: 6mm; }
+  .quick-header h1 { font-family: 'Batang','바탕',serif; font-size: 22pt; color: var(--star); margin: 0 0 4mm; }
+  .quick-header .meta { font-size: 10pt; color: var(--muted); }
+  .quick-header .meta b { color: var(--gold); }
+  .best-box {
+    border: 1px solid var(--gold-dim); border-radius: 4px; padding: 6mm 8mm;
+    margin: 0 0 10mm; text-align: center;
+  }
+  .best-box .label { font-size: 9pt; letter-spacing: .08em; color: var(--muted); margin-bottom: 2mm; }
+  .best-box .value { font-family: 'Batang','바탕',serif; font-size: 17pt; color: var(--gold); }
+  .ds-heading {
+    font-family: 'Batang','바탕',serif; font-size: 13.5pt; color: var(--gold);
+    margin: 9mm 0 1mm; letter-spacing: .02em;
+  }
+  .ds-heading:first-of-type { margin-top: 0; }
+</style>
+</head>
+<body>
+
+<section class="chapter">
+  <div class="quick-header">
+    <div class="eyebrow"><%= eyebrow %></div>
+    <h1><%= title %></h1>
+    <div class="meta"><%- metaLine %></div>
+  </div>
+
+  <% if (bestValue) { %>
+  <div class="best-box">
+    <div class="label"><%= bestLabel %></div>
+    <div class="value"><%= bestValue %></div>
+  </div>
+  <% } %>
+
+  <% sections.forEach(function(s) { %>
+    <% if (s.heading) { %><p class="ds-heading"><%= s.heading %></p><% } %>
+    <p><%- renderMarkup(s.body) %></p>
+  <% }) %>
+
+  <p class="disclaimer">
+    이 리포트는 명리학적 통계 경향에 근거한 참고 자료이며, 의학적·법적·재정적 조언을 대체하지 않습니다.
+  </p>
+  <div class="imprint" style="margin-top:6mm; text-align:center;">길잡이 여울</div>
+</section>
+
+<script>window.__chartsReady = true;</script>
+</body>
+</html>
