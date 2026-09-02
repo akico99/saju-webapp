@@ -7,13 +7,17 @@
    경로라 본문에는 적용되지 않았다).
 
    해결: 리포에 실제로 들어있는 나눔고딕(본문)·나눔명조(제목, Batang 대체) TTF 파일을
-   @font-face로 파일 경로째 CSS 맨 앞에 박아 넣는다. Puppeteer는 로컬 HTML 문자열을
-   page.setContent()로 그대로 렌더링하므로 상대경로를 못 쓰고, file:// 절대경로가 필요하다
-   (url.pathToFileURL이 윈도우/리눅스 경로 차이를 알아서 처리해준다). 시스템에 뭐가 깔려
-   있든 상관없이 항상 같은 폰트로 렌더링되므로, 개발 PC와 배포 서버의 결과물도 동일해진다. */
+   @font-face로 CSS 맨 앞에 박아 넣는다.
+
+   1차 시도(file:// 절대경로)는 배포 서버에서도 여전히 실패했다 — page.setContent()로
+   채운 문서는 about:blank 취급이라, Chromium이 그런 "불투명 출처" 문서에서의 file://
+   리소스 로딩을 보안상 차단한다(로컬 Windows에서 안 걸린 이유는 요청이 막혀도 시스템에
+   깔린 맑은 고딕이 대체 폰트로 한글을 그려줘서 증상이 가려졌을 뿐, 실제로는 그쪽도
+   막혀 있었다). 파일시스템 접근 자체를 거치지 않도록 폰트를 base64 data: URI로 CSS에
+   직접 박아 넣는다 — 출처 제약을 받지 않는 인라인 데이터라 어떤 환경에서도 동일하게
+   로드된다. */
 const fs = require('fs');
 const path = require('path');
-const { pathToFileURL } = require('url');
 
 const CSS_PATH = path.join(__dirname, 'templates', 'report.css');
 const GOTHIC_PATH = path.join(__dirname, 'fonts', 'NanumGothic-Regular.ttf');
@@ -22,10 +26,14 @@ const MYEONGJO_PATH = path.join(__dirname, 'fonts', 'NanumMyeongjo-Regular.ttf')
 let cachedFontFaces = null;
 let cachedFull = null;
 
+function toDataUri(fontPath) {
+  return `data:font/truetype;base64,${fs.readFileSync(fontPath).toString('base64')}`;
+}
+
 function getFontFaceCss() {
   if (cachedFontFaces) return cachedFontFaces;
-  const gothicUrl = pathToFileURL(GOTHIC_PATH).href;
-  const myeongjoUrl = pathToFileURL(MYEONGJO_PATH).href;
+  const gothicUrl = toDataUri(GOTHIC_PATH);
+  const myeongjoUrl = toDataUri(MYEONGJO_PATH);
   cachedFontFaces = `
 @font-face { font-family: 'ReportGothic'; src: url('${gothicUrl}') format('truetype'); font-weight: normal; font-style: normal; }
 @font-face { font-family: 'ReportMyeongjo'; src: url('${myeongjoUrl}') format('truetype'); font-weight: normal; font-style: normal; }
