@@ -15,13 +15,28 @@
    깔린 맑은 고딕이 대체 폰트로 한글을 그려줘서 증상이 가려졌을 뿐, 실제로는 그쪽도
    막혀 있었다). 파일시스템 접근 자체를 거치지 않도록 폰트를 base64 data: URI로 CSS에
    직접 박아 넣는다 — 출처 제약을 받지 않는 인라인 데이터라 어떤 환경에서도 동일하게
-   로드된다. */
+   로드된다.
+
+   2차 시도: 나눔고딕/명조(Google Fonts OFL 배포판, 한글 전용 서브셋)는 한자 글리프가
+   아예 없어 일간·오행 표기(甲乙, 木火土金水 등)가 빈칸으로 나왔다. CJK 통합 한자를
+   전부 포함하는 Noto Sans KR(10MB+)로 전체 교체를 시도했더니, 이번엔 배포 서버에서
+   그 큰 폰트를 파싱·래스터라이즈하는 데 몇 분씩 걸려 사실상 요청이 멈춰버렸다(로컬은
+   문제없었지만 배포 서버 사양에서는 감당이 안 됨).
+
+   최종 해결: 이 앱이 실제로 쓰는 한자는 십간·십이지·오행·격국·신살 용어 등 정해진
+   ~100자뿐이다(scripts/extract-hanja로 소스 전체를 스캔해 뽑음). Noto Sans KR에서
+   그 글자들만 fonttools로 서브셋한 초경량 폰트(수십 KB)를 'ReportHanja'라는 별도
+   family로 등록하고, 기존 폰트 스택 맨 뒤에 폴백으로만 붙인다 — 나눔고딕/명조가 이미
+   갖고 있는 한글은 그대로 쓰고, 그 폰트들에 없는 한자만 이 서브셋 폰트가 글자 단위로
+   대신 채워준다(CSS font-family 폴백은 폰트 전체가 아니라 글자마다 개별적으로
+   동작한다). 완전판 폰트를 통째로 바꾸는 것보다 훨씬 가볍고 안전하다. */
 const fs = require('fs');
 const path = require('path');
 
 const CSS_PATH = path.join(__dirname, 'templates', 'report.css');
 const GOTHIC_PATH = path.join(__dirname, 'fonts', 'NanumGothic-Regular.ttf');
 const MYEONGJO_PATH = path.join(__dirname, 'fonts', 'NanumMyeongjo-Regular.ttf');
+const HANJA_PATH = path.join(__dirname, 'fonts', 'ReportHanja.ttf');
 
 let cachedFontFaces = null;
 let cachedFull = null;
@@ -34,9 +49,12 @@ function getFontFaceCss() {
   if (cachedFontFaces) return cachedFontFaces;
   const gothicUrl = toDataUri(GOTHIC_PATH);
   const myeongjoUrl = toDataUri(MYEONGJO_PATH);
+  const hanjaUrl = toDataUri(HANJA_PATH);
   cachedFontFaces = `
 @font-face { font-family: 'ReportGothic'; src: url('${gothicUrl}') format('truetype'); font-weight: normal; font-style: normal; }
 @font-face { font-family: 'ReportMyeongjo'; src: url('${myeongjoUrl}') format('truetype'); font-weight: normal; font-style: normal; }
+@font-face { font-family: 'ReportGothic'; src: url('${hanjaUrl}') format('truetype'); font-weight: normal; font-style: normal; unicode-range: U+4E00-9FFF; }
+@font-face { font-family: 'ReportMyeongjo'; src: url('${hanjaUrl}') format('truetype'); font-weight: normal; font-style: normal; unicode-range: U+4E00-9FFF; }
 `;
   return cachedFontFaces;
 }
