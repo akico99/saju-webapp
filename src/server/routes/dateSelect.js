@@ -16,6 +16,8 @@ const {
   STEM_KO, BRANCH_KO, STEM_OHAENG, BRANCH_MAIN_STEM, PRODUCES, CONTROLS,
   getShipsin, SHIPSIN_KO, SHIPSIN_GROUP
 } = require('../../engine/constants');
+const { classifyPair } = require('../../engine/compatibility');
+const { generateDateSelectOverview } = require('../../llm/dateSelectReading');
 const points = require('../../db/points');
 const { requireAuth } = require('../middleware/auth');
 
@@ -103,6 +105,18 @@ function occasionShipsinInfo(occasionKey, group) {
   return { score, phrase };
 }
 
+// 실제 택일에서 많이 보는 기준 하나 더: 후보일의 지지가 신청자 본인의 일지(태어난 날의
+// 지지, 그 사람을 상징하는 자리)와 합을 이루는지 충돌하는지. 오행-용신/십신 궁합과는
+// 별개의 근거라서, 있을 때만 살짝 가감하고 문장에 덧붙인다(없으면 조용히 생략).
+function dayBranchRelationInfo(personDayBranch, candidateDayBranch) {
+  const rel = classifyPair(personDayBranch, candidateDayBranch);
+  if (!rel) return { bonus: 0, phrase: '' };
+  if (rel.type === 'yukhap') return { bonus: 6, phrase: '게다가 이 날은 당신 사주(태어난 날)와도 합을 이루어 조화롭게 흘러가요.' };
+  if (rel.type === 'samhap') return { bonus: 4, phrase: '게다가 이 날은 당신 사주(태어난 날)와 흐름이 잘 통하는 날이에요.' };
+  if (rel.type === 'chung') return { bonus: -10, phrase: '다만 이 날은 당신 사주(태어난 날)와 부딪히는 기운이 있어 조금 신경 쓰이는 날이에요.' };
+  return { bonus: 0, phrase: '' };
+}
+
 function ganZhiOhaengScore(ganZhi, yongshinMain) {
   if (!ganZhi || !yongshinMain) return 50;
   const stemOhaeng = STEM_OHAENG[ganZhi[0]]?.ohaeng;
@@ -129,7 +143,7 @@ router.get('/date-select/occasions', (req, res) => {
   res.json({ occasions: OCCASIONS });
 });
 
-router.post('/date-select', requireAuth, (req, res) => {
+router.post('/date-select', requireAuth, async (req, res) => {
   const occasionKey = req.body.occasion;
   const occasion = OCCASIONS[occasionKey];
   if (!occasion) return res.status(400).json({ error: '알 수 없는 종류입니다.' });
@@ -143,6 +157,9 @@ router.post('/date-select', requireAuth, (req, res) => {
   // 모드별로 필요한 사람 정보를 미리 계산해둔다 — 여기서 실패하면 포인트 차감 전에 걸러야 한다.
   let yongshinMain = null;
   let personDayStem = null;
+  let personDayBranch = null;
+  let personGanZhiKo = null;
+  let personGender = null;
   let parentDayBranches = [];
   if (occasion.mode === 'person') {
     const personInput = parsePerson(req.body, '');
@@ -151,6 +168,9 @@ router.post('/date-select', requireAuth, (req, res) => {
       const personEngine = computeSaju(personInput);
       yongshinMain = personEngine.yongshin.final.main;
       personDayStem = personEngine.palja.dayPillar.stem;
+      personDayBranch = personEngine.palja.dayPillar.branch;
+      personGanZhiKo = (STEM_KO[personDayStem] || '') + (BRANCH_KO[personDayBranch] || '');
+      personGender = personInput.gender;
     } catch (e) {
       return res.status(400).json({ error: '명식 계산 실패: ' + e.message });
     }
@@ -215,18 +235,23 @@ router.post('/date-select', requireAuth, (req, res) => {
         const shipsinGroup = SHIPSIN_GROUP[dayShipsinKo] || '비겁';
         const { score: occasionScore, phrase: occasionPhrase } = occasionShipsinInfo(occasionKey, shipsinGroup);
 
-        score = Math.max(5, Math.min(95, Math.round(baseScore * 0.5 + occasionScore * 0.5)));
+        // 세 번째 근거: 후보일이 신청자 본인의 일지(태어난 날)와 합/충을 이루는지.
+        const { bonus: branchBonus, phrase: branchPhrase } = dayBranchRelationInfo(personDayBranch, dayBranch);
+
+        score = Math.max(5, Math.min(95, Math.round(baseScore * 0.5 + occasionScore * 0.5) + branchBonus));
 
         const dayPhrase = relationPhrase(dayOhaeng, yongshinMain);
         const hourPhrase = relationPhrase(hourOhaeng, yongshinMain);
         const detailText = dayOhaeng === hourOhaeng
           ? `날과 시 모두 ${OHAENG_KO[dayOhaeng] || dayOhaeng} 기운이에요. ${dayPhrase}.`
           : `날의 기운(${OHAENG_KO[dayOhaeng] || dayOhaeng})은 ${dayPhrase}. 시의 기운(${OHAENG_KO[hourOhaeng] || hourOhaeng})은 ${hourPhrase}.`;
-        reasonText = `${verdictOf(score)} ${detailText} ${occasionPhrase}`;
+        reasonText = `${verdictOf(score)} ${detailText} ${occasionPhrase}${branchPhrase ? ' ' + branchPhrase : ''}`;
       } else {
         score = balanceScoreOf(engineResult.counts.ohaeng);
         const clashesWithParent = parentDayBranches.some((pb) => isChung(dayBranch, pb));
+        const harmoniesWithParent = parentDayBranches.some((pb) => classifyPair(pb, dayBranch)?.type === 'yukhap');
         if (clashesWithParent) score -= 25;
+        if (harmoniesWithParent) score += 8;
         score = Math.max(5, Math.min(95, score));
         const lackingCount = engineResult.counts.lacking.length;
         const detailText = lackingCount === 0
@@ -234,6 +259,7 @@ router.post('/date-select', requireAuth, (req, res) => {
           : `사주에 ${engineResult.counts.lacking.map((k) => OHAENG_KO[k] || k).join('·')} 기운이 비어있어서 조금 치우친 사주예요.`;
         reasonText = `${verdictOf(score)} ${detailText}`;
         if (clashesWithParent) reasonText += ' 다만 부모님 사주와 부딪히는 부분이 있어요.';
+        if (harmoniesWithParent) reasonText += ' 게다가 부모님 사주와도 합을 이루는 날이에요.';
       }
 
       candidates.push({
@@ -245,7 +271,27 @@ router.post('/date-select', requireAuth, (req, res) => {
   }
 
   candidates.sort((a, b) => b.score - a.score);
-  res.json({ occasion: occasionKey, occasionLabel: occasion.label, candidates: candidates.slice(0, 8) });
+  const topCandidates = candidates.slice(0, 8);
+
+  // 결정론적 채점은 이미 끝났다 — 그 결과를 근거로 사람이 읽는 총평 한 단락을 AI로 붙인다.
+  // 990원 빠른 리딩과 동일한 가치(개인화된 서술형 해설)를 여기서도 제공하는 부분.
+  // 실패해도 핵심 상품(후보 목록)은 이미 완성돼 있으니 총평 없이 그대로 응답한다.
+  let overview = null;
+  try {
+    overview = await generateDateSelectOverview({
+      mode: occasion.mode,
+      occasionLabel: occasion.label,
+      question: occasion.question,
+      gender: personGender,
+      personGanZhiKo,
+      yongshinOhaengKo: OHAENG_KO[yongshinMain] || yongshinMain,
+      top: topCandidates.slice(0, 3)
+    });
+  } catch (e) {
+    overview = null;
+  }
+
+  res.json({ occasion: occasionKey, occasionLabel: occasion.label, overview, candidates: topCandidates });
 });
 
 module.exports = router;

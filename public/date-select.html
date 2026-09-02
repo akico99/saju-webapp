@@ -30,6 +30,14 @@
 
   .bt-optional { margin: 20px 0 4px; }
   .bt-optional summary { font-size: 13px; font-weight: 700; color: var(--ink); cursor: pointer; padding: 4px 0; }
+
+  .ds-overview {
+    background: var(--accent-soft); border: 1px solid var(--accent); border-radius: var(--radius-card);
+    padding: 16px 18px; margin-bottom: 16px;
+  }
+  .ds-overview .ttl { font-size: 12px; font-weight: 800; color: var(--accent); margin-bottom: 6px; }
+  .ds-overview .body { font-size: 13.5px; color: var(--ink); line-height: 1.8; white-space: pre-wrap; }
+  .ds-overview .body strong { color: var(--accent); }
 </style>
 </head>
 <body>
@@ -151,6 +159,10 @@
 
     <section class="bt-result" id="dsResult">
       <div class="section-head"><h2 id="resultTtl">이런 날짜는 어떠세요</h2></div>
+      <div class="ds-overview hidden" id="dsOverview">
+        <div class="ttl">AI 총평</div>
+        <div class="body" id="dsOverviewBody"></div>
+      </div>
       <div id="dsList"></div>
     </section>
   </main>
@@ -197,11 +209,26 @@
     selectOccasion(OCCASION_META[preset] ? preset : 'moving');
   })();
 
+  const submitBtn = document.getElementById('submitBtn');
   function setFormBusy(busy) {
     form.querySelectorAll('input, select, button').forEach((el) => { el.disabled = busy; });
+    submitBtn.textContent = busy ? '날짜 계산하고 AI 총평 쓰는 중...' : '좋은 날짜 찾기';
+  }
+
+  function escapeHtml(s) {
+    return s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
   }
 
   function render(data) {
+    const overviewBox = document.getElementById('dsOverview');
+    if (data.overview) {
+      const html = escapeHtml(data.overview).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      document.getElementById('dsOverviewBody').innerHTML = html;
+      overviewBox.classList.remove('hidden');
+    } else {
+      overviewBox.classList.add('hidden');
+    }
+
     const list = document.getElementById('dsList');
     list.innerHTML = data.candidates.map((c, i) => {
       const d = new Date(c.year, c.month - 1, c.day);
