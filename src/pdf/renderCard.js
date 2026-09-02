@@ -40,6 +40,11 @@ async function renderCardImage(html, outputPath) {
     await page.setViewport({ width: CARD_WIDTH, height: CARD_HEIGHT });
     await page.setContent(html, { waitUntil: 'load' });
     await page.waitForFunction('window.__chartReady === true', { timeout: 10000 });
+    // renderPdf.js와 같은 이유 — @font-face 폰트 로드 완료를 기다리지 않으면 배포 서버
+    // (Linux, 한글 대체 폰트 없음)에서 한글이 안 보이는 카드가 나온다.
+    await page.evaluate(async () => {
+      await document.fonts.ready;
+    });
     await page.screenshot({ path: outputPath, type: 'png' });
   } finally {
     await browser.close();

@@ -61,6 +61,14 @@ async function renderPdf(html, outputPath, person = {}) {
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: 'load' });
     await page.waitForFunction('window.__chartsReady === true', { timeout: 10000 });
+    // `load` 이벤트는 @font-face로 넣은 커스텀 폰트의 다운로드 완료를 보장하지 않는다.
+    // 로컬(Windows)은 폰트가 안 떴어도 시스템 대체 폰트(맑은 고딕 등)가 한글을 그려줘서
+    // 문제가 안 보였지만, 배포 서버(Linux)는 대체 폰트에 한글 글리프가 전혀 없어서
+    // 이 레이스에서 지면 텍스트는 있는데 글자만 안 그려지는(복붙은 되는데 안 보이는)
+    // 현상이 났다. document.fonts.ready로 실제 로드 완료를 기다린다.
+    await page.evaluate(async () => {
+      await document.fonts.ready;
+    });
 
     pdfBytes = await page.pdf({
       format: 'A4',
