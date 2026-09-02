@@ -329,6 +329,18 @@ h1 { font-size: 20px; font-weight: 800; margin: 0 0 4px; letter-spacing: -0.01em
 .tile.full .glyph svg { width: 26px; height: 26px; }
 .tile.full .info { flex: 1; }
 
+/* 아이콘 대신 사진/일러스트를 넣는 타일 — /public/tiles/*.png 채워 넣으면 바로 반영됨 */
+.tile-img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; border-radius: 10px; background: var(--surface-2); display: block; }
+
+/* ---------- 날짜 선택(택일) 미니 그리드 ---------- */
+.ds-mini-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.ds-mini {
+  display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 16px 4px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card);
+  text-decoration: none; color: var(--ink); font-size: 12px; font-weight: 700;
+}
+.ds-mini .emoji { font-size: 22px; }
+
 /* ---------- 칩 ---------- */
 .topic-panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); padding: 16px; margin-top: 12px; }
 .topic-panel .ttl { font-size: 12.5px; font-weight: 700; color: var(--ink); margin-bottom: 10px; }

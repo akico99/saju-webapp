@@ -19,6 +19,7 @@ const bannersRouter = require('./routes/banners');
 const lifeGraphRouter = require('./routes/lifeGraph');
 const newTopicsRouter = require('./routes/newTopics');
 const profilesRouter = require('./routes/profiles');
+const dateSelectRouter = require('./routes/dateSelect');
 
 const app = express();
 app.use(express.json());
@@ -46,5 +47,6 @@ app.use('/api', bannersRouter);
 app.use('/api', lifeGraphRouter);
 app.use('/api', newTopicsRouter);
 app.use('/api', profilesRouter);
+app.use('/api', dateSelectRouter);
 
 module.exports = app;

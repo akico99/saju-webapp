@@ -7,7 +7,8 @@ const { adjustPointBalance, findById } = require('./users');
 // 화면 표시용일 뿐 절대 신뢰하지 않는다(가격 위조 방지).
 const PRICES = {
   quick: 990, compat: 4900, full: 14900,
-  career_timing: 990, reunion: 990, birth_timing: 2900
+  career_timing: 990, reunion: 990, birth_timing: 2900,
+  date_select: 2900
 };
 
 const stmts = {
