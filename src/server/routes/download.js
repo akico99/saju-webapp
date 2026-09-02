@@ -14,7 +14,10 @@ const NAME_BY_PRODUCT = {
   date_select_moving: '길잡이여울_이사리포트.pdf',
   date_select_opening: '길잡이여울_개업리포트.pdf',
   date_select_wedding: '길잡이여울_결혼리포트.pdf',
-  date_select_birth: '길잡이여울_임신출산리포트.pdf'
+  date_select_birth: '길잡이여울_임신출산리포트.pdf',
+  life_topic_compat: '길잡이여울_궁합운리포트.pdf',
+  life_topic_wealth: '길잡이여울_재물운리포트.pdf',
+  life_topic_health: '길잡이여울_건강운리포트.pdf'
 };
 
 router.get('/download/:jobId', (req, res) => {

@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>사주보는 수달 — 궁금한 사주</title>
+<link rel="stylesheet" href="/theme.css">
+<style>
+  .ds-icon-badge { width: 52px; height: 52px; border-radius: 16px; background: var(--accent-soft);
+    display: flex; align-items: center; justify-content: center; margin-bottom: 8px; }
+  .ds-icon-badge svg { width: 28px; height: 28px; color: var(--accent); }
+
+  .ds-summary {
+    background: var(--ink); color: #fff; border-radius: var(--radius-card);
+    padding: 20px 20px; margin-bottom: 16px;
+  }
+  .ds-summary .label { font-size: 11.5px; opacity: .75; margin-bottom: 4px; }
+  .ds-summary .date { font-size: 19px; font-weight: 800; }
+  .ds-summary .sub { font-size: 12.5px; opacity: .8; margin-top: 4px; }
+
+  .ds-report { padding: 28px 20px 24px; margin-top: 8px; border-top: 1px solid var(--line); display: none; }
+  .ds-report .body { font-size: 14.5px; color: var(--ink); line-height: 1.9; white-space: pre-wrap; }
+  .ds-report .body strong { color: var(--accent); }
+
+  .ds-download {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card);
+    padding: 14px 16px; margin-top: 20px;
+  }
+  .ds-download .txt { font-size: 12.5px; color: var(--muted); }
+  .ds-download a.btn-download {
+    flex-shrink: 0; background: var(--ink); color: #fff; text-decoration: none;
+    font-size: 13px; font-weight: 700; padding: 9px 16px; border-radius: var(--radius-pill);
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <a class="back" href="/">←</a>
+    <div class="ttl" id="pageTtl">궁금한 사주</div>
+  </header>
+  <main>
+    <div class="ds-icon-badge" id="dsBadge"></div>
+    <h1 id="dsH1">궁합운</h1>
+    <p class="lead" id="dsLead"></p>
+
+    <div class="point-notice" id="pointNotice">가격 확인 중...</div>
+
+    <form id="dsForm">
+      <input type="hidden" name="topic" id="topicInput" value="compat">
+
+      <div id="statusField" class="hidden">
+        <div class="field">
+          <label>현재 관계 상태</label>
+          <select name="relationshipStatus" id="relationshipStatus">
+            <option value="solo">솔로</option>
+            <option value="seeing">썸</option>
+            <option value="dating">연애 중</option>
+            <option value="breaking">이별 중</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="incomeFields" class="hidden">
+        <div class="field">
+          <label>현재 주수입원</label>
+          <select name="incomeSource">
+            <option value="월급">월급</option>
+            <option value="사업">사업</option>
+            <option value="프리랜서">프리랜서</option>
+            <option value="투자">투자</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>가장 관심 있는 분야</label>
+          <select name="interestArea">
+            <option value="저축">저축</option>
+            <option value="부동산">부동산</option>
+            <option value="주식">주식</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="concernField" class="hidden">
+        <div class="field">
+          <label>요즘 가장 고민인 부분</label>
+          <select name="concern">
+            <option value="다이어트">다이어트</option>
+            <option value="만성피로">만성피로</option>
+            <option value="수면·스트레스">수면·스트레스</option>
+            <option value="없음">없음</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="personFields">
+        <div class="profile-picker hidden" id="profilePicker"></div>
+        <div class="section-title" style="margin-top:0;">본인 정보</div>
+        <div class="field">
+          <label>이름 <span style="font-weight:400;color:var(--muted);">(리포트에 표시돼요)</span></label>
+          <input type="text" name="name" placeholder="이름" maxlength="20">
+        </div>
+        <div class="field-row">
+          <div class="field"><label>성별</label>
+            <select name="gender"><option value="남">남자</option><option value="여">여자</option></select>
+          </div>
+          <div class="field"><label>양력/음력</label>
+            <select name="calendar"><option value="양력">양력</option><option value="음력">음력</option></select>
+          </div>
+        </div>
+        <div class="field">
+          <label>생년월일</label>
+          <div class="date-inputs">
+            <input type="number" name="year" id="reqYear" placeholder="년" min="1900" max="2100">
+            <input type="number" name="month" id="reqMonth" placeholder="월" min="1" max="12">
+            <input type="number" name="day" id="reqDay" placeholder="일" min="1" max="31">
+          </div>
+        </div>
+        <div class="field">
+          <label>태어난 시각</label>
+          <div class="date-inputs">
+            <input type="number" name="hour" placeholder="시(0-23)" min="0" max="23">
+            <input type="number" name="minute" placeholder="분" min="0" max="59">
+          </div>
+          <label class="checkbox-field"><input type="checkbox" name="hourUnknown"> 시각 모름 (정오로 가정)</label>
+        </div>
+      </div>
+
+      <div id="spouseFields" class="hidden">
+        <div class="section-title">상대방 정보</div>
+        <div class="profile-picker hidden" id="profilePickerP"></div>
+        <div class="field">
+          <label>이름</label>
+          <input type="text" name="pName" placeholder="상대방 이름" maxlength="20">
+        </div>
+        <div class="field-row">
+          <div class="field"><label>성별</label>
+            <select name="pGender"><option value="여">여자</option><option value="남">남자</option></select>
+          </div>
+          <div class="field"><label>양력/음력</label>
+            <select name="pCalendar"><option value="양력">양력</option><option value="음력">음력</option></select>
+          </div>
+        </div>
+        <div class="field">
+          <label>생년월일</label>
+          <div class="date-inputs">
+            <input type="number" name="pYear" id="reqPYear" placeholder="년" min="1900" max="2100">
+            <input type="number" name="pMonth" id="reqPMonth" placeholder="월" min="1" max="12">
+            <input type="number" name="pDay" id="reqPDay" placeholder="일" min="1" max="31">
+          </div>
+        </div>
+        <div class="field">
+          <label>태어난 시각</label>
+          <div class="date-inputs">
+            <input type="number" name="pHour" placeholder="시(0-23)" min="0" max="23">
+            <input type="number" name="pMinute" placeholder="분" min="0" max="59">
+          </div>
+          <label class="checkbox-field"><input type="checkbox" name="pHourUnknown"> 시각 모름 (정오로 가정)</label>
+        </div>
+      </div>
+
+      <button type="submit" id="submitBtn" style="margin-top:20px;">리포트 만들기</button>
+    </form>
+
+    <div id="errorBox" class="error-box hidden"></div>
+
+    <section class="ds-report" id="dsResult">
+      <div class="ds-summary hidden" id="dsSummary">
+        <div class="label" id="dsSummaryLabel"></div>
+        <div class="date" id="dsSummaryDate"></div>
+        <div class="sub" id="dsSummarySub"></div>
+      </div>
+      <div class="body" id="dsReportBody"></div>
+      <div class="ds-download hidden" id="dsDownload">
+        <div class="txt">PDF로 저장해서 두고두고 볼 수 있어요. 마이페이지에서도 언제든 다시 받을 수 있어요.</div>
+        <a class="btn-download" id="dsDownloadLink" href="#" target="_blank" rel="noopener">PDF 다운로드</a>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="/profile-picker.js"></script>
+<script>
+  const form = document.getElementById('dsForm');
+  const errorBox = document.getElementById('errorBox');
+  const topicInput = document.getElementById('topicInput');
+  const spouseFields = document.getElementById('spouseFields');
+  const relationshipStatus = document.getElementById('relationshipStatus');
+
+  const ICONS = {
+    compat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="15" r="5"/><circle cx="15" cy="15" r="5"/></svg>',
+    wealth: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5c0-1.4 1.1-2.5 2.5-2.5s2.5 1 2.5 2.2c0 2.8-5 1.8-5 4.6 0 1.2 1.1 2.2 2.5 2.2s2.5-1.1 2.5-2.5"/></svg>',
+    health: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 8.6c0 4.8-8.8 10.4-8.8 10.4S3.2 13.4 3.2 8.6a4.6 4.6 0 0 1 8.8-1.8 4.6 4.6 0 0 1 8.8 1.8Z"/><path d="M7 12h2l1.5-3 2 6 1.5-3H17"/></svg>'
+  };
+
+  const TOPIC_META = {
+    compat: { label: '궁합운', lead: '지금 인연의 상성과, 관계가 한 걸음 더 나아가기 좋은 때까지 하나의 리포트로 알려드려요.' },
+    wealth: { label: '재물운', lead: '나에게 맞는 재물 관리 성향과, 돈이 열리는 때·조심할 때까지 하나의 리포트로 알려드려요.' },
+    health: { label: '건강운', lead: '타고난 체질과 맞춤 운동·식단, 습관을 시작하기 좋은 때까지 하나의 리포트로 알려드려요.' }
+  };
+
+  const preset = new URLSearchParams(location.search).get('topic');
+  const topicKey = TOPIC_META[preset] ? preset : 'compat';
+  const meta = TOPIC_META[topicKey];
+  topicInput.value = topicKey;
+  document.title = `사주보는 수달 — ${meta.label} 리포트`;
+  document.getElementById('pageTtl').textContent = `${meta.label} 리포트`;
+  document.getElementById('dsBadge').innerHTML = ICONS[topicKey];
+  document.getElementById('dsH1').textContent = `${meta.label} 리포트`;
+  document.getElementById('dsLead').textContent = meta.lead;
+  window.POINT_NOTICE_PRICE = 990;
+  window.POINT_NOTICE_LABEL = `${meta.label} 리포트`;
+
+  // required는 HTML에 미리 박아두지 않는다 — 지금 보여주는 섹션의 필드에만 그 자리에서 붙인다.
+  function markRequired(...ids) {
+    ids.forEach((id) => { const el = document.getElementById(id); if (el) el.required = true; });
+  }
+  function unmarkRequired(...ids) {
+    ids.forEach((id) => { const el = document.getElementById(id); if (el) el.required = false; });
+  }
+
+  markRequired('reqYear', 'reqMonth', 'reqDay');
+
+  if (topicKey === 'compat') {
+    document.getElementById('statusField').classList.remove('hidden');
+    function syncSpouseFields() {
+      const isSolo = relationshipStatus.value === 'solo';
+      spouseFields.classList.toggle('hidden', isSolo);
+      if (isSolo) unmarkRequired('reqPYear', 'reqPMonth', 'reqPDay');
+      else markRequired('reqPYear', 'reqPMonth', 'reqPDay');
+    }
+    relationshipStatus.addEventListener('change', syncSpouseFields);
+    syncSpouseFields();
+  } else if (topicKey === 'wealth') {
+    document.getElementById('incomeFields').classList.remove('hidden');
+  } else if (topicKey === 'health') {
+    document.getElementById('concernField').classList.remove('hidden');
+  }
+
+  const submitBtn = document.getElementById('submitBtn');
+  function setFormBusy(busy) {
+    form.querySelectorAll('input, select, button').forEach((el) => { el.disabled = busy; });
+    submitBtn.textContent = busy ? '리포트를 쓰는 중이에요...' : '리포트 만들기';
+  }
+
+  function escapeHtml(s) {
+    return s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+  }
+  function boldify(s) {
+    return escapeHtml(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  }
+
+  function render(data) {
+    const summaryBox = document.getElementById('dsSummary');
+    if (data.best && data.best.dateValue) {
+      const summaryWho = `${data.name || ''}${data.spouseName ? ' · ' + data.spouseName : ''}`.trim();
+      const bestLabel = { compat: '관계 진전에 좋은 때', wealth: '투자·계약에 좋은 때', health: '새 습관 시작하기 좋은 때' }[topicKey];
+      document.getElementById('dsSummaryLabel').textContent = summaryWho ? `${summaryWho} 님, ${bestLabel}` : bestLabel;
+      document.getElementById('dsSummaryDate').textContent = data.best.dateValue;
+      document.getElementById('dsSummarySub').textContent = `${data.best.ganZhiKo || ''}${data.best.hourGanZhiKo ? ' · ' + data.best.hourGanZhiKo : ''}`;
+      summaryBox.classList.remove('hidden');
+    } else {
+      summaryBox.classList.add('hidden');
+    }
+
+    document.getElementById('dsReportBody').innerHTML = data.report
+      ? boldify(data.report)
+      : '리포트를 만드는 데 문제가 생겼어요. 잠시 후 다시 시도해주세요.';
+
+    const downloadBox = document.getElementById('dsDownload');
+    if (data.jobId) {
+      document.getElementById('dsDownloadLink').href = `/api/download/${data.jobId}`;
+      downloadBox.classList.remove('hidden');
+    } else {
+      downloadBox.classList.add('hidden');
+    }
+
+    document.getElementById('dsResult').style.display = 'block';
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorBox.classList.add('hidden');
+
+    const fd = new FormData(form);
+    const body = Object.fromEntries(fd.entries());
+    body.hourUnknown = fd.get('hourUnknown') === 'on';
+    body.pHourUnknown = fd.get('pHourUnknown') === 'on';
+    setFormBusy(true);
+
+    try {
+      const res = await fetch('/api/life-topics', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setFormBusy(false);
+        if (res.status === 401) { location.href = '/login.html?redirect=' + encodeURIComponent(location.pathname + location.search); return; }
+        if (res.status === 402) { alert(`포인트가 부족합니다 (필요 ${data.required}P / 보유 ${data.balance}P). 마이페이지에서 충전해주세요.`); location.href = '/mypage.html'; return; }
+        errorBox.textContent = data.error || '요청 실패';
+        errorBox.classList.remove('hidden');
+        return;
+      }
+      render(data);
+      setFormBusy(false);
+    } catch (err) {
+      setFormBusy(false);
+      errorBox.textContent = '요청 실패: ' + err.message;
+      errorBox.classList.remove('hidden');
+    }
+  });
+
+  if (window.ProfilePicker) {
+    window.ProfilePicker.mount(document.getElementById('profilePicker'), form);
+    window.ProfilePicker.mount(document.getElementById('profilePickerP'), form, { prefix: 'p' });
+  }
+</script>
+<script src="/point-notice.js"></script>
+</body>
+</html>

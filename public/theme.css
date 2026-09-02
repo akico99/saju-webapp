@@ -320,6 +320,11 @@ h1 { font-size: 20px; font-weight: 800; margin: 0 0 4px; letter-spacing: -0.01em
 .tile .glyph.career { background: var(--accent-soft); color: var(--accent); }
 .tile .glyph.compat { background: var(--warn-soft); color: var(--warn); }
 .tile .glyph.book { background: var(--accent-soft); color: var(--accent); }
+.tile .glyph.health { background: var(--warn-soft); color: var(--warn); }
+.tile .glyph.moving { background: var(--success-soft); color: var(--success); }
+.tile .glyph.opening { background: var(--warn-soft); color: var(--warn); }
+.tile .glyph.wedding { background: var(--danger-soft); color: var(--danger); }
+.tile .glyph.birth { background: var(--accent-soft); color: var(--accent); }
 .tile .name { font-size: 14.5px; font-weight: 800; line-height: 1.4; }
 .tile .desc { font-size: 11.5px; color: var(--muted); line-height: 1.6; min-height: 34px; }
 .tile .price { font-size: 15px; font-weight: 800; color: var(--ink); margin-top: auto; }
@@ -329,21 +334,8 @@ h1 { font-size: 20px; font-weight: 800; margin: 0 0 4px; letter-spacing: -0.01em
 .tile.full .glyph svg { width: 26px; height: 26px; }
 .tile.full .info { flex: 1; }
 
-/* 아이콘 대신 사진/일러스트를 넣는 타일 — /public/tiles/*.png 채워 넣으면 바로 반영됨 */
+/* 아이콘 대신 사진을 넣는 타일 — public/tiles/*.png 채워 넣으면 바로 반영됨 */
 .tile-img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; border-radius: 10px; background: var(--surface-2); display: block; }
-
-/* ---------- 날짜 선택(택일) 미니 그리드 ---------- */
-.ds-mini-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-.ds-mini {
-  display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 4px;
-  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card);
-  text-decoration: none; color: var(--ink); font-size: 12px; font-weight: 700;
-}
-.ds-mini-icon {
-  width: 36px; height: 36px; border-radius: 12px; background: var(--accent-soft);
-  display: flex; align-items: center; justify-content: center;
-}
-.ds-mini-icon svg { width: 19px; height: 19px; color: var(--accent); }
 
 /* ---------- 칩 ---------- */
 .topic-panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); padding: 16px; margin-top: 12px; }

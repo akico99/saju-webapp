@@ -34,6 +34,25 @@ const GOEGANG_ILJU = new Set(['庚辰', '壬辰', '庚戌', '壬戌']);
 // 백호(白虎) — 사주 어느 기둥이든
 const BAEKHO_GANJI = new Set(['甲辰', '乙未', '丙戌', '丁丑', '戊辰', '壬戌', '癸丑']);
 
+// 반안살(攀鞍殺) — 12신살 중 하나. 장성살 지지(SHINSAL_JANGSEONG의 결과, 삼합국의 왕지)
+// 바로 다음 지지가 반안살이다(子丑寅卯辰巳午未申酉戌亥 순행 기준). 예: 寅午戌국의
+// 장성살은 午, 반안살은 그다음인 未.
+const BRANCH_ORDER = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
+function bananSalBranch(yearBranch) {
+  const jangseong = SHINSAL_JANGSEONG[yearBranch];
+  if (!jangseong) return null;
+  const idx = BRANCH_ORDER.indexOf(jangseong);
+  return BRANCH_ORDER[(idx + 1) % 12];
+}
+
+// 지지 → 방위(8방위로 단순화, 개운법 안내 수준). 재물운/건강운 리포트에서 "이 방향에
+// 서류함을 두세요/베개를 두세요" 같은 안내에 쓴다.
+const BRANCH_DIRECTION_KO = {
+  '子': '정북쪽', '丑': '북동쪽', '寅': '동북쪽', '卯': '정동쪽',
+  '辰': '동남쪽', '巳': '남동쪽', '午': '정남쪽', '未': '남서쪽',
+  '申': '서남쪽', '酉': '정서쪽', '戌': '서북쪽', '亥': '북서쪽'
+};
+
 const PILLAR_KEYS = ['year', 'month', 'day', 'hour'];
 
 /**
@@ -104,4 +123,7 @@ function analyzeShinsal(core) {
   return perPillarTags;
 }
 
-module.exports = { analyzeShinsal, CHEONEUL, MUNCHANG, YANGIN, GOEGANG_ILJU, BAEKHO_GANJI };
+module.exports = {
+  analyzeShinsal, CHEONEUL, MUNCHANG, YANGIN, GOEGANG_ILJU, BAEKHO_GANJI,
+  bananSalBranch, BRANCH_DIRECTION_KO
+};
