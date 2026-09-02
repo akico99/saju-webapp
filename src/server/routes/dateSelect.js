@@ -12,7 +12,7 @@ const express = require('express');
 const { computeSaju } = require('../../engine/index');
 const { relationScore } = require('../../pdf/charts');
 const { balanceScoreOf } = require('../../engine/timing');
-const { STEM_KO, BRANCH_KO, STEM_OHAENG, BRANCH_MAIN_STEM } = require('../../engine/constants');
+const { STEM_KO, BRANCH_KO, STEM_OHAENG, BRANCH_MAIN_STEM, PRODUCES, CONTROLS } = require('../../engine/constants');
 const points = require('../../db/points');
 const { requireAuth } = require('../middleware/auth');
 
@@ -29,6 +29,19 @@ const DEFAULT_HOURS = [9, 10, 11, 13, 14, 15, 16];
 const CHUNG_PAIRS = [['子', '午'], ['丑', '未'], ['寅', '申'], ['卯', '酉'], ['辰', '戌'], ['巳', '亥']];
 function isChung(b1, b2) {
   return CHUNG_PAIRS.some(([x, y]) => (x === b1 && y === b2) || (x === b2 && y === b1));
+}
+
+// relationScore와 같은 판정 기준(동일/생/극 등)을 사람이 읽을 문장으로 바꿔준다.
+// 점수 구간 3단계로만 나누면 후보마다 문구가 거의 똑같아져서, 실제 오행 관계(6가지)별로
+// 다른 표현을 쓴다 — 날과 시가 각각 다른 관계일 수 있으므로 후보별 문장이 자연히 갈린다.
+function relationPhrase(ohaeng, yongshinMain) {
+  if (!ohaeng || !yongshinMain) return '기운이 뚜렷하지 않아요';
+  if (ohaeng === yongshinMain) return `필요한 ${yongshinMain} 기운 그 자체라 가장 힘 있게 도와줘요`;
+  if (PRODUCES[ohaeng] === yongshinMain) return `필요한 ${yongshinMain} 기운을 낳아 키워주는 흐름이에요`;
+  if (CONTROLS[ohaeng] === yongshinMain) return `필요한 ${yongshinMain} 기운을 눌러버리는 흐름이에요`;
+  if (CONTROLS[yongshinMain] === ohaeng) return `당신의 ${yongshinMain} 기운이 더 강해서 부담 없이 다룰 수 있어요`;
+  if (PRODUCES[yongshinMain] === ohaeng) return `당신의 ${yongshinMain} 기운이 이쪽으로 조금씩 빠져나가는 흐름이에요`;
+  return '특별히 돕지도 방해하지도 않는 무난한 흐름이에요';
 }
 
 function ganZhiOhaengScore(ganZhi, yongshinMain) {
@@ -119,16 +132,24 @@ router.post('/date-select', requireAuth, (req, res) => {
       const dayStem = engineResult.palja.dayPillar.stem, dayBranch = engineResult.palja.dayPillar.branch;
       const ganZhi = dayStem + dayBranch;
       const ganZhiKo = (STEM_KO[dayStem] || '') + (BRANCH_KO[dayBranch] || '');
+      const hourStem = engineResult.palja.hourPillar.stem, hourBranch = engineResult.palja.hourPillar.branch;
+      const hourGanZhi = hourStem + hourBranch;
+      const hourGanZhiKo = (STEM_KO[hourStem] || '') + (BRANCH_KO[hourBranch] || '');
 
       let score, reasonText;
       if (occasion.mode === 'person') {
-        score = ganZhiOhaengScore(ganZhi, yongshinMain);
+        // 일진(날)이 큰 흐름, 시(시간)가 그 안의 세부 흐름 — 날 60% + 시 40%로 합산해야
+        // 같은 날 다른 시간대끼리도 점수가 갈린다(일주만 보면 하루 내내 점수가 똑같아짐).
+        const dayScore = ganZhiOhaengScore(ganZhi, yongshinMain);
+        const hourScore = ganZhiOhaengScore(hourGanZhi, yongshinMain);
+        score = Math.max(5, Math.min(95, Math.round(dayScore * 0.6 + hourScore * 0.4)));
         const dayOhaeng = STEM_OHAENG[dayStem]?.ohaeng;
-        score >= 65
-          ? (reasonText = `이 날의 기운(${dayOhaeng})이 당신에게 필요한 기운과 잘 맞아서, ${occasion.label}에 힘을 보태주는 날이에요.`)
-          : score <= 35
-            ? (reasonText = `이 날의 기운(${dayOhaeng})이 당신에게 필요한 기운을 눌러버리는 편이라, ${occasion.label}엔 조금 조심하면 좋은 날이에요.`)
-            : (reasonText = `이 날은 특별히 강하게 돕지도, 방해하지도 않는 무난한 날이에요.`);
+        const hourOhaeng = STEM_OHAENG[hourStem]?.ohaeng;
+        const dayPhrase = relationPhrase(dayOhaeng, yongshinMain);
+        const hourPhrase = relationPhrase(hourOhaeng, yongshinMain);
+        reasonText = dayOhaeng === hourOhaeng
+          ? `날과 시 모두 ${dayOhaeng} 기운이에요 — ${dayPhrase}.`
+          : `날의 기운(${dayOhaeng})은 ${dayPhrase}, 시의 기운(${hourOhaeng})은 ${hourPhrase}.`;
       } else {
         score = balanceScoreOf(engineResult.counts.ohaeng);
         const clashesWithParent = parentDayBranches.some((pb) => isChung(dayBranch, pb));
@@ -143,7 +164,7 @@ router.post('/date-select', requireAuth, (req, res) => {
 
       candidates.push({
         year: y, month: m, day, hour,
-        ganZhi, ganZhiKo, ohaeng: engineResult.counts.ohaeng, lacking: engineResult.counts.lacking,
+        ganZhi, ganZhiKo, hourGanZhiKo, ohaeng: engineResult.counts.ohaeng, lacking: engineResult.counts.lacking,
         score, reasonText
       });
     });
