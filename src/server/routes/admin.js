@@ -5,6 +5,7 @@
 const express = require('express');
 const points = require('../../db/points');
 const users = require('../../db/users');
+const orders = require('../../db/orders');
 const { requireAdmin } = require('../middleware/auth');
 
 const router = express.Router();
@@ -87,6 +88,14 @@ router.post('/admin/users/:id/status', requireAdmin, (req, res) => {
   } catch (e) {
     res.status(400).json({ error: e.message });
   }
+});
+
+/* 주문 하나의 전체 상세(에러 메시지 포함)를 본다 — PDF 생성 실패 원인을 눈으로
+   확인할 때 쓴다. /api/orders/mine은 statusLabel만 주고 원본 error는 안 준다. */
+router.get('/admin/orders/:jobId', requireAdmin, (req, res) => {
+  const order = orders.findByJobId(req.params.jobId);
+  if (!order) return res.status(404).json({ error: '주문을 찾을 수 없습니다.' });
+  res.json({ order });
 });
 
 module.exports = router;
