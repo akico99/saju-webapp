@@ -1,102 +1,159 @@
 'use strict';
-/* 날짜 선택(택일) 총평 — 결정론적 채점(오행-용신, 주제별 십신, 일지 합충)으로 이미 계산이
-   끝난 후보 목록을 근거로, 그 사람의 사주와 이번 주제에 맞춰 자연스러운 문장으로 풀어
-   설명하는 짧은 AI 총평 1개를 만든다. 새로운 명리학적 사실을 계산하지 않고, 이미 계산되어
-   순우리말로 번역된 사실(오행·용신·순위 이유)만 근거로 삼는다 — 18장 리포트와 같은 원칙. */
+/* 날짜 선택(택일) 리포트 — 결정론적 계산(오행-용신 궁합, 주제별 십신, 일지 합충, 두 사람
+   모드는 실제 궁합 계산)으로 이미 확정된 사실만 근거로, 잡지 칼럼 같은 톤의 개인화 리포트
+   1편을 만든다. 절대 원칙: 엔진과 고정 매핑표(오행→색/맛/방위/사물/소재)에 없는 사실은
+   지어내지 않는다 — "구체적으로 써달라"는 요청은 이 표 안에서 고르는 것으로 충족한다. */
 const { generateText } = require('./client');
 
-const SYSTEM_PROMPT = `당신은 정통 명리학에 근거해 "날짜 선택(택일)" 결과를 설명하는 명리학자입니다.
+const SYSTEM_PROMPT = `당신은 명리학 지식을 바탕으로 라이프스타일 매거진에 칼럼을 쓰는 에디터입니다.
 
 ## 절대 원칙
-1. 이번 턴에 전달된 정보(오행, 용신, 후보 날짜 목록과 그 이유)에 없는 명리학적 사실은 절대로 새로 지어내지 않습니다.
-2. 소수점이나 원시 점수(예: "87점이라서")를 그대로 인용하지 않습니다. 등급이나 결론으로만 말합니다.
-3. 명리학 전문용어(용신, 십신, 오행 등)는 등장하는 자리에서 짧게라도 쉬운 말로 풀어씁니다. 독자는 사주를 전혀 모르는 일반인이라고 가정하세요.
-4. 수명·사망·불치병, 임신/낙태, 이혼·파산을 단정하지 않습니다. 부적·굿·비싼 개명을 권하지 않습니다.
-5. 순수 한국어 문장으로만 씁니다(간지·한자 표기는 예외).
-6. 2인칭 상담체 존댓말("~하십니다" 대신 부드러운 "~해요/~이에요" 톤도 가능)로, 따뜻하고 신뢰가 가는 목소리로 씁니다.
-7. 별표 두 개(**)로 핵심 결론 1~2곳만 강조합니다. 남발하지 않습니다.
-8. "임신 시도" 주제일 때는 이 결과가 배란일·가임기 등 의학적 예측이 절대 아니라는 점을 분명히
-   합니다 — 명리학적으로 마음을 편히 갖기 좋은 시기를 참고하는 것일 뿐이라고 반드시 짧게
-   한 문장으로 짚어주고, 임신 성공·실패를 절대 단정하지 않습니다.
+1. 이번 턴에 전달된 정보(오행, 용신, 날짜·시간, 궁합 사실, 색/맛/방위/사물/소재 표)에 없는
+   사실은 절대로 새로 지어내지 않습니다. 특히 실제 지리 정보(구체적 동네·상권), 공간 좌표
+   (예: "현관 오른쪽"), 의학적 사실, 아이의 구체적 진로·직업은 전달된 자료에 없으면 쓰지
+   않습니다.
+2. 명리학 전문용어(충, 원진, 비견, 십신, 격국 등)를 절대 쓰지 않습니다. 이미 쉬운 말로
+   풀어서 전달된 표현만 사용하세요. 이 문서를 읽는 사람은 사주를 전혀 모르는 일반인입니다.
+3. 소수점이나 원시 점수를 그대로 인용하지 않습니다.
+4. 수명·사망·불치병, 임신/낙태 성공·실패, 이혼·파산을 단정하지 않습니다. 부적·굿·비싼 개명을
+   권하지 않습니다. 아이의 성격은 "이런 기질을 타고날 수 있어요" 정도의 참고 표현으로만
+   쓰고, 특정 직업을 확정하듯 말하지 않습니다.
+5. 순수 한국어 문장으로만 씁니다.
+6. 따뜻하고 세련된 에세이 톤("~해요/~이에요")으로 씁니다. 두루뭉술한 조언 대신, 전달받은
+   구체적 명사(색, 물건, 시간, 방향, 맛 등)를 실제로 문장에 넣어서 눈에 그려지게 씁니다.
+7. 별표 두 개(**)로 각 문단마다 핵심 문장 1곳씩만 강조합니다. 남발하지 않습니다.
+8. "임신·출산" 주제일 때는 이 리포트가 배란일·가임기 등 의학적 예측이 아니라는 점을 반드시
+   짧게 짚어주고, 임신 성공·실패를 절대 단정하지 않습니다.
 
-## 형식
-소제목 없이 3~5문장, 400~600자 내외의 자연스러운 한 단락(또는 두 단락)으로 씁니다. 빈말로 채우지 말고, 전달받은 오행·용신·1순위 후보 이유를 실제로 인용해서 씁니다.`;
+## 형식 (반드시 지킬 것)
+- markdown 기호(#, ##, -, *, 1. 등)를 절대 쓰지 않습니다. 오직 강조용 별표 두 개(**단어**)만 씁니다.
+- 리포트 맨 앞에 제목이나 인사말 줄("OOO 님을 위한 리포트", "안녕하세요" 등)을 만들지 않습니다.
+  화면에 이미 이름과 리포트 종류가 표시되어 있으니, 바로 본문 첫 소제목부터 시작합니다.
+- 전달된 소제목을 그대로, 줄 앞에 **굵게** 표시한 뒤 줄바꿈하고 바로 이어서 본문 문단을 씁니다.
+  예시 형식 그대로 따르세요:
+**언제가 좋을까**
+본문 문단이 여기 이어집니다...
 
-function buildPersonPrompt({ occasionLabel, question, gender, personGanZhiKo, yongshinOhaengKo, recommendedDirection, recommendedBusiness, top }) {
-  const topList = top.map((c, i) =>
-    `${i + 1}순위: ${c.year}.${c.month}.${c.day} ${c.hour}시 (${c.ganZhiKo}일·${c.hourGanZhiKo}시) — ${c.reasonText}`
-  ).join('\n');
+**방향과 동네 분위기**
+본문 문단이 여기 이어집니다...
+- 전체 1,500~2,000자 분량으로, 같은 말을 반복해서 분량을 채우지 말고 각 소제목마다
+  전달받은 사실을 실제로 인용해 구체적으로 채웁니다.`;
 
-  const directionLine = recommendedDirection
-    ? `\n추천 방향(용신 오행 ${recommendedDirection.ohaeng} 기준): ${recommendedDirection.direction} — ${recommendedDirection.note}.`
-    : '';
-  const businessLine = recommendedBusiness
-    ? `\n어울리는 분야(용신 오행 ${recommendedBusiness.ohaeng} 기준): ${recommendedBusiness.field} — ${recommendedBusiness.note}.`
-    : '';
-  const extraAsk = recommendedDirection
-    ? ' 추천 방향도 자연스럽게 한 문장 정도 녹여주세요.'
-    : recommendedBusiness ? ' 어울리는 분야도 자연스럽게 한 문장 정도 녹여주세요.' : '';
-
-  return `신청자 정보: 성별 ${gender || '미상'}, 일주(태어난 날의 간지) ${personGanZhiKo}, 용신(이 사람에게 필요한 기운) ${yongshinOhaengKo}.
-주제: ${question} (${occasionLabel}).${directionLine}${businessLine}
-
-이미 계산이 끝난 상위 후보 날짜와 그 이유:
-${topList}
-
-위 내용을 근거로, 이 사람의 사주와 "${occasionLabel}"라는 주제에 맞춰 왜 1순위 날짜·시간이 가장 좋은지, 그리고 전체적으로 어떤 흐름의 시기인지 자연스러운 총평을 써주세요.${extraAsk} 목록에 없는 새로운 간지나 오행 사실은 만들어내지 마세요.`;
+function factLine(label, value) {
+  return value ? `- ${label}: ${value}` : '';
 }
 
-// 연도 모드(결혼/임신 시도) — 날짜 하나가 아니라 "몇 월 몇째 주"가 좋은지를 설명한다.
-function buildPersonYearPrompt({ occasionLabel, question, gender, personGanZhiKo, yongshinOhaengKo, year, weeks }) {
-  const weekList = weeks.map((w, i) =>
-    `${i + 1}순위: ${year}년 ${w.dateRangeLabel}${w.bestHourGanZhiKo ? ` (대표일 ${w.ganZhiKo}일·${w.bestHourGanZhiKo}시)` : ''} — ${w.reasonText}`
-  ).join('\n');
+function buildMovingPrompt(p) {
+  const b = p.best;
+  const facts = [
+    factLine('이름', p.name || '(미입력)'),
+    factLine('태어난 날의 기운/기질', `${p.personGanZhiKo}일생, ${p.temperament}`),
+    factLine('필요한 기운(용신)', p.yongshinOhaengKo),
+    factLine('목표 시기', `${p.targetYear}년 ${p.targetMonth}월`),
+    b && factLine('가장 좋은 날짜·시간', `${b.year}.${b.month}.${b.day} ${b.hour}시 (${b.ganZhiKo}일·${b.hourGanZhiKo}시)`),
+    p.extras.direction && factLine('추천 방향', `${p.extras.direction.direction} — ${p.extras.direction.note}`),
+    p.extras.mood && factLine('어울리는 동네 분위기(은유, 실제 지역 예측 아님)', p.extras.mood),
+    p.extras.homeObject && factLine('이사 당일 가장 먼저 들이면 좋은 물건', p.extras.homeObject),
+    p.extras.currentAddress && factLine('현재 거주지(참고용, 문장에 자연스럽게 한 번만 언급)', p.extras.currentAddress)
+  ].filter(Boolean).join('\n');
 
-  const conceptionNote = occasionLabel === '임신 시도'
-    ? '\n주의: 이건 배란일이나 가임기를 계산한 게 아니라, 명리학적으로 마음이 편안하고 좋은 흐름인 시기를 참고하는 것뿐입니다. 이 점을 총평에서 짧게라도 분명히 밝혀주세요.'
-    : '';
+  return `${facts}
 
-  return `신청자 정보: 성별 ${gender || '미상'}, 일주(태어난 날의 간지) ${personGanZhiKo}, 용신(이 사람에게 필요한 기운) ${yongshinOhaengKo}.
-주제: ${question} (${occasionLabel}). ${year}년 한 해를 통째로 훑어서 좋은 주(週) 단위를 찾았습니다.${conceptionNote}
+위 사실만 근거로 이사 리포트를 써주세요. 아래 소제목 순서로 구성합니다:
+1) "언제가 좋을까" — 추천 날짜·시간과 그 이유
+2) "방향과 동네 분위기" — 추천 방향과 동네 분위기(실제 지역명이나 좌표는 절대 언급하지 말고, 전달받은 은유적 분위기 표현만 사용)
+3) "가장 먼저 들이면 좋은 물건" — 전달받은 물건과 그 물건을 왜 먼저 들이면 좋은지, 추천 시간대와 연결
 
-이미 계산이 끝난 상위 후보 주(週)와 그 이유:
-${weekList}
-
-위 내용을 근거로, 이 사람의 사주에 ${year}년이 "${occasionLabel}"라는 주제로 볼 때 전체적으로 어떤 흐름의 해인지, 그리고 왜 1순위로 꼽힌 주가 가장 좋은지 자연스러운 총평을 써주세요. 목록에 없는 새로운 간지나 오행 사실은 만들어내지 마세요.`;
+목록에 없는 새로운 사실(구체적 동네명, 공간 좌표 등)은 만들어내지 마세요.`;
 }
 
-function buildParentPrompt({ question, top }) {
-  const topList = top.map((c, i) =>
-    `${i + 1}순위: ${c.year}.${c.month}.${c.day} ${c.hour}시 (${c.ganZhiKo}일·${c.hourGanZhiKo}시) — ${c.reasonText}`
-  ).join('\n');
+function buildOpeningPrompt(p) {
+  const b = p.best;
+  const facts = [
+    factLine('이름', p.name || '(미입력)'),
+    factLine('태어난 날의 기운/기질', `${p.personGanZhiKo}일생, ${p.temperament}`),
+    factLine('필요한 기운(용신)', p.yongshinOhaengKo),
+    factLine('목표 시기', `${p.targetYear}년 ${p.targetMonth}월`),
+    factLine('준비 중인 업종', p.extras.industry || '(미입력)'),
+    b && factLine('가장 좋은 개업 날짜·시간', `${b.year}.${b.month}.${b.day} ${b.hour}시 (${b.ganZhiKo}일·${b.hourGanZhiKo}시)`),
+    p.extras.business && factLine('어울리는 사업 분야(키워드, 특정 사업 성패 단정 아님)', `${p.extras.business.field} — ${p.extras.business.note}`),
+    p.extras.bizObject && factLine('공간에 두면 좋은 소품', p.extras.bizObject)
+  ].filter(Boolean).join('\n');
 
-  return `주제: ${question}. 아직 태어나지 않은 아이의 사주이므로, 특정 사람의 용신이 아니라 그 순간 사주 8글자의 오행이 얼마나 골고루 갖춰지는지를 기준으로 채점했습니다.
+  return `${facts}
 
-이미 계산이 끝난 상위 후보 날짜와 그 이유:
-${topList}
+위 사실만 근거로 개업 리포트를 써주세요. 아래 소제목 순서로 구성합니다:
+1) "언제 문을 열까" — 추천 날짜·시간과 그 이유
+2) "공간에 힘을 더하는 소품" — 전달받은 소품과 어디쯤(포스기 주변, 출입구 등 일반적인 위치 표현은 괜찮되 구체 좌표는 지어내지 말 것) 두면 좋은지
+3) "흔들리지 않는 마음가짐" — 이 사람의 타고난 기질을 근거로, 사업 초반 불안을 다스리는 마인드셋 한두 가지
 
-위 내용을 근거로, 왜 1순위 날짜·시간이 오행이 골고루 갖춰진 좋은 사주인지, 전체적으로 어떤 시기가 좋은지 자연스러운 총평을 써주세요. 목록에 없는 새로운 사실은 만들어내지 마세요.`;
+목록에 없는 새로운 사실은 만들어내지 마세요.`;
+}
+
+function buildWeddingPrompt(p) {
+  const b = p.best;
+  const c = p.compat;
+  const compatLines = [];
+  if (c.dayRelationType === 'yukhap' || c.dayRelationType === 'samhap') compatLines.push('두 사람의 배우자 자리(태어난 날의 기운)가 서로 잘 맞물려요.');
+  if (c.dayRelationType === 'chung') compatLines.push('두 사람의 배우자 자리가 부딪히는 편이라 서로 다름을 이해하는 노력이 필요해요.');
+  if (c.yukhapCount > 0) compatLines.push(`두 사람의 사주 곳곳이 자연스럽게 맞물리는 지점이 ${c.yukhapCount}군데 있어요.`);
+  if (c.chungCount > 0) compatLines.push(`부딪히는 지점도 ${c.chungCount}군데 있어서, 의견을 맞추는 데 서로 노력이 필요해요.`);
+
+  const facts = [
+    factLine('신청자 이름', p.name || '(미입력)'),
+    factLine('신청자 기질', `${p.personGanZhiKo}일생, ${p.temperament}, 필요한 기운은 ${p.yongshinOhaengKo}`),
+    factLine('상대방 이름', p.spouseName || '(미입력)'),
+    factLine('상대방 기질', `${p.spouseGanZhiKo}일생, ${p.spouseTemperament}, 필요한 기운은 ${p.spouseYongshinOhaengKo}`),
+    factLine('목표 연도', `${p.targetYear}년`),
+    b && factLine('두 사람 모두에게 좋은 날짜·시간', `${b.year}.${b.month}.${b.day} ${b.hour}시 (${b.ganZhiKo}일·${b.hourGanZhiKo}시)`),
+    compatLines.length && factLine('두 사람의 실제 궁합 사실', compatLines.join(' ')),
+    factLine('신청자에게 어울리는 웨딩 소재/색', `${p.extras.textureA}, ${p.extras.colorA}`),
+    factLine('상대방에게 어울리는 웨딩 소재/색', `${p.extras.textureB}, ${p.extras.colorB}`)
+  ].filter(Boolean).join('\n');
+
+  return `${facts}
+
+위 사실만 근거로 결혼 리포트를 써주세요. 아래 소제목 순서로 구성합니다:
+1) "혼인신고, 이날이 좋아요" — 추천 날짜·시간과 두 사람 모두에게 좋은 이유
+2) "두 사람의 실제 궁합" — 전달받은 궁합 사실을 자연스러운 문장으로 풀어서
+3) "다툴 때 이렇게" — 두 사람의 기질 차이를 근거로, 다퉜을 때 상황을 악화시키지 않는 구체적인 대화 방식 한두 가지(예: 누가 먼저 말을 걸지, 어떤 톤으로)
+4) "웨딩과 신혼집의 무드" — 전달받은 소재·색을 실제로 언급하며 어떤 분위기가 두 사람에게 잘 맞는지
+
+목록에 없는 새로운 사실은 만들어내지 마세요.`;
+}
+
+function buildBirthPrompt(p) {
+  const b = p.best;
+  const facts = [
+    factLine('부모님 이름', p.parentNames && p.parentNames.length ? p.parentNames.join(', ') : '(미입력)'),
+    b && factLine('가장 오행이 골고루 갖춰지는 날짜·시간', `${b.year}.${b.month}.${b.day} ${b.hour}시 (${b.ganZhiKo}일·${b.hourGanZhiKo}시)`),
+    b && factLine('그 순간 아이 사주에 비어있는 기운', p.lackingKo && p.lackingKo.length ? p.lackingKo.join('·') : '없음(다섯 기운이 고루 갖춰짐)'),
+    p.temperament && factLine('그 순간 태어나면 강하게 나타나는 기질(태어난 날 기준)', p.temperament),
+    p.taste && factLine('산모에게 도움이 될 만한 맛(부족한 기운을 보충하는 음식 맛)', p.taste)
+  ].filter(Boolean).join('\n');
+
+  return `${facts}
+
+위 사실만 근거로 임신·출산 리포트를 써주세요. 아래 소제목 순서로 구성합니다:
+1) "먼저 알아두세요" — 이 리포트는 배란일이나 가임기를 계산한 의학적 예측이 아니라, 명리학적으로 오행이 골고루 갖춰지는 좋은 시기를 참고하는 것뿐이라는 점을 짧게 밝힙니다.
+2) "이 시기가 좋은 이유" — 추천 날짜·시간과 그 이유
+3) "이 아이는 어떤 기질을 타고날까" — 전달받은 기질을 근거로, 특정 직업을 확정하지 말고 성향·강점 위주로 다정하게
+4) "산모를 위한 작은 챙김" — 전달받은 맛을 활용해 이 시기 산모에게 도움이 될 만한 음식이나 마음가짐
+
+목록에 없는 새로운 사실이나 의학적 조언은 만들어내지 마세요.`;
 }
 
 /**
- * @param {Object} params
- * @param {'person'|'personYear'|'parent'} params.mode
- * @param {string} params.occasionLabel 이사/개업/결혼/임신 시도/출산
- * @param {string} params.question 이사하기 좋은 날 등
- * @param {Array} [params.top] 점수순 상위 후보(최대 3개, person/parent 모드) — { year, month, day, hour, ganZhiKo, hourGanZhiKo, reasonText }
- * @param {Array} [params.weeks] 점수순 상위 주(週, personYear 모드) — { dateRangeLabel, ganZhiKo, bestHourGanZhiKo, reasonText }
- * @param {number} [params.year] personYear 모드의 대상 연도
- * @param {string} [params.gender]
- * @param {string} [params.personGanZhiKo] 신청자 일주(사람 모드만)
- * @param {string} [params.yongshinOhaengKo] 신청자 용신 오행 순우리말(사람 모드만)
+ * @param {Object} p
+ * @param {'moving'|'opening'|'wedding'|'birth'} p.topic
  * @returns {Promise<string>}
  */
-async function generateDateSelectOverview(params) {
-  const prompt = params.mode === 'personYear' ? buildPersonYearPrompt(params)
-    : params.mode === 'person' ? buildPersonPrompt(params)
-      : buildParentPrompt(params);
+async function generateDateSelectReport(p) {
+  const builder = { moving: buildMovingPrompt, opening: buildOpeningPrompt, wedding: buildWeddingPrompt, birth: buildBirthPrompt }[p.topic];
+  if (!builder) throw new Error('알 수 없는 리포트 주제입니다: ' + p.topic);
+  const prompt = builder(p);
   const { text } = await generateText(SYSTEM_PROMPT, prompt);
   return text.trim();
 }
 
-module.exports = { generateDateSelectOverview };
+module.exports = { generateDateSelectReport };

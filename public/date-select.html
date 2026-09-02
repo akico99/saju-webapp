@@ -6,40 +6,24 @@
 <title>사주보는 수달 — 날짜 선택(택일)</title>
 <link rel="stylesheet" href="/theme.css">
 <style>
-  .ds-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 28px; margin-bottom: 4px; }
+  .ds-icon-badge { width: 52px; height: 52px; border-radius: 16px; background: var(--accent-soft);
+    display: flex; align-items: center; justify-content: center; margin-bottom: 8px; }
+  .ds-icon-badge svg { width: 28px; height: 28px; color: var(--accent); }
 
-  .bt-result { padding: 0 20px; display: none; }
-  .bt-card {
-    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card);
-    padding: 16px 18px; margin-bottom: 12px; position: relative;
+  .ds-summary {
+    background: var(--ink); color: #fff; border-radius: var(--radius-card);
+    padding: 20px 20px; margin-bottom: 16px;
   }
-  .bt-card.top { border-color: var(--ink); }
-  .bt-card .rank { position: absolute; top: -9px; left: 14px; background: var(--ink); color: #fff; font-size: 10.5px; font-weight: 800; padding: 3px 10px; border-radius: var(--radius-pill); }
-  .bt-card .date-row { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 6px; }
-  .bt-card .date { font-size: 15px; font-weight: 800; color: var(--ink); }
-  .bt-card .score { font-size: 13px; font-weight: 800; color: var(--accent); }
-  .bt-card .ganzhi { font-size: 12px; color: var(--muted-2); margin-bottom: 8px; }
-  .bt-card .reason { font-size: 13px; color: var(--muted); line-height: 1.7; }
+  .ds-summary .label { font-size: 11.5px; opacity: .75; margin-bottom: 4px; }
+  .ds-summary .date { font-size: 19px; font-weight: 800; }
+  .ds-summary .sub { font-size: 12.5px; opacity: .8; margin-top: 4px; }
+
+  .ds-report { padding: 0 20px 24px; display: none; }
+  .ds-report .body { font-size: 14.5px; color: var(--ink); line-height: 1.9; white-space: pre-wrap; }
+  .ds-report .body strong { color: var(--accent); }
 
   .bt-optional { margin: 20px 0 4px; }
   .bt-optional summary { font-size: 13px; font-weight: 700; color: var(--ink); cursor: pointer; padding: 4px 0; }
-
-  .ds-overview {
-    background: var(--accent-soft); border: 1px solid var(--accent); border-radius: var(--radius-card);
-    padding: 16px 18px; margin-bottom: 16px;
-  }
-  .ds-overview .ttl { font-size: 12px; font-weight: 800; color: var(--accent); margin-bottom: 6px; }
-  .ds-overview .body { font-size: 13.5px; color: var(--ink); line-height: 1.8; white-space: pre-wrap; }
-  .ds-overview .body strong { color: var(--accent); }
-
-  .ds-extra {
-    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card);
-    padding: 14px 18px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px;
-  }
-  .ds-extra .icon { font-size: 22px; }
-  .ds-extra .ttl { font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 2px; }
-  .ds-extra .val { font-size: 15px; font-weight: 800; color: var(--ink); }
-  .ds-extra .note { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
 
   .ds-disclaimer {
     background: var(--paper); border: 1px dashed var(--line); border-radius: var(--radius-card);
@@ -54,7 +38,7 @@
     <div class="ttl" id="pageTtl">날짜 선택(택일)</div>
   </header>
   <main>
-    <div class="ds-badge" id="dsBadge"></div>
+    <div class="ds-icon-badge" id="dsBadge"></div>
     <h1 id="dsH1">언제가 좋을까</h1>
     <p class="lead" id="dsLead"></p>
     <div class="ds-disclaimer hidden" id="dsDisclaimer"></div>
@@ -66,7 +50,11 @@
 
       <div id="personFields">
         <div class="profile-picker hidden" id="profilePicker"></div>
-        <div class="section-title" style="margin-top:0;">본인 정보 <span style="font-weight:400;color:var(--muted);">(이 날의 기운이 나에게 맞는지 보려면 필요해요)</span></div>
+        <div class="section-title" style="margin-top:0;">본인 정보</div>
+        <div class="field">
+          <label>이름 <span style="font-weight:400;color:var(--muted);">(리포트에 표시돼요)</span></label>
+          <input type="text" name="name" placeholder="이름" maxlength="20">
+        </div>
         <div class="field-row">
           <div class="field"><label>성별</label>
             <select name="gender"><option value="남">남자</option><option value="여">여자</option></select>
@@ -93,11 +81,82 @@
         </div>
       </div>
 
+      <div id="movingExtra" class="hidden">
+        <div class="section-title">이사 정보</div>
+        <div class="field-row">
+          <div class="field"><label>목표 연도</label><input type="number" name="targetYear" placeholder="예: 2026" min="1900" max="2100"></div>
+          <div class="field"><label>목표 월</label><input type="number" name="targetMonth" placeholder="예: 5" min="1" max="12"></div>
+        </div>
+        <div class="field">
+          <label>현재 거주지 <span style="font-weight:400;color:var(--muted);">(선택, 예: 서울 마포구)</span></label>
+          <input type="text" name="currentAddress" placeholder="현재 사시는 곳" maxlength="40">
+        </div>
+      </div>
+
+      <div id="openingExtra" class="hidden">
+        <div class="section-title">개업 정보</div>
+        <div class="field-row">
+          <div class="field"><label>목표 연도</label><input type="number" name="targetYear2" placeholder="예: 2026" min="1900" max="2100"></div>
+          <div class="field"><label>목표 월</label><input type="number" name="targetMonth2" placeholder="예: 5" min="1" max="12"></div>
+        </div>
+        <div class="field">
+          <label>준비 중인 업종</label>
+          <select name="industry">
+            <option value="">선택 안 함</option>
+            <option value="요식업(카페·식당)">요식업(카페·식당)</option>
+            <option value="소매·판매업">소매·판매업</option>
+            <option value="교육·콘텐츠">교육·콘텐츠</option>
+            <option value="상담·서비스업">상담·서비스업</option>
+            <option value="제조·기술">제조·기술</option>
+            <option value="온라인·무역">온라인·무역</option>
+            <option value="기타">기타</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="weddingExtra" class="hidden">
+        <div class="field" style="margin-bottom:14px;">
+          <label>결혼 목표 연도</label>
+          <input type="number" name="targetYear3" placeholder="예: 2026" min="1900" max="2100">
+        </div>
+        <div class="section-title">상대방 정보</div>
+        <div class="profile-picker hidden" id="profilePickerP"></div>
+        <div class="field">
+          <label>이름</label>
+          <input type="text" name="pName" placeholder="상대방 이름" maxlength="20">
+        </div>
+        <div class="field-row">
+          <div class="field"><label>성별</label>
+            <select name="pGender"><option value="여">여자</option><option value="남">남자</option></select>
+          </div>
+          <div class="field"><label>양력/음력</label>
+            <select name="pCalendar"><option value="양력">양력</option><option value="음력">음력</option></select>
+          </div>
+        </div>
+        <div class="field">
+          <label>생년월일</label>
+          <div class="date-inputs">
+            <input type="number" name="pYear" placeholder="년" min="1900" max="2100">
+            <input type="number" name="pMonth" placeholder="월" min="1" max="12">
+            <input type="number" name="pDay" placeholder="일" min="1" max="31">
+          </div>
+        </div>
+        <div class="field">
+          <label>태어난 시각</label>
+          <div class="date-inputs">
+            <input type="number" name="pHour" placeholder="시(0-23)" min="0" max="23">
+            <input type="number" name="pMinute" placeholder="분" min="0" max="59">
+          </div>
+          <label class="checkbox-field"><input type="checkbox" name="pHourUnknown"> 시각 모름 (정오로 가정)</label>
+        </div>
+      </div>
+
       <div id="parentFields" class="hidden">
         <details class="bt-optional" open>
-          <summary>부모님 생년월일 입력하기 (선택 — 부모님과 부딪히는 날짜를 걸러드려요)</summary>
+          <summary>부모님 생년월일 입력하기 (부모님과 부딪히는 날짜를 걸러드려요)</summary>
           <div class="section-title" style="margin-top:14px;">부모 1</div>
           <div class="profile-picker hidden" id="profilePickerA"></div>
+          <div class="field"><label>이름</label><input type="text" name="aName" placeholder="이름" maxlength="20"></div>
           <div class="field">
             <label>생년월일</label>
             <div class="date-inputs">
@@ -117,6 +176,7 @@
 
           <div class="section-title">부모 2 (선택)</div>
           <div class="profile-picker hidden" id="profilePickerB"></div>
+          <div class="field"><label>이름</label><input type="text" name="bName" placeholder="이름" maxlength="20"></div>
           <div class="field">
             <label>생년월일</label>
             <div class="date-inputs">
@@ -134,10 +194,8 @@
             </div>
           </div>
         </details>
-      </div>
 
-      <div id="dateFields">
-        <div class="section-title" id="baseDateTtl">예정일</div>
+        <div class="section-title" id="baseDateTtl">출산 예정일</div>
         <div class="date-inputs">
           <input type="number" name="baseYear" placeholder="년" min="1900" max="2100">
           <input type="number" name="baseMonth" placeholder="월" min="1" max="12">
@@ -154,41 +212,18 @@
         </div>
       </div>
 
-      <div id="yearFields" class="hidden">
-        <div class="section-title" id="yearTtl">예정 연도</div>
-        <div class="field">
-          <input type="number" name="year2" id="yearInput" placeholder="예: 2026" min="1900" max="2100">
-        </div>
-      </div>
-
-      <button type="submit" id="submitBtn">좋은 날짜 찾기</button>
+      <button type="submit" id="submitBtn" style="margin-top:20px;">리포트 만들기</button>
     </form>
 
     <div id="errorBox" class="error-box hidden"></div>
 
-    <section class="bt-result" id="dsResult">
-      <div class="section-head"><h2 id="resultTtl">이런 날짜는 어떠세요</h2></div>
-      <div class="ds-overview hidden" id="dsOverview">
-        <div class="ttl">AI 총평</div>
-        <div class="body" id="dsOverviewBody"></div>
+    <section class="ds-report" id="dsResult">
+      <div class="ds-summary hidden" id="dsSummary">
+        <div class="label" id="dsSummaryLabel"></div>
+        <div class="date" id="dsSummaryDate"></div>
+        <div class="sub" id="dsSummarySub"></div>
       </div>
-      <div class="ds-extra hidden" id="dsDirection">
-        <div class="icon">🧭</div>
-        <div>
-          <div class="ttl">이사하기 좋은 방향</div>
-          <div class="val" id="dsDirectionVal"></div>
-          <div class="note" id="dsDirectionNote"></div>
-        </div>
-      </div>
-      <div class="ds-extra hidden" id="dsBusiness">
-        <div class="icon">💼</div>
-        <div>
-          <div class="ttl">개업에 어울리는 분야</div>
-          <div class="val" id="dsBusinessVal"></div>
-          <div class="note" id="dsBusinessNote"></div>
-        </div>
-      </div>
-      <div id="dsList"></div>
+      <div class="body" id="dsReportBody"></div>
     </section>
   </main>
 </div>
@@ -200,41 +235,24 @@
   const occasionInput = document.getElementById('occasionInput');
   const personFields = document.getElementById('personFields');
   const parentFields = document.getElementById('parentFields');
-  const dateFields = document.getElementById('dateFields');
-  const yearFields = document.getElementById('yearFields');
-  const WEEKDAY_KO = ['일', '월', '화', '수', '목', '금', '토'];
+  const movingExtra = document.getElementById('movingExtra');
+  const openingExtra = document.getElementById('openingExtra');
+  const weddingExtra = document.getElementById('weddingExtra');
 
-  // 각 주제는 독립된 상품(990원)이다 — 홈 화면에서 원하는 주제로 바로 들어와서 그
-  // 주제 전용 페이지처럼 동작한다. 입력 방식도 주제마다 다르다:
-  //  - 날짜 범위형(이사/개업): 예정일 + 앞뒤 며칠
-  //  - 연도형(결혼/임신 시도): 연도 하나만 받아서 그 해의 좋은 "몇 월 몇째 주"를 찾음
-  //  - 부모 모드(출산): 부모 정보 + 예정일 + 앞뒤 며칠
+  const ICONS = {
+    moving: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-9"/><path d="M10 20v-5h4v5"/></svg>',
+    opening: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v4"/><path d="M3 9h18l-1.5 3.5a2 2 0 0 1-3.7 0A2 2 0 0 1 12 12.5a2 2 0 0 1-3.8 0 2 2 0 0 1-3.7 0L3 9Z"/><path d="M5 12.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7.5"/><path d="M10 21v-5h4v5"/></svg>',
+    wedding: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="15" r="5"/><circle cx="15" cy="15" r="5"/></svg>',
+    birth: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.35-9-8.5C1.5 8 3 5 6.2 5c2 0 3.2 1.2 3.8 2.2C10.6 6.2 11.8 5 13.8 5 17 5 18.5 8 21 11.5c-2 4.15-9 8.5-9 8.5Z"/><path d="M12 11v4M10.2 12.5c0-1 .8-1.8 1.8-1.8s1.8.8 1.8 1.8"/></svg>'
+  };
+
   const OCCASION_META = {
-    moving: {
-      label: '이사', emoji: '🏠', inputMode: 'date',
-      lead: '이사하기 좋은 날짜와 방향을 찾아드려요. 이사 예정일 앞뒤로 오행이 잘 맞는 날짜·시간을 확인해보세요.',
-      baseTtl: '이사 예정일'
-    },
-    opening: {
-      label: '개업', emoji: '🏢', inputMode: 'date',
-      lead: '개업하기 좋은 날짜와 어울리는 분야를 찾아드려요. 개업 예정일 앞뒤로 오행이 잘 맞는 날짜·시간을 확인해보세요.',
-      baseTtl: '개업 예정일'
-    },
-    wedding: {
-      label: '결혼', emoji: '💍', inputMode: 'year',
-      lead: '결혼은 예식장·하객 사정상 미리 계획하는 일이라, 날짜 하나보다 어느 달·몇째 주가 좋은지로 알려드려요(자동으로 주말만 찾아요).',
-      yearTtl: '결혼 예정 연도'
-    },
-    conception: {
-      label: '임신 시도', emoji: '🌱', inputMode: 'year',
-      lead: '한 해 동안 마음을 편히 갖기 좋은 흐름의 달·주를 찾아드려요.',
-      yearTtl: '희망 연도',
-      disclaimer: '이 결과는 배란일·가임기를 계산한 게 아니라, 명리학적으로 마음이 편안하고 좋은 흐름인 시기를 참고하는 것뿐이에요. 실제 임신 준비는 병원 상담을 통해 확인해주세요.'
-    },
+    moving: { label: '이사', lead: '이사하기 좋은 날짜, 방향, 그리고 새집에 가장 먼저 들이면 좋은 물건까지 하나의 리포트로 알려드려요.' },
+    opening: { label: '개업', lead: '개업하기 좋은 날짜와 공간에 힘을 더할 소품, 초반 마음가짐까지 하나의 리포트로 알려드려요.' },
+    wedding: { label: '결혼', lead: '두 사람 모두에게 좋은 혼인신고 날짜와 실제 궁합, 웨딩 무드까지 하나의 리포트로 알려드려요.' },
     birth: {
-      label: '출산', emoji: '👶', inputMode: 'date',
-      lead: '출산 예정일 앞뒤로 며칠, 그리고 하루 중 몇 개 시간대를 넣으면, 그 안에서 오행이 골고루 갖춰진 사주가 나오는 날짜·시간을 찾아드려요.',
-      baseTtl: '출산 예정일'
+      label: '임신·출산', lead: '오행이 골고루 갖춰지는 좋은 시기와, 그 시기 아이의 기질까지 하나의 리포트로 알려드려요.',
+      disclaimer: '이 리포트는 배란일·가임기 등 의학적 예측이 아니라, 명리학적으로 오행이 골고루 갖춰지는 시기를 참고하는 것뿐이에요. 실제 임신·출산 계획은 병원 상담을 통해 확인해주세요.'
     }
   };
 
@@ -242,14 +260,13 @@
   const occasionKey = OCCASION_META[preset] ? preset : 'moving';
   const meta = OCCASION_META[occasionKey];
   occasionInput.value = occasionKey;
-  document.title = `사주보는 수달 — ${meta.label} 날짜 선택`;
-  document.getElementById('pageTtl').textContent = `${meta.label} 날짜 선택`;
-  document.getElementById('dsBadge').textContent = meta.emoji;
-  document.getElementById('dsH1').textContent = `${meta.label}하기 좋은 날은 언제일까`;
+  document.title = `사주보는 수달 — ${meta.label} 리포트`;
+  document.getElementById('pageTtl').textContent = `${meta.label} 리포트`;
+  document.getElementById('dsBadge').innerHTML = ICONS[occasionKey];
+  document.getElementById('dsH1').textContent = `${meta.label} 리포트`;
   document.getElementById('dsLead').textContent = meta.lead;
-  document.getElementById('resultTtl').textContent = `${meta.label}하기 좋은 날짜는`;
   window.POINT_NOTICE_PRICE = 990;
-  window.POINT_NOTICE_LABEL = `${meta.label} 날짜 선택`;
+  window.POINT_NOTICE_LABEL = `${meta.label} 리포트`;
 
   if (meta.disclaimer) {
     const box = document.getElementById('dsDisclaimer');
@@ -260,29 +277,18 @@
   if (occasionKey === 'birth') {
     personFields.classList.add('hidden');
     parentFields.classList.remove('hidden');
-  } else {
-    personFields.classList.remove('hidden');
-    parentFields.classList.add('hidden');
-  }
-
-  if (meta.inputMode === 'year') {
-    dateFields.classList.add('hidden');
-    yearFields.classList.remove('hidden');
-    document.getElementById('yearTtl').textContent = meta.yearTtl;
-    document.getElementById('yearInput').required = true;
-  } else {
-    dateFields.classList.remove('hidden');
-    yearFields.classList.add('hidden');
-    document.querySelector('#dateFields input[name="baseYear"]').required = true;
-    document.querySelector('#dateFields input[name="baseMonth"]').required = true;
-    document.querySelector('#dateFields input[name="baseDay"]').required = true;
-    document.getElementById('baseDateTtl').textContent = meta.baseTtl;
+  } else if (occasionKey === 'moving') {
+    movingExtra.classList.remove('hidden');
+  } else if (occasionKey === 'opening') {
+    openingExtra.classList.remove('hidden');
+  } else if (occasionKey === 'wedding') {
+    weddingExtra.classList.remove('hidden');
   }
 
   const submitBtn = document.getElementById('submitBtn');
   function setFormBusy(busy) {
     form.querySelectorAll('input, select, button').forEach((el) => { el.disabled = busy; });
-    submitBtn.textContent = busy ? '날짜 계산하고 AI 총평 쓰는 중...' : '좋은 날짜 찾기';
+    submitBtn.textContent = busy ? '리포트를 쓰는 중이에요...' : '리포트 만들기';
   }
 
   function escapeHtml(s) {
@@ -292,75 +298,23 @@
     return escapeHtml(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
   }
 
-  function renderExtras(data) {
-    const overviewBox = document.getElementById('dsOverview');
-    if (data.overview) {
-      document.getElementById('dsOverviewBody').innerHTML = boldify(data.overview);
-      overviewBox.classList.remove('hidden');
-    } else {
-      overviewBox.classList.add('hidden');
-    }
-
-    const directionBox = document.getElementById('dsDirection');
-    if (data.recommendedDirection) {
-      document.getElementById('dsDirectionVal').textContent = `${data.recommendedDirection.direction} (용신 오행: ${data.recommendedDirection.ohaeng})`;
-      document.getElementById('dsDirectionNote').textContent = data.recommendedDirection.note;
-      directionBox.classList.remove('hidden');
-    } else {
-      directionBox.classList.add('hidden');
-    }
-
-    const businessBox = document.getElementById('dsBusiness');
-    if (data.recommendedBusiness) {
-      document.getElementById('dsBusinessVal').textContent = `${data.recommendedBusiness.field} (용신 오행: ${data.recommendedBusiness.ohaeng})`;
-      document.getElementById('dsBusinessNote').textContent = data.recommendedBusiness.note;
-      businessBox.classList.remove('hidden');
-    } else {
-      businessBox.classList.add('hidden');
-    }
-  }
-
-  function renderRangeCards(data) {
-    const list = document.getElementById('dsList');
-    list.innerHTML = data.candidates.map((c, i) => {
-      const d = new Date(c.year, c.month - 1, c.day);
-      const weekday = WEEKDAY_KO[d.getDay()];
-      return `
-        <div class="bt-card ${i === 0 ? 'top' : ''}">
-          ${i === 0 ? '<span class="rank">가장 좋아요</span>' : ''}
-          <div class="date-row">
-            <span class="date">${c.year}.${String(c.month).padStart(2, '0')}.${String(c.day).padStart(2, '0')} (${weekday}) ${c.hour}시</span>
-            <span class="score">${c.score}점</span>
-          </div>
-          <div class="ganzhi">${c.ganZhiKo}일 · ${c.hourGanZhiKo}시</div>
-          <div class="reason">${c.reasonText}</div>
-        </div>
-      `;
-    }).join('');
-  }
-
-  function renderWeekCards(data) {
-    const list = document.getElementById('dsList');
-    list.innerHTML = data.weeks.map((w, i) => `
-      <div class="bt-card ${i === 0 ? 'top' : ''}">
-        ${i === 0 ? '<span class="rank">가장 좋아요</span>' : ''}
-        <div class="date-row">
-          <span class="date">${data.year}년 ${w.dateRangeLabel}</span>
-          <span class="score">${w.score}점</span>
-        </div>
-        <div class="ganzhi">${w.ganZhiKo ? `대표일 ${w.ganZhiKo}일` : ''}${w.bestHourGanZhiKo ? ` · ${w.bestHourGanZhiKo}시` : ''}</div>
-        <div class="reason">${w.reasonText}</div>
-      </div>
-    `).join('');
-  }
-
+  const WEEKDAY_KO = ['일', '월', '화', '수', '목', '금', '토'];
   function render(data) {
-    renderExtras(data);
-    if (data.mode === 'year') {
-      renderWeekCards(data);
+    const summaryBox = document.getElementById('dsSummary');
+    if (data.best) {
+      const d = new Date(data.best.year, data.best.month - 1, data.best.day);
+      const weekday = WEEKDAY_KO[d.getDay()];
+      document.getElementById('dsSummaryLabel').textContent = `${data.name || ''}${data.spouseName ? ' · ' + data.spouseName : ''}${meta.label}에 가장 좋은 때`.trim();
+      document.getElementById('dsSummaryDate').textContent = `${data.best.year}.${String(data.best.month).padStart(2, '0')}.${String(data.best.day).padStart(2, '0')} (${weekday}) ${data.best.hour}시`;
+      document.getElementById('dsSummarySub').textContent = `${data.best.ganZhiKo}일 · ${data.best.hourGanZhiKo}시`;
+      summaryBox.classList.remove('hidden');
     } else {
-      renderRangeCards(data);
+      summaryBox.classList.add('hidden');
     }
+
+    document.getElementById('dsReportBody').innerHTML = data.report
+      ? boldify(data.report)
+      : '리포트를 만드는 데 문제가 생겼어요. 잠시 후 다시 시도해주세요.';
     document.getElementById('dsResult').style.display = 'block';
   }
 
@@ -371,7 +325,9 @@
     const fd = new FormData(form);
     const body = Object.fromEntries(fd.entries());
     body.hourUnknown = fd.get('hourUnknown') === 'on';
-    if (meta.inputMode === 'year') body.targetYear = body.year2;
+    body.pHourUnknown = fd.get('pHourUnknown') === 'on';
+    if (occasionKey === 'opening') { body.targetYear = body.targetYear2; body.targetMonth = body.targetMonth2; }
+    if (occasionKey === 'wedding') body.targetYear = body.targetYear3;
     setFormBusy(true);
 
     try {
@@ -398,6 +354,7 @@
 
   if (window.ProfilePicker) {
     window.ProfilePicker.mount(document.getElementById('profilePicker'), form);
+    window.ProfilePicker.mount(document.getElementById('profilePickerP'), form, { prefix: 'p' });
     window.ProfilePicker.mount(document.getElementById('profilePickerA'), form, { prefix: 'a' });
     window.ProfilePicker.mount(document.getElementById('profilePickerB'), form, { prefix: 'b' });
   }
