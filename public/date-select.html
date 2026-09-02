@@ -151,6 +151,9 @@
           <option value="10">±10일</option>
         </select>
       </div>
+      <label class="checkbox-field" style="margin-top:10px;">
+        <input type="checkbox" name="weekendOnly" id="weekendOnly"> 주말(토·일)만 보기
+      </label>
 
       <button type="submit" id="submitBtn">좋은 날짜 찾기</button>
     </form>
@@ -186,6 +189,7 @@
     birth: { label: '출산', lead: '출산 예정일 앞뒤로 며칠, 그리고 하루 중 몇 개 시간대를 넣으면, 그 안에서 오행이 골고루 갖춰진 사주가 나오는 날짜·시간을 찾아드려요.', baseTtl: '출산 예정일' }
   };
 
+  const weekendOnlyField = document.getElementById('weekendOnly').closest('label');
   function selectOccasion(value) {
     occasionInput.value = value;
     document.querySelectorAll('.ds-occasion').forEach((btn) => btn.classList.toggle('active', btn.dataset.value === value));
@@ -196,10 +200,14 @@
     if (value === 'birth') {
       personFields.classList.add('hidden');
       parentFields.classList.remove('hidden');
+      weekendOnlyField.classList.add('hidden'); // 출산일은 병원 사정으로 정해지지, 요일을 고르는 게 아니라서 의미 없음
     } else {
       personFields.classList.remove('hidden');
       parentFields.classList.add('hidden');
+      weekendOnlyField.classList.remove('hidden');
     }
+    // 결혼은 예식장·하객 사정상 사실상 주말에만 하니 기본으로 켜두고, 나머지는 신청자가 필요하면 직접 켠다.
+    document.getElementById('weekendOnly').checked = (value === 'wedding');
   }
   document.querySelectorAll('.ds-occasion').forEach((btn) => {
     btn.addEventListener('click', () => selectOccasion(btn.dataset.value));
@@ -255,6 +263,7 @@
     const fd = new FormData(form);
     const body = Object.fromEntries(fd.entries());
     body.hourUnknown = fd.get('hourUnknown') === 'on';
+    body.weekendOnly = fd.get('weekendOnly') === 'on';
     setFormBusy(true);
 
     try {

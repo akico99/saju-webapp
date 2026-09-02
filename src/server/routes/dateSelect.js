@@ -153,6 +153,10 @@ router.post('/date-select', requireAuth, async (req, res) => {
   if (!by || !bm || !bd) return res.status(400).json({ error: '기준 날짜를 올바르게 입력해주세요.' });
   const rangeDays = Math.min(10, Math.max(1, Number(req.body.rangeDays) || 5));
   const hours = Array.isArray(req.body.hours) && req.body.hours.length ? req.body.hours.map(Number) : DEFAULT_HOURS;
+  // 결혼처럼 예식장·하객 사정상 사실상 주말(토·일)에만 여는 주제가 있다 — 평일 후보를
+  // 아무리 점수 높게 뽑아줘도 실제로 쓸 수 없으면 무의미하므로, 신청자가 원하면
+  // 애초에 후보군에서 평일을 제외한다.
+  const weekendOnly = req.body.weekendOnly === true || req.body.weekendOnly === 'true';
 
   // 모드별로 필요한 사람 정보를 미리 계산해둔다 — 여기서 실패하면 포인트 차감 전에 걸러야 한다.
   let yongshinMain = null;
@@ -203,6 +207,10 @@ router.post('/date-select', requireAuth, async (req, res) => {
     const d = new Date(base);
     d.setUTCDate(d.getUTCDate() + offset);
     const y = d.getUTCFullYear(), m = d.getUTCMonth() + 1, day = d.getUTCDate();
+    if (weekendOnly) {
+      const weekday = d.getUTCDay(); // 0=일, 6=토
+      if (weekday !== 0 && weekday !== 6) continue;
+    }
     hours.forEach((hour) => {
       let engineResult;
       try {
