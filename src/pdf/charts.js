@@ -10,7 +10,7 @@ const OHAENG_ORDER = ['木', '火', '土', '金', '水'];
 const TEXT_COLOR = '#c9cde0';
 const MUTED_COLOR = '#8d96b8';
 const GRID_COLOR = 'rgba(141,150,184,0.18)';
-const FONT_FAMILY = "'Malgun Gothic','맑은 고딕',sans-serif";
+const FONT_FAMILY = "'ReportGothic','Malgun Gothic','맑은 고딕',sans-serif";
 
 const BASE_FONT = { family: FONT_FAMILY, size: 12 };
 

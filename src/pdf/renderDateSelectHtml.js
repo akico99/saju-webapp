@@ -7,9 +7,9 @@ const fs = require('fs');
 const path = require('path');
 const ejs = require('ejs');
 const { renderMarkup } = require('./textMarkup');
+const { getReportCss } = require('./reportCss');
 
 const TEMPLATE_PATH = path.join(__dirname, 'templates', 'dateSelect.ejs');
-const CSS_PATH = path.join(__dirname, 'templates', 'report.css');
 
 // LLM이 "**소제목**\n본문..." 형태로 쓴 텍스트를, 헤딩과 본문을 분리한 배열로 바꾼다.
 // (systemPrompt가 이 형식을 명시적으로 지시하므로 정규식 하나로 안전하게 분리된다.)
@@ -34,7 +34,7 @@ function splitSections(text) {
  * @param {string} p.text LLM이 쓴 본문 전체
  */
 function renderDateSelectHtml({ title, eyebrow, metaLine, bestLabel, bestValue, text }) {
-  const reportCss = fs.readFileSync(CSS_PATH, 'utf8');
+  const reportCss = getReportCss();
   const sections = splitSections(text);
   return ejs.render(
     fs.readFileSync(TEMPLATE_PATH, 'utf8'),

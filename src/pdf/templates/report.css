@@ -31,7 +31,7 @@ html, body {
 }
 
 body {
-  font-family: '맑은 고딕', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+  font-family: 'ReportGothic', '맑은 고딕', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
   font-size: 13pt;
   line-height: 2.85;
   color: var(--text);
@@ -58,7 +58,7 @@ body {
 }
 .cover .eyebrow { font-size: 11pt; letter-spacing: 0.28em; color: var(--gold); margin-bottom: 6mm; }
 .cover h1 {
-  font-family: 'Batang', '바탕', serif;
+  font-family: 'ReportMyeongjo', 'Batang', '바탕', serif;
   font-size: 27pt; line-height: 1.4; margin: 0 0 4mm; color: var(--star);
 }
 .cover .subtitle { font-size: 11.5pt; color: var(--muted); margin-bottom: 8mm; }
@@ -76,7 +76,7 @@ body {
 /* ── 목차 ── */
 .toc { padding: 18mm 26mm 16mm; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
 .toc .eyebrow { font-size: 10pt; letter-spacing: 0.24em; color: var(--gold); margin-bottom: 4mm; }
-.toc h2 { font-family: 'Batang','바탕',serif; font-size: 18pt; color: var(--star); border-bottom: 1px solid var(--line); padding-bottom: 5mm; margin: 0 0 8mm; }
+.toc h2 { font-family: 'ReportMyeongjo','Batang','바탕',serif; font-size: 18pt; color: var(--star); border-bottom: 1px solid var(--line); padding-bottom: 5mm; margin: 0 0 8mm; }
 .toc ol { list-style: none; padding: 0; margin: 0; }
 .toc li { display: flex; justify-content: space-between; padding: 2.8mm 0; border-bottom: 1px dotted var(--line); font-size: 11pt; }
 .toc li .num { color: var(--gold); font-variant-numeric: tabular-nums; margin-right: 3mm; }
@@ -85,13 +85,13 @@ body {
 /* ── 명식 원국표 ── */
 .myeongsik { padding: 18mm 26mm 16mm; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
 .myeongsik .eyebrow { font-size: 10pt; letter-spacing: 0.24em; color: var(--gold); margin-bottom: 4mm; }
-.myeongsik h2 { font-family: 'Batang','바탕',serif; font-size: 18pt; color: var(--star); margin: 0 0 8mm; }
+.myeongsik h2 { font-family: 'ReportMyeongjo','Batang','바탕',serif; font-size: 18pt; color: var(--star); margin: 0 0 8mm; }
 .myeongsik-table { width: 100%; border-collapse: collapse; margin-bottom: 8mm; font-size: 10pt; }
 .myeongsik-table th, .myeongsik-table td {
   border: 1px solid var(--line); padding: 3mm; text-align: center; color: var(--text);
 }
 .myeongsik-table th { background: rgba(199,161,58,0.08); color: var(--muted); font-weight: normal; letter-spacing: 0.04em; }
-.myeongsik-table .ganji { font-size: 15pt; font-family: 'Batang','바탕',serif; color: var(--star); }
+.myeongsik-table .ganji { font-size: 15pt; font-family: 'ReportMyeongjo','Batang','바탕',serif; color: var(--star); }
 .myeongsik-table .ilgan-col { background: rgba(199,161,58,0.10); }
 .myeongsik-summary {
   border: 1px solid var(--line); border-left: 3px solid var(--gold);
@@ -121,7 +121,7 @@ body {
 }
 .chapter .chapter-star { flex-shrink: 0; }
 .chapter h2 {
-  font-family: 'Batang','바탕',serif;
+  font-family: 'ReportMyeongjo','Batang','바탕',serif;
   font-size: 17pt; color: var(--star);
   border-bottom: 1px solid var(--line);
   padding-bottom: 5mm; margin: 0 0 8mm;
@@ -167,7 +167,7 @@ mark {
   text-align: center; padding: 16mm 26mm;
 }
 .compat-cover .eyebrow { font-size: 11pt; letter-spacing: 0.28em; color: var(--gold); margin-bottom: 10mm; }
-.compat-cover h1 { font-family: 'Batang','바탕',serif; font-size: 25pt; color: var(--star); line-height: 1.5; margin: 0 0 6mm; }
+.compat-cover h1 { font-family: 'ReportMyeongjo','Batang','바탕',serif; font-size: 25pt; color: var(--star); line-height: 1.5; margin: 0 0 6mm; }
 .compat-cover .subtitle { font-size: 11.5pt; color: var(--muted); margin-bottom: 16mm; }
 
 .compat-pair { display: flex; gap: 10mm; width: 100%; max-width: 150mm; margin-bottom: 12mm; }
@@ -175,10 +175,10 @@ mark {
   flex: 1; border: 1px solid var(--line); border-radius: 3mm; padding: 6mm;
   text-align: left; background: rgba(199,161,58,0.04);
 }
-.compat-person .p-name { font-family: 'Batang','바탕',serif; font-size: 14pt; color: var(--star); margin-bottom: 3mm; }
+.compat-person .p-name { font-family: 'ReportMyeongjo','Batang','바탕',serif; font-size: 14pt; color: var(--star); margin-bottom: 3mm; }
 .compat-person .p-row { font-size: 10pt; color: var(--muted); margin-bottom: 1.5mm; }
 .compat-person .p-row b { color: var(--text); }
-.compat-vs { align-self: center; font-size: 16pt; color: var(--gold); font-family: 'Batang','바탕',serif; }
+.compat-vs { align-self: center; font-size: 16pt; color: var(--gold); font-family: 'ReportMyeongjo','Batang','바탕',serif; }
 
 .compat-score-num { font-size: 54pt; color: var(--gold); font-weight: bold; line-height: 1; margin-bottom: 2mm; }
 .compat-score-label { font-size: 10.5pt; color: var(--muted); margin-bottom: 14mm; }
@@ -188,7 +188,7 @@ mark {
   box-decoration-break: clone; -webkit-box-decoration-break: clone;
 }
 .compat-section h2 {
-  font-family: 'Batang','바탕',serif; font-size: 16pt; color: var(--star);
+  font-family: 'ReportMyeongjo','Batang','바탕',serif; font-size: 16pt; color: var(--star);
   border-bottom: 1px solid var(--line); padding-bottom: 4mm; margin: 0 0 6mm;
 }
 .compat-section p { margin: 0 0 5mm 0; text-align: justify; color: var(--text); }

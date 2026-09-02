@@ -85,7 +85,7 @@ function buildStarChartSvg(engine, size = 220) {
     return `
       <circle cx="${p.x}" cy="${p.y}" r="5.5" fill="${color}" opacity="0.95"/>
       <circle cx="${p.x}" cy="${p.y}" r="9" fill="none" stroke="${color}" stroke-width="1" opacity="0.35"/>
-      <text x="${p.x + labelDx}" y="${p.y + labelDy + 4}" font-size="10.5" fill="#8d96b8" text-anchor="${anchor}" font-family="'Malgun Gothic',sans-serif">${PILLAR_LABEL[k]} ${esc(stems[k] + branches[k])}</text>
+      <text x="${p.x + labelDx}" y="${p.y + labelDy + 4}" font-size="10.5" fill="#8d96b8" text-anchor="${anchor}" font-family="'ReportGothic','Malgun Gothic',sans-serif">${PILLAR_LABEL[k]} ${esc(stems[k] + branches[k])}</text>
     `;
   }).join('\n');
 

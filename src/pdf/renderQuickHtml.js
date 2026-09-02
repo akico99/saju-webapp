@@ -3,9 +3,9 @@ const fs = require('fs');
 const path = require('path');
 const ejs = require('ejs');
 const { renderMarkup } = require('./textMarkup');
+const { getReportCss } = require('./reportCss');
 
 const TEMPLATE_PATH = path.join(__dirname, 'templates', 'quick.ejs');
-const CSS_PATH = path.join(__dirname, 'templates', 'report.css');
 
 function formatBirthDisplay(meta) {
   const i = meta.input;
@@ -21,7 +21,7 @@ function formatBirthDisplay(meta) {
  * @param {string} text LLM이 생성한 본문
  */
 function renderQuickHtml(engine, person, topicTitle, text) {
-  const reportCss = fs.readFileSync(CSS_PATH, 'utf8');
+  const reportCss = getReportCss();
   const birthDisplay = formatBirthDisplay(engine.meta);
   return ejs.render(
     fs.readFileSync(TEMPLATE_PATH, 'utf8'),

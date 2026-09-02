@@ -8,9 +8,9 @@ const ejs = require('ejs');
 const { ohaengRadarConfig, shipsinDonutConfig, daewoonScoreLineConfig } = require('./charts');
 const { buildStarChartSvg } = require('./starchart');
 const { renderMarkup } = require('./textMarkup');
+const { getReportCss } = require('./reportCss');
 
 const TEMPLATE_PATH = path.join(__dirname, 'templates', 'report.ejs');
-const CSS_PATH = path.join(__dirname, 'templates', 'report.css');
 const CHARTJS_PATH = path.join(__dirname, '..', '..', 'node_modules', 'chart.js', 'dist', 'chart.umd.min.js');
 
 function formatBirthDisplay(meta) {
@@ -26,7 +26,7 @@ function formatBirthDisplay(meta) {
  * @param {{name, gender}} person
  */
 function renderHtml(engine, chapters, person) {
-  const reportCss = fs.readFileSync(CSS_PATH, 'utf8');
+  const reportCss = getReportCss();
   const chartJsSource = fs.readFileSync(CHARTJS_PATH, 'utf8');
 
   const ohaengConfig = ohaengRadarConfig(engine.counts);

@@ -6,9 +6,9 @@ const fs = require('fs');
 const path = require('path');
 const ejs = require('ejs');
 const { renderMarkup } = require('./textMarkup');
+const { getReportCss } = require('./reportCss');
 
 const TEMPLATE_PATH = path.join(__dirname, 'templates', 'compat.ejs');
-const CSS_PATH = path.join(__dirname, 'templates', 'report.css');
 
 /**
  * @param {Object} engineA computeSaju() 결과 (본인)
@@ -19,7 +19,7 @@ const CSS_PATH = path.join(__dirname, 'templates', 'report.css');
  * @param {string} text LLM이 생성한 궁합 서술 본문
  */
 function renderCompatHtml(engineA, engineB, personA, personB, compat, text) {
-  const reportCss = fs.readFileSync(CSS_PATH, 'utf8');
+  const reportCss = getReportCss();
   return ejs.render(
     fs.readFileSync(TEMPLATE_PATH, 'utf8'),
     { engineA, engineB, personA, personB, compat, text, reportCss, renderMarkup },
