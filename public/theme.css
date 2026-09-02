@@ -172,7 +172,7 @@ header .logout, button.logout {
 }
 
 /* ---------- 이미지 슬라이드 배너 ---------- */
-.banner-slider { position: relative; }
+.banner-slider { position: relative; margin-bottom: 20px; }
 .banner-track {
   display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch;
 }
@@ -225,18 +225,19 @@ header .logout, button.logout {
 
 /* ---------- 오늘의 운세 카드 ---------- */
 .today-fortune-card {
-  margin: 0 20px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card);
+  margin: 0 20px 14px; background: var(--accent-soft); border: 1px solid rgba(4,51,109,0.22); border-radius: var(--radius-card);
   padding: 16px 18px;
 }
 .today-fortune-card .row-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
 .today-fortune-card .free-badge {
-  font-size: 10.5px; font-weight: 800; color: var(--ink); background: var(--paper); border: 1px solid var(--line);
+  font-size: 10.5px; font-weight: 800; color: #fff; background: var(--accent); border: 1px solid var(--accent);
   padding: 3px 10px; border-radius: var(--radius-pill);
 }
-.today-fortune-card .eyebrow { font-size: 11px; color: var(--muted); }
+.today-fortune-card .eyebrow { font-size: 11px; font-weight: 700; color: var(--accent); }
 .today-fortune-card h3 { font-size: 15px; font-weight: 800; margin: 0 0 4px; }
 .today-fortune-card p { font-size: 12.5px; color: var(--muted); line-height: 1.6; margin: 0; }
 a.today-fortune-card { display: block; text-decoration: none; color: inherit; }
+#todayFortuneCard { cursor: pointer; }
 .today-fortune-card .login-cta {
   display: inline-block; margin-top: 10px; font-size: 12.5px; font-weight: 700; color: var(--accent);
   background: var(--accent-grad); padding: 9px 16px; border-radius: var(--radius-btn); text-decoration: none;
@@ -457,6 +458,70 @@ button[type="submit"]:hover:not(:disabled), .btn-primary:hover, button.primary:h
   border-radius: var(--radius-btn); text-decoration: none; font-weight: 700; font-size: 14px; box-shadow: var(--accent-glow);
 }
 .download-btn.card-btn { background: var(--paper); color: var(--ink); border: 1px solid var(--line); margin-left: 10px; box-shadow: none; }
+
+/* ---------- 오늘의 운세 스텝 위저드 팝업 ---------- */
+.wizard-overlay {
+  position: fixed; inset: 0; background: rgba(17,17,17,0.55); z-index: 60;
+  opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
+}
+.wizard-overlay.open { opacity: 1; pointer-events: auto; }
+
+.wizard-modal {
+  position: fixed; left: 50%; bottom: 0; transform: translate(-50%, 100%);
+  width: 100%; max-width: 420px; max-height: 88vh; overflow-y: auto;
+  background: var(--paper); border-radius: 20px 20px 0 0; z-index: 61; padding: 18px 20px 24px;
+  box-shadow: 0 -8px 30px rgba(0,0,0,0.18); transition: transform 0.3s ease; box-sizing: border-box;
+  pointer-events: none;
+}
+.wizard-modal.open { transform: translate(-50%, 0); pointer-events: auto; }
+@media (min-width: 520px) {
+  .wizard-modal { top: 50%; bottom: auto; transform: translate(-50%, -46%); border-radius: 20px; opacity: 0; }
+  .wizard-modal.open { transform: translate(-50%, -50%); opacity: 1; }
+}
+
+.wizard-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.wizard-back, .wizard-close {
+  background: none; border: none; color: var(--muted); font-size: 22px; line-height: 1; cursor: pointer; padding: 4px;
+}
+.wizard-back[hidden] { visibility: hidden; }
+.wizard-progress { flex: 1; background: var(--surface); border-radius: 999px; height: 6px; overflow: hidden; }
+.wizard-progress-fill { background: var(--accent); height: 100%; width: 20%; transition: width 0.3s ease; }
+.wizard-step-label { font-size: 11px; color: var(--muted); font-weight: 700; margin-bottom: 14px; }
+
+.wizard-bubble { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 20px; }
+.wizard-mascot { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: var(--surface); flex-shrink: 0; }
+.wizard-bubble p { background: var(--surface); border-radius: 14px; padding: 12px 14px; font-size: 13.5px; line-height: 1.6; color: var(--ink); margin: 0; }
+
+.wizard-choice-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.wizard-choice {
+  padding: 16px; border-radius: 12px; border: 1px solid var(--line); background: var(--paper);
+  font-size: 14px; font-weight: 700; color: var(--ink); cursor: pointer; font-family: inherit;
+}
+.wizard-choice.active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+
+.wizard-next {
+  width: 100%; padding: 15px; background: var(--accent-grad); color: var(--accent); border: none; border-radius: var(--radius-btn);
+  font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; margin-top: 18px; box-shadow: var(--accent-glow);
+}
+.wizard-next:disabled { background: var(--surface-2); color: var(--muted-2); box-shadow: none; cursor: not-allowed; }
+.wizard-next[hidden] { display: none; }
+
+.wizard-result-card { background: var(--accent-soft); border: 1px solid rgba(4,51,109,0.22); border-radius: 14px; padding: 16px; margin-bottom: 18px; }
+.wizard-result-card .eyebrow { font-size: 11px; font-weight: 700; color: var(--accent); }
+.wizard-result-card h3 { font-size: 16px; margin: 4px 0 6px; }
+.wizard-result-card p { font-size: 13px; color: var(--muted); line-height: 1.6; margin: 0; }
+
+.wizard-upsell-lead { font-size: 13px; color: var(--muted); margin: 0 0 12px; text-align: center; line-height: 1.6; }
+.wizard-cta {
+  display: block; width: 100%; box-sizing: border-box; text-align: center; text-decoration: none;
+  padding: 15px; border-radius: var(--radius-btn); font-size: 15px; font-weight: 700;
+}
+.wizard-cta-primary { background: var(--accent-grad); color: var(--accent); box-shadow: var(--accent-glow); }
+.wizard-cta-secondary { background: var(--paper); color: var(--ink); border: 1px solid var(--line); margin-top: 10px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .wizard-overlay, .wizard-modal { transition: none; }
+}
 
 /* ---------- 토스트 ---------- */
 .toast {

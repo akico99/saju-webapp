@@ -89,7 +89,7 @@
 
       <button type="submit">가입하고 시작하기</button>
     </form>
-    <p class="switch-link">이미 계정이 있으신가요? <a href="/login.html">로그인</a></p>
+    <p class="switch-link">이미 계정이 있으신가요? <a href="/login.html" id="switchToLogin">로그인</a></p>
   </main>
 </div>
 <div class="toast" id="toast"></div>
@@ -109,6 +109,10 @@
 
   const form = document.getElementById('signupForm');
   const errorBox = document.getElementById('errorBox');
+  const params = new URLSearchParams(location.search);
+  const redirect = params.get('redirect') || '/mypage.html';
+  const switchToLogin = document.getElementById('switchToLogin');
+  if (switchToLogin) switchToLogin.href = '/login.html?redirect=' + encodeURIComponent(redirect);
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -124,7 +128,7 @@
       });
       const data = await res.json();
       if (!res.ok) { errorBox.textContent = data.error || '가입 실패'; errorBox.classList.remove('hidden'); return; }
-      location.href = '/mypage.html';
+      location.href = redirect;
     } catch (err) {
       errorBox.textContent = '요청 실패: ' + err.message;
       errorBox.classList.remove('hidden');

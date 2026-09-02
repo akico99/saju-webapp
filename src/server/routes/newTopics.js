@@ -4,7 +4,7 @@
    결제는 기존 포인트 시스템(points.chargeForProduct) 그대로 쓴다. */
 const express = require('express');
 const { computeSaju } = require('../../engine/index');
-const { analyzeCompatibility, classifyPair } = require('../../engine/compatibility');
+const { analyzeCompatibility, classifyPair, PILLAR_KO } = require('../../engine/compatibility');
 const { computeCareerTimeline, balanceScoreOf } = require('../../engine/timing');
 const { STEM_KO, BRANCH_KO } = require('../../engine/constants');
 const points = require('../../db/points');
@@ -33,9 +33,28 @@ const DAY_RELATION_TEXT = {
   samhap: '두 사람의 가장 중요한 자리(일지)가 강하게 묶여요 — 인연이 깊게 이어지는 조합이에요.'
 };
 const THIS_YEAR_SIGNAL_TEXT = {
-  yukhap: '올해는 다시 이어질 만한 흐름이 있는 해예요.',
-  samhap: '올해는 인연이 강하게 다시 엮일 수 있는 해예요.',
-  chung: '올해는 아직 어긋나는 기운이 있어요 — 서두르기보다 시간을 두는 게 나을 수 있어요.'
+  yukhap: '다시 이어질 만한 흐름이 있는 해예요.',
+  samhap: '인연이 강하게 다시 엮일 수 있는 해예요.',
+  chung: '아직 어긋나는 기운이 있어요 — 서두르기보다 시간을 두는 게 나을 수 있어요.'
+};
+// 일지(day) 외 같은 자리끼리(연지-연지, 월지-월지, 시지-시지)의 합/충 — 그 자리가 뜻하는
+// 인생의 맥락에 맞춰 문장을 따로 둔다. 일지는 배우자궁이라 이미 dayRelationText로 다룬다.
+const PILLAR_CONTEXT_TEXT = {
+  year: {
+    yukhap: '두 사람의 뿌리(연지)까지 잘 맞닿아 있어요 — 태생적으로 인연이 있는 조합이에요.',
+    samhap: '두 사람의 뿌리(연지)가 강하게 묶여요 — 처음부터 깊게 이어질 인연이었을 수 있어요.',
+    chung: '뿌리(연지)에서부터 서로 다른 환경이라, 배경이나 가치관이 안 맞을 수 있어요.'
+  },
+  month: {
+    yukhap: '지금 이 시기(월지)의 기운이 잘 맞아서, 주변 상황도 자연스럽게 다시 얽힐 수 있어요.',
+    samhap: '지금 이 시기(월지)의 기운이 강하게 묶여서, 사회적으로도 다시 만날 계기가 잘 만들어질 수 있어요.',
+    chung: '지금 이 시기(월지)의 기운은 서로 부딪혀서, 주변 상황이 쉽게 맞아떨어지진 않을 수 있어요.'
+  },
+  hour: {
+    yukhap: '미래를 그리는 자리(시지)까지 맞아서, 함께하는 그림이 자연스럽게 그려지는 조합이에요.',
+    samhap: '미래를 그리는 자리(시지)가 강하게 묶여서, 장기적으로 함께할 그림이 잘 맞는 편이에요.',
+    chung: '미래를 그리는 자리(시지)가 부딪혀서, 그리는 방향이 서로 다를 수 있어요.'
+  }
 };
 
 function fieldKey(prefix, suffix) {
@@ -117,20 +136,50 @@ router.post('/reunion-check', requireAuth, (req, res) => {
 
   const compat = analyzeCompatibility(engineA, engineB);
 
-  // 올해 흐름 — 본인의 이번 해 세운 지지가 상대방 일지와 합/충인지로 "지금 시기" 신호를 본다.
+  // 앞으로 3년(올해 포함) 흐름 — 본인의 그 해 세운 지지가 상대방 일지와 합/충인지로
+  // "언제가 다시 이어지기 좋은 시기인지"를 한 해만이 아니라 흐름으로 보여준다.
   const thisYear = new Date().getFullYear();
-  const thisYearEntry = engineA.daewoon.flatMap((d) => d.years).find((y) => y.year === thisYear && y.ganZhi);
-  let thisYearSignal = null;
-  if (thisYearEntry) {
-    const myBranch = thisYearEntry.ganZhi[1];
-    const partnerDayBranch = engineB.palja.dayPillar.branch;
-    const rel = classifyPair(myBranch, partnerDayBranch);
+  const yearEntries = engineA.daewoon.flatMap((d) => d.years);
+  const partnerDayBranch = engineB.palja.dayPillar.branch;
+  const yearSignals = [];
+  for (let y = thisYear; y < thisYear + 3; y++) {
+    const entry = yearEntries.find((yy) => yy.year === y && yy.ganZhi);
+    if (!entry) continue;
+    const rel = classifyPair(entry.ganZhi[1], partnerDayBranch);
     const relationType = rel ? rel.type : null;
-    thisYearSignal = {
-      year: thisYear, ganZhi: thisYearEntry.ganZhi, relationType,
-      text: THIS_YEAR_SIGNAL_TEXT[relationType] || '올해는 특별히 강한 신호 없이 평범하게 흘러가는 해예요.'
-    };
+    yearSignals.push({
+      year: y, ganZhi: entry.ganZhi, relationType,
+      text: THIS_YEAR_SIGNAL_TEXT[relationType] || '특별히 강한 신호 없이 평범하게 흘러가는 해예요.'
+    });
   }
+  const thisYearSignal = yearSignals[0] || null;
+  const bestYearSignal = yearSignals.slice().sort((a, b) => {
+    const rank = { samhap: 2, yukhap: 1 };
+    return (rank[b.relationType] || 0) - (rank[a.relationType] || 0);
+  })[0] || null;
+
+  // 일지 외 같은 자리끼리(연지-연지, 월지-월지, 시지-시지)의 합/충 중 눈에 띄는 것 최대 2개
+  // — 일지(day)는 이미 dayRelationText로 다루니 제외한다.
+  const notablePillarMatches = [...compat.crossSamhap, ...compat.crossYukhap, ...compat.crossChung]
+    .filter((m) => m.pillarA === m.pillarB && m.pillarA !== 'day')
+    .reduce((acc, m) => {
+      if (acc.some((x) => x.pillarA === m.pillarA)) return acc; // 자리당 하나만
+      const type = compat.crossSamhap.includes(m) ? 'samhap' : compat.crossYukhap.includes(m) ? 'yukhap' : 'chung';
+      const text = PILLAR_CONTEXT_TEXT[m.pillarA] && PILLAR_CONTEXT_TEXT[m.pillarA][type];
+      if (text) acc.push({ pillar: m.pillarA, pillarKo: PILLAR_KO[m.pillarA], type, text });
+      return acc;
+    }, [])
+    .slice(0, 2);
+
+  const totalGoodLinks = compat.crossYukhap.length + compat.crossSamhap.length;
+  const totalClashes = compat.crossChung.length;
+  const overallText = totalGoodLinks === 0 && totalClashes === 0
+    ? '전체 여덟 자리 사이에 두드러진 합이나 충은 없어요 — 강한 인연도, 강한 마찰도 아닌 무난한 조합이에요.'
+    : totalGoodLinks > totalClashes * 1.5
+      ? `사주 전체 여덟 자리를 비교했을 때 합이 ${totalGoodLinks}번, 충돌이 ${totalClashes}번 나타나요. 전체적으로 합이 더 많아서 인연이 이어질 여지가 있는 조합이에요.`
+      : totalClashes > totalGoodLinks
+        ? `사주 전체 여덟 자리를 비교했을 때 합이 ${totalGoodLinks}번, 충돌이 ${totalClashes}번 나타나요. 충돌이 더 많아서 다시 만나더라도 서로 맞춰가는 노력이 필요한 조합이에요.`
+        : `사주 전체 여덟 자리를 비교했을 때 합이 ${totalGoodLinks}번, 충돌이 ${totalClashes}번 나타나요. 좋을 때와 부딪힐 때가 뚜렷하게 갈리는 조합이에요.`;
 
   const plain = {
     dayRelationText: DAY_RELATION_TEXT[compat.dayRelation && compat.dayRelation.type]
@@ -139,10 +188,11 @@ router.post('/reunion-check', requireAuth, (req, res) => {
     meToPartnerText: compat.shipsinBtoAKo ? SHIPSIN_RELATION_TEXT[compat.shipsinBtoAKo] : null,
     scoreText: compat.score >= 75 ? '전체적으로 잘 맞는 편이에요'
       : compat.score >= 50 ? '무난하게 맞는 편이에요'
-      : '서로 다른 점이 꽤 있는 편이에요'
+      : '서로 다른 점이 꽤 있는 편이에요',
+    overallText
   };
 
-  res.json({ compat, thisYearSignal, plain });
+  res.json({ compat, thisYearSignal, yearSignals, bestYearSignal, notablePillarMatches, plain });
 });
 
 /* ---------- 3. 출산택일 (2,900원) ---------- */

@@ -16,6 +16,9 @@
   .rc-block .ttl { font-size: 12px; font-weight: 700; color: var(--muted-2); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
   .rc-block p { font-size: 14px; color: var(--ink); line-height: 1.75; margin: 0 0 6px; }
   .rc-block p:last-child { margin-bottom: 0; }
+
+  .rc-upsell { text-align: center; padding: 6px 0 20px; }
+  .rc-upsell p { font-size: 13px; color: var(--muted); margin: 0 0 12px; }
 </style>
 </head>
 <body>
@@ -99,7 +102,11 @@
         <div class="label" id="rcScoreText"></div>
       </div>
       <div class="rc-block">
-        <div class="ttl">가장 중요한 자리</div>
+        <div class="ttl">종합 요약</div>
+        <p id="rcOverall"></p>
+      </div>
+      <div class="rc-block">
+        <div class="ttl">가장 중요한 자리 — 배우자궁(일지)</div>
         <p id="rcDayRelation"></p>
       </div>
       <div class="rc-block">
@@ -107,9 +114,17 @@
         <p id="rcPartnerToMe"></p>
         <p id="rcMeToPartner"></p>
       </div>
+      <div class="rc-block hidden" id="rcNotableBlock">
+        <div class="ttl">그 밖에 눈에 띄는 부분</div>
+        <div id="rcNotableList"></div>
+      </div>
       <div class="rc-block">
-        <div class="ttl" id="rcYearTtl"></div>
-        <p id="rcYearText"></p>
+        <div class="ttl">앞으로 3년, 다시 이어지기 좋은 시기는</div>
+        <div id="rcYearList"></div>
+      </div>
+      <div class="rc-upsell">
+        <p>재회 여부만이 아니라 두 사람의 관계 전체를 더 깊이 보고 싶다면,</p>
+        <a class="download-btn card-btn" href="/compat.html">둘이 보는 궁합 리포트 보러가기 →</a>
       </div>
     </section>
   </main>
@@ -134,16 +149,36 @@
   function render(data) {
     document.getElementById('rcScore').innerHTML = `${data.compat.score}<span class="unit">점</span>`;
     document.getElementById('rcScoreText').textContent = data.plain.scoreText;
+    document.getElementById('rcOverall').textContent = data.plain.overallText;
     document.getElementById('rcDayRelation').textContent = data.plain.dayRelationText;
     document.getElementById('rcPartnerToMe').textContent = data.plain.partnerToMeText
       ? `상대방은 나에게 — ${data.plain.partnerToMeText}` : '';
     document.getElementById('rcMeToPartner').textContent = data.plain.meToPartnerText
       ? `나는 상대방에게 — ${data.plain.meToPartnerText}` : '';
 
-    if (data.thisYearSignal) {
-      document.getElementById('rcYearTtl').textContent = `${data.thisYearSignal.year}년(올해) 흐름`;
-      document.getElementById('rcYearText').textContent = data.thisYearSignal.text;
+    const notableBlock = document.getElementById('rcNotableBlock');
+    const notableList = document.getElementById('rcNotableList');
+    notableList.innerHTML = '';
+    if (data.notablePillarMatches && data.notablePillarMatches.length) {
+      data.notablePillarMatches.forEach((m) => {
+        const p = document.createElement('p');
+        p.textContent = m.text;
+        notableList.appendChild(p);
+      });
+      notableBlock.classList.remove('hidden');
+    } else {
+      notableBlock.classList.add('hidden');
     }
+
+    const yearList = document.getElementById('rcYearList');
+    yearList.innerHTML = '';
+    (data.yearSignals || []).forEach((y, i) => {
+      const p = document.createElement('p');
+      const label = i === 0 ? `${y.year}년(올해)` : `${y.year}년`;
+      const star = data.bestYearSignal && data.bestYearSignal.year === y.year && (y.relationType === 'yukhap' || y.relationType === 'samhap') ? ' ⭐' : '';
+      p.textContent = `${label}${star} — ${y.text}`;
+      yearList.appendChild(p);
+    });
 
     document.getElementById('rcResult').style.display = 'block';
   }

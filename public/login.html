@@ -36,7 +36,7 @@
       </div>
       <button type="submit">로그인</button>
     </form>
-    <p class="switch-link">계정이 없으신가요? <a href="/signup.html">회원가입</a></p>
+    <p class="switch-link">계정이 없으신가요? <a href="/signup.html" id="switchToSignup">회원가입</a></p>
   </main>
 </div>
 <div class="toast" id="toast"></div>
@@ -58,6 +58,10 @@
   const errorBox = document.getElementById('errorBox');
   const params = new URLSearchParams(location.search);
   const redirect = params.get('redirect') || '/mypage.html';
+  const switchToSignup = document.getElementById('switchToSignup');
+  if (switchToSignup && params.get('redirect')) {
+    switchToSignup.href = '/signup.html?redirect=' + encodeURIComponent(redirect);
+  }
   if (params.get('error')) {
     errorBox.textContent = params.get('error');
     errorBox.classList.remove('hidden');

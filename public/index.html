@@ -131,13 +131,6 @@
     </div>
   </div>
 
-  <section id="trust">
-    <div class="stat-counter">
-      <div class="num"><span id="statCount">0</span><span class="unit">건</span></div>
-      <div class="label">지금까지 수달이가 풀어준 사주예요</div>
-    </div>
-  </section>
-
   <div class="today-fortune-card" id="todayFortuneCard">
     <div class="row-top">
       <span class="eyebrow">오늘의 운세</span>
@@ -241,6 +234,87 @@
   </nav>
 
   <div class="toast" id="toast"></div>
+
+  <div class="wizard-overlay" id="wizardOverlay"></div>
+  <div class="wizard-modal" id="wizardModal" role="dialog" aria-modal="true" aria-label="오늘의 운세 무료로 보기">
+    <div class="wizard-head">
+      <button class="wizard-back" id="wizardBack" type="button" aria-label="이전 단계">‹</button>
+      <div class="wizard-progress"><div class="wizard-progress-fill" id="wizardProgressFill"></div></div>
+      <button class="wizard-close" id="wizardClose" type="button" aria-label="닫기">×</button>
+    </div>
+    <div class="wizard-step-label" id="wizardStepLabel"></div>
+
+    <div class="wizard-bubble">
+      <img class="wizard-mascot" src="/logo.png" alt="">
+      <p id="wizardMsg"></p>
+    </div>
+
+    <div id="wizardBody">
+      <div class="wizard-step" data-step="name">
+        <div class="field">
+          <label>이름 (선택)</label>
+          <input type="text" id="wName" placeholder="홍길동" autocomplete="off">
+          <p class="hint">이름은 사주 계산과는 관계없어요 — 결과에서 편하게 불러드릴 이름만 적어주세요. 그냥 넘어가도 괜찮아요.</p>
+        </div>
+      </div>
+      <div class="wizard-step" data-step="gender" hidden>
+        <div class="field">
+          <label>성별</label>
+          <div class="wizard-choice-row" id="wGenderRow">
+            <button type="button" class="wizard-choice" data-value="남">남성</button>
+            <button type="button" class="wizard-choice" data-value="여">여성</button>
+          </div>
+          <p class="hint">사주 계산 기준을 맞추기 위한 정보예요.</p>
+        </div>
+      </div>
+      <div class="wizard-step" data-step="calendar" hidden>
+        <div class="field">
+          <label>양력 · 음력</label>
+          <div class="wizard-choice-row" id="wCalendarRow">
+            <button type="button" class="wizard-choice" data-value="양력">양력</button>
+            <button type="button" class="wizard-choice" data-value="음력">음력</button>
+          </div>
+        </div>
+      </div>
+      <div class="wizard-step" data-step="birth" hidden>
+        <div class="field">
+          <label>생년월일</label>
+          <div class="date-inputs">
+            <input type="number" id="wYear" placeholder="년" min="1900" max="2100">
+            <input type="number" id="wMonth" placeholder="월" min="1" max="12">
+            <input type="number" id="wDay" placeholder="일" min="1" max="31">
+          </div>
+        </div>
+      </div>
+      <div class="wizard-step" data-step="time" hidden>
+        <div class="field">
+          <label>태어난 시간</label>
+          <div class="date-inputs">
+            <input type="number" id="wHour" placeholder="시" min="0" max="23">
+            <input type="number" id="wMinute" placeholder="분" min="0" max="59">
+          </div>
+          <label class="checkbox-field"><input type="checkbox" id="wHourUnknown"> 태어난 시간을 몰라요</label>
+        </div>
+      </div>
+
+      <div class="error-box hidden" id="wizardError"></div>
+
+      <div class="wizard-step wizard-result" data-step="result" hidden>
+        <div class="wizard-result-card">
+          <div class="eyebrow" id="wResultDate">오늘의 운세</div>
+          <h3 id="wResultTitle"></h3>
+          <p id="wResultDesc"></p>
+        </div>
+        <div class="wizard-upsell">
+          <p class="wizard-upsell-lead">오늘 하루만 살짝 보여드린 맛보기예요. 진짜 궁금한 건 따로 있죠?</p>
+          <a class="wizard-cta wizard-cta-primary" href="/quick.html?topic=love">990원으로 애정운 빠르게 보기 →</a>
+          <a class="wizard-cta wizard-cta-secondary" href="/lifetime-report.html">평생사주 100페이지 정식 리포트 보기</a>
+        </div>
+      </div>
+    </div>
+
+    <button type="button" class="wizard-next" id="wizardNext">다음</button>
+  </div>
 </div>
 
 <script>
@@ -441,7 +515,184 @@
       // 실패해도 스토어 자체는 정상 노출 — 0으로 둠
     }
   }
-  loadStatCount();
+  (function initFortuneWizard() {
+    const overlay = document.getElementById('wizardOverlay');
+    const modal = document.getElementById('wizardModal');
+    const backBtn = document.getElementById('wizardBack');
+    const closeBtn = document.getElementById('wizardClose');
+    const nextBtn = document.getElementById('wizardNext');
+    const progressFill = document.getElementById('wizardProgressFill');
+    const stepLabel = document.getElementById('wizardStepLabel');
+    const msgEl = document.getElementById('wizardMsg');
+    const errorBox = document.getElementById('wizardError');
+    const steps = Array.from(document.querySelectorAll('.wizard-step'));
+    const inputSteps = steps.filter((s) => s.dataset.step !== 'result');
+
+    const state = { name: '', gender: '', calendar: '양력', year: '', month: '', day: '', hour: '', minute: '', hourUnknown: false };
+    let stepIndex = 0;
+    let submitted = false;
+
+    const MESSAGES = {
+      name: () => '생년월일만 알려주면 오늘 하루 흐름을 바로 봐줄게요. 먼저, 편하게 부를 이름이 있을까요?',
+      gender: () => `${state.name ? state.name + '님, ' : ''}사주 계산 기준을 맞추려면 성별이 필요해요.`,
+      calendar: () => '생일이 양력 기준인가요, 음력 기준인가요?',
+      birth: () => '태어난 날짜를 알려주세요.',
+      time: () => '태어난 시간까지 알면 더 정확해요. 모르면 아래 체크만 해도 괜찮아요.',
+      result: () => `${state.name ? state.name + '님, ' : ''}오늘의 흐름을 봐드렸어요.`
+    };
+
+    function setupChoiceRow(rowId, key) {
+      const row = document.getElementById(rowId);
+      row.querySelectorAll('.wizard-choice').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          state[key] = btn.dataset.value;
+          row.querySelectorAll('.wizard-choice').forEach((b) => b.classList.toggle('active', b === btn));
+          errorBox.classList.add('hidden');
+        });
+      });
+    }
+    setupChoiceRow('wGenderRow', 'gender');
+    setupChoiceRow('wCalendarRow', 'calendar');
+    document.querySelector('#wCalendarRow .wizard-choice[data-value="양력"]').classList.add('active');
+
+    function currentStepEl() { return inputSteps[stepIndex]; }
+
+    function showError(msg) {
+      errorBox.textContent = msg;
+      errorBox.classList.remove('hidden');
+    }
+
+    function render() {
+      steps.forEach((s) => { s.hidden = true; });
+      errorBox.classList.add('hidden');
+      if (submitted) {
+        document.querySelector('.wizard-step[data-step="result"]').hidden = false;
+        backBtn.hidden = true;
+        nextBtn.hidden = true;
+        progressFill.style.width = '100%';
+        stepLabel.textContent = '완료';
+        msgEl.textContent = MESSAGES.result();
+        return;
+      }
+      const stepEl = currentStepEl();
+      stepEl.hidden = false;
+      backBtn.hidden = stepIndex === 0;
+      nextBtn.hidden = false;
+      nextBtn.disabled = false;
+      nextBtn.textContent = stepIndex === inputSteps.length - 1 ? '오늘의 운세 보기' : '다음';
+      progressFill.style.width = `${Math.round(((stepIndex + 1) / inputSteps.length) * 100)}%`;
+      stepLabel.textContent = `${stepIndex + 1}/${inputSteps.length}단계`;
+      msgEl.textContent = MESSAGES[stepEl.dataset.step]();
+    }
+
+    function validateStep() {
+      const step = currentStepEl().dataset.step;
+      if (step === 'name') {
+        state.name = document.getElementById('wName').value.trim();
+        return true;
+      }
+      if (step === 'gender') {
+        if (!state.gender) { showError('성별을 선택해주세요.'); return false; }
+        return true;
+      }
+      if (step === 'calendar') {
+        if (!state.calendar) { showError('양력/음력을 선택해주세요.'); return false; }
+        return true;
+      }
+      if (step === 'birth') {
+        const y = document.getElementById('wYear').value;
+        const m = document.getElementById('wMonth').value;
+        const d = document.getElementById('wDay').value;
+        if (!y || !m || !d) { showError('생년월일을 모두 입력해주세요.'); return false; }
+        state.year = y; state.month = m; state.day = d;
+        return true;
+      }
+      if (step === 'time') {
+        state.hourUnknown = document.getElementById('wHourUnknown').checked;
+        if (!state.hourUnknown) {
+          const h = document.getElementById('wHour').value;
+          const mi = document.getElementById('wMinute').value;
+          if (h === '' || mi === '') { showError('시간을 모르면 아래 "태어난 시간을 몰라요"를 체크해주세요.'); return false; }
+          state.hour = h; state.minute = mi;
+        }
+        return true;
+      }
+      return true;
+    }
+
+    async function submitWizard() {
+      nextBtn.disabled = true;
+      nextBtn.textContent = '분석 중...';
+      try {
+        const res = await fetch('/api/today-fortune-preview', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            year: state.year, month: state.month, day: state.day,
+            hour: state.hourUnknown ? '' : state.hour, minute: state.hourUnknown ? '' : state.minute,
+            hourUnknown: state.hourUnknown, gender: state.gender, calendar: state.calendar
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          showError(data.error || '계산에 실패했어요. 입력값을 확인해주세요.');
+          nextBtn.disabled = false;
+          nextBtn.textContent = '오늘의 운세 보기';
+          return;
+        }
+        document.getElementById('wResultDate').textContent = `오늘의 운세 · ${data.fortune.date}`;
+        document.getElementById('wResultTitle').textContent = data.fortune.title;
+        document.getElementById('wResultDesc').textContent = data.fortune.desc;
+        submitted = true;
+        render();
+      } catch (e) {
+        showError('네트워크 오류로 실패했어요. 잠시 후 다시 시도해주세요.');
+        nextBtn.disabled = false;
+        nextBtn.textContent = '오늘의 운세 보기';
+      }
+    }
+
+    nextBtn.addEventListener('click', () => {
+      if (!validateStep()) return;
+      if (stepIndex === inputSteps.length - 1) { submitWizard(); return; }
+      stepIndex += 1;
+      render();
+    });
+
+    backBtn.addEventListener('click', () => {
+      if (stepIndex === 0) return;
+      stepIndex -= 1;
+      render();
+    });
+
+    function open() {
+      stepIndex = 0;
+      submitted = false;
+      overlay.classList.add('open');
+      modal.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      render();
+    }
+    function close() {
+      overlay.classList.remove('open');
+      modal.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    overlay.addEventListener('click', close);
+    closeBtn.addEventListener('click', close);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && overlay.classList.contains('open')) close(); });
+
+    const tfCard = document.getElementById('todayFortuneCard');
+    if (tfCard) {
+      tfCard.addEventListener('click', (e) => {
+        const tfCta = document.getElementById('tfCta');
+        if (tfCta && tfCta.getAttribute('href') === '/today-preview.html') {
+          e.preventDefault();
+          open();
+        }
+      });
+    }
+  })();
 </script>
 </body>
 </html>
