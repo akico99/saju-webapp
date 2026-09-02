@@ -59,31 +59,48 @@ function verdictOf(score) {
   return '가급적 피하면 좋은 날이에요.';
 }
 
-// 이사·개업·결혼은 계산 방식(오행-용신 궁합)은 같지만, 주제마다 "좋은 기운"의 의미가 다르다.
-// 후보일의 천간이 신청자의 일간(본인) 기준으로 무슨 십신인지 봐서, 그 주제와 잘 맞는
-// 십신 그룹이면 가산점 + 주제에 맞는 해석 문장을, 안 맞으면 감점 + 주의 문장을 붙인다.
-const OCCASION_SHIPSIN = {
+// 이사·개업·결혼은 오행-용신 궁합 계산 방식은 같지만, 주제마다 "좋은 기운"의 의미가
+// 다르다. 후보일의 천간이 신청자의 일간(본인) 기준으로 무슨 십신인지 봐서, 그 주제와
+// 얼마나 잘 맞는 그룹인지 5단계로 순위를 매긴다 — 딱 1~2개 그룹만 다루던 이전 방식은
+// 나머지 그룹에선 아무 언급이 없어서 주제를 바꿔도 문장이 똑같아 보이는 문제가 있었다.
+// 이제는 5개 그룹 모두에 순위·문장이 있어서 항상 그 주제만의 해석이 붙고, 점수에도
+// 절반 비중으로 반영되므로 같은 날짜라도 주제를 바꾸면 순위 자체가 달라진다.
+const OCCASION_GROUP_ORDER = {
+  moving: ['인성', '비겁', '식상', '재성', '관성'],
+  opening: ['재성', '식상', '관성', '비겁', '인성'],
+  wedding: ['관성', '재성', '인성', '식상', '비겁']
+};
+const OCCASION_GROUP_TEXT = {
   moving: {
-    good: { '인성': '안정적으로 자리 잡는 기운이 있어서 이사하기 좋아요', '비겁': '내 힘으로 씩씩하게 밀고 나가는 기운이 있어서 이사하기 좋아요' },
-    bad: { '관성': '이런저런 일과 부담이 늘어나기 쉬운 기운이라 이사엔 조금 신경 쓰이는 날이에요' }
+    '인성': '안정적으로 자리 잡는 기운이 강해서 이사하기 특히 좋은 날이에요',
+    '비겁': '내 힘으로 씩씩하게 밀고 나가는 기운이 있어서 이사하기 좋은 날이에요',
+    '식상': '새로운 환경에 적응하는 활동적인 기운이 있는 날이에요',
+    '재성': '이사 비용 등 돈 문제에 조금 신경 쓰이는 기운이 있는 날이에요',
+    '관성': '이런저런 일과 부담이 늘어나기 쉬운 기운이라 이사는 신경 써서 준비하면 좋아요'
   },
   opening: {
-    good: { '재성': '돈이 들어오는 기운이 강해서 개업하기 좋아요', '식상': '내 능력을 마음껏 펼칠 수 있는 기운이 있어서 개업하기 좋아요' },
-    bad: { '비겁': '동업자나 경쟁자와 부딪히기 쉬운 기운이라 개업엔 조금 신경 쓰이는 날이에요' }
+    '재성': '돈이 들어오는 기운이 강해서 개업하기 특히 좋은 날이에요',
+    '식상': '내 능력을 마음껏 펼칠 수 있는 기운이 있어서 개업하기 좋은 날이에요',
+    '관성': '책임감 있게 사업을 이끌어가는 기운이 있는 날이에요',
+    '비겁': '동업자나 경쟁자와 부딪히기 쉬운 기운이라 개업은 신경 써서 준비하면 좋아요',
+    '인성': '크게 벌이기보단 차분히 다지기 좋은 기운이 있는 날이에요'
   },
   wedding: {
-    good: { '재성': '인연이 안정적으로 자리 잡는 기운이 있어서 결혼하기 좋아요', '관성': '서로에 대한 책임감이 단단해지는 기운이 있어서 결혼하기 좋아요' },
-    bad: { '식상': '마음이 들뜨기 쉬운 기운이라 결혼 준비는 차분하게 챙기면 좋아요' }
+    '관성': '서로에 대한 책임감이 단단해지는 기운이 있어서 결혼하기 특히 좋은 날이에요',
+    '재성': '인연이 안정적으로 자리 잡는 기운이 있어서 결혼하기 좋은 날이에요',
+    '인성': '가족과 주변의 지지를 받는 기운이 있는 날이에요',
+    '식상': '마음이 들뜨기 쉬운 기운이라 결혼 준비는 차분하게 챙기면 좋아요',
+    '비겁': '주관이 강해지는 기운이라 배우자와 의견을 맞추는 데 신경 쓰면 좋아요'
   }
 };
-const OCCASION_GROUP_BONUS = 8;
-const OCCASION_GROUP_PENALTY = -6;
+const OCCASION_GROUP_SCORE_TIERS = [90, 72, 55, 38, 20]; // 1~5순위
 function occasionShipsinInfo(occasionKey, group) {
-  const table = OCCASION_SHIPSIN[occasionKey];
-  if (!table || !group) return { bonus: 0, phrase: null };
-  if (table.good[group]) return { bonus: OCCASION_GROUP_BONUS, phrase: table.good[group] };
-  if (table.bad[group]) return { bonus: OCCASION_GROUP_PENALTY, phrase: table.bad[group] };
-  return { bonus: 0, phrase: null };
+  const order = OCCASION_GROUP_ORDER[occasionKey];
+  if (!order || !group) return { score: 55, phrase: '' };
+  const idx = order.indexOf(group);
+  const score = idx >= 0 ? OCCASION_GROUP_SCORE_TIERS[idx] : 55;
+  const phrase = OCCASION_GROUP_TEXT[occasionKey]?.[group] || '';
+  return { score, phrase };
 }
 
 function ganZhiOhaengScore(ganZhi, yongshinMain) {
@@ -188,22 +205,24 @@ router.post('/date-select', requireAuth, (req, res) => {
         const hourScore = ganZhiOhaengScore(hourGanZhi, yongshinMain);
         const dayOhaeng = STEM_OHAENG[dayStem]?.ohaeng;
         const hourOhaeng = STEM_OHAENG[hourStem]?.ohaeng;
+        const baseScore = Math.round(dayScore * 0.6 + hourScore * 0.4); // 나에게 맞는 기운인지(공통)
 
         // 이사·개업·결혼마다 "좋은 기운"의 의미가 다르므로, 후보일이 본인에게 무슨
-        // 십신인지 봐서 그 주제와 맞는지 별도로 가산·감산한다(주제별 해석의 핵심).
+        // 십신인지 봐서 그 주제와 얼마나 맞는지를 절반 비중으로 반영한다 — 이 비중을
+        // 작게 두면 세 주제의 순위·문장이 사실상 똑같아 보이는 문제가 생긴다.
         const dayShipsinHanja = getShipsin(personDayStem, dayStem);
         const dayShipsinKo = dayShipsinHanja ? SHIPSIN_KO[dayShipsinHanja] : '비견';
         const shipsinGroup = SHIPSIN_GROUP[dayShipsinKo] || '비겁';
-        const { bonus, phrase: occasionPhrase } = occasionShipsinInfo(occasionKey, shipsinGroup);
+        const { score: occasionScore, phrase: occasionPhrase } = occasionShipsinInfo(occasionKey, shipsinGroup);
 
-        score = Math.max(5, Math.min(95, Math.round(dayScore * 0.6 + hourScore * 0.4) + bonus));
+        score = Math.max(5, Math.min(95, Math.round(baseScore * 0.5 + occasionScore * 0.5)));
 
         const dayPhrase = relationPhrase(dayOhaeng, yongshinMain);
         const hourPhrase = relationPhrase(hourOhaeng, yongshinMain);
         const detailText = dayOhaeng === hourOhaeng
           ? `날과 시 모두 ${OHAENG_KO[dayOhaeng] || dayOhaeng} 기운이에요. ${dayPhrase}.`
           : `날의 기운(${OHAENG_KO[dayOhaeng] || dayOhaeng})은 ${dayPhrase}. 시의 기운(${OHAENG_KO[hourOhaeng] || hourOhaeng})은 ${hourPhrase}.`;
-        reasonText = `${verdictOf(score)} ${detailText}${occasionPhrase ? ' ' + occasionPhrase + '.' : ''}`;
+        reasonText = `${verdictOf(score)} ${detailText} ${occasionPhrase}`;
       } else {
         score = balanceScoreOf(engineResult.counts.ohaeng);
         const clashesWithParent = parentDayBranches.some((pb) => isChung(dayBranch, pb));
