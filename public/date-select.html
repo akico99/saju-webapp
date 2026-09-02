@@ -6,14 +6,7 @@
 <title>사주보는 수달 — 날짜 선택(택일)</title>
 <link rel="stylesheet" href="/theme.css">
 <style>
-  .ds-occasion-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 20px; }
-  .ds-occasion {
-    padding: 14px 6px; border-radius: 12px; border: 1px solid var(--line); background: var(--paper);
-    font-size: 12.5px; font-weight: 700; color: var(--ink); cursor: pointer; font-family: inherit;
-    display: flex; flex-direction: column; align-items: center; gap: 6px;
-  }
-  .ds-occasion .emoji { font-size: 20px; }
-  .ds-occasion.active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+  .ds-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 28px; margin-bottom: 4px; }
 
   .bt-result { padding: 0 20px; display: none; }
   .bt-card {
@@ -38,26 +31,27 @@
   .ds-overview .ttl { font-size: 12px; font-weight: 800; color: var(--accent); margin-bottom: 6px; }
   .ds-overview .body { font-size: 13.5px; color: var(--ink); line-height: 1.8; white-space: pre-wrap; }
   .ds-overview .body strong { color: var(--accent); }
+
+  .ds-direction {
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card);
+    padding: 14px 18px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px;
+  }
+  .ds-direction .icon { font-size: 22px; }
+  .ds-direction .ttl { font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 2px; }
+  .ds-direction .val { font-size: 15px; font-weight: 800; color: var(--ink); }
+  .ds-direction .note { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
 </style>
 </head>
 <body>
 <div class="app">
   <header>
     <a class="back" href="/">←</a>
-    <div class="ttl">날짜 선택(택일)</div>
+    <div class="ttl" id="pageTtl">날짜 선택(택일)</div>
   </header>
   <main>
-    <h1>언제가 좋을까</h1>
-    <p class="lead" id="dsLead">
-      이사·개업·결혼·출산처럼 중요한 날, 예정일 앞뒤로 오행이 잘 맞는 날짜·시간을 찾아드려요.
-    </p>
-
-    <div class="ds-occasion-row" id="occasionRow">
-      <button type="button" class="ds-occasion" data-value="moving"><span class="emoji">🏠</span>이사</button>
-      <button type="button" class="ds-occasion" data-value="opening"><span class="emoji">🏢</span>개업</button>
-      <button type="button" class="ds-occasion" data-value="wedding"><span class="emoji">💍</span>결혼</button>
-      <button type="button" class="ds-occasion" data-value="birth"><span class="emoji">👶</span>출산</button>
-    </div>
+    <div class="ds-badge" id="dsBadge"></div>
+    <h1 id="dsH1">언제가 좋을까</h1>
+    <p class="lead" id="dsLead"></p>
 
     <div class="point-notice" id="pointNotice">가격 확인 중...</div>
 
@@ -166,13 +160,19 @@
         <div class="ttl">AI 총평</div>
         <div class="body" id="dsOverviewBody"></div>
       </div>
+      <div class="ds-direction hidden" id="dsDirection">
+        <div class="icon">🧭</div>
+        <div>
+          <div class="ttl">이사하기 좋은 방향</div>
+          <div class="val" id="dsDirectionVal"></div>
+          <div class="note" id="dsDirectionNote"></div>
+        </div>
+      </div>
       <div id="dsList"></div>
     </section>
   </main>
 </div>
 
-<script>window.POINT_NOTICE_PRICE = 2900; window.POINT_NOTICE_LABEL = '날짜 선택(택일)';</script>
-<script src="/point-notice.js"></script>
 <script src="/profile-picker.js"></script>
 <script>
   const form = document.getElementById('dsForm');
@@ -182,40 +182,41 @@
   const parentFields = document.getElementById('parentFields');
   const WEEKDAY_KO = ['일', '월', '화', '수', '목', '금', '토'];
 
+  // 이사/개업/결혼/출산은 각각 독립된 상품(990원)이다 — 이 페이지 안에서 주제를 바꿔가며
+  // 고르는 게 아니라, 홈 화면에서 원하는 주제로 바로 들어와서 그 결과만 받는다.
   const OCCASION_META = {
-    moving: { label: '이사', lead: '이사하기 좋은 날짜를 찾아드려요. 이사 예정일 앞뒤로 오행이 잘 맞는 날짜·시간을 확인해보세요.', baseTtl: '이사 예정일' },
-    opening: { label: '개업', lead: '개업하기 좋은 날짜를 찾아드려요. 개업 예정일 앞뒤로 오행이 잘 맞는 날짜·시간을 확인해보세요.', baseTtl: '개업 예정일' },
-    wedding: { label: '결혼', lead: '결혼하기 좋은 날짜를 찾아드려요. 결혼 예정일 앞뒤로 오행이 잘 맞는 날짜·시간을 확인해보세요.', baseTtl: '결혼 예정일' },
-    birth: { label: '출산', lead: '출산 예정일 앞뒤로 며칠, 그리고 하루 중 몇 개 시간대를 넣으면, 그 안에서 오행이 골고루 갖춰진 사주가 나오는 날짜·시간을 찾아드려요.', baseTtl: '출산 예정일' }
+    moving: { label: '이사', emoji: '🏠', lead: '이사하기 좋은 날짜와 방향을 찾아드려요. 이사 예정일 앞뒤로 오행이 잘 맞는 날짜·시간을 확인해보세요.', baseTtl: '이사 예정일' },
+    opening: { label: '개업', emoji: '🏢', lead: '개업하기 좋은 날짜를 찾아드려요. 개업 예정일 앞뒤로 오행이 잘 맞는 날짜·시간을 확인해보세요.', baseTtl: '개업 예정일' },
+    wedding: { label: '결혼', emoji: '💍', lead: '결혼하기 좋은 날짜를 찾아드려요. 결혼 예정일 앞뒤로 오행이 잘 맞는 날짜·시간을 확인해보세요.', baseTtl: '결혼 예정일' },
+    birth: { label: '출산', emoji: '👶', lead: '출산 예정일 앞뒤로 며칠, 그리고 하루 중 몇 개 시간대를 넣으면, 그 안에서 오행이 골고루 갖춰진 사주가 나오는 날짜·시간을 찾아드려요.', baseTtl: '출산 예정일' }
   };
 
+  const preset = new URLSearchParams(location.search).get('occasion');
+  const occasionKey = OCCASION_META[preset] ? preset : 'moving';
+  const meta = OCCASION_META[occasionKey];
+  occasionInput.value = occasionKey;
+  document.title = `사주보는 수달 — ${meta.label} 날짜 선택`;
+  document.getElementById('pageTtl').textContent = `${meta.label} 날짜 선택`;
+  document.getElementById('dsBadge').textContent = meta.emoji;
+  document.getElementById('dsH1').textContent = `${meta.label}하기 좋은 날은 언제일까`;
+  document.getElementById('dsLead').textContent = meta.lead;
+  document.getElementById('baseDateTtl').textContent = meta.baseTtl;
+  document.getElementById('resultTtl').textContent = `${meta.label}하기 좋은 날짜는`;
+  window.POINT_NOTICE_PRICE = 990;
+  window.POINT_NOTICE_LABEL = `${meta.label} 날짜 선택`;
+
   const weekendOnlyField = document.getElementById('weekendOnly').closest('label');
-  function selectOccasion(value) {
-    occasionInput.value = value;
-    document.querySelectorAll('.ds-occasion').forEach((btn) => btn.classList.toggle('active', btn.dataset.value === value));
-    const meta = OCCASION_META[value];
-    document.getElementById('dsLead').textContent = meta.lead;
-    document.getElementById('baseDateTtl').textContent = meta.baseTtl;
-    document.getElementById('resultTtl').textContent = `${meta.label}하기 좋은 날짜는`;
-    if (value === 'birth') {
-      personFields.classList.add('hidden');
-      parentFields.classList.remove('hidden');
-      weekendOnlyField.classList.add('hidden'); // 출산일은 병원 사정으로 정해지지, 요일을 고르는 게 아니라서 의미 없음
-    } else {
-      personFields.classList.remove('hidden');
-      parentFields.classList.add('hidden');
-      weekendOnlyField.classList.remove('hidden');
-    }
-    // 결혼은 예식장·하객 사정상 사실상 주말에만 하니 기본으로 켜두고, 나머지는 신청자가 필요하면 직접 켠다.
-    document.getElementById('weekendOnly').checked = (value === 'wedding');
+  if (occasionKey === 'birth') {
+    personFields.classList.add('hidden');
+    parentFields.classList.remove('hidden');
+    weekendOnlyField.classList.add('hidden'); // 출산일은 병원 사정으로 정해지지, 요일을 고르는 게 아니라서 의미 없음
+  } else {
+    personFields.classList.remove('hidden');
+    parentFields.classList.add('hidden');
+    weekendOnlyField.classList.remove('hidden');
   }
-  document.querySelectorAll('.ds-occasion').forEach((btn) => {
-    btn.addEventListener('click', () => selectOccasion(btn.dataset.value));
-  });
-  (function initOccasionFromUrl() {
-    const preset = new URLSearchParams(location.search).get('occasion');
-    selectOccasion(OCCASION_META[preset] ? preset : 'moving');
-  })();
+  // 결혼은 예식장·하객 사정상 사실상 주말에만 하니 기본으로 켜두고, 나머지는 신청자가 원하면 직접 켠다.
+  document.getElementById('weekendOnly').checked = (occasionKey === 'wedding');
 
   const submitBtn = document.getElementById('submitBtn');
   function setFormBusy(busy) {
@@ -235,6 +236,15 @@
       overviewBox.classList.remove('hidden');
     } else {
       overviewBox.classList.add('hidden');
+    }
+
+    const directionBox = document.getElementById('dsDirection');
+    if (data.recommendedDirection) {
+      document.getElementById('dsDirectionVal').textContent = `${data.recommendedDirection.direction} (용신 오행: ${data.recommendedDirection.ohaeng})`;
+      document.getElementById('dsDirectionNote').textContent = data.recommendedDirection.note;
+      directionBox.classList.remove('hidden');
+    } else {
+      directionBox.classList.add('hidden');
     }
 
     const list = document.getElementById('dsList');
@@ -273,7 +283,7 @@
       const data = await res.json();
       if (!res.ok) {
         setFormBusy(false);
-        if (res.status === 401) { location.href = '/login.html?redirect=' + encodeURIComponent(location.pathname); return; }
+        if (res.status === 401) { location.href = '/login.html?redirect=' + encodeURIComponent(location.pathname + location.search); return; }
         if (res.status === 402) { alert(`포인트가 부족합니다 (필요 ${data.required}P / 보유 ${data.balance}P). 마이페이지에서 충전해주세요.`); location.href = '/mypage.html'; return; }
         errorBox.textContent = data.error || '요청 실패';
         errorBox.classList.remove('hidden');
@@ -294,5 +304,6 @@
     window.ProfilePicker.mount(document.getElementById('profilePickerB'), form, { prefix: 'b' });
   }
 </script>
+<script src="/point-notice.js"></script>
 </body>
 </html>

@@ -8,7 +8,7 @@ const { adjustPointBalance, findById } = require('./users');
 const PRICES = {
   quick: 990, compat: 4900, full: 14900,
   career_timing: 990, reunion: 990, birth_timing: 2900,
-  date_select: 2900
+  date_select_moving: 990, date_select_opening: 990, date_select_wedding: 990, date_select_birth: 990
 };
 
 const stmts = {

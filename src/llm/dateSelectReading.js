@@ -19,18 +19,22 @@ const SYSTEM_PROMPT = `당신은 정통 명리학에 근거해 "날짜 선택(�
 ## 형식
 소제목 없이 3~5문장, 400~600자 내외의 자연스러운 한 단락(또는 두 단락)으로 씁니다. 빈말로 채우지 말고, 전달받은 오행·용신·1순위 후보 이유를 실제로 인용해서 씁니다.`;
 
-function buildPersonPrompt({ occasionLabel, question, gender, personGanZhiKo, yongshinOhaengKo, top }) {
+function buildPersonPrompt({ occasionLabel, question, gender, personGanZhiKo, yongshinOhaengKo, recommendedDirection, top }) {
   const topList = top.map((c, i) =>
     `${i + 1}순위: ${c.year}.${c.month}.${c.day} ${c.hour}시 (${c.ganZhiKo}일·${c.hourGanZhiKo}시) — ${c.reasonText}`
   ).join('\n');
 
+  const directionLine = recommendedDirection
+    ? `\n추천 방향(용신 오행 ${recommendedDirection.ohaeng} 기준): ${recommendedDirection.direction} — ${recommendedDirection.note}.`
+    : '';
+
   return `신청자 정보: 성별 ${gender || '미상'}, 일주(태어난 날의 간지) ${personGanZhiKo}, 용신(이 사람에게 필요한 기운) ${yongshinOhaengKo}.
-주제: ${question} (${occasionLabel}).
+주제: ${question} (${occasionLabel}).${directionLine}
 
 이미 계산이 끝난 상위 후보 날짜와 그 이유:
 ${topList}
 
-위 내용을 근거로, 이 사람의 사주와 "${occasionLabel}"라는 주제에 맞춰 왜 1순위 날짜·시간이 가장 좋은지, 그리고 전체적으로 어떤 흐름의 시기인지 자연스러운 총평을 써주세요. 목록에 없는 새로운 간지나 오행 사실은 만들어내지 마세요.`;
+위 내용을 근거로, 이 사람의 사주와 "${occasionLabel}"라는 주제에 맞춰 왜 1순위 날짜·시간이 가장 좋은지, 그리고 전체적으로 어떤 흐름의 시기인지 자연스러운 총평을 써주세요.${recommendedDirection ? ' 추천 방향도 자연스럽게 한 문장 정도 녹여주세요.' : ''} 목록에 없는 새로운 간지나 오행 사실은 만들어내지 마세요.`;
 }
 
 function buildParentPrompt({ question, top }) {

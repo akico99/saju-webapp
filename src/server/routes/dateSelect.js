@@ -24,10 +24,20 @@ const { requireAuth } = require('../middleware/auth');
 const router = express.Router();
 
 const OCCASIONS = {
-  moving: { label: '이사', question: '이사하기 좋은 날', mode: 'person' },
-  opening: { label: '개업', question: '개업하기 좋은 날', mode: 'person' },
-  wedding: { label: '결혼', question: '결혼하기 좋은 날', mode: 'person' },
-  birth: { label: '출산', question: '출산하기 좋은 날', mode: 'parent' }
+  moving: { label: '이사', question: '이사하기 좋은 날', mode: 'person', productKey: 'date_select_moving' },
+  opening: { label: '개업', question: '개업하기 좋은 날', mode: 'person', productKey: 'date_select_opening' },
+  wedding: { label: '결혼', question: '결혼하기 좋은 날', mode: 'person', productKey: 'date_select_wedding' },
+  birth: { label: '출산', question: '출산하기 좋은 날', mode: 'parent', productKey: 'date_select_birth' }
+};
+
+// 이사에서만 쓰는 오행-방위 매핑 — 18장 리포트 개운법과 같은 기준(interpretation.md §보충법)을
+// 그대로 재사용한다: 木=동쪽, 火=남쪽, 土=중앙(가까운 곳), 金=서쪽, 水=북쪽.
+const OHAENG_DIRECTION = {
+  '木': { direction: '동쪽', note: '성장과 새로운 시작의 기운을 북돋아주는 방향이에요' },
+  '火': { direction: '남쪽', note: '활력과 밝은 기운을 채워주는 방향이에요' },
+  '土': { direction: '지금 사는 곳과 가까운 동네', note: '멀리 옮기기보다 익숙한 생활권 안에서 안정을 찾는 편이 잘 맞아요' },
+  '金': { direction: '서쪽', note: '결단력과 재물운을 도와주는 방향이에요' },
+  '水': { direction: '북쪽', note: '차분함과 지혜의 기운을 채워주는 방향이에요' }
 };
 
 const DEFAULT_HOURS = [9, 10, 11, 13, 14, 15, 16];
@@ -193,7 +203,7 @@ router.post('/date-select', requireAuth, async (req, res) => {
   }
 
   try {
-    points.chargeForProduct(req.session.userId, 'date_select');
+    points.chargeForProduct(req.session.userId, occasion.productKey);
   } catch (e) {
     if (e.code === 'insufficient_points') {
       return res.status(402).json({ error: e.message, code: e.code, required: e.required, balance: e.balance });
@@ -281,6 +291,14 @@ router.post('/date-select', requireAuth, async (req, res) => {
   candidates.sort((a, b) => b.score - a.score);
   const topCandidates = candidates.slice(0, 8);
 
+  // 이사만 해당 — 이사 갈 방향까지 알려달라는 요청 반영. 용신 오행을 방위로 환산한다
+  // (18장 리포트 개운법과 같은 기준). 지어낼 수 없는 "구체적 지역"이 아니라, 명리학에서
+  // 실제로 쓰는 개운법 범위(방위)까지만 다룬다.
+  let recommendedDirection = null;
+  if (occasionKey === 'moving' && yongshinMain && OHAENG_DIRECTION[yongshinMain]) {
+    recommendedDirection = { ohaeng: OHAENG_KO[yongshinMain], ...OHAENG_DIRECTION[yongshinMain] };
+  }
+
   // 결정론적 채점은 이미 끝났다 — 그 결과를 근거로 사람이 읽는 총평 한 단락을 AI로 붙인다.
   // 990원 빠른 리딩과 동일한 가치(개인화된 서술형 해설)를 여기서도 제공하는 부분.
   // 실패해도 핵심 상품(후보 목록)은 이미 완성돼 있으니 총평 없이 그대로 응답한다.
@@ -293,13 +311,17 @@ router.post('/date-select', requireAuth, async (req, res) => {
       gender: personGender,
       personGanZhiKo,
       yongshinOhaengKo: OHAENG_KO[yongshinMain] || yongshinMain,
+      recommendedDirection,
       top: topCandidates.slice(0, 3)
     });
   } catch (e) {
     overview = null;
   }
 
-  res.json({ occasion: occasionKey, occasionLabel: occasion.label, overview, candidates: topCandidates });
+  res.json({
+    occasion: occasionKey, occasionLabel: occasion.label, overview, recommendedDirection,
+    candidates: topCandidates
+  });
 });
 
 module.exports = router;
