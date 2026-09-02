@@ -248,17 +248,18 @@ function computePersonBasics(body, prefix) {
 
 // 화면에 보여주고 끝나는 게 아니라, PDF로 저장해서 주문 이력(orders)에 남긴다 —
 // 마이페이지 "다시보기"에서 quick.js 상품들과 똑같은 방식으로 다시 받아볼 수 있게 된다.
-// 실패해도(디스크·puppeteer 오류 등) 화면에 이미 보여줄 리포트 텍스트는 있으니 조용히
-// jobId 없이 넘어간다 — 다운로드 버튼만 안 보일 뿐 상품 자체는 정상 완료된 것으로 본다.
+// 실패해도(디스크·puppeteer 오류 등) 화면에 이미 보여줄 리포트 텍스트는 있으니 상품
+// 자체는 정상 완료로 본다 — 다만 주문 행을 'pending'으로 방치하면 마이페이지에
+// "생성 중"이라고 영원히 뜨는 거짓 상태가 되므로, 실패는 반드시 'error'로 마감한다.
 async function savePdfAndOrder({ userId, occasion, name, title, eyebrow, metaLine, bestLabel, bestValue, text }) {
   if (!text) return null;
+  const jobId = crypto.randomUUID();
+  orders.createOrder({
+    userId, productKey: occasion.productKey,
+    label: `${occasion.label} 리포트${name ? ' — ' + name : ''}`,
+    jobId
+  });
   try {
-    const jobId = crypto.randomUUID();
-    orders.createOrder({
-      userId, productKey: occasion.productKey,
-      label: `${occasion.label} 리포트${name ? ' — ' + name : ''}`,
-      jobId
-    });
     const html = renderDateSelectHtml({ title, eyebrow, metaLine, bestLabel, bestValue, text });
     const jobDir = path.join(OUTPUT_ROOT, jobId);
     fs.mkdirSync(jobDir, { recursive: true });
@@ -267,6 +268,7 @@ async function savePdfAndOrder({ userId, occasion, name, title, eyebrow, metaLin
     orders.markDone(jobId, { resultPath: pdfPath });
     return jobId;
   } catch (e) {
+    orders.markError(jobId, e.message || String(e));
     return null;
   }
 }

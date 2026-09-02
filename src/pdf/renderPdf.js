@@ -30,6 +30,7 @@
       않으므로 위 버그와 완전히 무관하다. */
 
 const fs = require('fs');
+const path = require('path');
 const puppeteer = require('puppeteer');
 const { PDFDocument, rgb } = require('pdf-lib');
 const fontkit = require('@pdf-lib/fontkit');
@@ -38,9 +39,13 @@ const GOLD_RGB = rgb(0.7804, 0.6314, 0.2275);
 const MUTED_RGB = rgb(0.5529, 0.5882, 0.7216);
 
 /* pdf-lib의 StandardFonts(Helvetica 등)는 한글 글리프가 없어 이름을 그대로 못 그린다
-   (WinAnsi 인코딩만 지원). 실제 시스템의 맑은 고딕 TTF를 fontkit으로 임베드해야
-   "OOO 님의 평생사주" 같은 한글 푸터 텍스트를 페이지 번호 옆에 그릴 수 있다. */
-const KOREAN_FONT_PATH = 'C:\\Windows\\Fonts\\malgun.ttf';
+   (WinAnsi 인코딩만 지원). "OOO 님의 평생사주" 같은 한글 푸터 텍스트를 그리려면 한글
+   글리프가 있는 TTF를 fontkit으로 임베드해야 한다 — 예전엔 로컬 윈도우의 맑은 고딕
+   경로(C:\Windows\Fonts\malgun.ttf)를 직접 가리켰는데, 그 경로는 그 개발 PC에만
+   존재해서 리눅스인 배포 서버(Render)에서는 파일을 못 찾아 PDF 생성이 조용히 계속
+   실패했다(주문이 "생성 중"에 멈춘 채 끝나지 않음). OS에 있는 폰트에 기대는 대신
+   OFL 라이선스 나눔고딕을 리포에 함께 커밋해 두 환경에서 완전히 동일하게 동작한다. */
+const KOREAN_FONT_PATH = path.join(__dirname, 'fonts', 'NanumGothic-Regular.ttf');
 
 /**
  * @param {string} html renderHtml()의 결과
