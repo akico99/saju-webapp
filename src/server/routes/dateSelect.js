@@ -1,13 +1,16 @@
 'use strict';
-/* 날짜 선택(택일) — 이사·개업·결혼처럼 "이미 있는 사람"에게 좋은 날을 찾아주는 것과,
-   출산처럼 "아직 태어나지 않은 사람"에게 좋은 날을 찾아주는 것은 계산 방식이 다르다.
+/* 날짜 선택(택일) — 세 가지 입력 방식이 있다.
 
-   - 이사/개업/결혼(사람 모드): 신청자 본인의 용신을 구하고, 후보 날짜의 오행이 그 용신과
-     얼마나 잘 맞는지로 점수를 매긴다 — life-graph·오늘의 운세와 완전히 같은 계산
-     (relationScore)을 재사용한다.
-   - 출산(부모 모드): 아직 태어나지 않은 아이 자신의 사주이므로 "용신과 맞는지"를 따질
-     기준이 없다 — 대신 그 순간 사주 8글자의 오행이 얼마나 골고루 있는지(balanceScoreOf)로
-     보고, 부모와 부딪히는 날은 감점한다. 기존 출산택일(birth-timing)과 동일한 로직. */
+   1) 날짜 범위 모드(이사/개업): 기준일 앞뒤 며칠 안에서 날짜·시간 후보를 점수순으로 뽑는다.
+   2) 연도 모드(결혼/임신 시도): "몇 년도"만 받아서 그 해 전체를 훑고, 좋은 "몇 월 몇째 주"를
+      찾아준다 — 결혼·임신 시도는 애초에 "그날 아침에 정하는" 게 아니라 미리 달·주 단위로
+      계획하는 일이라, 날짜 하나를 콕 찍어주는 것보다 이 방식이 실제로 더 쓸모 있다.
+   3) 부모 모드(출산): 아직 태어나지 않은 아이 자신의 사주이므로 "용신과 맞는지"를 따질 기준이
+      없다 — 그 순간 사주 8글자의 오행이 얼마나 골고루 있는지(balanceScoreOf)로 보고, 부모와
+      부딪히는 날은 감점한다.
+
+   점수 계산 공통 원칙(사람 모드): ①오행-용신 궁합(날 60%+시 40%) ②주제별 십신 궁합(주제마다
+   "좋은 기운"의 의미가 다름) ③본인 일지와의 합충 — 세 근거를 절반씩 섞어서 매긴다. */
 const express = require('express');
 const { computeSaju } = require('../../engine/index');
 const { relationScore } = require('../../pdf/charts');
@@ -26,7 +29,14 @@ const router = express.Router();
 const OCCASIONS = {
   moving: { label: '이사', question: '이사하기 좋은 날', mode: 'person', productKey: 'date_select_moving' },
   opening: { label: '개업', question: '개업하기 좋은 날', mode: 'person', productKey: 'date_select_opening' },
-  wedding: { label: '결혼', question: '결혼하기 좋은 날', mode: 'person', productKey: 'date_select_wedding' },
+  wedding: {
+    label: '결혼', question: '결혼하기 좋은 날', mode: 'person', productKey: 'date_select_wedding',
+    yearMode: true, weekendOnly: true
+  },
+  conception: {
+    label: '임신 시도', question: '임신 시도하기 좋은 날', mode: 'person', productKey: 'date_select_conception',
+    yearMode: true, weekendOnly: false, genderAware: true
+  },
   birth: { label: '출산', question: '출산하기 좋은 날', mode: 'parent', productKey: 'date_select_birth' }
 };
 
@@ -38,6 +48,18 @@ const OHAENG_DIRECTION = {
   '土': { direction: '지금 사는 곳과 가까운 동네', note: '멀리 옮기기보다 익숙한 생활권 안에서 안정을 찾는 편이 잘 맞아요' },
   '金': { direction: '서쪽', note: '결단력과 재물운을 도와주는 방향이에요' },
   '水': { direction: '북쪽', note: '차분함과 지혜의 기운을 채워주는 방향이에요' }
+};
+
+// 개업에서만 쓰는 오행-업종 키워드 매핑 — interpretation.md §오행별 키워드(木=성장·기획·인정욕
+// / 火=표현·열정·명예 / 土=안정·신뢰·중재 / 金=결단·규율·재물 / 水=지혜·유연·욕망)를 그대로
+// 재사용해 "구체적인 업종 하나"가 아니라 방향성(키워드)만 제시한다 — 특정 사업 성패를
+// 단정하지 않기 위해서다.
+const OHAENG_BUSINESS = {
+  '木': { field: '교육·기획·미디어·콘텐츠 계열', note: '새로운 걸 키우고 알리는 일에 특히 힘이 실려요' },
+  '火': { field: '요식업·엔터테인먼트·마케팅 계열', note: '사람을 모으고 표현하는 일에 특히 힘이 실려요' },
+  '土': { field: '부동산·중개·상담·안정적인 자영업 계열', note: '신뢰를 쌓아가는 꾸준한 일에 특히 힘이 실려요' },
+  '金': { field: '금융·제조·기술·재무 계열', note: '숫자와 규율을 다루는 일에 특히 힘이 실려요' },
+  '水': { field: '유통·무역·서비스·물류 계열', note: '흐름을 만들고 사람을 연결하는 일에 특히 힘이 실려요' }
 };
 
 const DEFAULT_HOURS = [9, 10, 11, 13, 14, 15, 16];
@@ -71,16 +93,20 @@ function verdictOf(score) {
   return '가급적 피하면 좋은 날이에요.';
 }
 
-// 이사·개업·결혼은 오행-용신 궁합 계산 방식은 같지만, 주제마다 "좋은 기운"의 의미가
-// 다르다. 후보일의 천간이 신청자의 일간(본인) 기준으로 무슨 십신인지 봐서, 그 주제와
-// 얼마나 잘 맞는 그룹인지 5단계로 순위를 매긴다 — 딱 1~2개 그룹만 다루던 이전 방식은
-// 나머지 그룹에선 아무 언급이 없어서 주제를 바꿔도 문장이 똑같아 보이는 문제가 있었다.
-// 이제는 5개 그룹 모두에 순위·문장이 있어서 항상 그 주제만의 해석이 붙고, 점수에도
-// 절반 비중으로 반영되므로 같은 날짜라도 주제를 바꾸면 순위 자체가 달라진다.
+// 이사·개업·결혼·임신 시도는 오행-용신 궁합 계산 방식은 같지만, 주제마다 "좋은 기운"의
+// 의미가 다르다. 후보일의 천간이 신청자의 일간(본인) 기준으로 무슨 십신인지 봐서, 그
+// 주제와 얼마나 잘 맞는 그룹인지 5단계로 순위를 매긴다 — 5개 그룹 모두에 순위·문장이
+// 있어야 후보마다, 주제마다 문장이 자연히 갈린다.
+// 임신 시도는 전통 명리학에서 자녀를 상징하는 십신이 성별에 따라 다르다고 보므로
+// (여성=식상, 남성=관성) 성별별로 순서를 따로 둔다.
 const OCCASION_GROUP_ORDER = {
   moving: ['인성', '비겁', '식상', '재성', '관성'],
   opening: ['재성', '식상', '관성', '비겁', '인성'],
-  wedding: ['관성', '재성', '인성', '식상', '비겁']
+  wedding: ['관성', '재성', '인성', '식상', '비겁'],
+  conception: {
+    여: ['식상', '인성', '재성', '비겁', '관성'],
+    남: ['관성', '재성', '인성', '식상', '비겁']
+  }
 };
 const OCCASION_GROUP_TEXT = {
   moving: {
@@ -103,11 +129,19 @@ const OCCASION_GROUP_TEXT = {
     '인성': '가족과 주변의 지지를 받는 기운이 있는 날이에요',
     '식상': '마음이 들뜨기 쉬운 기운이라 결혼 준비는 차분하게 챙기면 좋아요',
     '비겁': '주관이 강해지는 기운이라 배우자와 의견을 맞추는 데 신경 쓰면 좋아요'
+  },
+  conception: {
+    '식상': '새 생명을 품고 표현하는 기운이 강해서 임신 시도에 특히 좋은 흐름이에요',
+    '관성': '책임감과 인연이 맺어지는 기운이 있어서 임신 시도에 특히 좋은 흐름이에요',
+    '인성': '몸과 마음이 안정되고 받아들이는 기운이 있는 시기예요',
+    '재성': '결실을 맺는 기운이 있는 시기예요',
+    '비겁': '내 컨디션에 집중하는 기운이라 무리하지 않고 몸을 챙기면 좋아요'
   }
 };
 const OCCASION_GROUP_SCORE_TIERS = [90, 72, 55, 38, 20]; // 1~5순위
-function occasionShipsinInfo(occasionKey, group) {
-  const order = OCCASION_GROUP_ORDER[occasionKey];
+function occasionShipsinInfo(occasionKey, group, gender) {
+  let order = OCCASION_GROUP_ORDER[occasionKey];
+  if (order && !Array.isArray(order)) order = order[gender] || order['남']; // 성별 모르면 남 기준
   if (!order || !group) return { score: 55, phrase: '' };
   const idx = order.indexOf(group);
   const score = idx >= 0 ? OCCASION_GROUP_SCORE_TIERS[idx] : 55;
@@ -136,6 +170,50 @@ function ganZhiOhaengScore(ganZhi, yongshinMain) {
   return Math.max(5, Math.min(95, raw));
 }
 
+// 사람 모드(이사/개업/결혼/임신 시도) 공통 채점 — 날짜 범위 모드와 연도 모드 둘 다 여기를 쓴다.
+// includeHour=false면 일주(날)만으로 채점한다(연도 모드에서 그 해 모든 날을 훑을 때, 시간까지
+// 계산하면 7배 느려지므로 날짜 단위로 먼저 추리고 상위 후보만 시간까지 본다).
+function scorePersonCandidate({ engineResult, occasionKey, yongshinMain, personDayStem, personDayBranch, gender, includeHour }) {
+  const dayStem = engineResult.palja.dayPillar.stem, dayBranch = engineResult.palja.dayPillar.branch;
+  const ganZhi = dayStem + dayBranch;
+  const ganZhiKo = (STEM_KO[dayStem] || '') + (BRANCH_KO[dayBranch] || '');
+  const dayOhaeng = STEM_OHAENG[dayStem]?.ohaeng;
+  const dayScore = ganZhiOhaengScore(ganZhi, yongshinMain);
+
+  let hourGanZhiKo = null, baseScore = dayScore, hourOhaeng = null;
+  if (includeHour) {
+    const hourStem = engineResult.palja.hourPillar.stem, hourBranch = engineResult.palja.hourPillar.branch;
+    const hourGanZhi = hourStem + hourBranch;
+    hourGanZhiKo = (STEM_KO[hourStem] || '') + (BRANCH_KO[hourBranch] || '');
+    hourOhaeng = STEM_OHAENG[hourStem]?.ohaeng;
+    const hourScore = ganZhiOhaengScore(hourGanZhi, yongshinMain);
+    baseScore = Math.round(dayScore * 0.6 + hourScore * 0.4); // 일진(날) 60% + 시 40%
+  }
+
+  const dayShipsinHanja = getShipsin(personDayStem, dayStem);
+  const dayShipsinKo = dayShipsinHanja ? SHIPSIN_KO[dayShipsinHanja] : '비견';
+  const shipsinGroup = SHIPSIN_GROUP[dayShipsinKo] || '비겁';
+  const { score: occasionScore, phrase: occasionPhrase } = occasionShipsinInfo(occasionKey, shipsinGroup, gender);
+
+  const { bonus: branchBonus, phrase: branchPhrase } = dayBranchRelationInfo(personDayBranch, dayBranch);
+
+  const score = Math.max(5, Math.min(95, Math.round(baseScore * 0.5 + occasionScore * 0.5) + branchBonus));
+
+  const dayPhrase = relationPhrase(dayOhaeng, yongshinMain);
+  let detailText;
+  if (includeHour) {
+    const hourPhrase = relationPhrase(hourOhaeng, yongshinMain);
+    detailText = dayOhaeng === hourOhaeng
+      ? `날과 시 모두 ${OHAENG_KO[dayOhaeng] || dayOhaeng} 기운이에요. ${dayPhrase}.`
+      : `날의 기운(${OHAENG_KO[dayOhaeng] || dayOhaeng})은 ${dayPhrase}. 시의 기운(${OHAENG_KO[hourOhaeng] || hourOhaeng})은 ${hourPhrase}.`;
+  } else {
+    detailText = `이 날은 ${OHAENG_KO[dayOhaeng] || dayOhaeng} 기운이에요. ${dayPhrase}.`;
+  }
+  const reasonText = `${verdictOf(score)} ${detailText} ${occasionPhrase}${branchPhrase ? ' ' + branchPhrase : ''}`;
+
+  return { score, ganZhi, ganZhiKo, hourGanZhiKo, dayOhaeng, reasonText };
+}
+
 function parsePerson(body, prefix) {
   const f = (suffix) => (prefix ? prefix + suffix : suffix.charAt(0).toLowerCase() + suffix.slice(1));
   const y = Number(body[f('Year')]), m = Number(body[f('Month')]), d = Number(body[f('Day')]);
@@ -149,6 +227,24 @@ function parsePerson(body, prefix) {
   return { year: y, month: m, day: d, hour, minute, gender, isLunar, isLeap };
 }
 
+function computePersonBasics(req) {
+  const personInput = parsePerson(req.body, '');
+  if (!personInput) return { error: '본인 생년월일을 올바르게 입력해주세요.' };
+  try {
+    const personEngine = computeSaju(personInput);
+    const personDayStem = personEngine.palja.dayPillar.stem;
+    const personDayBranch = personEngine.palja.dayPillar.branch;
+    return {
+      yongshinMain: personEngine.yongshin.final.main,
+      personDayStem, personDayBranch,
+      personGanZhiKo: (STEM_KO[personDayStem] || '') + (BRANCH_KO[personDayBranch] || ''),
+      personGender: personInput.gender
+    };
+  } catch (e) {
+    return { error: '명식 계산 실패: ' + e.message };
+  }
+}
+
 router.get('/date-select/occasions', (req, res) => {
   res.json({ occasions: OCCASIONS });
 });
@@ -158,36 +254,24 @@ router.post('/date-select', requireAuth, async (req, res) => {
   const occasion = OCCASIONS[occasionKey];
   if (!occasion) return res.status(400).json({ error: '알 수 없는 종류입니다.' });
 
+  if (occasion.yearMode) return runYearSearch(req, res, occasionKey, occasion);
+  return runDateRangeSearch(req, res, occasionKey, occasion);
+});
+
+// 날짜 범위 모드 — 이사/개업(그리고 부모 모드인 출산). 기준일 앞뒤 며칠 안에서 후보를 뽑는다.
+async function runDateRangeSearch(req, res, occasionKey, occasion) {
   const { baseYear, baseMonth, baseDay } = req.body;
   const by = Number(baseYear), bm = Number(baseMonth), bd = Number(baseDay);
   if (!by || !bm || !bd) return res.status(400).json({ error: '기준 날짜를 올바르게 입력해주세요.' });
   const rangeDays = Math.min(10, Math.max(1, Number(req.body.rangeDays) || 5));
   const hours = Array.isArray(req.body.hours) && req.body.hours.length ? req.body.hours.map(Number) : DEFAULT_HOURS;
-  // 결혼처럼 예식장·하객 사정상 사실상 주말(토·일)에만 여는 주제가 있다 — 평일 후보를
-  // 아무리 점수 높게 뽑아줘도 실제로 쓸 수 없으면 무의미하므로, 신청자가 원하면
-  // 애초에 후보군에서 평일을 제외한다.
-  const weekendOnly = req.body.weekendOnly === true || req.body.weekendOnly === 'true';
 
-  // 모드별로 필요한 사람 정보를 미리 계산해둔다 — 여기서 실패하면 포인트 차감 전에 걸러야 한다.
-  let yongshinMain = null;
-  let personDayStem = null;
-  let personDayBranch = null;
-  let personGanZhiKo = null;
-  let personGender = null;
+  let yongshinMain = null, personDayStem = null, personDayBranch = null, personGanZhiKo = null, personGender = null;
   let parentDayBranches = [];
   if (occasion.mode === 'person') {
-    const personInput = parsePerson(req.body, '');
-    if (!personInput) return res.status(400).json({ error: '본인 생년월일을 올바르게 입력해주세요.' });
-    try {
-      const personEngine = computeSaju(personInput);
-      yongshinMain = personEngine.yongshin.final.main;
-      personDayStem = personEngine.palja.dayPillar.stem;
-      personDayBranch = personEngine.palja.dayPillar.branch;
-      personGanZhiKo = (STEM_KO[personDayStem] || '') + (BRANCH_KO[personDayBranch] || '');
-      personGender = personInput.gender;
-    } catch (e) {
-      return res.status(400).json({ error: '명식 계산 실패: ' + e.message });
-    }
+    const basics = computePersonBasics(req);
+    if (basics.error) return res.status(400).json({ error: basics.error });
+    ({ yongshinMain, personDayStem, personDayBranch, personGanZhiKo, personGender } = basics);
   } else {
     try {
       ['a', 'b'].forEach((prefix) => {
@@ -217,54 +301,25 @@ router.post('/date-select', requireAuth, async (req, res) => {
     const d = new Date(base);
     d.setUTCDate(d.getUTCDate() + offset);
     const y = d.getUTCFullYear(), m = d.getUTCMonth() + 1, day = d.getUTCDate();
-    if (weekendOnly) {
-      const weekday = d.getUTCDay(); // 0=일, 6=토
-      if (weekday !== 0 && weekday !== 6) continue;
-    }
     hours.forEach((hour) => {
       let engineResult;
       try {
         engineResult = computeSaju({ year: y, month: m, day, hour, minute: 0 });
       } catch (e) {
-        return; // 계산 실패한 후보는 건너뜀(예: 범위 밖 날짜)
+        return;
       }
-      const dayStem = engineResult.palja.dayPillar.stem, dayBranch = engineResult.palja.dayPillar.branch;
-      const ganZhi = dayStem + dayBranch;
-      const ganZhiKo = (STEM_KO[dayStem] || '') + (BRANCH_KO[dayBranch] || '');
-      const hourStem = engineResult.palja.hourPillar.stem, hourBranch = engineResult.palja.hourPillar.branch;
-      const hourGanZhi = hourStem + hourBranch;
-      const hourGanZhiKo = (STEM_KO[hourStem] || '') + (BRANCH_KO[hourBranch] || '');
+      const dayBranch = engineResult.palja.dayPillar.branch;
 
-      let score, reasonText;
+      let score, reasonText, ganZhi, ganZhiKo, hourGanZhiKo;
       if (occasion.mode === 'person') {
-        // 일진(날)이 큰 흐름, 시(시간)가 그 안의 세부 흐름 — 날 60% + 시 40%로 합산해야
-        // 같은 날 다른 시간대끼리도 점수가 갈린다(일주만 보면 하루 내내 점수가 똑같아짐).
-        const dayScore = ganZhiOhaengScore(ganZhi, yongshinMain);
-        const hourScore = ganZhiOhaengScore(hourGanZhi, yongshinMain);
-        const dayOhaeng = STEM_OHAENG[dayStem]?.ohaeng;
-        const hourOhaeng = STEM_OHAENG[hourStem]?.ohaeng;
-        const baseScore = Math.round(dayScore * 0.6 + hourScore * 0.4); // 나에게 맞는 기운인지(공통)
-
-        // 이사·개업·결혼마다 "좋은 기운"의 의미가 다르므로, 후보일이 본인에게 무슨
-        // 십신인지 봐서 그 주제와 얼마나 맞는지를 절반 비중으로 반영한다 — 이 비중을
-        // 작게 두면 세 주제의 순위·문장이 사실상 똑같아 보이는 문제가 생긴다.
-        const dayShipsinHanja = getShipsin(personDayStem, dayStem);
-        const dayShipsinKo = dayShipsinHanja ? SHIPSIN_KO[dayShipsinHanja] : '비견';
-        const shipsinGroup = SHIPSIN_GROUP[dayShipsinKo] || '비겁';
-        const { score: occasionScore, phrase: occasionPhrase } = occasionShipsinInfo(occasionKey, shipsinGroup);
-
-        // 세 번째 근거: 후보일이 신청자 본인의 일지(태어난 날)와 합/충을 이루는지.
-        const { bonus: branchBonus, phrase: branchPhrase } = dayBranchRelationInfo(personDayBranch, dayBranch);
-
-        score = Math.max(5, Math.min(95, Math.round(baseScore * 0.5 + occasionScore * 0.5) + branchBonus));
-
-        const dayPhrase = relationPhrase(dayOhaeng, yongshinMain);
-        const hourPhrase = relationPhrase(hourOhaeng, yongshinMain);
-        const detailText = dayOhaeng === hourOhaeng
-          ? `날과 시 모두 ${OHAENG_KO[dayOhaeng] || dayOhaeng} 기운이에요. ${dayPhrase}.`
-          : `날의 기운(${OHAENG_KO[dayOhaeng] || dayOhaeng})은 ${dayPhrase}. 시의 기운(${OHAENG_KO[hourOhaeng] || hourOhaeng})은 ${hourPhrase}.`;
-        reasonText = `${verdictOf(score)} ${detailText} ${occasionPhrase}${branchPhrase ? ' ' + branchPhrase : ''}`;
+        ({ score, reasonText, ganZhi, ganZhiKo, hourGanZhiKo } = scorePersonCandidate({
+          engineResult, occasionKey, yongshinMain, personDayStem, personDayBranch, gender: personGender, includeHour: true
+        }));
       } else {
+        ganZhi = engineResult.palja.dayPillar.stem + dayBranch;
+        ganZhiKo = (STEM_KO[engineResult.palja.dayPillar.stem] || '') + (BRANCH_KO[dayBranch] || '');
+        const hourStem = engineResult.palja.hourPillar.stem, hourBranch = engineResult.palja.hourPillar.branch;
+        hourGanZhiKo = (STEM_KO[hourStem] || '') + (BRANCH_KO[hourBranch] || '');
         score = balanceScoreOf(engineResult.counts.ohaeng);
         const clashesWithParent = parentDayBranches.some((pb) => isChung(dayBranch, pb));
         const harmoniesWithParent = parentDayBranches.some((pb) => classifyPair(pb, dayBranch)?.type === 'yukhap');
@@ -298,10 +353,12 @@ router.post('/date-select', requireAuth, async (req, res) => {
   if (occasionKey === 'moving' && yongshinMain && OHAENG_DIRECTION[yongshinMain]) {
     recommendedDirection = { ohaeng: OHAENG_KO[yongshinMain], ...OHAENG_DIRECTION[yongshinMain] };
   }
+  // 개업만 해당 — 용신 오행을 어울리는 업종 "키워드"로 환산한다(특정 사업 성패는 단정하지 않음).
+  let recommendedBusiness = null;
+  if (occasionKey === 'opening' && yongshinMain && OHAENG_BUSINESS[yongshinMain]) {
+    recommendedBusiness = { ohaeng: OHAENG_KO[yongshinMain], ...OHAENG_BUSINESS[yongshinMain] };
+  }
 
-  // 결정론적 채점은 이미 끝났다 — 그 결과를 근거로 사람이 읽는 총평 한 단락을 AI로 붙인다.
-  // 990원 빠른 리딩과 동일한 가치(개인화된 서술형 해설)를 여기서도 제공하는 부분.
-  // 실패해도 핵심 상품(후보 목록)은 이미 완성돼 있으니 총평 없이 그대로 응답한다.
   let overview = null;
   try {
     overview = await generateDateSelectOverview({
@@ -312,6 +369,7 @@ router.post('/date-select', requireAuth, async (req, res) => {
       personGanZhiKo,
       yongshinOhaengKo: OHAENG_KO[yongshinMain] || yongshinMain,
       recommendedDirection,
+      recommendedBusiness,
       top: topCandidates.slice(0, 3)
     });
   } catch (e) {
@@ -319,9 +377,124 @@ router.post('/date-select', requireAuth, async (req, res) => {
   }
 
   res.json({
-    occasion: occasionKey, occasionLabel: occasion.label, overview, recommendedDirection,
+    occasion: occasionKey, occasionLabel: occasion.label, mode: 'range', overview,
+    recommendedDirection, recommendedBusiness,
     candidates: topCandidates
   });
-});
+}
+
+const WEEK_LABELS = ['첫째', '둘째', '셋째', '넷째', '다섯째'];
+function weekOfMonthLabel(day) {
+  return WEEK_LABELS[Math.min(4, Math.floor((day - 1) / 7))];
+}
+
+// 연도 모드 — 결혼/임신 시도. 특정 날짜 하나가 아니라 "몇 월 몇째 주가 좋은지"를 찾는다.
+// 결혼은 예식장·하객 사정상 주말만, 임신 시도는 요일 제한이 의미 없어 매일을 훑는다.
+async function runYearSearch(req, res, occasionKey, occasion) {
+  const year = Number(req.body.targetYear);
+  const nowYear = new Date().getFullYear();
+  if (!year || year < nowYear || year > nowYear + 5) {
+    return res.status(400).json({ error: `연도는 ${nowYear}~${nowYear + 5} 사이로 입력해주세요.` });
+  }
+
+  const basics = computePersonBasics(req);
+  if (basics.error) return res.status(400).json({ error: basics.error });
+  const { yongshinMain, personDayStem, personDayBranch, personGanZhiKo, personGender } = basics;
+
+  try {
+    points.chargeForProduct(req.session.userId, occasion.productKey);
+  } catch (e) {
+    if (e.code === 'insufficient_points') {
+      return res.status(402).json({ error: e.message, code: e.code, required: e.required, balance: e.balance });
+    }
+    return res.status(400).json({ error: e.message });
+  }
+
+  // 1단계: 그 해의 (필요하면 주말만) 모든 날을 일주 기준으로만 빠르게 채점한다 — 시간까지
+  // 다 돌리면 365일×7시간이라 너무 느려서, 날짜 단위로 먼저 추려낸다.
+  const dayResults = [];
+  const cursor = new Date(Date.UTC(year, 0, 1));
+  const endOfYear = new Date(Date.UTC(year, 11, 31));
+  while (cursor <= endOfYear) {
+    const y = cursor.getUTCFullYear(), m = cursor.getUTCMonth() + 1, day = cursor.getUTCDate();
+    const weekday = cursor.getUTCDay();
+    if (!occasion.weekendOnly || weekday === 0 || weekday === 6) {
+      try {
+        const engineResult = computeSaju({ year: y, month: m, day, hour: 12, minute: 0 });
+        const { score } = scorePersonCandidate({
+          engineResult, occasionKey, yongshinMain, personDayStem, personDayBranch,
+          gender: personGender, includeHour: false
+        });
+        dayResults.push({ year: y, month: m, day, score });
+      } catch (e) { /* 계산 실패한 날은 건너뜀 */ }
+    }
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+
+  // 2단계: 월+몇째 주로 묶어서, 그 주 안에서 가장 점수 높은 날을 대표로 삼는다.
+  const weekGroups = {};
+  dayResults.forEach((r) => {
+    const key = `${r.month}-${weekOfMonthLabel(r.day)}`;
+    if (!weekGroups[key]) weekGroups[key] = { month: r.month, weekLabel: weekOfMonthLabel(r.day), days: [] };
+    weekGroups[key].days.push(r);
+  });
+  let weeks = Object.values(weekGroups).map((w) => {
+    const best = w.days.reduce((a, b) => (b.score > a.score ? b : a));
+    const dayNums = w.days.map((d) => d.day).sort((a, b) => a - b);
+    return {
+      month: w.month, weekLabel: w.weekLabel,
+      dateRangeLabel: `${w.month}월 ${w.weekLabel}주 (${dayNums.map((d) => `${w.month}/${d}`).join(', ')})`,
+      score: best.score, bestDate: { year: best.year, month: w.month, day: best.day }
+    };
+  });
+  weeks.sort((a, b) => b.score - a.score);
+  weeks = weeks.slice(0, 8);
+
+  // 3단계: 상위 몇 개 주만 그 대표일의 시간대까지 세부 계산해서, 실제로 쓸 문장·시간을 채운다.
+  weeks = weeks.map((w) => {
+    const hourCandidates = DEFAULT_HOURS.map((hour) => {
+      let engineResult;
+      try {
+        engineResult = computeSaju({ year: w.bestDate.year, month: w.bestDate.month, day: w.bestDate.day, hour, minute: 0 });
+      } catch (e) {
+        return null;
+      }
+      const { score, ganZhiKo, hourGanZhiKo, reasonText } = scorePersonCandidate({
+        engineResult, occasionKey, yongshinMain, personDayStem, personDayBranch,
+        gender: personGender, includeHour: true
+      });
+      return { hour, ganZhiKo, hourGanZhiKo, score, reasonText };
+    }).filter(Boolean);
+    hourCandidates.sort((a, b) => b.score - a.score);
+    const top = hourCandidates[0] || null;
+    return {
+      month: w.month, weekLabel: w.weekLabel, dateRangeLabel: w.dateRangeLabel,
+      bestDate: w.bestDate, score: top ? top.score : w.score,
+      ganZhiKo: top ? top.ganZhiKo : null, bestHour: top ? top.hour : null,
+      bestHourGanZhiKo: top ? top.hourGanZhiKo : null,
+      reasonText: top ? top.reasonText : '',
+      topTimes: hourCandidates.slice(0, 3)
+    };
+  });
+  weeks.sort((a, b) => b.score - a.score);
+
+  let overview = null;
+  try {
+    overview = await generateDateSelectOverview({
+      mode: 'personYear',
+      occasionLabel: occasion.label,
+      question: occasion.question,
+      gender: personGender,
+      personGanZhiKo,
+      yongshinOhaengKo: OHAENG_KO[yongshinMain] || yongshinMain,
+      year,
+      weeks: weeks.slice(0, 3)
+    });
+  } catch (e) {
+    overview = null;
+  }
+
+  res.json({ occasion: occasionKey, occasionLabel: occasion.label, mode: 'year', year, overview, weeks });
+}
 
 module.exports = router;
