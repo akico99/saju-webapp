@@ -69,6 +69,15 @@ db.exec(`
     finished_at TEXT
   );
 
+  CREATE TABLE IF NOT EXISTS email_verifications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    token TEXT NOT NULL UNIQUE,
+    expires_at TEXT NOT NULL,
+    used_at TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+
   CREATE TABLE IF NOT EXISTS password_resets (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL REFERENCES users(id),
@@ -121,6 +130,14 @@ db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_provider ON users(provider,
 /* 관리자 회원관리(정지 처리)용 컬럼 — 기존과 같은 방식으로 없을 때만 추가 */
 if (!userColumns.includes('status')) {
   db.exec("ALTER TABLE users ADD COLUMN status TEXT NOT NULL DEFAULT 'active'");
+}
+
+/* 이메일 인증 여부 — DEFAULT 1로 추가하면 기존 회원(이미 써오던 사람들)은 전부 인증된
+   것으로 소급 처리된다. 앞으로 새로 가입하는 사람만 email_verified=0으로 시작하게
+   하려면, users.js의 INSERT 문에서 이 컬럼 값을 명시적으로 지정해야 한다(안 그러면
+   방금 추가한 컬럼 기본값 1이 그대로 적용돼버림). */
+if (!userColumns.includes('email_verified')) {
+  db.exec('ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 1');
 }
 
 module.exports = db;

@@ -11,6 +11,7 @@ function toPublicUser(row) {
     name: row.name,
     pointBalance: row.point_balance,
     gender: row.gender,
+    emailVerified: !!row.email_verified,
     birth: row.birth_year ? {
       year: row.birth_year, month: row.birth_month, day: row.birth_day,
       hour: row.birth_hour, minute: row.birth_minute,
@@ -23,16 +24,16 @@ function toPublicUser(row) {
 const stmts = {
   insert: db.prepare(`
     INSERT INTO users (email, password_hash, name, gender, birth_year, birth_month, birth_day,
-                        birth_hour, birth_minute, is_lunar, is_leap, city)
+                        birth_hour, birth_minute, is_lunar, is_leap, city, email_verified)
     VALUES (@email, @passwordHash, @name, @gender, @birthYear, @birthMonth, @birthDay,
-            @birthHour, @birthMinute, @isLunar, @isLeap, @city)
+            @birthHour, @birthMinute, @isLunar, @isLeap, @city, 0)
   `),
   findByEmail: db.prepare('SELECT * FROM users WHERE email = ?'),
   findById: db.prepare('SELECT * FROM users WHERE id = ?'),
   findByProvider: db.prepare('SELECT * FROM users WHERE provider = ? AND provider_id = ?'),
   insertSocial: db.prepare(`
-    INSERT INTO users (email, password_hash, name, provider, provider_id)
-    VALUES (@email, @passwordHash, @name, @provider, @providerId)
+    INSERT INTO users (email, password_hash, name, provider, provider_id, email_verified)
+    VALUES (@email, @passwordHash, @name, @provider, @providerId, 1)
   `),
   adjustBalance: db.prepare('UPDATE users SET point_balance = point_balance + ? WHERE id = ?'),
   updateBirth: db.prepare(`
@@ -40,7 +41,8 @@ const stmts = {
       birth_hour=@birthHour, birth_minute=@birthMinute, is_lunar=@isLunar, is_leap=@isLeap, city=@city
     WHERE id=@id
   `),
-  updatePasswordHash: db.prepare('UPDATE users SET password_hash = ? WHERE id = ?')
+  updatePasswordHash: db.prepare('UPDATE users SET password_hash = ? WHERE id = ?'),
+  markEmailVerified: db.prepare('UPDATE users SET email_verified = 1 WHERE id = ?')
 };
 
 function createUser({ email, passwordHash, name, gender, birthYear, birthMonth, birthDay, birthHour, birthMinute, isLunar, isLeap, city }) {
@@ -83,6 +85,10 @@ function updatePasswordHash(userId, passwordHash) {
   stmts.updatePasswordHash.run(passwordHash, userId);
 }
 
+function markEmailVerified(userId) {
+  stmts.markEmailVerified.run(userId);
+}
+
 /* ---------- 관리자 회원관리 ---------- */
 function toAdminUser(row) {
   if (!row) return null;
@@ -93,6 +99,7 @@ function toAdminUser(row) {
     pointBalance: row.point_balance,
     provider: row.provider,
     status: row.status,
+    emailVerified: !!row.email_verified,
     createdAt: row.created_at
   };
 }
@@ -138,6 +145,6 @@ function updateBirth(id, { gender, birthYear, birthMonth, birthDay, birthHour, b
 
 module.exports = {
   createUser, findByEmail, findById, adjustPointBalance, updateBirth, toPublicUser,
-  findByProvider, createSocialUser, updatePasswordHash,
+  findByProvider, createSocialUser, updatePasswordHash, markEmailVerified,
   listAll, countAll, setStatus, adminStats, toAdminUser
 };

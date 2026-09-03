@@ -44,4 +44,19 @@ function passwordResetEmail({ resetUrl, ttlMinutes }) {
   `);
 }
 
-module.exports = { passwordResetEmail };
+function verifyEmailEmail({ verifyUrl, ttlHours }) {
+  return wrap(`
+    <h1 style="color:${COLORS.star};font-size:19px;margin:0 0 12px;text-align:center;">이메일 주소를 확인해주세요</h1>
+    <p style="color:${COLORS.muted};font-size:14px;line-height:1.7;margin:0 0 28px;text-align:center;">
+      가입해주셔서 감사해요! 아래 버튼을 눌러 이메일 인증을 마쳐주세요.<br>이 링크는 <b style="color:${COLORS.gold};">${ttlHours}시간</b> 동안만 유효해요.
+    </p>
+    <div style="text-align:center;margin-bottom:24px;">
+      <a href="${verifyUrl}" style="display:inline-block;background:${COLORS.gold};color:#1a1408;font-weight:700;font-size:14.5px;padding:13px 32px;border-radius:999px;text-decoration:none;">이메일 인증하기</a>
+    </div>
+    <p style="color:${COLORS.muted};font-size:12px;line-height:1.6;text-align:center;margin:0;">
+      본인이 가입하지 않았다면 이 메일은 무시하셔도 괜찮아요.
+    </p>
+  `);
+}
+
+module.exports = { passwordResetEmail, verifyEmailEmail };

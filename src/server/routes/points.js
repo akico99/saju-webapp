@@ -2,7 +2,7 @@
 const express = require('express');
 const points = require('../../db/points');
 const users = require('../../db/users');
-const { requireAuth } = require('../middleware/auth');
+const { requireAuth, requireVerifiedEmail } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -14,7 +14,7 @@ router.get('/points/deposit-info', requireAuth, (req, res) => {
   });
 });
 
-router.post('/points/request', requireAuth, (req, res) => {
+router.post('/points/request', requireAuth, requireVerifiedEmail, (req, res) => {
   const amountKrw = Number(req.body.amountKrw);
   const depositorName = (req.body.depositorName || '').slice(0, 30);
   if (!amountKrw || amountKrw < 1000) {

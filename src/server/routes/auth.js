@@ -4,8 +4,10 @@ const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const users = require('../../db/users');
 const passwordResets = require('../../db/passwordResets');
+const emailVerifications = require('../../db/emailVerifications');
 const { sendEmail } = require('../../email/resend');
-const { passwordResetEmail } = require('../../email/templates');
+const { passwordResetEmail, verifyEmailEmail } = require('../../email/templates');
+const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -22,6 +24,18 @@ function parseBirth(body) {
   const isLeap = !!body.isLeap;
   const city = body.city || null;
   return { birthYear: year, birthMonth: month, birthDay: day, birthHour: hour, birthMinute: minute, gender, isLunar, isLeap, city };
+}
+
+// 가입 직후·재발송 요청 양쪽에서 쓰는 공용 함수 — 발송 실패는 호출한 쪽에서 조용히
+// 넘어갈 수 있도록 그대로 던진다(가입 자체는 막지 않되, 재발송 API는 실패를 알려줘야 하므로).
+async function sendVerificationEmail(user) {
+  const token = emailVerifications.createToken(user.id);
+  const verifyUrl = `${BASE_URL}/api/auth/verify-email?token=${token}`;
+  await sendEmail({
+    to: user.email,
+    subject: '[사주보는 수달] 이메일 인증',
+    html: verifyEmailEmail({ verifyUrl, ttlHours: emailVerifications.TOKEN_TTL_HOURS })
+  });
 }
 
 router.post('/auth/signup', async (req, res) => {
@@ -42,6 +56,10 @@ router.post('/auth/signup', async (req, res) => {
 
     req.session.userId = row.id;
     res.json({ user: users.toPublicUser(row) });
+
+    // 가입 자체는 인증 메일 발송 성공 여부와 무관하게 완료시킨다 — 응답은 이미 보냈으니
+    // 이 아래는 실패해도 사용자 경험에 영향 없이 로그로만 남는다.
+    sendVerificationEmail(row).catch((e) => console.error('가입 인증 메일 발송 실패:', e.message));
   } catch (e) {
     res.status(400).json({ error: e.message });
   }
@@ -119,6 +137,30 @@ router.post('/auth/reset-password', async (req, res) => {
   passwordResets.markUsed(row.id);
 
   res.json({ ok: true });
+});
+
+/* ---------- 이메일 인증 ---------- */
+// 이메일 속 버튼이 GET으로 직접 여는 링크라 JSON이 아니라 페이지로 응답(리다이렉트)한다.
+router.get('/auth/verify-email', (req, res) => {
+  const { token } = req.query;
+  const row = token && emailVerifications.findValidToken(token);
+  if (!row) {
+    return res.redirect('/login.html?error=' + encodeURIComponent('인증 링크가 만료되었거나 이미 사용됐어요.'));
+  }
+  users.markEmailVerified(row.user_id);
+  emailVerifications.markUsed(row.id);
+  res.redirect('/mypage.html?verified=1');
+});
+
+router.post('/auth/resend-verification', requireAuth, async (req, res) => {
+  const user = users.findById(req.session.userId);
+  if (user.email_verified) return res.json({ ok: true, alreadyVerified: true });
+  try {
+    await sendVerificationEmail(user);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: '메일 발송에 실패했어요. 잠시 후 다시 시도해주세요.' });
+  }
 });
 
 /* ---------- 네이버 로그인 ---------- */

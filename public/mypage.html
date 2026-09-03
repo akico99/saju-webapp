@@ -21,6 +21,12 @@
       <p class="hint">로그인 이메일: <span id="accountEmail">-</span></p>
     </div>
 
+    <div class="card hidden" id="verifyCard" style="background:var(--paper);border:1px dashed var(--line);">
+      <h3>이메일 인증이 필요해요</h3>
+      <p class="hint">가입하실 때 인증 메일을 보내드렸어요. 포인트 충전 같은 일부 기능은 이메일 인증 후 이용할 수 있습니다.</p>
+      <button class="btn-primary" id="resendVerifyBtn" style="display:block;width:100%;box-sizing:border-box;">인증 메일 다시 보내기</button>
+    </div>
+
     <div class="card">
       <h3>저장된 인물</h3>
       <p class="hint">나·배우자·자녀 등 여러 명의 생년월일을 저장해두고, 궁합·인생그래프 같은 서비스에서 바로 불러올 수 있어요. "내 정보"로 지정한 인물 기준으로 아래 오늘의 운세도 계산돼요.</p>
@@ -160,10 +166,30 @@
     location.href = '/';
   });
 
+  document.getElementById('resendVerifyBtn').addEventListener('click', async (e) => {
+    e.target.disabled = true;
+    e.target.textContent = '보내는 중...';
+    try {
+      const res = await fetch('/api/auth/resend-verification', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || '발송 실패');
+      showToast('인증 메일을 다시 보냈어요. 받은편지함을 확인해주세요.');
+    } catch (err) {
+      showToast('메일 발송에 실패했어요: ' + err.message);
+    } finally {
+      e.target.disabled = false;
+      e.target.textContent = '인증 메일 다시 보내기';
+    }
+  });
+
   (async () => {
     const user = await requireLogin();
     if (!user) return;
     document.getElementById('accountEmail').textContent = user.email;
+    if (!user.emailVerified) document.getElementById('verifyCard').classList.remove('hidden');
+    if (new URLSearchParams(location.search).get('verified') === '1') {
+      showToast('이메일 인증이 완료됐어요!');
+    }
     loadFortune();
     loadMine();
     loadOrders();
