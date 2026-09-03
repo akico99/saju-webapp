@@ -21,9 +21,9 @@
     <div id="errorBox" class="error-box hidden"></div>
 
     <div class="social-login">
-      <button type="button" class="social-btn kakao" data-provider="카카오">카카오로 로그인<span class="social-badge">준비중</span></button>
+      <a class="social-btn kakao" href="/api/auth/kakao/start">카카오로 로그인</a>
       <a class="social-btn naver" href="/api/auth/naver/start">네이버로 로그인</a>
-      <button type="button" class="social-btn google" data-provider="구글">구글로 로그인<span class="social-badge">준비중</span></button>
+      <a class="social-btn google" href="/api/auth/google/start">구글로 로그인</a>
     </div>
     <div class="divider"><span>또는 이메일로 로그인</span></div>
 
@@ -42,21 +42,8 @@
     <p class="switch-link">계정이 없으신가요? <a href="/signup.html" id="switchToSignup">회원가입</a></p>
   </main>
 </div>
-<div class="toast" id="toast"></div>
 
 <script>
-  function showToast(msg) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.classList.add('show');
-    clearTimeout(window.__toastTimer);
-    window.__toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
-  }
-
-  document.querySelectorAll('.social-btn').forEach((btn) => {
-    btn.addEventListener('click', () => showToast(`${btn.dataset.provider} 로그인은 준비 중이에요 — 이메일로 로그인해주세요.`));
-  });
-
   const form = document.getElementById('loginForm');
   const errorBox = document.getElementById('errorBox');
   const params = new URLSearchParams(location.search);

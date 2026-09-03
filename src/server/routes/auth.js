@@ -235,4 +235,148 @@ router.get('/auth/naver/callback', async (req, res) => {
   }
 });
 
+/* ---------- 구글 로그인 ---------- */
+router.get('/auth/google/start', (req, res) => {
+  if (!process.env.GOOGLE_CLIENT_ID) {
+    return res.status(503).send('구글 로그인이 아직 설정되지 않았습니다.');
+  }
+  const state = crypto.randomBytes(16).toString('hex');
+  req.session.googleOAuthState = state;
+
+  const url = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+  url.searchParams.set('response_type', 'code');
+  url.searchParams.set('client_id', process.env.GOOGLE_CLIENT_ID);
+  url.searchParams.set('redirect_uri', `${BASE_URL}/api/auth/google/callback`);
+  url.searchParams.set('scope', 'openid email profile');
+  url.searchParams.set('state', state);
+  res.redirect(url.toString());
+});
+
+router.get('/auth/google/callback', async (req, res) => {
+  const { code, state, error } = req.query;
+  if (error) return res.redirect('/login.html?error=' + encodeURIComponent('구글 로그인이 취소되었습니다.'));
+  if (!state || state !== req.session.googleOAuthState) {
+    return res.redirect('/login.html?error=' + encodeURIComponent('로그인 요청이 만료되었어요. 다시 시도해주세요.'));
+  }
+  delete req.session.googleOAuthState;
+
+  try {
+    const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        client_id: process.env.GOOGLE_CLIENT_ID,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET,
+        redirect_uri: `${BASE_URL}/api/auth/google/callback`,
+        code
+      })
+    });
+    const tokenData = await tokenRes.json();
+    if (!tokenRes.ok || !tokenData.access_token) {
+      throw new Error(tokenData.error_description || '토큰 발급 실패');
+    }
+
+    const profileRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+      headers: { Authorization: `Bearer ${tokenData.access_token}` }
+    });
+    const googleProfile = await profileRes.json();
+    if (!googleProfile.id) throw new Error('프로필 조회 실패');
+
+    // provider_id로 못 찾으면 이메일로 기존 계정에 병합(이메일/비번 가입자가 구글로도 로그인하는 경우 대비).
+    let user = users.findByProvider('google', googleProfile.id);
+    if (!user) {
+      const email = googleProfile.email || `google_${googleProfile.id}@social.sajusudal.local`;
+      user = users.findByEmail(email);
+      if (!user) {
+        user = users.createSocialUser({
+          email, name: googleProfile.name,
+          provider: 'google', providerId: googleProfile.id
+        });
+      }
+    }
+
+    if (user.status === 'suspended') {
+      return res.redirect('/login.html?error=' + encodeURIComponent('이용이 제한된 계정입니다. 문의: sooky2001@gmail.com'));
+    }
+
+    req.session.userId = user.id;
+    res.redirect(user.birth_year ? '/' : '/mypage.html');
+  } catch (e) {
+    res.redirect('/login.html?error=' + encodeURIComponent('구글 로그인 중 문제가 발생했어요: ' + e.message));
+  }
+});
+
+/* ---------- 카카오 로그인 ---------- */
+router.get('/auth/kakao/start', (req, res) => {
+  if (!process.env.KAKAO_CLIENT_ID) {
+    return res.status(503).send('카카오 로그인이 아직 설정되지 않았습니다.');
+  }
+  const state = crypto.randomBytes(16).toString('hex');
+  req.session.kakaoOAuthState = state;
+
+  const url = new URL('https://kauth.kakao.com/oauth/authorize');
+  url.searchParams.set('response_type', 'code');
+  url.searchParams.set('client_id', process.env.KAKAO_CLIENT_ID);
+  url.searchParams.set('redirect_uri', `${BASE_URL}/api/auth/kakao/callback`);
+  url.searchParams.set('state', state);
+  res.redirect(url.toString());
+});
+
+router.get('/auth/kakao/callback', async (req, res) => {
+  const { code, state, error } = req.query;
+  if (error) return res.redirect('/login.html?error=' + encodeURIComponent('카카오 로그인이 취소되었습니다.'));
+  if (!state || state !== req.session.kakaoOAuthState) {
+    return res.redirect('/login.html?error=' + encodeURIComponent('로그인 요청이 만료되었어요. 다시 시도해주세요.'));
+  }
+  delete req.session.kakaoOAuthState;
+
+  try {
+    const tokenRes = await fetch('https://kauth.kakao.com/oauth/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        client_id: process.env.KAKAO_CLIENT_ID,
+        client_secret: process.env.KAKAO_CLIENT_SECRET,
+        redirect_uri: `${BASE_URL}/api/auth/kakao/callback`,
+        code
+      })
+    });
+    const tokenData = await tokenRes.json();
+    if (!tokenRes.ok || !tokenData.access_token) {
+      throw new Error(tokenData.error_description || '토큰 발급 실패');
+    }
+
+    const profileRes = await fetch('https://kapi.kakao.com/v2/user/me', {
+      headers: { Authorization: `Bearer ${tokenData.access_token}` }
+    });
+    const kakaoProfile = await profileRes.json();
+    if (!kakaoProfile.id) throw new Error('프로필 조회 실패');
+
+    const account = kakaoProfile.kakao_account || {};
+    // provider_id로 못 찾으면 이메일로 기존 계정에 병합(이메일/비번 가입자가 카카오로도 로그인하는 경우 대비).
+    let user = users.findByProvider('kakao', kakaoProfile.id);
+    if (!user) {
+      const email = account.email || `kakao_${kakaoProfile.id}@social.sajusudal.local`;
+      user = users.findByEmail(email);
+      if (!user) {
+        user = users.createSocialUser({
+          email, name: account.profile ? account.profile.nickname : null,
+          provider: 'kakao', providerId: kakaoProfile.id
+        });
+      }
+    }
+
+    if (user.status === 'suspended') {
+      return res.redirect('/login.html?error=' + encodeURIComponent('이용이 제한된 계정입니다. 문의: sooky2001@gmail.com'));
+    }
+
+    req.session.userId = user.id;
+    res.redirect(user.birth_year ? '/' : '/mypage.html');
+  } catch (e) {
+    res.redirect('/login.html?error=' + encodeURIComponent('카카오 로그인 중 문제가 발생했어요: ' + e.message));
+  }
+});
+
 module.exports = router;
