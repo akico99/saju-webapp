@@ -385,8 +385,8 @@
       if (fRes.ok) {
         tfTitle.textContent = `${fData.fortune.score}점 · ${fData.fortune.title}`;
         tfDesc.textContent = fData.fortune.tip;
-        tfCta.textContent = `오늘 ${fData.fortune.topicLabel} 더 보기 →`;
-        tfCta.href = `/quick.html?topic=${fData.fortune.topic}`;
+        tfCta.textContent = '오늘의 운세 더 보기 →';
+        tfCta.href = '/today-fortune.html';
       }
     } catch (e) {
       // 계정 상태 확인 실패해도 스토어 자체는 정상 노출
