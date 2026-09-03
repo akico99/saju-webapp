@@ -8,6 +8,9 @@
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const RESEND_FROM = process.env.RESEND_FROM || 'onboarding@resend.dev';
 const RESEND_FROM_NAME = process.env.RESEND_FROM_NAME || '길잡이 여울';
+// noreply@ 주소는 받은편지함이 없어 답장이 사라진다 — 실제로 확인 가능한 문의
+// 메일함으로 Reply-To를 걸어서, 발신 표시는 noreply@로 유지하되 답장은 여기로 오게 한다.
+const RESEND_REPLY_TO = process.env.RESEND_REPLY_TO || 'sooky2001@gmail.com';
 
 async function sendEmail({ to, subject, html }) {
   if (!RESEND_API_KEY) {
@@ -16,7 +19,7 @@ async function sendEmail({ to, subject, html }) {
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from: `${RESEND_FROM_NAME} <${RESEND_FROM}>`, to, subject, html })
+    body: JSON.stringify({ from: `${RESEND_FROM_NAME} <${RESEND_FROM}>`, to, subject, html, reply_to: RESEND_REPLY_TO })
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {

@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs');
 const users = require('../../db/users');
 const passwordResets = require('../../db/passwordResets');
 const { sendEmail } = require('../../email/resend');
+const { passwordResetEmail } = require('../../email/templates');
 
 const router = express.Router();
 
@@ -90,17 +91,7 @@ router.post('/auth/forgot-password', async (req, res) => {
       await sendEmail({
         to: user.email,
         subject: '[사주보는 수달] 비밀번호 재설정',
-        html: `
-          <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px;">
-            <h2 style="color:#1a1a2e;">비밀번호를 재설정해주세요</h2>
-            <p>아래 버튼을 눌러 새 비밀번호를 설정하세요. 이 링크는 ${passwordResets.TOKEN_TTL_MINUTES}분 동안만 유효합니다.</p>
-            <p style="margin:28px 0;">
-              <a href="${resetUrl}" style="background:#1a1a2e;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700;">비밀번호 재설정하기</a>
-            </p>
-            <p style="color:#888;font-size:13px;">본인이 요청하지 않았다면 이 메일을 무시하셔도 됩니다.</p>
-            <p style="color:#888;font-size:13px;">길잡이 여울</p>
-          </div>
-        `
+        html: passwordResetEmail({ resetUrl, ttlMinutes: passwordResets.TOKEN_TTL_MINUTES })
       });
     } catch (e) {
       // 발송 실패는 사용자에게 정보를 흘리지 않고 서버 로그로만 남긴다.
