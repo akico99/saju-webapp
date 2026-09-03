@@ -196,9 +196,9 @@
   };
 
   const TOPIC_META = {
-    compat: { label: '궁합운', lead: '지금 인연의 상성과, 관계가 한 걸음 더 나아가기 좋은 때까지 하나의 리포트로 알려드려요.' },
-    wealth: { label: '재물운', lead: '나에게 맞는 재물 관리 성향과, 돈이 열리는 때·조심할 때까지 하나의 리포트로 알려드려요.' },
-    health: { label: '건강운', lead: '타고난 체질과 맞춤 운동·식단, 습관을 시작하기 좋은 때까지 하나의 리포트로 알려드려요.' }
+    compat: { label: '궁합운', price: 2900, lead: '지금 인연의 상성과, 관계가 한 걸음 더 나아가기 좋은 때까지 하나의 리포트로 알려드려요.' },
+    wealth: { label: '재물운', price: 990, lead: '나에게 맞는 재물 관리 성향과, 돈이 열리는 때·조심할 때까지 하나의 리포트로 알려드려요.' },
+    health: { label: '건강운', price: 990, lead: '타고난 체질과 맞춤 운동·식단, 습관을 시작하기 좋은 때까지 하나의 리포트로 알려드려요.' }
   };
 
   const preset = new URLSearchParams(location.search).get('topic');
@@ -210,7 +210,7 @@
   document.getElementById('dsBadge').innerHTML = ICONS[topicKey];
   document.getElementById('dsH1').textContent = `${meta.label} 리포트`;
   document.getElementById('dsLead').textContent = meta.lead;
-  window.POINT_NOTICE_PRICE = 990;
+  window.POINT_NOTICE_PRICE = meta.price;
   window.POINT_NOTICE_LABEL = `${meta.label} 리포트`;
 
   // required는 HTML에 미리 박아두지 않는다 — 지금 보여주는 섹션의 필드에만 그 자리에서 붙인다.
