@@ -63,6 +63,11 @@ header {
 header .row { display: flex; align-items: center; justify-content: space-between; width: 100%; }
 header a.back { color: var(--ink); text-decoration: none; font-size: 18px; min-width: 24px; }
 header .ttl { font-size: 15px; font-weight: 700; color: var(--ink); flex: 1; text-align: center; margin-right: 24px; }
+/* 뒤로가기만 있고 홈으로 바로 갈 방법이 없던 하위 페이지들에 집 아이콘을 추가 —
+   margin-right:24px는 원래 뒤로가기(~24px)만 있을 때 제목을 시각적으로 가운데
+   맞추기 위한 보정값이라, 집 아이콘이 추가로 생기면 그 보정이 필요 없어진다. */
+header .home-link { display: flex; align-items: center; color: var(--ink); flex-shrink: 0; }
+header:has(.home-link) .ttl { margin-right: 0; }
 .logo { display: flex; align-items: center; height: 40px; }
 .logo img { height: 100%; width: auto; display: block; }
 
