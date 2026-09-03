@@ -2,24 +2,27 @@
 /* 궁합 리포트용 프롬프트 — 18챕터 promptBuilder와 같은 원칙(엔진 JSON만이 사실 소스,
    영문 필드명 노출 금지)을 따르되, 단일 호출로 궁합 서술 전체를 받는다. */
 
+const { safeName } = require('../pdf/personName');
+
 function buildCompatPrompt(engineA, engineB, personA, personB, compat) {
+  const nameA = safeName(personA.name, '본인'), nameB = safeName(personB.name, '상대방');
   const summaryA = {
-    이름: personA.name, 일간: `${engineA.ilgan.char}(${engineA.ilgan.ko})`,
+    이름: nameA, 일간: `${engineA.ilgan.char}(${engineA.ilgan.ko})`,
     격국: engineA.kyukguk.name, 신강신약: engineA.strength.verdict, 용신: engineA.yongshin.final.main,
     사주: `${engineA.palja.yearPillar.stem}${engineA.palja.yearPillar.branch} ${engineA.palja.monthPillar.stem}${engineA.palja.monthPillar.branch} ${engineA.palja.dayPillar.stem}${engineA.palja.dayPillar.branch} ${engineA.palja.hourPillar.stem}${engineA.palja.hourPillar.branch}`
   };
   const summaryB = {
-    이름: personB.name, 일간: `${engineB.ilgan.char}(${engineB.ilgan.ko})`,
+    이름: nameB, 일간: `${engineB.ilgan.char}(${engineB.ilgan.ko})`,
     격국: engineB.kyukguk.name, 신강신약: engineB.strength.verdict, 용신: engineB.yongshin.final.main,
     사주: `${engineB.palja.yearPillar.stem}${engineB.palja.yearPillar.branch} ${engineB.palja.monthPillar.stem}${engineB.palja.monthPillar.branch} ${engineB.palja.dayPillar.stem}${engineB.palja.dayPillar.branch} ${engineB.palja.hourPillar.stem}${engineB.palja.hourPillar.branch}`
   };
 
   return `아래 두 사람의 궁합 데이터를 바탕으로 궁합 리포트 본문을 작성하세요.
 
-## ${personA.name || 'A'}님의 명식
+## ${nameA}님의 명식
 ${JSON.stringify(summaryA, null, 2)}
 
-## ${personB.name || 'B'}님의 명식
+## ${nameB}님의 명식
 ${JSON.stringify(summaryB, null, 2)}
 
 ## 궁합 계산 결과 (compatibility 엔진 JSON — 이것이 유일한 사실 소스입니다)

@@ -51,7 +51,7 @@ function buildSummaryCardData(engine, person) {
   ];
 
   return {
-    name: person.name || '',
+    name: person.name,
     score: currentSeg.score,
     scoreAge: currentSeg.age,
     scoreAgeRangeEnd: currentSeg.ageRangeEnd,

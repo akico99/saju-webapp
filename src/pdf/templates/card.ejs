@@ -26,6 +26,7 @@
 
   .chart-wrap { margin-bottom: 60px; }
 
+  .keywords-label { font-size: 22px; color: #8d96b8; margin-bottom: 18px; }
   .keywords { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; margin-bottom: 50px; }
   .keyword-pill {
     border: 1px solid #c7a13a; color: #ece2c4; border-radius: 40px;
@@ -40,7 +41,7 @@
 </head>
 <body>
   <div class="eyebrow">命 式 關 係 圖</div>
-  <div class="name-line"><b><%= name %></b> 님의 사주 흐름</div>
+  <div class="name-line"><b><%= safeName(name) %></b> 님의 사주 흐름</div>
 
   <div class="score-label">지금 이 흐름 (<%= scoreAge %>~<%= scoreAgeRangeEnd %>세, <%= scoreYear %>년~) 점수</div>
   <div class="score-num"><%= score %></div>
@@ -50,6 +51,7 @@
     <canvas id="miniChart" width="820" height="420"></canvas>
   </div>
 
+  <div class="keywords-label">무료 인생 그래프엔 없는, 이 사람만의 격국·용신</div>
   <div class="keywords">
     <% keywords.forEach(function(k) { %>
     <div class="keyword-pill"><%= k %></div>

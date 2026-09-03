@@ -10,6 +10,7 @@ const puppeteer = require('puppeteer');
 const { daewoonMiniLineConfig } = require('./charts');
 const { buildSummaryCardData } = require('./summaryCard');
 const { getFontFaceCss } = require('./reportCss');
+const { safeName } = require('./personName');
 
 const TEMPLATE_PATH = path.join(__dirname, 'templates', 'card.ejs');
 const CHARTJS_PATH = path.join(__dirname, '..', '..', 'node_modules', 'chart.js', 'dist', 'chart.umd.min.js');
@@ -24,7 +25,7 @@ function renderCardHtml(engine, person) {
 
   return ejs.render(
     fs.readFileSync(TEMPLATE_PATH, 'utf8'),
-    { ...data, chartJsSource, miniChartConfig, fontFaceCss: getFontFaceCss() },
+    { ...data, chartJsSource, miniChartConfig, fontFaceCss: getFontFaceCss(), safeName },
     { filename: TEMPLATE_PATH }
   );
 }

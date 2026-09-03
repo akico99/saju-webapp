@@ -9,7 +9,11 @@ const { buildChapterPrompt } = require('./promptBuilder');
 const { SYSTEM_PROMPT } = require('./systemPrompt');
 const { generateText } = require('./client');
 
-const CONCURRENCY = 3;
+// 예전엔 3개씩 동시 처리했는데, 같은 배치로 묶인 챕터끼리는 서로 아직 안 끝난 상태라
+// "이전 챕터 요약"을 못 보고 써서 그 3개끼리 내용이 겹치는 문제가 있었다. 순차 처리로
+// 바꿔 매 챕터가 그 앞의 모든 챕터를 확실히 참고하게 한다(생성 시간은 늘어나지만, 100p
+// 유료 리포트에서는 속도보다 챕터 간 중복 없는 품질이 우선).
+const CONCURRENCY = 1;
 
 function summarize(text) {
   // 다음 챕터 프롬프트에 넣을 짧은 핵심 요지(중복 서술 방지용) — 첫 문장 위주로 축약

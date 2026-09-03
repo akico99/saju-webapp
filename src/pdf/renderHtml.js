@@ -6,9 +6,9 @@ const fs = require('fs');
 const path = require('path');
 const ejs = require('ejs');
 const { ohaengRadarConfig, shipsinDonutConfig, daewoonScoreLineConfig } = require('./charts');
-const { buildStarChartSvg } = require('./starchart');
 const { renderMarkup } = require('./textMarkup');
 const { getReportCss } = require('./reportCss');
+const { safeName } = require('./personName');
 
 const TEMPLATE_PATH = path.join(__dirname, 'templates', 'report.ejs');
 const CHARTJS_PATH = path.join(__dirname, '..', '..', 'node_modules', 'chart.js', 'dist', 'chart.umd.min.js');
@@ -24,8 +24,9 @@ function formatBirthDisplay(meta) {
  * @param {Object} engine computeSaju() 결과
  * @param {Array} chapters generateReport() 결과 (또는 더미 데이터)
  * @param {{name, gender}} person
+ * @param {string[]} [coverSummary] 표지용 3줄 요약 (generateCoverSummary 결과, 실패 시 null/undefined 가능)
  */
-function renderHtml(engine, chapters, person) {
+function renderHtml(engine, chapters, person, coverSummary) {
   const reportCss = getReportCss();
   const chartJsSource = fs.readFileSync(CHARTJS_PATH, 'utf8');
 
@@ -35,16 +36,15 @@ function renderHtml(engine, chapters, person) {
 
   const generatedDate = new Date().toISOString().slice(0, 10);
   const birthDisplay = formatBirthDisplay(engine.meta);
-  const starChartSvg = buildStarChartSvg(engine, 220);
 
   return ejs.render(
     fs.readFileSync(TEMPLATE_PATH, 'utf8'),
     {
       person: { ...person, birthDisplay },
       engine, chapters, generatedDate,
-      reportCss, chartJsSource, starChartSvg,
+      reportCss, chartJsSource, coverSummary,
       ohaengConfig, shipsinConfig, daewoonConfig,
-      renderMarkup
+      renderMarkup, safeName
     },
     { filename: TEMPLATE_PATH }
   );

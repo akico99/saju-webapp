@@ -4,6 +4,7 @@ const path = require('path');
 const ejs = require('ejs');
 const { renderMarkup } = require('./textMarkup');
 const { getReportCss } = require('./reportCss');
+const { safeName } = require('./personName');
 
 const TEMPLATE_PATH = path.join(__dirname, 'templates', 'quick.ejs');
 
@@ -25,7 +26,7 @@ function renderQuickHtml(engine, person, topicTitle, text) {
   const birthDisplay = formatBirthDisplay(engine.meta);
   return ejs.render(
     fs.readFileSync(TEMPLATE_PATH, 'utf8'),
-    { engine, person: { ...person, birthDisplay }, topicTitle, text, reportCss, renderMarkup },
+    { engine, person: { ...person, birthDisplay }, topicTitle, text, reportCss, renderMarkup, safeName },
     { filename: TEMPLATE_PATH }
   );
 }

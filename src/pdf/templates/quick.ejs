@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title><%= person.name || '' %> · <%= topicTitle %></title>
+<title><%= safeName(person.name) %> 님의 <%= topicTitle %></title>
 <style><%- reportCss %></style>
 <style>
   /* 마이크로 리딩 전용 — 표지 한 장을 통째로 쓰기엔 아까운 짧은 분량이라,
@@ -19,7 +19,7 @@
 <section class="chapter">
   <div class="quick-header">
     <div class="eyebrow">命 式 關 係 圖 · 빠른 리딩</div>
-    <h1><%= person.name || '' %> 님의 <%= topicTitle %></h1>
+    <h1><%= safeName(person.name) %> 님의 <%= topicTitle %></h1>
     <div class="meta">
       생년월일 <b><%= person.birthDisplay %></b> ·
       일간 <b><%= engine.ilgan.char %>(<%= engine.ilgan.ko %>)</b> ·

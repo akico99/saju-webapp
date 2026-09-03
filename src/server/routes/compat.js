@@ -10,6 +10,7 @@ const { createJob, updateJob } = require('../../jobs/jobManager');
 const { generateCompatReport } = require('../../llm/generateCompatReport');
 const { renderCompatHtml } = require('../../pdf/renderCompatHtml');
 const { renderPdf } = require('../../pdf/renderPdf');
+const { safeName } = require('../../pdf/personName');
 const points = require('../../db/points');
 const orders = require('../../db/orders');
 const { requireAuth } = require('../middleware/auth');
@@ -87,7 +88,7 @@ router.post('/compat', requireAuth, async (req, res) => {
       updateJob(jobId, { status: 'rendering' });
       const html = renderCompatHtml(engineA, engineB, personA, personB, compat, text);
       const pdfPath = path.join(jobDir, 'compat-report.pdf');
-      await renderPdf(html, pdfPath, { name: `${personA.name} · ${personB.name}` });
+      await renderPdf(html, pdfPath, { name: `${safeName(personA.name, '본인')} · ${safeName(personB.name, '상대방')}` });
       updateJob(jobId, { status: 'done', resultPath: pdfPath });
       orders.markDone(jobId, { resultPath: pdfPath });
     })

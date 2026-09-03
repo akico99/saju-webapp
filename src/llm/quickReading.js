@@ -9,12 +9,13 @@ const { buildChapterPrompt } = require('./promptBuilder');
 const { SYSTEM_PROMPT } = require('./systemPrompt');
 const { generateText } = require('./client');
 
+// 실제 가격은 상품 무관하게 points.js의 quick(990원) 고정값을 쓴다 — 여기 price는 없음.
 const QUICK_TOPICS = {
-  total: { chapterId: 1, label: '오늘의 나 — 총평', price: 1000 },
-  wealth: { chapterId: 8, label: '재물운', price: 1000 },
-  career: { chapterId: 9, label: '직업·적성운', price: 1000 },
-  love: { chapterId: 11, label: '애정운', price: 1000 },
-  relationship: { chapterId: 13, label: '인간관계', price: 1000 }
+  total: { chapterId: 1, label: '오늘의 나 — 총평' },
+  wealth: { chapterId: 8, label: '재물운' },
+  career: { chapterId: 9, label: '직업·적성운' },
+  love: { chapterId: 11, label: '애정운' },
+  relationship: { chapterId: 13, label: '인간관계' }
 };
 
 const QUICK_TARGET_WORDS = 900;

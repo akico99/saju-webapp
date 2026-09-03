@@ -2,12 +2,13 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title><%= person.name || '평생사주' %> 평생사주</title>
+<title><%= safeName(person.name) %> 님의 평생사주</title>
 <style><%- reportCss %></style>
 </head>
 <body>
 
-<%- include('partials/cover', { person, generatedDate, engine, starChartSvg }) %>
+<%- include('partials/cover', { person, generatedDate, engine, coverSummary, safeName }) %>
+<%- include('partials/benefits') %>
 <%- include('partials/toc', { chapters }) %>
 <%- include('partials/myeongsik-table', { engine }) %>
 

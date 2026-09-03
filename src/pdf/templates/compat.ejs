@@ -2,26 +2,26 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title><%= personA.name || '' %> · <%= personB.name || '' %> 궁합 리포트</title>
+<title><%= safeName(personA.name, '본인') %> · <%= safeName(personB.name, '상대방') %> 궁합 리포트</title>
 <style><%- reportCss %></style>
 </head>
 <body>
 
 <section class="compat-cover">
   <div class="eyebrow">緣 分 宮 合</div>
-  <h1><%= personA.name || 'A' %> · <%= personB.name || 'B' %> 님의<br>궁합 리포트</h1>
+  <h1><%= safeName(personA.name, '본인') %> · <%= safeName(personB.name, '상대방') %> 님의<br>궁합 리포트</h1>
   <div class="subtitle">두 사람의 팔자를 겹쳐, 합·충으로 흐름을 읽습니다</div>
 
   <div class="compat-pair">
     <div class="compat-person">
-      <div class="p-name"><%= personA.name || 'A' %></div>
+      <div class="p-name"><%= safeName(personA.name, '본인') %></div>
       <div class="p-row">사주 &nbsp;<b><%= engineA.palja.yearPillar.stem %><%= engineA.palja.yearPillar.branch %> <%= engineA.palja.monthPillar.stem %><%= engineA.palja.monthPillar.branch %> <%= engineA.palja.dayPillar.stem %><%= engineA.palja.dayPillar.branch %> <%= engineA.palja.hourPillar.stem %><%= engineA.palja.hourPillar.branch %></b></div>
       <div class="p-row">일간 &nbsp;<b><%= engineA.ilgan.char %>(<%= engineA.ilgan.ko %>)</b></div>
       <div class="p-row">격국 &nbsp;<b><%= engineA.kyukguk.name %></b> · 용신 &nbsp;<b><%= engineA.yongshin.final.main %></b></div>
     </div>
     <div class="compat-vs">與</div>
     <div class="compat-person">
-      <div class="p-name"><%= personB.name || 'B' %></div>
+      <div class="p-name"><%= safeName(personB.name, '상대방') %></div>
       <div class="p-row">사주 &nbsp;<b><%= engineB.palja.yearPillar.stem %><%= engineB.palja.yearPillar.branch %> <%= engineB.palja.monthPillar.stem %><%= engineB.palja.monthPillar.branch %> <%= engineB.palja.dayPillar.stem %><%= engineB.palja.dayPillar.branch %> <%= engineB.palja.hourPillar.stem %><%= engineB.palja.hourPillar.branch %></b></div>
       <div class="p-row">일간 &nbsp;<b><%= engineB.ilgan.char %>(<%= engineB.ilgan.ko %>)</b></div>
       <div class="p-row">격국 &nbsp;<b><%= engineB.kyukguk.name %></b> · 용신 &nbsp;<b><%= engineB.yongshin.final.main %></b></div>
@@ -49,7 +49,7 @@
   <h2>근거가 된 관계 데이터</h2>
   <ul class="compat-rel-list">
     <li>일지-일지(배우자궁) 관계: <b><%= compat.dayRelation ? (compat.dayRelation.type === 'chung' ? '충' : compat.dayRelation.type === 'samhap' ? '삼합' : '육합') : '특별한 합충 없음' %></b></li>
-    <li><%= personB.name || 'B' %>님의 일간은 <%= personA.name || 'A' %>님에게 <b><%= compat.shipsinAtoBKo %>(<%= compat.shipsinAtoB %>)</b>, <%= personA.name || 'A' %>님의 일간은 <%= personB.name || 'B' %>님에게 <b><%= compat.shipsinBtoAKo %>(<%= compat.shipsinBtoA %>)</b>에 해당</li>
+    <li><%= safeName(personB.name, '상대방') %>님의 일간은 <%= safeName(personA.name, '본인') %>님에게 <b><%= compat.shipsinAtoBKo %>(<%= compat.shipsinAtoB %>)</b>, <%= safeName(personA.name, '본인') %>님의 일간은 <%= safeName(personB.name, '상대방') %>님에게 <b><%= compat.shipsinBtoAKo %>(<%= compat.shipsinBtoA %>)</b>에 해당</li>
     <li>교차 육합 <b><%= compat.crossYukhap.length %></b>건 · 교차 삼합 <b><%= compat.crossSamhap.length %></b>건 · 교차 충 <b><%= compat.crossChung.length %></b>건</li>
   </ul>
   <div class="disclaimer">

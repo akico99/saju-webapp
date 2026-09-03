@@ -61,17 +61,27 @@ body {
   font-family: 'ReportMyeongjo', 'Batang', '바탕', serif;
   font-size: 27pt; line-height: 1.4; margin: 0 0 4mm; color: var(--star);
 }
-.cover .subtitle { font-size: 11.5pt; color: var(--muted); margin-bottom: 8mm; }
-.cover .starchart-wrap { margin: 2mm 0 3mm; }
-.cover .diagram-caption {
-  font-size: 8.5pt; color: var(--muted); max-width: 120mm; margin: 0 auto 5mm; line-height: 1.6;
+.cover .subtitle { font-size: 11.5pt; color: var(--muted); margin-bottom: 10mm; }
+.cover-summary {
+  background: var(--bg2); border: 1px solid var(--line); border-radius: 4mm;
+  padding: 8mm 10mm; margin-bottom: 10mm; max-width: 130mm;
 }
-.cover .legend { display: flex; gap: 10mm; justify-content: center; margin-bottom: 3mm; font-size: 9pt; color: var(--muted); }
-.cover .legend i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 2mm; vertical-align: middle; }
+.cover-summary-ttl { font-size: 9pt; letter-spacing: 0.16em; color: var(--gold); margin-bottom: 4mm; }
+.cover-summary p { font-size: 12.5pt; line-height: 1.9; color: var(--star); margin: 0 0 2mm; }
+.cover-summary p:last-child { margin-bottom: 0; }
 .cover .meta { font-size: 11pt; color: var(--text); line-height: 2.0; }
 .cover .meta b { color: var(--gold); }
 .cover .disclaimer-mini, .compat-cover .disclaimer-mini { margin-top: 8mm; font-size: 8.5pt; color: var(--muted); max-width: 130mm; line-height: 1.6; }
 .cover .imprint, .compat-cover .imprint { margin-top: 5mm; font-size: 9pt; letter-spacing: 0.18em; color: var(--gold-dim); }
+
+/* ── 얻게 될 3가지 ── */
+.benefits { padding: 18mm 26mm 16mm; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.benefits .eyebrow { font-size: 10pt; letter-spacing: 0.24em; color: var(--gold); margin-bottom: 4mm; }
+.benefits h2 { font-family: 'ReportMyeongjo','Batang','바탕',serif; font-size: 18pt; color: var(--star); border-bottom: 1px solid var(--line); padding-bottom: 5mm; margin: 0 0 10mm; }
+.benefit-item { display: flex; gap: 6mm; margin-bottom: 10mm; }
+.benefit-num { font-family: 'ReportMyeongjo','Batang','바탕',serif; font-size: 20pt; color: var(--gold-dim); flex-shrink: 0; width: 14mm; }
+.benefit-ttl { font-size: 13pt; font-weight: 700; color: var(--star); margin-bottom: 2mm; }
+.benefit-desc { font-size: 11pt; color: var(--muted); line-height: 1.8; }
 
 /* ── 목차 ── */
 .toc { padding: 18mm 26mm 16mm; box-decoration-break: clone; -webkit-box-decoration-break: clone; }

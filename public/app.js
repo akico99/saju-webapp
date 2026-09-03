@@ -10,6 +10,7 @@ const engineSummaryEl = document.getElementById('engineSummary');
 const progressBlock = document.getElementById('progressBlock');
 const progressFill = document.getElementById('progressFill');
 const progressText = document.getElementById('progressText');
+const progressHeadline = document.getElementById('progressHeadline');
 const downloadBlock = document.getElementById('downloadBlock');
 const downloadLink = document.getElementById('downloadLink');
 const downloadCardLink = document.getElementById('downloadCardLink');
@@ -81,9 +82,20 @@ shareCardBtn.addEventListener('click', async () => {
 function renderEngineSummary(s) {
   const p = s.palja;
   const ganji = (x) => x.stem + x.branch;
+  const pillars = [
+    { label: '연주', v: ganji(p.yearPillar) }, { label: '월주', v: ganji(p.monthPillar) },
+    { label: '일주', v: ganji(p.dayPillar) }, { label: '시주', v: ganji(p.hourPillar) }
+  ];
   let html = `
-    <div>연주 ${ganji(p.yearPillar)} · 월주 ${ganji(p.monthPillar)} · 일주 ${ganji(p.dayPillar)} · 시주 ${ganji(p.hourPillar)}</div>
-    <div>일간 ${s.ilgan.char}(${s.ilgan.ko}) · 신강신약 ${s.strength} · 격국 ${s.kyukguk} · 용신 ${s.yongshin}</div>
+    <div class="ms-pillars">
+      ${pillars.map((x) => `<div class="ms-pillar"><div class="ms-pillar-label">${x.label}</div><div class="ms-pillar-v">${x.v}</div></div>`).join('')}
+    </div>
+    <div class="ms-facts">
+      <div class="ms-fact"><span>일간</span><b>${s.ilgan.char}(${s.ilgan.ko})</b></div>
+      <div class="ms-fact"><span>신강신약</span><b>${s.strength}</b></div>
+      <div class="ms-fact"><span>격국</span><b>${s.kyukguk}</b></div>
+      <div class="ms-fact"><span>용신</span><b>${s.yongshin}</b></div>
+    </div>
   `;
   if (s.warnings && s.warnings.length) {
     html += `<div class="warn">⚠ ${s.warnings.join(' / ')}</div>`;
@@ -100,7 +112,12 @@ async function poll(jobId) {
     if (data.progress) {
       const pct = Math.round((data.progress.current / data.progress.total) * 100);
       progressFill.style.width = pct + '%';
-      progressText.textContent = `${data.progress.current} / ${data.progress.total}`;
+      progressText.textContent = `${data.progress.current} / ${data.progress.total} 챕터`;
+      if (progressHeadline) {
+        progressHeadline.textContent = data.progress.current === 0
+          ? '명식을 바탕으로 첫 챕터를 쓰기 시작했어요'
+          : `${data.progress.current}번째 챕터까지 완성했어요`;
+      }
     }
 
     if (data.status === 'done') {
@@ -131,7 +148,8 @@ form.addEventListener('submit', async (e) => {
   downloadBlock.classList.add('hidden');
   progressBlock.classList.remove('hidden');
   progressFill.style.width = '0%';
-  progressText.textContent = '0 / 18';
+  progressText.textContent = '0 / 18 챕터';
+  if (progressHeadline) progressHeadline.textContent = 'PDF 생성 준비 중...';
 
   // FormData는 disabled 필드의 값을 안 읽는다 — 값을 먼저 다 읽고 나서 폼을 잠가야 한다.
   const fd = new FormData(form);

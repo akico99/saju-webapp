@@ -151,6 +151,12 @@ header .logout, button.logout {
   margin-left: 4px; vertical-align: middle;
 }
 .menu-section a:active { opacity: 0.6; }
+.menu-logout-btn {
+  display: block; width: 100%; text-align: center; padding: 12px 0; font-size: 14px; font-weight: 700;
+  color: var(--danger); background: var(--danger-soft); border: none; border-radius: var(--radius-pill);
+  font-family: inherit; cursor: pointer;
+}
+.menu-logout-btn:active { opacity: 0.7; }
 
 @media (prefers-reduced-motion: reduce) {
   .menu-overlay, .menu-drawer { transition: none; }
@@ -466,9 +472,20 @@ button[type="submit"]:hover:not(:disabled), .btn-primary:hover, button.primary:h
 
 /* ---------- 결과/진행 (index/quick/compat 생성 페이지) ---------- */
 .result { margin-top: 28px; border-top: 1px solid var(--line); padding-top: 20px; }
-#engineSummary { font-size: 13.5px; line-height: 1.9; background: var(--surface); padding: 14px; border-radius: 12px; }
-#engineSummary .warn { color: var(--warn); font-size: 12px; margin-top: 6px; }
-.progress-bar { background: var(--surface); border-radius: 999px; height: 8px; overflow: hidden; margin: 10px 0 6px; }
+.myeongsik-preview { background: var(--ink); color: #fff; border-radius: var(--radius-card); padding: 20px; margin-bottom: 18px; }
+.myeongsik-preview-ttl { font-size: 11px; letter-spacing: 0.18em; color: var(--gold, #c7a13a); opacity: 0.85; margin-bottom: 14px; }
+.ms-pillars { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
+.ms-pillar { background: rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 4px; text-align: center; }
+.ms-pillar-label { font-size: 10.5px; opacity: 0.6; margin-bottom: 4px; }
+.ms-pillar-v { font-size: 16px; font-weight: 800; letter-spacing: 0.04em; }
+.ms-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ms-fact { font-size: 12.5px; display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; }
+.ms-fact span { opacity: 0.65; }
+.ms-fact b { font-weight: 700; }
+#engineSummary .warn { color: var(--warn); font-size: 12px; margin-top: 10px; }
+#progressBlock { background: var(--surface); padding: 16px; border-radius: var(--radius-card); }
+#progressBlock h3 { font-size: 14px; margin: 0 0 4px; }
+.progress-bar { background: var(--paper); border-radius: 999px; height: 8px; overflow: hidden; margin: 10px 0 6px; }
 .progress-fill { background: var(--accent); height: 100%; width: 0%; transition: width 0.4s; }
 #progressText { font-size: 13px; color: var(--muted); }
 .download-btn {

@@ -5,6 +5,7 @@ const path = require('path');
 const { computeSaju } = require('../../engine/index');
 const { createJob, updateJob } = require('../../jobs/jobManager');
 const { generateReport } = require('../../llm/generateReport');
+const { generateCoverSummary } = require('../../llm/coverSummary');
 const { renderHtml } = require('../../pdf/renderHtml');
 const { renderPdf } = require('../../pdf/renderPdf');
 const { renderCardHtml, renderCardImage } = require('../../pdf/renderCard');
@@ -90,12 +91,15 @@ router.post('/generate', requireAuth, async (req, res) => {
 
   // 이후 LLM 생성 + PDF 렌더는 비동기로 진행 (응답은 이미 보냄)
   updateJob(jobId, { status: 'generating' });
-  generateReport(engineResult, person, jobDir, (progress) => {
-    updateJob(jobId, { progress });
-  })
-    .then(async (chapters) => {
+  Promise.all([
+    generateReport(engineResult, person, jobDir, (progress) => {
+      updateJob(jobId, { progress });
+    }),
+    generateCoverSummary(engineResult, person).catch(() => null) // 실패해도 표지 요약만 빠질 뿐 본편은 그대로 진행
+  ])
+    .then(async ([chapters, coverSummary]) => {
       updateJob(jobId, { status: 'rendering' });
-      const html = renderHtml(engineResult, chapters, person);
+      const html = renderHtml(engineResult, chapters, person, coverSummary);
       const pdfPath = path.join(jobDir, 'report.pdf');
       await renderPdf(html, pdfPath, person);
 

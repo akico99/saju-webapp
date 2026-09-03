@@ -7,6 +7,7 @@ const path = require('path');
 const ejs = require('ejs');
 const { renderMarkup } = require('./textMarkup');
 const { getReportCss } = require('./reportCss');
+const { safeName } = require('./personName');
 
 const TEMPLATE_PATH = path.join(__dirname, 'templates', 'compat.ejs');
 
@@ -22,7 +23,7 @@ function renderCompatHtml(engineA, engineB, personA, personB, compat, text) {
   const reportCss = getReportCss();
   return ejs.render(
     fs.readFileSync(TEMPLATE_PATH, 'utf8'),
-    { engineA, engineB, personA, personB, compat, text, reportCss, renderMarkup },
+    { engineA, engineB, personA, personB, compat, text, reportCss, renderMarkup, safeName },
     { filename: TEMPLATE_PATH }
   );
 }

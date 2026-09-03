@@ -38,7 +38,7 @@
     </div>
     <div class="menu-section">
       <div class="menu-section-ttl">무료로 먼저 보기</div>
-      <a href="/today-preview.html">오늘의 운세</a>
+      <a href="/today-preview.html" id="menuTodayFortune">오늘의 운세</a>
       <a href="/life-graph.html">인생 그래프</a>
     </div>
     <div class="menu-section">
@@ -74,6 +74,9 @@
       <a href="/mypage.html">마이페이지</a>
       <a href="/profiles.html">저장된 인물</a>
       <a href="/charge.html">포인트 충전</a>
+    </div>
+    <div class="menu-section hidden" id="menuLogoutSection">
+      <button type="button" class="menu-logout-btn" id="menuLogoutBtn">로그아웃</button>
     </div>
   </nav>
 
@@ -371,6 +374,11 @@
         <span class="point-pill">${data.user.pointBalance.toLocaleString('ko-KR')}P</span>
         <a href="/mypage.html">마이페이지</a>
       `;
+      // 로그인 상태에서도 햄버거 메뉴의 "오늘의 운세"가 계속 비로그인 미리보기로 가던
+      // 버그 — 로그인 확인되면 실제 운세 페이지로 바꿔준다.
+      const menuTodayFortune = document.getElementById('menuTodayFortune');
+      if (menuTodayFortune) menuTodayFortune.href = '/today-fortune.html';
+      document.getElementById('menuLogoutSection').classList.remove('hidden');
 
       if (!data.user.birth) {
         tfTitle.textContent = '생년월일을 등록하면 오늘의 운세가 열려요';
@@ -393,6 +401,11 @@
     }
   }
   loadAccountState();
+
+  document.getElementById('menuLogoutBtn').addEventListener('click', async () => {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    location.href = '/';
+  });
 
   (function initMenu() {
     const btn = document.getElementById('menuBtn');
