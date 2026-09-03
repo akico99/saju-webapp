@@ -21,6 +21,7 @@ function toPublic(row) {
     isLunar: !!row.is_lunar,
     isLeap: !!row.is_leap,
     city: row.city,
+    noLonCorrection: !!row.no_lon_correction,
     isPrimary: !!row.is_primary
   };
 }
@@ -28,14 +29,14 @@ function toPublic(row) {
 const stmts = {
   insert: db.prepare(`
     INSERT INTO saved_profiles (user_id, label, name, gender, birth_year, birth_month, birth_day,
-                                 birth_hour, birth_minute, is_lunar, is_leap, city, is_primary)
+                                 birth_hour, birth_minute, is_lunar, is_leap, city, no_lon_correction, is_primary)
     VALUES (@userId, @label, @name, @gender, @birthYear, @birthMonth, @birthDay,
-            @birthHour, @birthMinute, @isLunar, @isLeap, @city, @isPrimary)
+            @birthHour, @birthMinute, @isLunar, @isLeap, @city, @noLonCorrection, @isPrimary)
   `),
   update: db.prepare(`
     UPDATE saved_profiles SET label=@label, name=@name, gender=@gender, birth_year=@birthYear,
       birth_month=@birthMonth, birth_day=@birthDay, birth_hour=@birthHour, birth_minute=@birthMinute,
-      is_lunar=@isLunar, is_leap=@isLeap, city=@city
+      is_lunar=@isLunar, is_leap=@isLeap, city=@city, no_lon_correction=@noLonCorrection
     WHERE id=@id AND user_id=@userId
   `),
   remove: db.prepare('DELETE FROM saved_profiles WHERE id = ? AND user_id = ?'),
@@ -91,6 +92,7 @@ function create(userId, data) {
     isLunar: data.isLunar ? 1 : 0,
     isLeap: data.isLeap ? 1 : 0,
     city: data.city || null,
+    noLonCorrection: data.noLonCorrection ? 1 : 0,
     isPrimary: makePrimary ? 1 : 0
   });
   return toPublic(stmts.findById.get(info.lastInsertRowid, userId));
@@ -111,7 +113,8 @@ function update(userId, id, data) {
     birthMinute: data.birthMinute != null && data.birthMinute !== '' ? Number(data.birthMinute) : 0,
     isLunar: data.isLunar ? 1 : 0,
     isLeap: data.isLeap ? 1 : 0,
-    city: data.city || null
+    city: data.city || null,
+    noLonCorrection: data.noLonCorrection ? 1 : 0
   });
   return toPublic(stmts.findById.get(id, userId));
 }
@@ -138,7 +141,8 @@ function migrateLegacyBirthIfNeeded(userId, legacyUser) {
     birthMinute: legacyUser.birth_minute,
     isLunar: !!legacyUser.is_lunar,
     isLeap: !!legacyUser.is_leap,
-    city: legacyUser.city
+    city: legacyUser.city,
+    noLonCorrection: !!legacyUser.no_lon_correction
   });
 }
 

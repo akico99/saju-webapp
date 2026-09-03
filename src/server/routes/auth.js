@@ -23,7 +23,8 @@ function parseBirth(body) {
   const isLunar = body.calendar === '음력';
   const isLeap = !!body.isLeap;
   const city = body.city || null;
-  return { birthYear: year, birthMonth: month, birthDay: day, birthHour: hour, birthMinute: minute, gender, isLunar, isLeap, city };
+  const noLonCorrection = !!body.noLonCorrection;
+  return { birthYear: year, birthMonth: month, birthDay: day, birthHour: hour, birthMinute: minute, gender, isLunar, isLeap, city, noLonCorrection };
 }
 
 // 가입 직후·재발송 요청 양쪽에서 쓰는 공용 함수 — 발송 실패는 호출한 쪽에서 조용히

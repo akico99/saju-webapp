@@ -129,7 +129,7 @@ function getTodayFortune(birth, now = new Date()) {
     year: birth.year, month: birth.month, day: birth.day,
     hour: birth.hour != null ? birth.hour : null, minute: birth.minute || 0,
     gender: birth.gender || null, isLunar: !!birth.isLunar, isLeap: !!birth.isLeap,
-    city: birth.city || null
+    city: birth.city || null, lonOff: !!birth.noLonCorrection
   });
   const myIlganStem = myResult.palja.dayPillar.stem;
   const yongshinMain = myResult.yongshin.final.main;

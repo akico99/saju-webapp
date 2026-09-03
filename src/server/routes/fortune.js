@@ -19,7 +19,8 @@ router.get('/today-fortune', requireAuth, (req, res) => {
     const fortune = getTodayFortune({
       year: primary.birthYear, month: primary.birthMonth, day: primary.birthDay,
       hour: primary.birthHour, minute: primary.birthMinute,
-      gender: primary.gender, isLunar: primary.isLunar, isLeap: primary.isLeap, city: primary.city
+      gender: primary.gender, isLunar: primary.isLunar, isLeap: primary.isLeap, city: primary.city,
+      noLonCorrection: primary.noLonCorrection
     });
     res.json({ fortune });
   } catch (e) {

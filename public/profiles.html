@@ -85,6 +85,30 @@
         </div>
         <div class="checkbox-row"><input type="checkbox" name="hourUnknown" id="hourUnknown"><label for="hourUnknown">시각 모름</label></div>
 
+        <div class="field">
+          <label>출생지 (선택 — 진태양시 보정용)</label>
+          <select name="city">
+            <option value="">서울(기본)</option>
+            <option value="인천">인천</option><option value="수원">수원</option>
+            <option value="춘천">춘천</option><option value="강릉">강릉</option>
+            <option value="대전">대전</option><option value="세종">세종</option>
+            <option value="청주">청주</option><option value="천안">천안</option>
+            <option value="전주">전주</option><option value="광주">광주</option>
+            <option value="목포">목포</option><option value="여수">여수</option>
+            <option value="대구">대구</option><option value="안동">안동</option>
+            <option value="포항">포항</option><option value="부산">부산</option>
+            <option value="울산">울산</option><option value="창원">창원</option>
+            <option value="제주">제주</option><option value="평양">평양</option>
+            <option value="개성">개성</option>
+          </select>
+          <p class="hint">
+            목록에 없는 지역은 가장 가까운 도시를 골라도 무방해요(차이는 최대 몇 분 수준).
+            출생지를 전혀 모르신다면 비워두세요 — 자동으로 서울 기준으로 계산돼요. 해외
+            출생이라면 아래 "경도 보정 끄기"를 체크해주세요.
+          </p>
+        </div>
+        <div class="checkbox-row"><input type="checkbox" name="noLonCorrection" id="noLonCorrection"><label for="noLonCorrection">경도 보정 끄기 (해외 출생 시 권장)</label></div>
+
         <button type="submit" class="btn-primary" id="submitBtn">추가하기</button>
         <button type="button" class="btn-primary hidden" id="cancelEditBtn" style="background:var(--surface);color:var(--muted);box-shadow:none;">취소</button>
       </form>
@@ -180,6 +204,8 @@
       form.minute.value = '';
       form.hourUnknown.checked = true;
     }
+    form.city.value = p.city || '';
+    form.noLonCorrection.checked = !!p.noLonCorrection;
     formTitle.textContent = '인물 정보 수정';
     submitBtn.textContent = '수정 완료';
     cancelBtn.classList.remove('hidden');
@@ -221,6 +247,7 @@
     body.birthYear = body.year; body.birthMonth = body.month; body.birthDay = body.day;
     body.birthHour = hourUnknown ? null : body.hour;
     body.birthMinute = hourUnknown ? null : (body.minute || 0);
+    body.noLonCorrection = fd.get('noLonCorrection') === 'on';
 
     const url = editingId ? `/api/profiles/${editingId}` : '/api/profiles';
     const method = editingId ? 'PUT' : 'POST';

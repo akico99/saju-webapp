@@ -15,7 +15,8 @@ function toPublicUser(row) {
     birth: row.birth_year ? {
       year: row.birth_year, month: row.birth_month, day: row.birth_day,
       hour: row.birth_hour, minute: row.birth_minute,
-      isLunar: !!row.is_lunar, isLeap: !!row.is_leap, city: row.city
+      isLunar: !!row.is_lunar, isLeap: !!row.is_leap, city: row.city,
+      noLonCorrection: !!row.no_lon_correction
     } : null,
     createdAt: row.created_at
   };
@@ -24,9 +25,9 @@ function toPublicUser(row) {
 const stmts = {
   insert: db.prepare(`
     INSERT INTO users (email, password_hash, name, gender, birth_year, birth_month, birth_day,
-                        birth_hour, birth_minute, is_lunar, is_leap, city, email_verified)
+                        birth_hour, birth_minute, is_lunar, is_leap, city, no_lon_correction, email_verified)
     VALUES (@email, @passwordHash, @name, @gender, @birthYear, @birthMonth, @birthDay,
-            @birthHour, @birthMinute, @isLunar, @isLeap, @city, 0)
+            @birthHour, @birthMinute, @isLunar, @isLeap, @city, @noLonCorrection, 0)
   `),
   findByEmail: db.prepare('SELECT * FROM users WHERE email = ?'),
   findById: db.prepare('SELECT * FROM users WHERE id = ?'),
@@ -38,19 +39,21 @@ const stmts = {
   adjustBalance: db.prepare('UPDATE users SET point_balance = point_balance + ? WHERE id = ?'),
   updateBirth: db.prepare(`
     UPDATE users SET gender=@gender, birth_year=@birthYear, birth_month=@birthMonth, birth_day=@birthDay,
-      birth_hour=@birthHour, birth_minute=@birthMinute, is_lunar=@isLunar, is_leap=@isLeap, city=@city
+      birth_hour=@birthHour, birth_minute=@birthMinute, is_lunar=@isLunar, is_leap=@isLeap, city=@city,
+      no_lon_correction=@noLonCorrection
     WHERE id=@id
   `),
   updatePasswordHash: db.prepare('UPDATE users SET password_hash = ? WHERE id = ?'),
   markEmailVerified: db.prepare('UPDATE users SET email_verified = 1 WHERE id = ?')
 };
 
-function createUser({ email, passwordHash, name, gender, birthYear, birthMonth, birthDay, birthHour, birthMinute, isLunar, isLeap, city }) {
+function createUser({ email, passwordHash, name, gender, birthYear, birthMonth, birthDay, birthHour, birthMinute, isLunar, isLeap, city, noLonCorrection }) {
   const info = stmts.insert.run({
     email, passwordHash, name: name || null, gender: gender || null,
     birthYear: birthYear || null, birthMonth: birthMonth || null, birthDay: birthDay || null,
     birthHour: birthHour != null ? birthHour : null, birthMinute: birthMinute != null ? birthMinute : 0,
-    isLunar: isLunar ? 1 : 0, isLeap: isLeap ? 1 : 0, city: city || null
+    isLunar: isLunar ? 1 : 0, isLeap: isLeap ? 1 : 0, city: city || null,
+    noLonCorrection: noLonCorrection ? 1 : 0
   });
   return stmts.findById.get(info.lastInsertRowid);
 }
@@ -133,12 +136,13 @@ function adminStats() {
   return { totalUsers, todaySignups, totalRevenue };
 }
 
-function updateBirth(id, { gender, birthYear, birthMonth, birthDay, birthHour, birthMinute, isLunar, isLeap, city }) {
+function updateBirth(id, { gender, birthYear, birthMonth, birthDay, birthHour, birthMinute, isLunar, isLeap, city, noLonCorrection }) {
   stmts.updateBirth.run({
     id, gender: gender || null,
     birthYear: birthYear || null, birthMonth: birthMonth || null, birthDay: birthDay || null,
     birthHour: birthHour != null ? birthHour : null, birthMinute: birthMinute != null ? birthMinute : 0,
-    isLunar: isLunar ? 1 : 0, isLeap: isLeap ? 1 : 0, city: city || null
+    isLunar: isLunar ? 1 : 0, isLeap: isLeap ? 1 : 0, city: city || null,
+    noLonCorrection: noLonCorrection ? 1 : 0
   });
   return stmts.findById.get(id);
 }

@@ -49,6 +49,9 @@
 
     const cityEl = form.elements[fieldName('city', prefix)];
     if (cityEl && profile.city) cityEl.value = profile.city;
+
+    const lonOffEl = form.elements[fieldName('noLonCorrection', prefix)];
+    if (lonOffEl) lonOffEl.checked = !!profile.noLonCorrection;
   }
 
   /**

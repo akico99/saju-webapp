@@ -113,6 +113,11 @@ const spColumns = db.prepare('PRAGMA table_info(saved_profiles)').all().map((c) 
 if (!spColumns.includes('is_primary')) {
   db.exec('ALTER TABLE saved_profiles ADD COLUMN is_primary INTEGER NOT NULL DEFAULT 0');
 }
+/* 경도(진태양시) 보정 끄기 — 해외 출생이거나 출생지를 몰라 목록에서 도시를 고를 수 없는
+   경우, 보정 없이 한국 표준시 그대로 계산하고 싶을 때 쓰는 인물별 설정. */
+if (!spColumns.includes('no_lon_correction')) {
+  db.exec('ALTER TABLE saved_profiles ADD COLUMN no_lon_correction INTEGER NOT NULL DEFAULT 0');
+}
 /* 세션 테이블(sessions)은 better-sqlite3-session-store가 자체 스키마로 직접 생성한다
    (sid/sess/expire) — 여기서 미리 만들지 않는다(컬럼 충돌 방지). */
 
@@ -138,6 +143,12 @@ if (!userColumns.includes('status')) {
    방금 추가한 컬럼 기본값 1이 그대로 적용돼버림). */
 if (!userColumns.includes('email_verified')) {
   db.exec('ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 1');
+}
+
+/* saved_profiles와 같은 목적의 경도 보정 끄기 설정 — 예전 마이페이지 "생년월일시 저장"
+   (users 테이블 컬럼) 경로도 이관 시 값을 잃지 않도록 동일하게 추가. */
+if (!userColumns.includes('no_lon_correction')) {
+  db.exec('ALTER TABLE users ADD COLUMN no_lon_correction INTEGER NOT NULL DEFAULT 0');
 }
 
 module.exports = db;
