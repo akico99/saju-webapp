@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="/favicon.png">
+<title>사주보는 수달 — 오늘의 운세</title>
+<link rel="stylesheet" href="/theme.css">
+<style>
+  .tf-summary-list { margin: 0; padding-left: 18px; font-size: 13.5px; line-height: 1.9; color: #fff; opacity: .92; }
+  .tf-weather { display: flex; align-items: center; gap: 14px; }
+  .tf-weather .icon { font-size: 40px; line-height: 1; }
+  .tf-weather .label { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
+  .tf-weather .note { font-size: 12.5px; color: var(--muted); line-height: 1.6; }
+  .tf-dodont { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .tf-dodont .col-ttl { font-size: 12px; font-weight: 800; margin-bottom: 8px; }
+  .tf-dodont .do .col-ttl { color: var(--success); }
+  .tf-dodont .dont .col-ttl { color: var(--danger); }
+  .tf-dodont ul { margin: 0; padding-left: 16px; font-size: 12px; line-height: 1.7; color: var(--ink); }
+  .tf-quest-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .tf-quest-item:last-child { border-bottom: none; }
+  .tf-quest-item input[type="checkbox"] { width: 18px; height: 18px; flex-shrink: 0; }
+  .tf-quest-item.done span { text-decoration: line-through; color: var(--muted); }
+  .tf-upsell { display: flex; align-items: center; justify-content: space-between; gap: 12px; text-decoration: none; color: var(--ink); }
+  .tf-upsell .txt .label { font-size: 11.5px; color: var(--muted); margin-bottom: 4px; }
+  .tf-upsell .txt .name { font-size: 15px; font-weight: 800; }
+  .tf-upsell .price { font-size: 13px; font-weight: 800; color: var(--accent); flex-shrink: 0; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <a class="back" href="/mypage.html">←</a>
+    <div class="ttl">오늘의 운세</div>
+  </header>
+  <main>
+    <div id="loadingBox" class="hint">불러오는 중...</div>
+    <div id="errorBox" class="error-box hidden"></div>
+
+    <div id="content" class="hidden">
+      <div class="card fortune-card">
+        <div class="row-top">
+          <div class="eyebrow" id="tfDate"></div>
+          <span class="fortune-score" id="tfScore"></span>
+        </div>
+        <h2 id="tfTitle"></h2>
+        <ul class="tf-summary-list" id="tfSummary"></ul>
+      </div>
+
+      <div class="card">
+        <h3>오늘의 운세 날씨</h3>
+        <div class="tf-weather">
+          <div class="icon" id="tfWeatherIcon"></div>
+          <div>
+            <div class="label" id="tfWeatherLabel"></div>
+            <div class="note" id="tfWeatherNote"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>오늘의 DO & DON'T</h3>
+        <div class="tf-dodont">
+          <div class="do">
+            <div class="col-ttl">DO</div>
+            <ul id="tfDos"></ul>
+          </div>
+          <div class="dont">
+            <div class="col-ttl">DON'T</div>
+            <ul id="tfDonts"></ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>오늘 나의 하루 액땜 퀘스트</h3>
+        <p class="hint" style="margin-top:-6px;">오늘 필요한 기운을 채워주는 작은 행동들이에요. 체크해보세요.</p>
+        <div id="tfQuest"></div>
+      </div>
+
+      <a class="card tf-upsell" id="tfUpsell" href="#">
+        <div class="txt">
+          <div class="label" id="tfUpsellLabel"></div>
+          <div class="name" id="tfUpsellName"></div>
+        </div>
+        <div class="price" id="tfUpsellPrice"></div>
+      </a>
+    </div>
+  </main>
+</div>
+
+<script>
+  async function requireLogin() {
+    const res = await fetch('/api/auth/me');
+    const data = await res.json();
+    if (!data.user) {
+      location.href = '/login.html?redirect=' + encodeURIComponent(location.pathname);
+      return null;
+    }
+    return data.user;
+  }
+
+  function questStorageKey(dateStr) {
+    return `tf-quest-${dateStr}`;
+  }
+
+  function renderQuest(quest, dateStr) {
+    const key = questStorageKey(dateStr);
+    let saved = {};
+    try { saved = JSON.parse(localStorage.getItem(key) || '{}'); } catch (e) {}
+
+    const box = document.getElementById('tfQuest');
+    box.innerHTML = '';
+    quest.forEach((item, i) => {
+      const row = document.createElement('label');
+      row.className = 'tf-quest-item' + (saved[i] ? ' done' : '');
+      row.innerHTML = `<input type="checkbox" ${saved[i] ? 'checked' : ''}><span>${item.text}</span>`;
+      row.querySelector('input').addEventListener('change', (e) => {
+        row.classList.toggle('done', e.target.checked);
+        let cur = {};
+        try { cur = JSON.parse(localStorage.getItem(key) || '{}'); } catch (err) {}
+        cur[i] = e.target.checked;
+        try { localStorage.setItem(key, JSON.stringify(cur)); } catch (err) {}
+      });
+      box.appendChild(row);
+    });
+  }
+
+  function render(fortune) {
+    document.getElementById('tfDate').textContent = `${fortune.date} · ${fortune.gapja}`;
+    document.getElementById('tfScore').textContent = fortune.score + '점';
+    document.getElementById('tfTitle').textContent = fortune.title;
+    document.getElementById('tfSummary').innerHTML = fortune.summary3.map((s) => `<li>${s}</li>`).join('');
+
+    document.getElementById('tfWeatherIcon').textContent = fortune.weather.icon;
+    document.getElementById('tfWeatherLabel').textContent = fortune.weather.label;
+    document.getElementById('tfWeatherNote').textContent = fortune.weather.note;
+
+    document.getElementById('tfDos').innerHTML = fortune.dos.map((s) => `<li>${s}</li>`).join('');
+    document.getElementById('tfDonts').innerHTML = fortune.donts.map((s) => `<li>${s}</li>`).join('');
+
+    renderQuest(fortune.quest, fortune.date);
+
+    document.getElementById('tfUpsellLabel').textContent = fortune.upsell.label;
+    document.getElementById('tfUpsellName').textContent = fortune.upsell.name;
+    document.getElementById('tfUpsellPrice').textContent = fortune.upsell.price;
+    document.getElementById('tfUpsell').href = fortune.upsell.href;
+
+    document.getElementById('loadingBox').classList.add('hidden');
+    document.getElementById('content').classList.remove('hidden');
+  }
+
+  (async () => {
+    const user = await requireLogin();
+    if (!user) return;
+    try {
+      const res = await fetch('/api/today-fortune');
+      const data = await res.json();
+      const loadingBox = document.getElementById('loadingBox');
+      const errorBox = document.getElementById('errorBox');
+      if (!res.ok) {
+        loadingBox.classList.add('hidden');
+        errorBox.textContent = data.error || '오늘의 운세를 불러오지 못했어요.';
+        errorBox.classList.remove('hidden');
+        return;
+      }
+      render(data.fortune);
+    } catch (err) {
+      document.getElementById('loadingBox').classList.add('hidden');
+      const errorBox = document.getElementById('errorBox');
+      errorBox.textContent = '요청 실패: ' + err.message;
+      errorBox.classList.remove('hidden');
+    }
+  })();
+</script>
+</body>
+</html>
