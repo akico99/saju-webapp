@@ -38,11 +38,18 @@
     new Chart(el.getContext('2d'), config);
   }
   window.__chartsReady = false;
-  mount('ohaengChart', configs.ohaeng);
-  mount('shipsinChart', configs.shipsin);
-  mount('daewoonChart', configs.daewoon);
-  // 캔버스가 하나도 없는 극단적 상황 대비 안전장치
-  setTimeout(function () { window.__chartsReady = true; }, 3000);
+  // Chart.js는 <canvas>에 텍스트를 한 번 그리면 그걸로 끝 — 이후 커스텀 폰트가 로드돼도
+  // 알아서 다시 그려주지 않는다. document.fonts.ready 전에 그리면(특히 ReportHanja처럼
+  // unicode-range 폴백으로만 붙는 폰트는 canvas의 fillText가 DOM 텍스트와 달리 로딩을
+  // 스스로 트리거하지 않아 더 늦게 뜨거나 아예 안 뜬다) 한자가 빈칸으로 박제된 채
+  // 캔버스 이미지로 고정되어 버린다 — 폰트 로딩이 끝난 뒤에만 그린다.
+  document.fonts.ready.then(function () {
+    mount('ohaengChart', configs.ohaeng);
+    mount('shipsinChart', configs.shipsin);
+    mount('daewoonChart', configs.daewoon);
+  });
+  // 캔버스가 하나도 없거나 폰트 로딩이 비정상적으로 오래 걸리는 극단적 상황 대비 안전장치
+  setTimeout(function () { window.__chartsReady = true; }, 5000);
 })();
 </script>
 </body>

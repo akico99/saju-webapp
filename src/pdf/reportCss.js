@@ -41,20 +41,24 @@ const HANJA_PATH = path.join(__dirname, 'fonts', 'ReportHanja.ttf');
 let cachedFontFaces = null;
 let cachedFull = null;
 
-function toDataUri(fontPath) {
-  return `data:font/truetype;base64,${fs.readFileSync(fontPath).toString('base64')}`;
+function toDataUri(fontPath, mime) {
+  return `data:${mime};base64,${fs.readFileSync(fontPath).toString('base64')}`;
 }
 
 function getFontFaceCss() {
   if (cachedFontFaces) return cachedFontFaces;
-  const gothicUrl = toDataUri(GOTHIC_PATH);
-  const myeongjoUrl = toDataUri(MYEONGJO_PATH);
-  const hanjaUrl = toDataUri(HANJA_PATH);
+  const gothicUrl = toDataUri(GOTHIC_PATH, 'font/truetype');
+  const myeongjoUrl = toDataUri(MYEONGJO_PATH, 'font/truetype');
+  // ReportHanja.ttf는 fonttools로 Noto Sans CJK KR(OTF/CFF)에서 뽑아낸 서브셋이라
+  // TTF가 아니라 OTF(CFF 외곽선)다 — 확장자는 관례상 .ttf로 맞춰뒀지만 실제 포맷은
+  // opentype. format() 힌트가 실제 바이트와 달라도 브라우저는 힌트를 강제하지 않고
+  // 그냥 로드하지만, 정확한 힌트를 주는 게 맞다.
+  const hanjaUrl = toDataUri(HANJA_PATH, 'font/opentype');
   cachedFontFaces = `
 @font-face { font-family: 'ReportGothic'; src: url('${gothicUrl}') format('truetype'); font-weight: normal; font-style: normal; }
 @font-face { font-family: 'ReportMyeongjo'; src: url('${myeongjoUrl}') format('truetype'); font-weight: normal; font-style: normal; }
-@font-face { font-family: 'ReportGothic'; src: url('${hanjaUrl}') format('truetype'); font-weight: normal; font-style: normal; unicode-range: U+4E00-9FFF; }
-@font-face { font-family: 'ReportMyeongjo'; src: url('${hanjaUrl}') format('truetype'); font-weight: normal; font-style: normal; unicode-range: U+4E00-9FFF; }
+@font-face { font-family: 'ReportGothic'; src: url('${hanjaUrl}') format('opentype'); font-weight: normal; font-style: normal; unicode-range: U+4E00-9FFF; }
+@font-face { font-family: 'ReportMyeongjo'; src: url('${hanjaUrl}') format('opentype'); font-weight: normal; font-style: normal; unicode-range: U+4E00-9FFF; }
 `;
   return cachedFontFaces;
 }
