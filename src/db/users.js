@@ -39,7 +39,8 @@ const stmts = {
     UPDATE users SET gender=@gender, birth_year=@birthYear, birth_month=@birthMonth, birth_day=@birthDay,
       birth_hour=@birthHour, birth_minute=@birthMinute, is_lunar=@isLunar, is_leap=@isLeap, city=@city
     WHERE id=@id
-  `)
+  `),
+  updatePasswordHash: db.prepare('UPDATE users SET password_hash = ? WHERE id = ?')
 };
 
 function createUser({ email, passwordHash, name, gender, birthYear, birthMonth, birthDay, birthHour, birthMinute, isLunar, isLeap, city }) {
@@ -76,6 +77,10 @@ function findById(id) {
 
 function adjustPointBalance(userId, delta) {
   stmts.adjustBalance.run(delta, userId);
+}
+
+function updatePasswordHash(userId, passwordHash) {
+  stmts.updatePasswordHash.run(passwordHash, userId);
 }
 
 /* ---------- 관리자 회원관리 ---------- */
@@ -133,6 +138,6 @@ function updateBirth(id, { gender, birthYear, birthMonth, birthDay, birthHour, b
 
 module.exports = {
   createUser, findByEmail, findById, adjustPointBalance, updateBirth, toPublicUser,
-  findByProvider, createSocialUser,
+  findByProvider, createSocialUser, updatePasswordHash,
   listAll, countAll, setStatus, adminStats, toAdminUser
 };

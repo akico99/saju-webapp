@@ -3,6 +3,8 @@ const express = require('express');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const users = require('../../db/users');
+const passwordResets = require('../../db/passwordResets');
+const { sendEmail } = require('../../email/resend');
 
 const router = express.Router();
 
@@ -68,6 +70,64 @@ router.get('/auth/me', (req, res) => {
   if (!req.session || !req.session.userId) return res.json({ user: null });
   const row = users.findById(req.session.userId);
   res.json({ user: users.toPublicUser(row) });
+});
+
+/* ---------- 비밀번호 재설정 ---------- */
+// 가입 여부와 무관하게 항상 같은 응답을 준다 — "이 이메일은 가입돼 있지 않아요" 같은
+// 메시지는 그 자체로 회원 여부를 노출하는 정보 유출이라 절대 구분해서 알려주지 않는다.
+const GENERIC_MSG = '해당 이메일로 가입된 계정이 있다면, 비밀번호 재설정 링크를 보내드렸어요.';
+
+router.post('/auth/forgot-password', async (req, res) => {
+  const email = String(req.body.email || '').trim();
+  if (!email) return res.status(400).json({ error: '이메일을 입력해주세요.' });
+
+  const user = users.findByEmail(email);
+  // 소셜 로그인 계정은 원래 비밀번호가 없으니(무작위 값) 재설정 대상에서 제외한다.
+  if (user && user.provider === 'local') {
+    const token = passwordResets.createToken(user.id);
+    const resetUrl = `${BASE_URL}/reset-password.html?token=${token}`;
+    try {
+      await sendEmail({
+        to: user.email,
+        subject: '[사주보는 수달] 비밀번호 재설정',
+        html: `
+          <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px;">
+            <h2 style="color:#1a1a2e;">비밀번호를 재설정해주세요</h2>
+            <p>아래 버튼을 눌러 새 비밀번호를 설정하세요. 이 링크는 ${passwordResets.TOKEN_TTL_MINUTES}분 동안만 유효합니다.</p>
+            <p style="margin:28px 0;">
+              <a href="${resetUrl}" style="background:#1a1a2e;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700;">비밀번호 재설정하기</a>
+            </p>
+            <p style="color:#888;font-size:13px;">본인이 요청하지 않았다면 이 메일을 무시하셔도 됩니다.</p>
+            <p style="color:#888;font-size:13px;">길잡이 여울</p>
+          </div>
+        `
+      });
+    } catch (e) {
+      // 발송 실패는 사용자에게 정보를 흘리지 않고 서버 로그로만 남긴다.
+      console.error('비밀번호 재설정 메일 발송 실패:', e.message);
+    }
+  }
+
+  res.json({ message: GENERIC_MSG });
+});
+
+router.post('/auth/reset-password', async (req, res) => {
+  const { token, password } = req.body;
+  if (!token) return res.status(400).json({ error: '유효하지 않은 요청입니다.' });
+  if (!password || String(password).length < 8) {
+    return res.status(400).json({ error: '비밀번호는 8자 이상이어야 합니다.' });
+  }
+
+  const row = passwordResets.findValidToken(token);
+  if (!row) {
+    return res.status(400).json({ error: '링크가 만료되었거나 이미 사용됐어요. 다시 요청해주세요.' });
+  }
+
+  const passwordHash = await bcrypt.hash(password, 10);
+  users.updatePasswordHash(row.user_id, passwordHash);
+  passwordResets.markUsed(row.id);
+
+  res.json({ ok: true });
 });
 
 /* ---------- 네이버 로그인 ---------- */

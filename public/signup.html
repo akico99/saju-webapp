@@ -36,6 +36,10 @@
         <input type="password" name="password" required minlength="8">
       </div>
       <div class="field">
+        <label>비밀번호 확인</label>
+        <input type="password" name="passwordConfirm" required minlength="8">
+      </div>
+      <div class="field">
         <label>이름</label>
         <input type="text" name="name" placeholder="예: 홍길동">
       </div>
@@ -118,7 +122,13 @@
     e.preventDefault();
     errorBox.classList.add('hidden');
     const fd = new FormData(form);
+    if (fd.get('password') !== fd.get('passwordConfirm')) {
+      errorBox.textContent = '비밀번호가 서로 달라요. 다시 확인해주세요.';
+      errorBox.classList.remove('hidden');
+      return;
+    }
     const body = Object.fromEntries(fd.entries());
+    delete body.passwordConfirm;
     body.isLeap = fd.get('isLeap') === 'on';
     body.hourUnknown = fd.get('hourUnknown') === 'on';
 
