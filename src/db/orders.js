@@ -11,7 +11,8 @@ const stmts = {
   `),
   findByJobId: db.prepare('SELECT * FROM orders WHERE job_id = ?'),
   markDone: db.prepare(`
-    UPDATE orders SET status='done', result_path=@resultPath, card_path=@cardPath, finished_at=datetime('now')
+    UPDATE orders SET status='done', result_path=@resultPath, card_path=@cardPath,
+      llm_cost_usd=@llmCostUsd, finished_at=datetime('now')
     WHERE job_id=@jobId
   `),
   markError: db.prepare(`
@@ -22,7 +23,15 @@ const stmts = {
   countDone: db.prepare("SELECT COUNT(*) AS c FROM orders WHERE status = 'done'"),
   findPendingByUserAndProduct: db.prepare(
     "SELECT * FROM orders WHERE user_id = ? AND product_key = ? AND status = 'pending' ORDER BY id DESC LIMIT 1"
-  )
+  ),
+  listRecentDone: db.prepare(`
+    SELECT o.*, u.email AS user_email FROM orders o JOIN users u ON u.id = o.user_id
+    WHERE o.status = 'done' ORDER BY o.id DESC LIMIT ? OFFSET ?
+  `),
+  costSummaryByProduct: db.prepare(`
+    SELECT product_key, COUNT(*) AS count, SUM(llm_cost_usd) AS total_cost_usd, AVG(llm_cost_usd) AS avg_cost_usd
+    FROM orders WHERE status = 'done' AND llm_cost_usd IS NOT NULL GROUP BY product_key
+  `)
 };
 
 function createOrder({ userId, productKey, label, jobId }) {
@@ -33,8 +42,8 @@ function findByJobId(jobId) {
   return stmts.findByJobId.get(jobId);
 }
 
-function markDone(jobId, { resultPath, cardPath }) {
-  stmts.markDone.run({ jobId, resultPath: resultPath || null, cardPath: cardPath || null });
+function markDone(jobId, { resultPath, cardPath, llmCostUsd }) {
+  stmts.markDone.run({ jobId, resultPath: resultPath || null, cardPath: cardPath || null, llmCostUsd: llmCostUsd != null ? llmCostUsd : null });
 }
 
 function markError(jobId, error) {
@@ -53,6 +62,15 @@ function findPendingByUserAndProduct(userId, productKey) {
   return stmts.findPendingByUserAndProduct.get(userId, productKey);
 }
 
+function listRecentDone({ limit = 50, offset = 0 } = {}) {
+  return stmts.listRecentDone.all(limit, offset);
+}
+
+function costSummaryByProduct() {
+  return stmts.costSummaryByProduct.all();
+}
+
 module.exports = {
-  createOrder, findByJobId, markDone, markError, listByUser, countDone, findPendingByUserAndProduct
+  createOrder, findByJobId, markDone, markError, listByUser, countDone, findPendingByUserAndProduct,
+  listRecentDone, costSummaryByProduct
 };

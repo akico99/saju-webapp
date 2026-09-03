@@ -35,9 +35,9 @@ ${JSON.stringify(facts, null, 2)}
 
 async function generateCoverSummary(engineResult, person) {
   const prompt = buildCoverSummaryPrompt(engineResult, person);
-  const { text } = await generateText(SYSTEM_PROMPT, prompt);
+  const { text, usage } = await generateText(SYSTEM_PROMPT, prompt);
   const lines = text.trim().split('\n').map((s) => s.trim()).filter(Boolean);
-  return lines.slice(0, 3);
+  return { lines: lines.slice(0, 3), usage };
 }
 
 module.exports = { generateCoverSummary };

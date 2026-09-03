@@ -25,6 +25,7 @@ const {
 } = require('../../engine/constants');
 const { classifyPair, analyzeCompatibility } = require('../../engine/compatibility');
 const { generateDateSelectReport } = require('../../llm/dateSelectReading');
+const { costUsd } = require('../../llm/client');
 const { renderDateSelectHtml } = require('../../pdf/renderDateSelectHtml');
 const { renderPdf } = require('../../pdf/renderPdf');
 const orders = require('../../db/orders');
@@ -251,7 +252,7 @@ function computePersonBasics(body, prefix) {
 // 실패해도(디스크·puppeteer 오류 등) 화면에 이미 보여줄 리포트 텍스트는 있으니 상품
 // 자체는 정상 완료로 본다 — 다만 주문 행을 'pending'으로 방치하면 마이페이지에
 // "생성 중"이라고 영원히 뜨는 거짓 상태가 되므로, 실패는 반드시 'error'로 마감한다.
-async function savePdfAndOrder({ userId, occasion, name, title, eyebrow, metaLine, bestLabel, bestValue, text }) {
+async function savePdfAndOrder({ userId, occasion, name, title, eyebrow, metaLine, bestLabel, bestValue, text, usage }) {
   if (!text) return null;
   const jobId = crypto.randomUUID();
   orders.createOrder({
@@ -265,7 +266,7 @@ async function savePdfAndOrder({ userId, occasion, name, title, eyebrow, metaLin
     fs.mkdirSync(jobDir, { recursive: true });
     const pdfPath = path.join(jobDir, 'date-select-report.pdf');
     await renderPdf(html, pdfPath, { name, label: `${occasion.label} 리포트` });
-    orders.markDone(jobId, { resultPath: pdfPath });
+    orders.markDone(jobId, { resultPath: pdfPath, llmCostUsd: costUsd(usage) });
     return jobId;
   } catch (e) {
     orders.markError(jobId, e.message || String(e));
@@ -374,8 +375,9 @@ async function runMonthSearch(req, res, occasionKey, occasion) {
   }
 
   let report = null;
+  let usage = null;
   try {
-    report = await generateDateSelectReport({
+    ({ text: report, usage } = await generateDateSelectReport({
       topic: occasionKey, occasionLabel: occasion.label,
       name: personName, gender: personGender, personGanZhiKo,
       temperament: STEM_TEMPERAMENT[personDayStem],
@@ -383,7 +385,7 @@ async function runMonthSearch(req, res, occasionKey, occasion) {
       targetYear, targetMonth,
       best: best ? { year: bestDay.year, month: bestDay.month, day: bestDay.day, ...best } : null,
       extras
-    });
+    }));
   } catch (e) {
     report = null;
   }
@@ -395,7 +397,7 @@ async function runMonthSearch(req, res, occasionKey, occasion) {
     eyebrow: `命 式 關 係 圖 · ${occasion.label} 리포트`,
     metaLine: `목표 <b>${targetYear}년 ${targetMonth}월</b>`,
     bestLabel: `${occasion.label}하기 가장 좋은 때`, bestValue,
-    text: report
+    text: report, usage
   });
 
   res.json({
@@ -458,8 +460,9 @@ async function runWeddingSearch(req, res, occasionKey, occasion) {
   const compat = analyzeCompatibility(basicsA.engine, basicsB.engine);
 
   let report = null;
+  let usage = null;
   try {
-    report = await generateDateSelectReport({
+    ({ text: report, usage } = await generateDateSelectReport({
       topic: 'wedding', occasionLabel: occasion.label,
       name: basicsA.personName, spouseName: basicsB.personName,
       gender: basicsA.personGender, personGanZhiKo: basicsA.personGanZhiKo,
@@ -480,7 +483,7 @@ async function runWeddingSearch(req, res, occasionKey, occasion) {
         textureA: OHAENG_TEXTURE[basicsA.yongshinMain], textureB: OHAENG_TEXTURE[basicsB.yongshinMain],
         colorA: OHAENG_COLOR[basicsA.yongshinMain], colorB: OHAENG_COLOR[basicsB.yongshinMain]
       }
-    });
+    }));
   } catch (e) {
     report = null;
   }
@@ -493,7 +496,7 @@ async function runWeddingSearch(req, res, occasionKey, occasion) {
     eyebrow: '命 式 關 係 圖 · 결혼 리포트',
     metaLine: `목표 <b>${targetYear}년</b> · 궁합 참고 점수 <b>${compat.score}점</b>`,
     bestLabel: '혼인신고 하기 가장 좋은 때', bestValue,
-    text: report
+    text: report, usage
   });
 
   res.json({
@@ -574,15 +577,16 @@ async function runBirthSearch(req, res, occasionKey, occasion) {
   const best = candidates[0] || null;
 
   let report = null;
+  let usage = null;
   try {
-    report = await generateDateSelectReport({
+    ({ text: report, usage } = await generateDateSelectReport({
       topic: 'birth', occasionLabel: occasion.label,
       parentNames,
       best,
       temperament: best ? STEM_TEMPERAMENT[best.dayStem] : null,
       taste: motherYongshinMain ? OHAENG_TASTE[motherYongshinMain] : null,
       lackingKo: best ? best.lacking.map((k) => OHAENG_KO[k] || k) : []
-    });
+    }));
   } catch (e) {
     report = null;
   }
@@ -595,7 +599,7 @@ async function runBirthSearch(req, res, occasionKey, occasion) {
     eyebrow: '命 式 關 係 圖 · 임신·출산 리포트',
     metaLine: `예정일 <b>${by}.${String(bm).padStart(2, '0')}.${String(bd).padStart(2, '0')}</b> 전후 ±${rangeDays}일`,
     bestLabel: '오행이 가장 골고루 갖춰지는 때', bestValue,
-    text: report
+    text: report, usage
   });
 
   res.json({

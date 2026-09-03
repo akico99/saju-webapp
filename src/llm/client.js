@@ -7,6 +7,24 @@ const Anthropic = require('@anthropic-ai/sdk');
 
 const MODEL = process.env.SAJU_MODEL || 'claude-sonnet-5';
 
+// claude-sonnet-5 공식 단가($/백만 토큰, platform.claude.com/docs/en/about-claude/pricing 기준).
+// 모델을 바꾸면 이 값도 같이 바꿔야 원가 계산이 정확하다.
+const PRICE_PER_MTOK = { input: 2, output: 10 };
+
+/** 한 번의 API 응답 usage({input_tokens, output_tokens})를 달러 원가로 환산. */
+function costUsd(usage) {
+  if (!usage) return 0;
+  return (usage.input_tokens * PRICE_PER_MTOK.input + usage.output_tokens * PRICE_PER_MTOK.output) / 1e6;
+}
+
+/** 여러 usage 객체(챕터별 등)를 하나로 합산 — 합산 후 costUsd에 그대로 넣을 수 있다. */
+function sumUsage(usages) {
+  return usages.filter(Boolean).reduce(
+    (acc, u) => ({ input_tokens: acc.input_tokens + (u.input_tokens || 0), output_tokens: acc.output_tokens + (u.output_tokens || 0) }),
+    { input_tokens: 0, output_tokens: 0 }
+  );
+}
+
 let client = null;
 function getClient() {
   if (!client) {
@@ -59,4 +77,4 @@ async function generateText(systemPrompt, userMessage, opts = {}) {
   throw lastErr;
 }
 
-module.exports = { generateText, MODEL };
+module.exports = { generateText, MODEL, costUsd, sumUsage };

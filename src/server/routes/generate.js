@@ -6,6 +6,7 @@ const { computeSaju } = require('../../engine/index');
 const { createJob, updateJob } = require('../../jobs/jobManager');
 const { generateReport } = require('../../llm/generateReport');
 const { generateCoverSummary } = require('../../llm/coverSummary');
+const { costUsd, sumUsage } = require('../../llm/client');
 const { renderHtml } = require('../../pdf/renderHtml');
 const { renderPdf } = require('../../pdf/renderPdf');
 const { renderCardHtml, renderCardImage } = require('../../pdf/renderCard');
@@ -97,8 +98,9 @@ router.post('/generate', requireAuth, async (req, res) => {
     }),
     generateCoverSummary(engineResult, person).catch(() => null) // 실패해도 표지 요약만 빠질 뿐 본편은 그대로 진행
   ])
-    .then(async ([chapters, coverSummary]) => {
+    .then(async ([chapters, coverResult]) => {
       updateJob(jobId, { status: 'rendering' });
+      const coverSummary = coverResult ? coverResult.lines : null;
       const html = renderHtml(engineResult, chapters, person, coverSummary);
       const pdfPath = path.join(jobDir, 'report.pdf');
       await renderPdf(html, pdfPath, person);
@@ -108,8 +110,12 @@ router.post('/generate', requireAuth, async (req, res) => {
       const cardHtml = renderCardHtml(engineResult, person);
       await renderCardImage(cardHtml, cardPath);
 
+      // 18챕터 + 표지요약 전체 usage를 합쳐 이 리포트 한 건의 실제 LLM 원가(달러)를 계산·저장.
+      const totalUsage = sumUsage([...chapters.map((c) => c.usage), coverResult && coverResult.usage]);
+      const llmCostUsd = costUsd(totalUsage);
+
       updateJob(jobId, { status: 'done', resultPath: pdfPath, cardPath });
-      orders.markDone(jobId, { resultPath: pdfPath, cardPath });
+      orders.markDone(jobId, { resultPath: pdfPath, cardPath, llmCostUsd });
     })
     .catch((e) => {
       updateJob(jobId, { status: 'error', error: e.message });

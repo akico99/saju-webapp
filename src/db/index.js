@@ -151,4 +151,12 @@ if (!userColumns.includes('no_lon_correction')) {
   db.exec('ALTER TABLE users ADD COLUMN no_lon_correction INTEGER NOT NULL DEFAULT 0');
 }
 
+/* 주문 하나를 생성하는 데 실제로 든 LLM 원가(달러) — 관리자가 상품별/건별 실비용을
+   확인할 수 있게 markDone 시점에 usage 기반으로 계산해 저장한다. LLM을 안 쓰는
+   과거 주문은 NULL로 남는다. */
+const orderColumns = db.prepare('PRAGMA table_info(orders)').all().map((c) => c.name);
+if (!orderColumns.includes('llm_cost_usd')) {
+  db.exec('ALTER TABLE orders ADD COLUMN llm_cost_usd REAL');
+}
+
 module.exports = db;

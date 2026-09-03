@@ -22,6 +22,7 @@ const {
 const { classifyPair, analyzeCompatibility } = require('../../engine/compatibility');
 const { bananSalBranch, BRANCH_DIRECTION_KO } = require('../../engine/shinsal');
 const { generateLifeTopicReport } = require('../../llm/lifeTopicsReading');
+const { costUsd } = require('../../llm/client');
 const { renderDateSelectHtml } = require('../../pdf/renderDateSelectHtml');
 const { renderPdf } = require('../../pdf/renderPdf');
 const orders = require('../../db/orders');
@@ -242,7 +243,7 @@ function currentDaewoon(engine) {
   return current;
 }
 
-async function savePdfAndOrder({ userId, productKey, label, name, title, eyebrow, metaLine, bestLabel, bestValue, text }) {
+async function savePdfAndOrder({ userId, productKey, label, name, title, eyebrow, metaLine, bestLabel, bestValue, text, usage }) {
   if (!text) return null;
   const jobId = crypto.randomUUID();
   orders.createOrder({ userId, productKey, label: `${label}${name ? ' — ' + name : ''}`, jobId });
@@ -252,7 +253,7 @@ async function savePdfAndOrder({ userId, productKey, label, name, title, eyebrow
     fs.mkdirSync(jobDir, { recursive: true });
     const pdfPath = path.join(jobDir, 'life-topic-report.pdf');
     await renderPdf(html, pdfPath, { name, label });
-    orders.markDone(jobId, { resultPath: pdfPath });
+    orders.markDone(jobId, { resultPath: pdfPath, llmCostUsd: costUsd(usage) });
     return jobId;
   } catch (e) {
     orders.markError(jobId, e.message || String(e));
@@ -323,7 +324,7 @@ async function runCompat(req, res, topic) {
     personDayStem: basics.personDayStem, personDayBranch: basics.personDayBranch, months: 2
   });
 
-  const report = await safeReport(() => generateLifeTopicReport({
+  const compatResult = await safeReport(() => generateLifeTopicReport({
     topic: 'compat',
     name: basics.personName, gender: basics.personGender, personGanZhiKo: basics.personGanZhiKo,
     dayNature: OHAENG_NATURE[dayOhaeng], yongshinOhaengKo: yongshinKo,
@@ -333,6 +334,7 @@ async function runCompat(req, res, topic) {
     best: best ? { ...best, dateValue: formatDateValue(best) } : null,
     dateColor: OHAENG_COLOR[basics.yongshinMain], dateSpot: OHAENG_DATE_SPOT[basics.yongshinMain]
   }));
+  const report = compatResult ? compatResult.text : null;
 
   const displayName = isSolo ? basics.personName : [basics.personName, spouseBasics?.personName].filter(Boolean).join(' · ');
   const jobId = await savePdfAndOrder({
@@ -342,7 +344,7 @@ async function runCompat(req, res, topic) {
     eyebrow: `命 式 關 係 圖 · ${topic.label} 리포트`,
     metaLine: isSolo ? '현재 상태: 솔로' : `현재 상태: ${{ seeing: '썸', dating: '연애 중', breaking: '이별 중' }[status]}`,
     bestLabel: '관계 진전에 좋은 때', bestValue: best ? formatDateValue(best) : null,
-    text: report
+    text: report, usage: compatResult ? compatResult.usage : null
   });
 
   res.json({ topic: 'compat', topicLabel: topic.label, name: basics.personName, spouseName: spouseBasics?.personName || null, report, jobId, best: best ? { ...best, dateValue: formatDateValue(best) } : null, compatScore: compat?.score || null });
@@ -374,7 +376,7 @@ async function runWealth(req, res, topic) {
   const banansal = bananSalBranch(basics.yearBranch);
   const direction = banansal ? BRANCH_DIRECTION_KO[banansal] : null;
 
-  const report = await safeReport(() => generateLifeTopicReport({
+  const wealthResult = await safeReport(() => generateLifeTopicReport({
     topic: 'wealth',
     name: basics.personName, gender: basics.personGender, personGanZhiKo: basics.personGanZhiKo,
     yongshinOhaengKo: yongshinKo, incomeSource: income, interestArea: interest,
@@ -383,6 +385,7 @@ async function runWealth(req, res, topic) {
     badDay: badDay ? { ...badDay, dateValue: formatDateValue(badDay) } : null,
     walletColor: OHAENG_COLOR[basics.yongshinMain], direction
   }));
+  const report = wealthResult ? wealthResult.text : null;
 
   const jobId = await savePdfAndOrder({
     userId: req.session.userId, productKey: topic.productKey, label: `${topic.label} 리포트`,
@@ -391,7 +394,7 @@ async function runWealth(req, res, topic) {
     eyebrow: `命 式 關 係 圖 · ${topic.label} 리포트`,
     metaLine: `주수입원 <b>${income || '미입력'}</b> · 관심 분야 <b>${interest || '미입력'}</b>`,
     bestLabel: '투자·계약에 좋은 때', bestValue: goodDay ? formatDateValue(goodDay) : null,
-    text: report
+    text: report, usage: wealthResult ? wealthResult.usage : null
   });
 
   res.json({ topic: 'wealth', topicLabel: topic.label, name: basics.personName, report, jobId, best: goodDay ? { ...goodDay, dateValue: formatDateValue(goodDay) } : null });
@@ -421,7 +424,7 @@ async function runHealth(req, res, topic) {
   const banansal = bananSalBranch(basics.yearBranch);
   const direction = banansal ? BRANCH_DIRECTION_KO[banansal] : null;
 
-  const report = await safeReport(() => generateLifeTopicReport({
+  const healthResult = await safeReport(() => generateLifeTopicReport({
     topic: 'health',
     name: basics.personName, gender: basics.personGender, personGanZhiKo: basics.personGanZhiKo,
     yongshinOhaengKo: yongshinKo, concern,
@@ -430,6 +433,7 @@ async function runHealth(req, res, topic) {
     goodDay: goodDay ? { ...goodDay, dateValue: formatDateValue(goodDay) } : null,
     pillowDirection: direction, colorTone: OHAENG_COLOR[basics.yongshinMain]
   }));
+  const report = healthResult ? healthResult.text : null;
 
   const jobId = await savePdfAndOrder({
     userId: req.session.userId, productKey: topic.productKey, label: `${topic.label} 리포트`,
@@ -438,7 +442,7 @@ async function runHealth(req, res, topic) {
     eyebrow: `命 式 關 係 圖 · ${topic.label} 리포트`,
     metaLine: `요즘 고민 <b>${concern || '미입력'}</b>`,
     bestLabel: '새 건강 습관 시작하기 좋은 때', bestValue: goodDay ? formatDateValue(goodDay) : null,
-    text: report
+    text: report, usage: healthResult ? healthResult.usage : null
   });
 
   res.json({ topic: 'health', topicLabel: topic.label, name: basics.personName, report, jobId, best: goodDay ? { ...goodDay, dateValue: formatDateValue(goodDay) } : null });

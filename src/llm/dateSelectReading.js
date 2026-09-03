@@ -141,14 +141,14 @@ function buildBirthPrompt(p) {
 /**
  * @param {Object} p
  * @param {'moving'|'opening'|'wedding'|'birth'} p.topic
- * @returns {Promise<string>}
+ * @returns {Promise<{text: string, usage: object}>}
  */
 async function generateDateSelectReport(p) {
   const builder = { moving: buildMovingPrompt, opening: buildOpeningPrompt, wedding: buildWeddingPrompt, birth: buildBirthPrompt }[p.topic];
   if (!builder) throw new Error('알 수 없는 리포트 주제입니다: ' + p.topic);
   const prompt = builder(p);
-  const { text } = await generateText(SYSTEM_PROMPT, prompt);
-  return text.trim();
+  const { text, usage } = await generateText(SYSTEM_PROMPT, prompt);
+  return { text: text.trim(), usage };
 }
 
 module.exports = { generateDateSelectReport };

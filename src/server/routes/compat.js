@@ -8,6 +8,7 @@ const { computeSaju } = require('../../engine/index');
 const { analyzeCompatibility } = require('../../engine/compatibility');
 const { createJob, updateJob } = require('../../jobs/jobManager');
 const { generateCompatReport } = require('../../llm/generateCompatReport');
+const { costUsd } = require('../../llm/client');
 const { renderCompatHtml } = require('../../pdf/renderCompatHtml');
 const { renderPdf } = require('../../pdf/renderPdf');
 const { safeName } = require('../../pdf/personName');
@@ -84,13 +85,13 @@ router.post('/compat', requireAuth, async (req, res) => {
 
   updateJob(jobId, { status: 'generating' });
   generateCompatReport(engineA, engineB, personA, personB, compat)
-    .then(async ({ text }) => {
+    .then(async ({ text, usage }) => {
       updateJob(jobId, { status: 'rendering' });
       const html = renderCompatHtml(engineA, engineB, personA, personB, compat, text);
       const pdfPath = path.join(jobDir, 'compat-report.pdf');
       await renderPdf(html, pdfPath, { name: `${safeName(personA.name, '본인')} · ${safeName(personB.name, '상대방')}` });
       updateJob(jobId, { status: 'done', resultPath: pdfPath });
-      orders.markDone(jobId, { resultPath: pdfPath });
+      orders.markDone(jobId, { resultPath: pdfPath, llmCostUsd: costUsd(usage) });
     })
     .catch((e) => {
       updateJob(jobId, { status: 'error', error: e.message });

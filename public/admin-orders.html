@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="/favicon.png">
+<title>사주보는 수달 — 생성 원가</title>
+<link rel="stylesheet" href="/theme.css">
+<style>
+  .stat-row { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+  .stat-box { flex: 1; min-width: 160px; background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; }
+  .stat-box .ttl { font-size: 13px; font-weight: 800; color: var(--ink); margin-bottom: 6px; }
+  .stat-box .row { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .stat-box .row b { color: var(--ink); }
+  .stat-box .margin.good { color: var(--success); }
+  .stat-box .margin.bad { color: var(--danger); }
+  .note { font-size: 11.5px; color: var(--muted); margin: -10px 0 18px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1><svg class="otter-mark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="7" cy="7" r="2.4" fill="currentColor"/><circle cx="17" cy="7" r="2.4" fill="currentColor"/><ellipse cx="12" cy="13.5" rx="8" ry="7" fill="currentColor"/><circle cx="9" cy="12.5" r="1.1" fill="var(--paper)"/><circle cx="15" cy="12.5" r="1.1" fill="var(--paper)"/><ellipse cx="12" cy="16" rx="1.6" ry="1.1" fill="var(--paper)"/></svg> 생성 원가</h1>
+    <div style="display:flex;align-items:center;gap:14px;">
+      <a href="/admin.html" style="font-size:12.5px;color:var(--muted);text-decoration:none;">← 포인트 승인으로</a>
+      <a href="/admin-users.html" style="font-size:12.5px;color:var(--muted);text-decoration:none;">회원관리 →</a>
+      <button class="logout" id="logoutBtn">관리자 로그아웃</button>
+    </div>
+  </header>
+
+  <p class="note">
+    원가는 claude-sonnet-5 API 응답의 실제 토큰 사용량(usage)을 그대로 계산한 값이에요 —
+    추정치가 아니라 이 리포트를 만드는 데 정말로 든 비용입니다. 마진(원)은 환율 약
+    1,400원/$ 기준 참고용 추정치예요.
+  </p>
+
+  <div class="stat-row" id="summaryRow"></div>
+
+  <table>
+    <thead><tr><th>일시</th><th>상품</th><th>회원</th><th>판매가</th><th>실제 원가</th><th>마진(참고)</th></tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+  <div class="empty hidden" id="empty" style="text-align:center;padding:30px;color:var(--muted);">표시할 내역이 없습니다.</div>
+</div>
+
+<script>
+  const FX_KRW_PER_USD = 1400; // 참고용 고정 환율 — 실제 청구는 USD 기준, 마진 표시는 감을 잡기 위한 근사치일 뿐
+
+  async function checkAdmin() {
+    const res = await fetch('/api/admin/me');
+    const data = await res.json();
+    if (!data.isAdmin) { location.href = '/admin-login.html'; return false; }
+    return true;
+  }
+
+  function fmtUsd(v) { return v == null ? '-' : '$' + v.toFixed(3); }
+  function fmtKrw(v) { return v == null ? '-' : Math.round(v).toLocaleString('ko-KR') + '원'; }
+
+  async function loadSummary() {
+    const res = await fetch('/api/admin/orders/cost-summary');
+    const data = await res.json();
+    const row = document.getElementById('summaryRow');
+    row.innerHTML = '';
+    if (!data.summary.length) return;
+    data.summary.forEach((s) => {
+      const avgCostKrw = s.avgCostUsd != null ? s.avgCostUsd * FX_KRW_PER_USD : null;
+      const margin = s.priceKrw != null && avgCostKrw != null ? s.priceKrw - avgCostKrw : null;
+      const marginPct = margin != null && s.priceKrw ? Math.round((margin / s.priceKrw) * 100) : null;
+      const box = document.createElement('div');
+      box.className = 'stat-box';
+      box.innerHTML = `
+        <div class="ttl">${s.productKey} <span style="font-weight:400;color:var(--muted);">(${s.count}건)</span></div>
+        <div class="row"><span>판매가</span><b>${fmtKrw(s.priceKrw)}</b></div>
+        <div class="row"><span>평균 원가</span><b>${fmtUsd(s.avgCostUsd)} (약 ${fmtKrw(avgCostKrw)})</b></div>
+        <div class="row"><span>마진(참고)</span><b class="margin ${margin != null && margin >= 0 ? 'good' : 'bad'}">${fmtKrw(margin)}${marginPct != null ? ` · ${marginPct}%` : ''}</b></div>
+        <div class="row"><span>누적 원가</span><b>${fmtUsd(s.totalCostUsd)}</b></div>
+      `;
+      row.appendChild(box);
+    });
+  }
+
+  function row(o) {
+    const tr = document.createElement('tr');
+    const costKrw = o.llmCostUsd != null ? o.llmCostUsd * FX_KRW_PER_USD : null;
+    const margin = o.priceKrw != null && costKrw != null ? o.priceKrw - costKrw : null;
+    tr.innerHTML = `
+      <td>${o.createdAt.slice(0, 16).replace('T', ' ')}</td>
+      <td>${o.label || o.productKey}</td>
+      <td style="color:var(--muted);font-size:11px;">${o.userEmail}</td>
+      <td>${fmtKrw(o.priceKrw)}</td>
+      <td>${fmtUsd(o.llmCostUsd)}</td>
+      <td class="margin ${margin != null && margin >= 0 ? 'good' : 'bad'}">${fmtKrw(margin)}</td>
+    `;
+    return tr;
+  }
+
+  async function loadOrders() {
+    const res = await fetch('/api/admin/orders?limit=100');
+    const data = await res.json();
+    const tbody = document.getElementById('tbody');
+    const empty = document.getElementById('empty');
+    tbody.innerHTML = '';
+    if (!data.orders.length) { empty.classList.remove('hidden'); return; }
+    empty.classList.add('hidden');
+    data.orders.forEach((o) => tbody.appendChild(row(o)));
+  }
+
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    await fetch('/api/admin/logout', { method: 'POST' });
+    location.href = '/admin-login.html';
+  });
+
+  (async () => {
+    if (!(await checkAdmin())) return;
+    loadSummary();
+    loadOrders();
+  })();
+</script>
+</body>
+</html>
