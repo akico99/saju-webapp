@@ -27,9 +27,9 @@
 
   .lg-chart-wrap { position: relative; margin: 22px 0 6px; touch-action: pan-y; user-select: none; }
   .lg-chart-wrap svg { width: 100%; height: auto; display: block; overflow: visible; }
-  .lg-axis { display: flex; justify-content: space-between; padding: 0 2px; margin-top: 2px; }
-  .lg-axis span { font-size: 10.5px; color: var(--muted-2); font-variant-numeric: tabular-nums; }
-  .lg-axis span.today { color: var(--ink); font-weight: 800; }
+  .lg-axis { display: flex; justify-content: space-between; padding: 0 2px; margin-top: 6px; }
+  .lg-axis span { font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .lg-axis span.today { color: var(--ink); font-weight: 800; font-size: 12px; }
 
   .lg-today-badge {
     position: absolute; transform: translate(-50%, -100%); margin-top: -10px;
@@ -555,7 +555,13 @@
       scoreText: document.getElementById('lgScore').textContent,
       scoreColor: document.getElementById('lgScore').style.color || '#14171C',
       descText: document.getElementById('lgDesc').textContent,
-      svgString: new XMLSerializer().serializeToString(svg)
+      svgString: new XMLSerializer().serializeToString(svg),
+      // 나이 축 라벨은 svg 밖의 별도 <div>(#lgAxis)에만 그려져 있어서, svg만 직렬화하는
+      // 위 svgString에는 포함되지 않는다 — 그대로 두면 저장/공유되는 카드에 나이가
+      // 아예 안 보이는 채로 나가버린다. render()와 같은 계산(points/todayIdx)을 여기
+      // 스냅샷에도 떠서, 아래에서 카드에 직접 나이 숫자를 그려 넣는다.
+      points: points.slice(),
+      todayIdx: nearestDaewoonIndex(currentAge)
     };
 
     const scale = 2;
@@ -623,16 +629,31 @@
 
     const svgBlob = new Blob([snapshot.svgString], { type: 'image/svg+xml;charset=utf-8' });
     const svgUrl = URL.createObjectURL(svgBlob);
+    let chartW = CARD_W - CARD_PAD * 2;
     try {
       const chartImg = await loadImage(svgUrl);
-      const chartW = CARD_W - CARD_PAD * 2;
       const chartH = chartW * (CHART_H / CHART_W);
       ctx.drawImage(chartImg, CARD_PAD, cursorY, chartW, chartH);
       cursorY += chartH;
     } finally {
       URL.revokeObjectURL(svgUrl);
     }
-    cursorY += 40;
+
+    // 나이 축 — render()의 span 배치(8칸 간격 + 오늘/처음/끝)와 같은 규칙으로 그린다.
+    cursorY += 16;
+    const axisPoints = snapshot.points;
+    const axisStep = Math.max(1, Math.ceil(axisPoints.length / 8));
+    ctx.font = '700 11px "Malgun Gothic", sans-serif';
+    axisPoints.forEach((p, i) => {
+      const show = i === snapshot.todayIdx || i === 0 || i === axisPoints.length - 1 || i % axisStep === 0;
+      if (!show) return;
+      const x = CARD_PAD + (i / (axisPoints.length - 1)) * chartW;
+      ctx.textAlign = i === 0 ? 'left' : i === axisPoints.length - 1 ? 'right' : 'center';
+      ctx.fillStyle = i === snapshot.todayIdx ? '#14171C' : '#8A93A0';
+      ctx.fillText(p.age + '세', x, cursorY);
+    });
+    ctx.textAlign = 'left';
+    cursorY += 34;
 
     // 라인 그래프 밑에 지금 이 시점의 오행 균형도 같이 찍어서, 그래프 따로 오행 따로가
     // 아니라 "지금 이 시기"를 한 장에 담는다. 라인 그래프와 바 차트 레이스는 이제 selected
