@@ -80,6 +80,8 @@
     </div>
   </nav>
 
+  <p class="hero-tagline"><b>추측이 아니라 계산</b>이에요 — 실제 만세력 엔진으로 뽑은 사주를, 990원부터 필요한 만큼만 골라 보세요.</p>
+
   <div class="banner-slider" id="top">
     <div class="banner-track" id="bannerTrack">
       <a class="banner-slide" href="quick.html?topic=total">
@@ -88,6 +90,7 @@
           <span class="eyebrow">TODAY'S PICK</span>
           <div class="headline">깊게 볼 필요 없을 땐, 990원</div>
           <div class="price">오늘의 나 — 총평 빠른 리딩</div>
+          <span class="banner-cta">지금 보기 →</span>
         </div>
       </a>
       <a class="banner-slide" href="quick.html?topic=love">
@@ -96,6 +99,7 @@
           <span class="eyebrow">HOT</span>
           <div class="headline">지금 인연의 흐름이 궁금할 때</div>
           <div class="price">애정운 빠른 리딩 · 990원</div>
+          <span class="banner-cta">지금 보기 →</span>
         </div>
       </a>
       <a class="banner-slide" href="compat.html">
@@ -104,6 +108,7 @@
           <span class="eyebrow">COMPATIBILITY</span>
           <div class="headline">둘이 보는 진짜 궁합</div>
           <div class="price">궁합 리포트 · 4,900원</div>
+          <span class="banner-cta">지금 보기 →</span>
         </div>
       </a>
       <a class="banner-slide" href="quick.html?topic=wealth">
@@ -112,6 +117,7 @@
           <span class="eyebrow">MONEY</span>
           <div class="headline">돈이 들어오고 나가는 흐름</div>
           <div class="price">재물운 빠른 리딩 · 990원</div>
+          <span class="banner-cta">지금 보기 →</span>
         </div>
       </a>
       <a class="banner-slide" href="life-graph.html">
@@ -120,6 +126,7 @@
           <span class="eyebrow">FREE</span>
           <div class="headline">내 인생, 흐름으로 한눈에 보기</div>
           <div class="price">인생 그래프 · 무료 체험</div>
+          <span class="banner-cta">무료로 보기 →</span>
         </div>
       </a>
       <a class="banner-slide" href="lifetime-report.html">
@@ -128,6 +135,7 @@
           <span class="eyebrow">FULL REPORT</span>
           <div class="headline">인생 전체를 18장으로</div>
           <div class="price">평생사주 100p 정식 리포트 · 14,900원</div>
+          <span class="banner-cta">지금 보기 →</span>
         </div>
       </a>
     </div>
@@ -160,6 +168,11 @@
     <p>대운·세운이 바뀔 때마다 내 기운이 어떻게 출렁이는지 그래프 하나로 확인해보세요.</p>
     <span class="login-cta">그래프 보러가기 →</span>
   </a>
+
+  <div class="stat-counter" id="statCounter" hidden>
+    <div class="num"><span id="statCounterNum">0</span><span class="unit">건</span></div>
+    <div class="label">실제 만세력으로 완성된 리포트</div>
+  </div>
 
   <section id="products">
     <div class="section-head"><h2>궁금한 사주, 골라보기</h2></div>
@@ -401,6 +414,20 @@
     }
   }
   loadAccountState();
+
+  // 실제 완료된 주문 건수를 후기 대신 신뢰 신호로 보여준다 — 지어낸 숫자가 아니라
+  // orders 테이블의 진짜 카운트(GET /api/orders/count). 서비스 초반에 숫자가 너무
+  // 작으면(예: 한 자리) 오히려 "안 팔리는 곳"으로 보여 역효과가 날 수 있어서,
+  // 최소 10건이 넘을 때만 노출한다 — 그 아래에서는 조용히 숨겨진 채로 둔다.
+  (async function loadStatCounter() {
+    try {
+      const res = await fetch('/api/orders/count');
+      const data = await res.json();
+      if (!res.ok || !(data.count >= 10)) return;
+      document.getElementById('statCounterNum').textContent = data.count.toLocaleString('ko-KR');
+      document.getElementById('statCounter').hidden = false;
+    } catch (e) { /* 실패해도 조용히 안 보여줄 뿐, 페이지 전체엔 영향 없음 */ }
+  })();
 
   document.getElementById('menuLogoutBtn').addEventListener('click', async () => {
     await fetch('/api/auth/logout', { method: 'POST' });

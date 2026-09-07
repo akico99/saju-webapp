@@ -142,7 +142,7 @@ header .logout, button.logout {
 .menu-section { padding: 16px 20px; border-bottom: 1px solid var(--line); }
 .menu-section:last-child { border-bottom: none; }
 .menu-section-ttl {
-  font-size: 11px; font-weight: 700; color: var(--muted-2); text-transform: uppercase; letter-spacing: 0.06em;
+  font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em;
   margin-bottom: 10px;
 }
 .menu-section a { display: block; padding: 10px 0; font-size: 14.5px; color: var(--ink); text-decoration: none; font-weight: 500; }
@@ -202,6 +202,17 @@ header .logout, button.logout {
 .banner-copy .eyebrow { font-size: 11px; letter-spacing: 0.12em; opacity: 0.85; text-transform: uppercase; font-weight: 700; }
 .banner-copy .headline { font-size: 18px; font-weight: 800; margin: 4px 0 6px; line-height: 1.4; }
 .banner-copy .price { font-size: 13px; font-weight: 700; opacity: 0.9; }
+.banner-copy .banner-cta {
+  display: inline-block; margin-top: 12px; font-size: 12px; font-weight: 800; color: var(--ink);
+  background: #fff; padding: 8px 14px; border-radius: var(--radius-pill);
+}
+
+/* ---------- 히어로 한 줄 소개 — 캐러셀이 화면 대부분을 차지해서, 처음 온 사람이
+   "그래서 뭐 하는 곳인지"를 스크롤 없이 바로 알 수 있게 캐러셀 위에 고정 문구를 둔다. ---------- */
+.hero-tagline {
+  margin: 14px 20px 0; font-size: 13.5px; color: var(--muted); line-height: 1.6; text-align: center;
+}
+.hero-tagline b { color: var(--ink); font-weight: 800; }
 .banner-dots { position: absolute; left: 0; right: 0; bottom: 14px; z-index: 3; display: flex; justify-content: center; gap: 6px; }
 .banner-dots .dot { width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.45); padding: 0; cursor: pointer; }
 .banner-dots .dot.active { background: #fff; width: 16px; border-radius: 3px; }
@@ -237,7 +248,7 @@ header .logout, button.logout {
 /* ---------- 오늘의 운세 카드 ---------- */
 .today-fortune-card {
   margin: 0 20px 14px; background: var(--accent-soft); border: 1px solid rgba(4,51,109,0.22); border-radius: var(--radius-card);
-  padding: 16px 18px;
+  padding: 16px 18px; box-shadow: 0 1px 2px rgba(17,17,17,0.04), 0 2px 8px rgba(17,17,17,0.05);
 }
 .today-fortune-card .row-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
 .today-fortune-card .free-badge {
@@ -265,7 +276,7 @@ a.today-fortune-card { display: block; text-decoration: none; color: inherit; }
 
 /* ---------- 누적 이용 카운터 (후기 자리 대체) ---------- */
 .stat-counter {
-  background: var(--ink); border-radius: var(--radius-card); padding: 26px 20px; text-align: center; color: #fff;
+  margin: 0 20px 14px; background: var(--ink); border-radius: var(--radius-card); padding: 26px 20px; text-align: center; color: #fff;
 }
 .stat-counter .num { font-size: 32px; font-weight: 800; letter-spacing: -0.02em; }
 .stat-counter .num .unit { font-size: 16px; font-weight: 700; margin-left: 2px; opacity: 0.85; }
@@ -275,7 +286,7 @@ a.today-fortune-card { display: block; text-decoration: none; color: inherit; }
 section { padding: 26px 20px 6px; }
 main { padding: 20px; }
 .section-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px; }
-.section-head h2 { font-size: 17px; font-weight: 800; margin: 0; }
+.section-head h2 { font-size: 20px; font-weight: 800; letter-spacing: -0.01em; margin: 0; }
 .section-head .more { font-size: 12px; color: var(--muted); text-decoration: none; }
 .section-lead { font-size: 12.5px; color: var(--muted); margin: -8px 0 16px; line-height: 1.7; }
 .section-ttl { font-size: 11.5px; font-weight: 800; color: var(--muted); margin: 22px 0 10px; text-transform: uppercase; letter-spacing: 0.06em; }
@@ -314,9 +325,9 @@ h1 { font-size: 20px; font-weight: 800; margin: 0 0 4px; letter-spacing: -0.01em
 /* ---------- 상품 타일 ---------- */
 .tile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .tile {
-  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card);
+  background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-card);
   padding: 16px; display: flex; flex-direction: column; gap: 8px; text-decoration: none; color: var(--ink);
-  position: relative;
+  position: relative; box-shadow: 0 1px 2px rgba(17,17,17,0.04), 0 2px 8px rgba(17,17,17,0.05);
 }
 .tile .badge {
   position: absolute; top: 10px; right: 10px; z-index: 1;
