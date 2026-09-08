@@ -32,10 +32,17 @@
   h1, h2, h3, .serif { font-family: var(--font-serif); font-weight: 600; color: var(--text-main); letter-spacing: -0.02em; }
   p { color: var(--text-sub); font-size: 16px; line-height: 1.8; }
 
+  mark {
+    background: transparent; color: var(--text-main); font-weight: 700;
+    background-image: linear-gradient(120deg, #ffe38a 0%, #ffe38a 100%);
+    background-repeat: no-repeat; background-size: 100% 42%; background-position: 0 88%;
+    padding: 0 1px;
+  }
+  h1 mark { color: inherit; }
+
   .hero { padding: 40px 0 36px; text-align: center; }
-  .hero-brand { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 28px; }
-  .hero-brand img { width: 26px; height: 26px; border-radius: 7px; }
-  .hero-brand span { font-size: 13.5px; font-weight: 700; color: var(--text-main); }
+  .hero-brand { display: flex; align-items: center; justify-content: center; margin-bottom: 28px; }
+  .hero-brand img { height: 40px; width: auto; display: block; }
   .hero-tag { display: inline-block; font-size: 13px; letter-spacing: 0.08em; color: var(--accent); margin-bottom: 20px; text-transform: uppercase; font-weight: 500; }
   .hero h1 { font-size: 28px; line-height: 1.5; margin-bottom: 22px; }
   .hero p { font-size: 15.5px; color: var(--text-sub); margin-bottom: 32px; }
@@ -61,7 +68,7 @@
      항상 같은 내용이 보인다(고정 height + object-fit:cover 방식은 컨테이너가 넓어질수록
      실제 보이는 영역이 줄어드는 문제가 있었다). */
   .sample-slide { flex: 0 0 100%; scroll-snap-align: start; }
-  .sample-slide img { width: 100%; height: auto; display: block; }
+  .sample-slide img { width: 100%; height: auto; aspect-ratio: 4 / 5; object-fit: cover; display: block; }
   .sample-slider-dots { display: flex; justify-content: center; gap: 6px; margin-top: 10px; }
   .sample-slider-dots .dot { width: 6px; height: 6px; border-radius: 50%; border: none; background: var(--border-color); padding: 0; cursor: pointer; }
   .sample-slider-dots .dot.active { background: var(--accent); width: 16px; border-radius: 3px; }
@@ -114,7 +121,7 @@
   .feature-item h4 { font-size: 14.5px; margin-bottom: 4px; }
   .feature-item p { font-size: 12.5px; color: var(--text-sub); line-height: 1.6; }
 
-  .sample-box { background: var(--bg-subtle); border: 1px solid var(--border-color); border-radius: 14px; padding: 24px 22px; margin-top: 22px; text-align: center; }
+  .sample-box { background: var(--bg-subtle); border: 1px solid var(--border-color); border-radius: 14px; padding: 24px 22px; margin: 22px 0 24px; text-align: center; }
   .sample-box-ttl { font-family: var(--font-serif); font-size: 16px; font-weight: 600; color: var(--text-main); margin-bottom: 8px; }
   .sample-box-desc { font-size: 13px; color: var(--text-sub); margin-bottom: 18px; line-height: 1.7; }
   .btn-outline {
@@ -134,33 +141,17 @@
   .faq-q { font-weight: 600; font-size: 15px; margin-bottom: 8px; color: var(--text-main); }
   .faq-a { font-size: 13.5px; color: var(--text-sub); }
 
-  /* 정보입력 폼 */
-  .lead-form { display: flex; flex-direction: column; gap: 16px; }
-  .field { display: flex; flex-direction: column; gap: 6px; }
-  .field label { font-size: 13px; font-weight: 700; color: var(--text-main); }
-  .field .hint { font-size: 11.5px; color: var(--text-muted); font-weight: 400; margin-top: 2px; }
-  .field input[type="text"], .field input[type="number"], .field select, .field textarea {
-    font-family: var(--font-sans); font-size: 15px; padding: 12px 14px; border: 1px solid var(--border-color);
-    border-radius: 8px; background: var(--bg-card); color: var(--text-main); width: 100%;
+  /* 진행 방법 선택 */
+  .choice-cards { display: flex; flex-direction: column; gap: 14px; }
+  .choice-card {
+    display: block; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px;
+    padding: 22px; text-decoration: none; color: inherit; transition: border-color 0.2s ease;
   }
-  .field textarea { resize: vertical; min-height: 84px; }
-  .field-row { display: flex; gap: 10px; }
-  .field-row .field { flex: 1; }
-  .choice-row { display: flex; gap: 8px; }
-  .choice-btn {
-    flex: 1; padding: 11px; text-align: center; border: 1px solid var(--border-color); border-radius: 8px;
-    background: var(--bg-card); font-size: 14px; font-weight: 600; color: var(--text-sub); cursor: pointer;
-    font-family: var(--font-sans);
-  }
-  .choice-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
-  .checkbox-field { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-sub); font-weight: 400; }
-  .checkbox-field input { width: 16px; height: 16px; }
-
-  .lead-success { display: none; text-align: center; padding: 8px 0; }
-  .lead-success.show { display: block; }
-  .lead-success p { margin-bottom: 18px; font-size: 14.5px; }
-  .lead-error { display: none; font-size: 13px; color: #b3432f; margin-top: -6px; }
-  .lead-error.show { display: block; }
+  .choice-card:hover { border-color: var(--accent); }
+  .choice-card .ico { font-size: 22px; margin-bottom: 10px; display: block; }
+  .choice-card h4 { font-family: var(--font-serif); font-size: 17px; margin-bottom: 6px; color: var(--text-main); }
+  .choice-card p { font-size: 13.5px; color: var(--text-sub); margin: 0; }
+  .choice-card .go { display: inline-block; margin-top: 10px; font-size: 12.5px; font-weight: 700; color: var(--accent); }
 
   .final-cta { text-align: center; padding: 56px 0; border-bottom: none; }
   .final-cta h2 { font-size: 23px; line-height: 1.5; margin-bottom: 18px; }
@@ -175,24 +166,26 @@
 <div class="container">
 
   <header class="hero">
-    <div class="hero-brand"><img src="/logo.png" alt=""><span>사주보는 수달</span></div>
+    <div class="hero-brand"><img src="/logo.png" alt="길잡이 여울 · 사주보는 수달"></div>
     <span class="hero-tag">정통 명리학 · 실제 만세력 계산</span>
-    <h1>답답했던 매일의 물음표를,<br />계산된 흐름으로 짚어드립니다.</h1>
+    <h1>어려운 한자어 투성이인 사주풀이,<br />언제까지 <mark>눈치 보며 고개만 끄덕이실</mark> 건가요?</h1>
     <p>
-      막연한 예언이 아니라 실제 만세력 엔진으로 계산한 명식에 근거해서 풀이해요.<br />
-      내 그릇의 결을 알고, 지금 걷는 계절을 마주하는 일부터 시작해보세요.
+      형광펜 칠해진 <mark>핵심만</mark>,<br />
+      쭉쭉 읽어 내려가시면 돼요.<br />
+      막연한 예언이 아니라,<br />
+      <mark>실제 계산 결과</mark>예요.
     </p>
 
     <div class="sample-slider" id="sampleSlider">
       <div class="sample-slider-track" id="sampleSliderTrack">
-        <div class="sample-slide"><img src="/samples/slides/cover-hook.png" alt="평생사주 표지 미리보기 — 홍길동 님"></div>
-        <div class="sample-slide"><img src="/samples/slides/table-hook.png" alt="명식 원국표 미리보기"></div>
-        <div class="sample-slide"><img src="/samples/slides/chapter1-hook.png" alt="총평 챕터 실제 본문 미리보기"></div>
+        <div class="sample-slide"><img src="/samples/slides/hook-translate.jpg" alt="어려운 사주 용어를 일상어로 번역해드려요"></div>
+        <div class="sample-slide"><img src="/samples/slides/hook-highlight.jpg" alt="내 인생의 핵심만 노란색 형광펜으로 하이라이트"></div>
+        <div class="sample-slide"><img src="/samples/slides/hook-datachart.jpg" alt="한눈에 쏙 들어오는 데이터 사주"></div>
       </div>
       <div class="sample-slider-dots" id="sampleSliderDots">
-        <button type="button" class="dot active" data-i="0" aria-label="표지 미리보기"></button>
-        <button type="button" class="dot" data-i="1" aria-label="명식 원국표 미리보기"></button>
-        <button type="button" class="dot" data-i="2" aria-label="총평 챕터 미리보기"></button>
+        <button type="button" class="dot active" data-i="0" aria-label="용어 번역 소개"></button>
+        <button type="button" class="dot" data-i="1" aria-label="핵심 하이라이트 소개"></button>
+        <button type="button" class="dot" data-i="2" aria-label="데이터 시각화 소개"></button>
       </div>
       <button type="button" class="slider-nav prev" id="sliderPrev" aria-label="이전 미리보기">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
@@ -200,14 +193,20 @@
       <button type="button" class="slider-nav next" id="sliderNext" aria-label="다음 미리보기">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
       </button>
-      <p class="sample-slider-label">실제 샘플 리포트 미리보기 · 가상 인물 "홍길동" 기준</p>
+      <p class="sample-slider-label">어려운 용어 번역부터 데이터 시각화까지, 이렇게 풀어드려요</p>
+    </div>
+
+    <div class="sample-box">
+      <p class="sample-box-ttl">직접 눈으로 확인해보세요</p>
+      <p class="sample-box-desc">가상 인물 "홍길동" 님의 생년월일시로 실제 파이프라인 그대로 만든 100페이지 리포트예요. 과장 없이, 실제 결과물과 100% 동일한 형식입니다.</p>
+      <a class="btn-outline" href="/samples/hong-gildong-lifetime.pdf" target="_blank" rel="noopener">샘플 리포트 PDF 보기</a>
     </div>
 
     <a href="http://pf.kakao.com/_KxaRxaX/chat" target="_blank" rel="noopener" class="btn-kakao">
       <svg viewBox="0 0 24 24" fill="#391b1b"><path d="M12 3C6.48 3 2 6.58 2 11c0 2.79 1.86 5.25 4.66 6.68-.15.55-.98 3.56-1.01 3.79 0 0-.02.17.09.24.11.07.24.02.24.02.32-.04 3.7-2.43 4.28-2.83.56.08 1.14.12 1.74.12 5.52 0 10-3.58 10-8s-4.48-8-10-8z"/></svg>
       카카오톡 채널에서 상담하기
     </a>
-    <a href="#apply" class="btn-secondary-link">정보만 먼저 남기고 상담 이어가기 ↓</a>
+    <a href="#choose" class="btn-secondary-link">다른 방법으로 진행하고 싶다면 ↓</a>
   </header>
 
   <section>
@@ -217,19 +216,19 @@
     <div class="problem-cards">
       <div class="problem-card">
         <h3>01. 진로와 방향의 혼란</h3>
-        <p>남들 기준에 맞춰 쉼 없이 달렸지만, 정작 내 기질과 그릇에 맞는 길인지 헷갈릴 때</p>
+        <p>남들 기준에 맞춰 쉼 없이 달렸지만, 정작 <mark>내 기질과 그릇에 맞는 길</mark>인지 헷갈릴 때</p>
       </div>
       <div class="problem-card">
         <h3>02. 관계와 인연의 피로</h3>
-        <p>유독 특정 관계에서 에너지가 바닥나고, 반복되는 갈등의 이유를 이해하고 싶을 때</p>
+        <p>유독 특정 관계에서 에너지가 바닥나고, <mark>반복되는 갈등의 이유</mark>를 이해하고 싶을 때</p>
       </div>
       <div class="problem-card">
         <h3>03. 멈춤과 나아감의 기로</h3>
-        <p>이직·사업·학업… 지금이 변화를 시도할 계절인지, 내실을 다질 계절인지 궁금할 때</p>
+        <p>이직·사업·학업… <mark>지금이 변화를 시도할 계절</mark>인지, 내실을 다질 계절인지 궁금할 때</p>
       </div>
       <div class="problem-card">
         <h3>04. 운과 타이밍의 아쉬움</h3>
-        <p>노력만큼 결과가 따르지 않아 자책하게 될 때, 내 기운의 흐름을 가늠해보고 싶을 때</p>
+        <p>노력만큼 결과가 따르지 않아 자책하게 될 때, <mark>내 기운의 흐름</mark>을 가늠해보고 싶을 때</p>
       </div>
     </div>
   </section>
@@ -238,14 +237,14 @@
     <div class="philosophy">
       <h2>사주는 정해진 결말이 아닌,<br />삶의 '일기예보'예요.</h2>
       <p>
-        비 오는 날을 바꿀 수는 없지만, 우산을 미리 챙기거나 잠시 처마 밑에서 비를 피할 수는 있어요.
+        비 오는 날을 바꿀 수는 없지만, <mark>우산을 미리 챙기거나</mark> 잠시 처마 밑에서 비를 피할 수는 있어요.
       </p>
       <p>
         명리학은 미신이 아니라 오랜 시간 쌓인 통계의 언어예요. 사주보는 수달은 추측이 아니라
-        실제 만세력 엔진으로 계산한 명식에 근거해서만 풀이해요.
+        <mark>실제 만세력 엔진으로 계산한</mark> 명식에 근거해서만 풀이해요.
       </p>
       <p>
-        어려운 한자 풀이나 겁주는 말 대신, 일상과 현실에 바로 닿는 언어로 풀어드려요.
+        어려운 한자 풀이나 겁주는 말 대신, <mark>일상과 현실에 바로 닿는 언어</mark>로 풀어드려요.
       </p>
     </div>
   </section>
@@ -257,32 +256,32 @@
     <div class="chapter-list">
       <div class="chapter-item">
         <h4>① 만세력 계산</h4>
-        <p>태어난 순간의 양력·음력을 변환해 년·월·일·시 8글자(천간·지지)를 정확히 산출해요</p>
+        <p>태어난 순간의 양력·음력을 변환해 년·월·일·시 <mark>8글자(천간·지지)</mark>를 정확히 산출해요</p>
       </div>
       <div class="chapter-item">
         <h4>② 진태양시 보정</h4>
-        <p>표준시와 실제 출생지 경도의 차이까지 반영해서, 시주(時柱)가 바뀔 수 있는 미세한 오차까지 계산해요</p>
+        <p>표준시와 실제 출생지 경도의 차이까지 반영해서, 시주(時柱)가 바뀔 수 있는 <mark>미세한 오차까지</mark> 계산해요</p>
       </div>
       <div class="chapter-item">
         <h4>③ 대운수 계산</h4>
-        <p>태어난 순간부터 가장 가까운 절기까지의 날짜 수를 계산해, 대운이 시작하는 정확한 나이를 산출해요</p>
+        <p>태어난 순간부터 가장 가까운 절기까지의 날짜 수를 계산해, 대운이 시작하는 <mark>정확한 나이</mark>를 산출해요</p>
       </div>
       <div class="chapter-item">
         <h4>④ 격국·용신 판정</h4>
-        <p>일간의 강약과 오행 분포를 정해진 기준으로 따져 사주의 그릇(격국)과 필요한 기운(용신)을 판정해요</p>
+        <p>일간의 강약과 오행 분포를 정해진 기준으로 따져 사주의 <mark>그릇(격국)과 필요한 기운(용신)</mark>을 판정해요</p>
       </div>
     </div>
   </section>
 
   <section>
     <h2 class="section-title">평생 곁에 두고 꺼내보는<br />정밀 사주 분석 리포트</h2>
-    <p class="section-desc">한 번 읽고 사라지는 단편 풀이가 아니라, 100페이지 문서로 전해드려요.</p>
+    <p class="section-desc">한 번 읽고 사라지는 단편 풀이가 아니라, <mark>100페이지 문서</mark>로 전해드려요.</p>
 
     <div class="product-img">
       <img src="/banners/6.png" alt="평생사주 100페이지 정식 리포트" />
     </div>
 
-    <p class="chapter-list-lead">지어낸 목차가 아니라, 실제로 리포트에 들어가는 18개 챕터 그대로예요.</p>
+    <p class="chapter-list-lead">지어낸 목차가 아니라, <mark>실제로 리포트에 들어가는</mark> 18개 챕터 그대로예요.</p>
     <div class="chapter-grid">
       <div class="chapter-cell"><span class="num">1</span><span class="ttl">총평</span></div>
       <div class="chapter-cell"><span class="num">2</span><span class="ttl">타고난 성격과 기질</span></div>
@@ -307,29 +306,23 @@
     <div class="feature-list">
       <div class="feature-item">
         <span class="feature-ico">📈</span>
-        <div><h4>대운 그래프</h4><p>10년 단위 대운을 점수 그래프로 그려서, 인생에서 가장 순조로운 시기와 신중해야 할 시기를 한눈에 보여줘요</p></div>
+        <div><h4>대운 그래프</h4><p>10년 단위 대운을 점수 그래프로 그려서, 인생에서 가장 순조로운 시기와 신중해야 할 시기를 <mark>한눈에 보여줘요</mark></p></div>
       </div>
       <div class="feature-item">
         <span class="feature-ico">🕸️</span>
-        <div><h4>오행·십신 차트</h4><p>타고난 오행 균형과 십신 분포를 레이더·도넛 차트로 시각화해서, 텍스트만으론 안 잡히는 그릇의 형태를 보여줘요</p></div>
+        <div><h4>오행·십신 차트</h4><p>타고난 오행 균형과 십신 분포를 레이더·도넛 차트로 시각화해서, 텍스트만으론 안 잡히는 <mark>그릇의 형태</mark>를 보여줘요</p></div>
       </div>
       <div class="feature-item">
         <span class="feature-ico">🏷️</span>
-        <div><h4>챕터별 계산 키워드</h4><p>매 챕터 상단에 그 챕터가 근거한 실제 계산값(일간·격국·용신·신살 등)을 칩으로 표시해서, 어디서 나온 해석인지 바로 확인돼요</p></div>
+        <div><h4>챕터별 계산 키워드</h4><p>매 챕터 상단에 그 챕터가 근거한 실제 계산값(일간·격국·용신·신살 등)을 칩으로 표시해서, 어디서 나온 해석인지 <mark>바로 확인돼요</mark></p></div>
       </div>
       <div class="feature-item">
         <span class="feature-ico">✅</span>
-        <div><h4>개운법 체크리스트</h4><p>부족한 오행을 색·방향·시간·습관으로 바꾼 오늘부터 실천할 수 있는 체크리스트를 담아요</p></div>
+        <div><h4>개운법 체크리스트</h4><p>부족한 오행을 색·방향·시간·습관으로 바꾼 <mark>오늘부터 실천할 수 있는</mark> 체크리스트를 담아요</p></div>
       </div>
     </div>
 
     <p class="price-line">평생사주 100p 정식 리포트 · 14,900원<br><span>1회 결제 · 마이페이지에서 다시 받아볼 수 있어요</span></p>
-
-    <div class="sample-box">
-      <p class="sample-box-ttl">직접 눈으로 확인해보세요</p>
-      <p class="sample-box-desc">가상 인물 "홍길동" 님의 생년월일시로 실제 파이프라인 그대로 만든 100페이지 리포트예요. 과장 없이, 실제 결과물과 100% 동일한 형식입니다.</p>
-      <a class="btn-outline" href="/samples/hong-gildong-lifetime.pdf" target="_blank" rel="noopener">샘플 리포트 PDF 보기</a>
-    </div>
   </section>
 
   <section>
@@ -339,7 +332,7 @@
     <div class="process-steps">
       <div class="step-card">
         <div class="step-num">1</div>
-        <div class="step-content"><h4>정보 및 고민 입력</h4><p>정확한 생년월일시와 지금 가장 궁금한 주제를 남겨주세요.</p></div>
+        <div class="step-content"><h4>카카오톡 채널에서 대화 시작</h4><p>정확한 생년월일시와 <mark>지금 가장 궁금한 주제</mark>를 편하게 이야기해주세요.</p></div>
       </div>
       <div class="step-card">
         <div class="step-num">2</div>
@@ -347,7 +340,7 @@
       </div>
       <div class="step-card">
         <div class="step-num">3</div>
-        <div class="step-content"><h4>실제 만세력 엔진으로 계산</h4><p>남겨주신 생년월일시로 명식을 계산해 100페이지 리포트를 만들어요.</p></div>
+        <div class="step-content"><h4>실제 만세력 엔진으로 계산</h4><p>남겨주신 생년월일시로 명식을 계산해 <mark>100페이지 리포트</mark>를 만들어요.</p></div>
       </div>
       <div class="step-card">
         <div class="step-num">4</div>
@@ -363,90 +356,39 @@
     <div class="faq-list">
       <div class="faq-item">
         <div class="faq-q">Q. 태어난 시간을 정확히 몰라도 분석이 가능한가요?</div>
-        <div class="faq-a">년·월·일만으로도 전반적인 성향과 인생의 큰 흐름은 충분히 파악할 수 있어요. 시간을 모르시면 아래 입력폼에서 "시간 모름"만 체크해주세요.</div>
+        <div class="faq-a">년·월·일만으로도 전반적인 성향과 인생의 큰 흐름은 <mark>충분히 파악할 수 있어요</mark>. 시간을 모르시면 카카오톡에서 "시간 모름"이라고만 말씀해주세요.</div>
       </div>
       <div class="faq-item">
         <div class="faq-q">Q. 나쁜 사주가 나오면 어쩌죠?</div>
-        <div class="faq-a">절대적으로 좋거나 나쁜 사주는 없어요. 누구나 강점과 보완점을 함께 지니고 있고, 그걸 어떻게 다루면 좋을지 참고할 수 있게 풀어드려요.</div>
+        <div class="faq-a">절대적으로 좋거나 나쁜 사주는 없어요. 누구나 <mark>강점과 보완점</mark>을 함께 지니고 있고, 그걸 어떻게 다루면 좋을지 참고할 수 있게 풀어드려요.</div>
       </div>
       <div class="faq-item">
         <div class="faq-q">Q. 결과물은 언제 받아볼 수 있나요?</div>
-        <div class="faq-a">계산 자체는 실제 만세력 엔진으로 바로 이뤄지고, 카카오톡에서 결제가 확인되면 순서대로 정리해서 PDF로 전달해드려요.</div>
+        <div class="faq-a">계산 자체는 <mark>실제 만세력 엔진으로 바로</mark> 이뤄지고, 카카오톡에서 결제가 확인되면 순서대로 정리해서 PDF로 전달해드려요.</div>
       </div>
       <div class="faq-item">
         <div class="faq-q">Q. 부적이나 굿 같은 걸 권유받나요?</div>
-        <div class="faq-a">아니에요. 부적·굿 등 추가 결제를 권하지 않고, 안내드린 리포트 가격 외에 다른 비용은 없어요.</div>
+        <div class="faq-a">아니에요. 부적·굿 등 추가 결제를 권하지 않고, 안내드린 리포트 가격 외에 <mark>다른 비용은 없어요</mark>.</div>
       </div>
     </div>
   </section>
 
-  <section id="apply">
-    <h2 class="section-title">정보 남기고<br />상담 이어가기</h2>
-    <p class="section-desc">남겨주신 정보는 카카오톡 상담을 이어갈 때 참고용으로만 쓰여요.</p>
+  <section id="choose">
+    <h2 class="section-title">어떻게 진행할까요?</h2>
+    <p class="section-desc">편하신 방식으로 선택해주세요.</p>
 
-    <form class="lead-form" id="leadForm">
-      <div class="field">
-        <label>이름 (선택)</label>
-        <input type="text" id="lName" placeholder="편하게 불러드릴 이름" autocomplete="off">
-      </div>
-
-      <div class="field">
-        <label>성별</label>
-        <div class="choice-row" id="genderRow">
-          <button type="button" class="choice-btn" data-value="남">남성</button>
-          <button type="button" class="choice-btn" data-value="여">여성</button>
-        </div>
-      </div>
-
-      <div class="field-row">
-        <div class="field">
-          <label>생년월일</label>
-          <div class="field-row">
-            <input type="number" id="lYear" placeholder="년" min="1900" max="2100">
-            <input type="number" id="lMonth" placeholder="월" min="1" max="12">
-            <input type="number" id="lDay" placeholder="일" min="1" max="31">
-          </div>
-        </div>
-      </div>
-
-      <div class="field">
-        <label>양력 · 음력</label>
-        <div class="choice-row" id="calendarRow">
-          <button type="button" class="choice-btn active" data-value="양력">양력</button>
-          <button type="button" class="choice-btn" data-value="음력">음력</button>
-        </div>
-      </div>
-
-      <div class="field">
-        <label>태어난 시간</label>
-        <div class="field-row">
-          <input type="number" id="lHour" placeholder="시 (0-23)" min="0" max="23">
-          <input type="number" id="lMinute" placeholder="분" min="0" max="59">
-        </div>
-        <label class="checkbox-field"><input type="checkbox" id="lHourUnknown"> 태어난 시간을 몰라요</label>
-      </div>
-
-      <div class="field">
-        <label>지금 가장 궁금한 것 (선택)</label>
-        <textarea id="lConcern" placeholder="예: 이직을 고민 중인데 지금이 적절한 시기인지 궁금해요"></textarea>
-      </div>
-
-      <div class="field">
-        <label>카카오톡 닉네임 또는 이메일 (선택)</label>
-        <input type="text" id="lContact" placeholder="상담 시 알아볼 수 있는 정보를 남겨주세요" autocomplete="off">
-        <p class="hint">채널에서 채팅 나눌 때 어떤 분인지 확인하는 용도로만 써요.</p>
-      </div>
-
-      <div class="lead-error" id="leadError"></div>
-
-      <button type="submit" class="btn-primary" id="leadSubmitBtn">정보 남기고 카카오톡 상담 이어가기</button>
-    </form>
-
-    <div class="lead-success" id="leadSuccess">
-      <p>접수됐어요. 아래 버튼으로 카카오톡 채널에서 상담을 이어가주세요.</p>
-      <a href="http://pf.kakao.com/_KxaRxaX/chat" target="_blank" rel="noopener" class="btn-kakao">
-        <svg viewBox="0 0 24 24" fill="#391b1b"><path d="M12 3C6.48 3 2 6.58 2 11c0 2.79 1.86 5.25 4.66 6.68-.15.55-.98 3.56-1.01 3.79 0 0-.02.17.09.24.11.07.24.02.24.02.32-.04 3.7-2.43 4.28-2.83.56.08 1.14.12 1.74.12 5.52 0 10-3.58 10-8s-4.48-8-10-8z"/></svg>
-        카카오톡 채널 열기
+    <div class="choice-cards">
+      <a href="https://sajuotter.com/" class="choice-card">
+        <span class="ico">🖥️</span>
+        <h4>직접 둘러보고 셀프로 진행</h4>
+        <p>회원가입 후 포인트만 충전해두면, 그다음부턴 채팅 없이 바로 리포트를 받아볼 수 있어요.</p>
+        <span class="go">사주보는 수달 홈페이지 →</span>
+      </a>
+      <a href="http://pf.kakao.com/_KxaRxaX/chat" target="_blank" rel="noopener" class="choice-card">
+        <span class="ico">💬</span>
+        <h4>카카오톡으로 상담하기</h4>
+        <p>고민을 먼저 나누고, 안내받으면서 진행하고 싶다면 채널에서 바로 이야기해주세요.</p>
+        <span class="go">카카오톡 채널 열기 →</span>
       </a>
     </div>
   </section>
@@ -454,7 +396,7 @@
   <section class="final-cta">
     <h2>
       바람의 방향을 바꿀 수는 없지만,<br />
-      돛을 조정하는 법을 알면 나아갈 수 있어요.
+      <mark>돛을 조정하는 법</mark>을 알면 나아갈 수 있어요.
     </h2>
     <p style="margin-bottom: 28px;">당신의 내일을 위한 정갈한 나침반을 준비해드려요.</p>
     <a href="http://pf.kakao.com/_KxaRxaX/chat" target="_blank" rel="noopener" class="btn-kakao">
@@ -529,85 +471,6 @@
   startAuto();
 })();
 
-(function () {
-  var state = { gender: '', calendar: '양력', hourUnknown: false };
-
-  function setupChoiceRow(rowId, key) {
-    var row = document.getElementById(rowId);
-    row.querySelectorAll('.choice-btn').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        state[key] = btn.dataset.value;
-        row.querySelectorAll('.choice-btn').forEach(function (b) { b.classList.toggle('active', b === btn); });
-      });
-    });
-  }
-  setupChoiceRow('genderRow', 'gender');
-  setupChoiceRow('calendarRow', 'calendar');
-
-  var hourUnknownEl = document.getElementById('lHourUnknown');
-  var hourEl = document.getElementById('lHour');
-  var minuteEl = document.getElementById('lMinute');
-  hourUnknownEl.addEventListener('change', function () {
-    var off = hourUnknownEl.checked;
-    hourEl.disabled = off; minuteEl.disabled = off;
-    if (off) { hourEl.value = ''; minuteEl.value = ''; }
-  });
-
-  var form = document.getElementById('leadForm');
-  var errorBox = document.getElementById('leadError');
-  var submitBtn = document.getElementById('leadSubmitBtn');
-
-  form.addEventListener('submit', function (e) {
-    e.preventDefault();
-    errorBox.classList.remove('show');
-
-    var year = document.getElementById('lYear').value;
-    var month = document.getElementById('lMonth').value;
-    var day = document.getElementById('lDay').value;
-    if (!year || !month || !day) {
-      errorBox.textContent = '생년월일을 입력해주세요.';
-      errorBox.classList.add('show');
-      return;
-    }
-
-    submitBtn.disabled = true;
-    submitBtn.textContent = '접수 중...';
-
-    fetch('/api/leads', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: document.getElementById('lName').value,
-        gender: state.gender,
-        birthYear: year, birthMonth: month, birthDay: day,
-        birthHour: hourEl.value, birthMinute: minuteEl.value,
-        hourUnknown: hourUnknownEl.checked,
-        isLunar: state.calendar === '음력',
-        concern: document.getElementById('lConcern').value,
-        contact: document.getElementById('lContact').value
-      })
-    }).then(function (res) {
-      return res.json().then(function (data) { return { ok: res.ok, data: data }; });
-    }).then(function (r) {
-      if (!r.ok) {
-        errorBox.textContent = r.data.error || '접수에 실패했어요. 잠시 후 다시 시도해주세요.';
-        errorBox.classList.add('show');
-        submitBtn.disabled = false;
-        submitBtn.textContent = '정보 남기고 카카오톡 상담 이어가기';
-        return;
-      }
-      form.style.display = 'none';
-      var successBox = document.getElementById('leadSuccess');
-      successBox.classList.add('show');
-      window.open('http://pf.kakao.com/_KxaRxaX/chat', '_blank', 'noopener');
-    }).catch(function () {
-      errorBox.textContent = '네트워크 오류로 접수에 실패했어요. 잠시 후 다시 시도해주세요.';
-      errorBox.classList.add('show');
-      submitBtn.disabled = false;
-      submitBtn.textContent = '정보 남기고 카카오톡 상담 이어가기';
-    });
-  });
-})();
 </script>
 </body>
 </html>
