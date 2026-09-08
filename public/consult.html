@@ -42,12 +42,16 @@
 
   .sample-slider { margin-bottom: 14px; }
   .sample-slider-track {
-    display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
+    display: flex; align-items: flex-start; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
     border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); background: #0f1420;
   }
   .sample-slider-track::-webkit-scrollbar { display: none; }
-  .sample-slide { flex: 0 0 100%; scroll-snap-align: start; height: 300px; overflow: hidden; }
-  .sample-slide img { width: 100%; height: 100%; object-fit: cover; object-position: top center; display: block; }
+  /* 이미지 자체를 이미 원하는 영역만큼 미리 잘라뒀으므로(scripts/cropSampleSlides.js),
+     여기서는 CSS로 다시 자르지 않고 원본 비율 그대로 보여준다 — 뷰포트 너비가 얼마든
+     항상 같은 내용이 보인다(고정 height + object-fit:cover 방식은 컨테이너가 넓어질수록
+     실제 보이는 영역이 줄어드는 문제가 있었다). */
+  .sample-slide { flex: 0 0 100%; scroll-snap-align: start; }
+  .sample-slide img { width: 100%; height: auto; display: block; }
   .sample-slider-dots { display: flex; justify-content: center; gap: 6px; margin-top: 10px; }
   .sample-slider-dots .dot { width: 6px; height: 6px; border-radius: 50%; border: none; background: var(--border-color); padding: 0; cursor: pointer; }
   .sample-slider-dots .dot.active { background: var(--accent); width: 16px; border-radius: 3px; }
@@ -87,6 +91,18 @@
   .chapter-item p { font-size: 13.5px; color: var(--text-sub); }
   .price-line { text-align: center; margin-top: 24px; font-size: 15px; color: var(--text-main); font-weight: 600; }
   .price-line span { color: var(--text-muted); font-weight: 400; font-size: 13px; }
+
+  .chapter-list-lead { font-size: 12.5px; color: var(--text-muted); margin: -6px 0 14px; text-align: center; }
+  .chapter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 26px; }
+  .chapter-cell { display: flex; align-items: flex-start; gap: 8px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px 11px; }
+  .chapter-cell .num { font-size: 10.5px; font-weight: 800; color: var(--accent); background: var(--bg-subtle); width: 20px; height: 20px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+  .chapter-cell .ttl { font-size: 12px; font-weight: 600; line-height: 1.4; color: var(--text-main); }
+
+  .feature-list { display: flex; flex-direction: column; gap: 12px; }
+  .feature-item { display: flex; gap: 12px; align-items: flex-start; background: var(--bg-subtle); border: 1px solid var(--border-color); border-radius: 10px; padding: 16px; }
+  .feature-ico { font-size: 20px; line-height: 1; flex-shrink: 0; }
+  .feature-item h4 { font-size: 14.5px; margin-bottom: 4px; }
+  .feature-item p { font-size: 12.5px; color: var(--text-sub); line-height: 1.6; }
 
   .sample-box { background: var(--bg-subtle); border: 1px solid var(--border-color); border-radius: 14px; padding: 24px 22px; margin-top: 22px; text-align: center; }
   .sample-box-ttl { font-family: var(--font-serif); font-size: 16px; font-weight: 600; color: var(--text-main); margin-bottom: 8px; }
@@ -159,9 +175,9 @@
 
     <div class="sample-slider" id="sampleSlider">
       <div class="sample-slider-track" id="sampleSliderTrack">
-        <div class="sample-slide"><img src="/samples/slides/cover.png" alt="평생사주 표지 미리보기 — 홍길동 님"></div>
-        <div class="sample-slide"><img src="/samples/slides/table.png" alt="명식 원국표 미리보기"></div>
-        <div class="sample-slide"><img src="/samples/slides/chapter1.png" alt="총평 챕터 실제 본문 미리보기"></div>
+        <div class="sample-slide"><img src="/samples/slides/cover-hook.png" alt="평생사주 표지 미리보기 — 홍길동 님"></div>
+        <div class="sample-slide"><img src="/samples/slides/table-hook.png" alt="명식 원국표 미리보기"></div>
+        <div class="sample-slide"><img src="/samples/slides/chapter1-hook.png" alt="총평 챕터 실제 본문 미리보기"></div>
       </div>
       <div class="sample-slider-dots" id="sampleSliderDots">
         <button type="button" class="dot active" data-i="0" aria-label="표지 미리보기"></button>
@@ -219,6 +235,30 @@
   </section>
 
   <section>
+    <h2 class="section-title">"계산"이라고 말하는 이유</h2>
+    <p class="section-desc">사람이 대충 짐작해서 쓰는 게 아니라, 정해진 절차대로 실제로 계산해요.</p>
+
+    <div class="chapter-list">
+      <div class="chapter-item">
+        <h4>① 만세력 계산</h4>
+        <p>태어난 순간의 양력·음력을 변환해 년·월·일·시 8글자(천간·지지)를 정확히 산출해요</p>
+      </div>
+      <div class="chapter-item">
+        <h4>② 진태양시 보정</h4>
+        <p>표준시와 실제 출생지 경도의 차이까지 반영해서, 시주(時柱)가 바뀔 수 있는 미세한 오차까지 계산해요</p>
+      </div>
+      <div class="chapter-item">
+        <h4>③ 대운수 계산</h4>
+        <p>태어난 순간부터 가장 가까운 절기까지의 날짜 수를 계산해, 대운이 시작하는 정확한 나이를 산출해요</p>
+      </div>
+      <div class="chapter-item">
+        <h4>④ 격국·용신 판정</h4>
+        <p>일간의 강약과 오행 분포를 정해진 기준으로 따져 사주의 그릇(격국)과 필요한 기운(용신)을 판정해요</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
     <h2 class="section-title">평생 곁에 두고 꺼내보는<br />정밀 사주 분석 리포트</h2>
     <p class="section-desc">한 번 읽고 사라지는 단편 풀이가 아니라, 100페이지 문서로 전해드려요.</p>
 
@@ -226,24 +266,47 @@
       <img src="/banners/6.png" alt="평생사주 100페이지 정식 리포트" />
     </div>
 
-    <div class="chapter-list">
-      <div class="chapter-item">
-        <h4>Chapter 1. 원국 분석 — 본질과 기질</h4>
-        <p>오행·십신·격국·용신까지, 타고난 기본 그릇과 강점·보완점을 계산 결과 그대로 풀어요</p>
+    <p class="chapter-list-lead">지어낸 목차가 아니라, 실제로 리포트에 들어가는 18개 챕터 그대로예요.</p>
+    <div class="chapter-grid">
+      <div class="chapter-cell"><span class="num">1</span><span class="ttl">총평</span></div>
+      <div class="chapter-cell"><span class="num">2</span><span class="ttl">타고난 성격과 기질</span></div>
+      <div class="chapter-cell"><span class="num">3</span><span class="ttl">오행 밸런스</span></div>
+      <div class="chapter-cell"><span class="num">4</span><span class="ttl">십신 구조 — 내 에너지 지도</span></div>
+      <div class="chapter-cell"><span class="num">5</span><span class="ttl">격국과 그릇</span></div>
+      <div class="chapter-cell"><span class="num">6</span><span class="ttl">용신 — 평생 나를 살리는 기운</span></div>
+      <div class="chapter-cell"><span class="num">7</span><span class="ttl">대운 흐름 — 10년 단위 인생 그래프</span></div>
+      <div class="chapter-cell"><span class="num">8</span><span class="ttl">재물운</span></div>
+      <div class="chapter-cell"><span class="num">9</span><span class="ttl">직업·적성운</span></div>
+      <div class="chapter-cell"><span class="num">10</span><span class="ttl">학업·시험·자격운</span></div>
+      <div class="chapter-cell"><span class="num">11</span><span class="ttl">애정·결혼운</span></div>
+      <div class="chapter-cell"><span class="num">12</span><span class="ttl">건강운</span></div>
+      <div class="chapter-cell"><span class="num">13</span><span class="ttl">대인관계·인복</span></div>
+      <div class="chapter-cell"><span class="num">14</span><span class="ttl">가족운</span></div>
+      <div class="chapter-cell"><span class="num">15</span><span class="ttl">신살 풀이</span></div>
+      <div class="chapter-cell"><span class="num">16</span><span class="ttl">평생 길흉 캘린더</span></div>
+      <div class="chapter-cell"><span class="num">17</span><span class="ttl">개운법</span></div>
+      <div class="chapter-cell"><span class="num">18</span><span class="ttl">마무리 — 인생 총조언</span></div>
+    </div>
+
+    <div class="feature-list">
+      <div class="feature-item">
+        <span class="feature-ico">📈</span>
+        <div><h4>대운 그래프</h4><p>10년 단위 대운을 점수 그래프로 그려서, 인생에서 가장 순조로운 시기와 신중해야 할 시기를 한눈에 보여줘요</p></div>
       </div>
-      <div class="chapter-item">
-        <h4>Chapter 2. 대운 흐름 — 인생의 사계절</h4>
-        <p>10년 주기로 바뀌는 대운을 그래프로 정리해, 지금이 어떤 시기인지 짚어드려요</p>
+      <div class="feature-item">
+        <span class="feature-ico">🕸️</span>
+        <div><h4>오행·십신 차트</h4><p>타고난 오행 균형과 십신 분포를 레이더·도넛 차트로 시각화해서, 텍스트만으론 안 잡히는 그릇의 형태를 보여줘요</p></div>
       </div>
-      <div class="chapter-item">
-        <h4>Chapter 3. 현실 영역별 풀이</h4>
-        <p>재물·직업·학업·애정·건강·대인관계·가족까지, 삶의 영역별로 나눠서 풀어드려요</p>
+      <div class="feature-item">
+        <span class="feature-ico">🏷️</span>
+        <div><h4>챕터별 계산 키워드</h4><p>매 챕터 상단에 그 챕터가 근거한 실제 계산값(일간·격국·용신·신살 등)을 칩으로 표시해서, 어디서 나온 해석인지 바로 확인돼요</p></div>
       </div>
-      <div class="chapter-item">
-        <h4>Chapter 4. 개운법과 총조언</h4>
-        <p>신살 풀이와 평생 길흉 캘린더, 일상에서 바로 실천할 수 있는 개운법까지 담아요</p>
+      <div class="feature-item">
+        <span class="feature-ico">✅</span>
+        <div><h4>개운법 체크리스트</h4><p>부족한 오행을 색·방향·시간·습관으로 바꾼 오늘부터 실천할 수 있는 체크리스트를 담아요</p></div>
       </div>
     </div>
+
     <p class="price-line">평생사주 100p 정식 리포트 · 14,900원<br><span>1회 결제 · 마이페이지에서 다시 받아볼 수 있어요</span></p>
 
     <div class="sample-box">
