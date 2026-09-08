@@ -67,7 +67,9 @@ body {
   padding: 8mm 10mm; margin-bottom: 10mm; max-width: 130mm;
 }
 .cover-summary-ttl { font-size: 9pt; letter-spacing: 0.16em; color: var(--gold); margin-bottom: 4mm; }
-.cover-summary p { font-size: 12.5pt; line-height: 1.9; color: var(--star); margin: 0 0 2mm; }
+/* .cover 전체가 가운데정렬이라 그대로 두면 2~3줄짜리 문장이 매번 다른 위치에서
+   꺾여 읽기 불편하다 — 이 문단만 왼쪽정렬로 되돌린다. */
+.cover-summary p { font-size: 12.5pt; line-height: 1.9; color: var(--star); margin: 0 0 2mm; text-align: left; }
 .cover-summary p:last-child { margin-bottom: 0; }
 .cover .meta { font-size: 11pt; color: var(--text); line-height: 2.0; }
 .cover .meta b { color: var(--gold); }

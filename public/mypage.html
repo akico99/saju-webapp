@@ -58,7 +58,7 @@
       <h3>다시보기 — 내가 만든 리포트</h3>
       <div class="table-scroll">
         <table id="orderTable">
-          <thead><tr><th>상품</th><th>신청일</th><th>상태</th><th></th></tr></thead>
+          <thead><tr><th>주문번호</th><th>상품</th><th>신청일</th><th>상태</th><th></th></tr></thead>
           <tbody id="orderBody"></tbody>
         </table>
       </div>
@@ -139,6 +139,7 @@
         ? `<button type="button" class="download-link" data-job-id="${o.jobId}">다운로드</button>`
         : (o.status === 'pending' ? '생성 중...' : '-');
       tr.innerHTML = `
+        <td>#${o.orderNo}</td>
         <td>${o.label || o.productKey}</td>
         <td>${o.createdAt.slice(0, 16).replace('T', ' ')}</td>
         <td><span class="status ${ORDER_STATUS_CLASS[o.status] || ''}">${o.statusLabel}</span></td>

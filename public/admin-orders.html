@@ -37,7 +37,7 @@
   <div class="stat-row" id="summaryRow"></div>
 
   <table>
-    <thead><tr><th>일시</th><th>상품</th><th>회원</th><th>판매가</th><th>실제 원가</th><th>마진(참고)</th><th>파일</th></tr></thead>
+    <thead><tr><th>주문번호</th><th>일시</th><th>상품</th><th>회원</th><th>판매가</th><th>실제 원가</th><th>마진(참고)</th><th>파일</th></tr></thead>
     <tbody id="tbody"></tbody>
   </table>
   <div class="empty hidden" id="empty" style="text-align:center;padding:30px;color:var(--muted);">표시할 내역이 없습니다.</div>
@@ -96,6 +96,7 @@
          </div>`
       : `<span style="color:var(--danger);">없음</span>`;
     tr.innerHTML = `
+      <td>#${o.id}</td>
       <td>${o.createdAt.slice(0, 16).replace('T', ' ')}</td>
       <td>${o.label || o.productKey}</td>
       <td style="color:var(--muted);font-size:11px;">${o.userEmail}</td>

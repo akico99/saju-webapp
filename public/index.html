@@ -80,8 +80,6 @@
     </div>
   </nav>
 
-  <p class="hero-tagline"><b>추측이 아니라 계산</b>이에요 — 실제 만세력 엔진으로 뽑은 사주를, 990원부터 필요한 만큼만 골라 보세요.</p>
-
   <div class="banner-slider" id="top">
     <div class="banner-track" id="bannerTrack">
       <a class="banner-slide" href="quick.html?topic=total">
@@ -416,14 +414,18 @@
   loadAccountState();
 
   // 실제 완료된 주문 건수를 후기 대신 신뢰 신호로 보여준다 — 지어낸 숫자가 아니라
-  // orders 테이블의 진짜 카운트(GET /api/orders/count). 서비스 초반에 숫자가 너무
-  // 작으면(예: 한 자리) 오히려 "안 팔리는 곳"으로 보여 역효과가 날 수 있어서,
-  // 최소 10건이 넘을 때만 노출한다 — 그 아래에서는 조용히 숨겨진 채로 둔다.
+  // orders 테이블의 진짜 카운트(GET /api/orders/count). 서비스 초반에는 숫자가
+  // 너무 작아서(2026-09) 오히려 "안 팔리는 곳"으로 보일 수 있어 대표님 요청으로
+  // 잠시 꺼둔다 — 나중에 주문이 충분히 쌓이면 STAT_COUNTER_ENABLED만 true로
+  // 바꾸면 바로 다시 켜진다(로직·API는 그대로 둠).
+  const STAT_COUNTER_ENABLED = false;
+  const STAT_COUNTER_MIN = 10;
   (async function loadStatCounter() {
+    if (!STAT_COUNTER_ENABLED) return;
     try {
       const res = await fetch('/api/orders/count');
       const data = await res.json();
-      if (!res.ok || !(data.count >= 10)) return;
+      if (!res.ok || !(data.count >= STAT_COUNTER_MIN)) return;
       document.getElementById('statCounterNum').textContent = data.count.toLocaleString('ko-KR');
       document.getElementById('statCounter').hidden = false;
     } catch (e) { /* 실패해도 조용히 안 보여줄 뿐, 페이지 전체엔 영향 없음 */ }

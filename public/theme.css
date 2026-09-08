@@ -207,12 +207,6 @@ header .logout, button.logout {
   background: #fff; padding: 8px 14px; border-radius: var(--radius-pill);
 }
 
-/* ---------- 히어로 한 줄 소개 — 캐러셀이 화면 대부분을 차지해서, 처음 온 사람이
-   "그래서 뭐 하는 곳인지"를 스크롤 없이 바로 알 수 있게 캐러셀 위에 고정 문구를 둔다. ---------- */
-.hero-tagline {
-  margin: 14px 20px 0; font-size: 13.5px; color: var(--muted); line-height: 1.6; text-align: center;
-}
-.hero-tagline b { color: var(--ink); font-weight: 800; }
 .banner-dots { position: absolute; left: 0; right: 0; bottom: 14px; z-index: 3; display: flex; justify-content: center; gap: 6px; }
 .banner-dots .dot { width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.45); padding: 0; cursor: pointer; }
 .banner-dots .dot.active { background: #fff; width: 16px; border-radius: 3px; }
@@ -597,6 +591,10 @@ tr:last-child td { border-bottom: none; }
 .table-scroll table { border: none; border-radius: 0; table-layout: fixed; min-width: 420px; }
 .table-scroll th, .table-scroll td { padding: 10px 10px; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .table-scroll th:first-child, .table-scroll td:first-child { width: 34%; }
+/* 마이페이지 주문내역 표만 맨 앞에 주문번호 열이 하나 더 있어서, 그 열은 좁게
+   유지하고 원래 첫 열이었던 상품명 쪽에 넓은 폭을 그대로 준다. */
+#orderTable th:first-child, #orderTable td:first-child { width: 14%; }
+#orderTable th:nth-child(2), #orderTable td:nth-child(2) { width: 34%; }
 .actions button { padding: 7px 13px; border-radius: var(--radius-pill); border: none; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; margin-right: 6px; }
 .approve-btn { background: var(--ink); color: #fff; }
 .reject-btn { background: var(--danger-soft); color: var(--danger); }

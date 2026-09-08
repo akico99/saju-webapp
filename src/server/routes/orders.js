@@ -13,6 +13,7 @@ router.get('/orders/count', (req, res) => {
 
 router.get('/orders/mine', requireAuth, (req, res) => {
   const rows = orders.listByUser(req.session.userId).map((o) => ({
+    orderNo: o.id,
     jobId: o.job_id,
     productKey: o.product_key,
     label: o.label,
