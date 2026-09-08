@@ -14,7 +14,7 @@ const orders = require('../../db/orders');
 const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
-const OUTPUT_ROOT = path.join(__dirname, '..', '..', '..', 'output');
+const { OUTPUT_ROOT } = require('../../config/outputDir');
 
 function parseBody(body) {
   const year = Number(body.year), month = Number(body.month), day = Number(body.day);

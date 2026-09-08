@@ -587,6 +587,10 @@ table { width: 100%; border-collapse: collapse; background: var(--paper); border
 th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--line); font-size: 13px; }
 th { background: var(--surface); color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
 tr:last-child td { border-bottom: none; }
+.download-link {
+  background: none; border: none; padding: 0; margin: 0; font: inherit; font-size: inherit;
+  color: var(--accent); text-decoration: underline; cursor: pointer;
+}
 
 /* ---------- 마이페이지 좁은 표 (모바일 480px 컨테이너 안, 4열이라 넘치기 쉬움) ---------- */
 .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 14px; border: 1px solid var(--line); }

@@ -33,7 +33,7 @@ const points = require('../../db/points');
 const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
-const OUTPUT_ROOT = path.join(__dirname, '..', '..', '..', 'output');
+const { OUTPUT_ROOT } = require('../../config/outputDir');
 const WEEKDAY_KO = ['일', '월', '화', '수', '목', '금', '토'];
 
 function formatBestValue(b) {

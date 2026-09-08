@@ -136,7 +136,7 @@
     data.orders.forEach((o) => {
       const tr = document.createElement('tr');
       const action = o.status === 'done'
-        ? `<a href="/api/download/${o.jobId}">다운로드</a>`
+        ? `<button type="button" class="download-link" data-job-id="${o.jobId}">다운로드</button>`
         : (o.status === 'pending' ? '생성 중...' : '-');
       tr.innerHTML = `
         <td>${o.label || o.productKey}</td>
@@ -154,6 +154,45 @@
       ordersPollTimer = setTimeout(loadOrders, 5000);
     }
   }
+
+  // 예전엔 <a href="/api/download/...">라 서버가 에러 JSON을 내려주면 브라우저가 그
+  // JSON 텍스트를 화면에 그대로 띄워버렸다(사용자가 실제로 본 화면). 링크 이동 대신
+  // 먼저 fetch로 확인해서, 성공할 때만 실제로 파일을 받게 한다.
+  document.getElementById('orderBody').addEventListener('click', async (e) => {
+    const btn = e.target.closest('.download-link');
+    if (!btn) return;
+    const jobId = btn.dataset.jobId;
+    btn.disabled = true;
+    try {
+      const res = await fetch(`/api/download/${jobId}`);
+      if (res.ok) {
+        const blob = await res.blob();
+        // Content-Disposition엔 filename="?????.pdf"(한글이 깨진 ASCII 폴백)과
+        // filename*=UTF-8''%EA...(RFC 5987, 실제 한글) 둘 다 들어있다 — filename*= 쪽을
+        // 먼저 찾아야 한다. 앞의 깨진 filename=을 먼저 매치해버리면 파일명이 물음표로 나간다.
+        const cd = res.headers.get('Content-Disposition') || '';
+        const star = cd.match(/filename\*=UTF-8''([^;]+)/);
+        const plain = cd.match(/filename="?([^";]+?)"?(?:;|$)/);
+        const filename = star ? decodeURIComponent(star[1]) : (plain ? plain[1] : '길잡이여울_리포트.pdf');
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(a.href);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        if (data.code === 'file_missing') {
+          alert(data.error || '이전에 완료된 파일을 서버에서 찾을 수 없습니다. 문의: sooky2001@gmail.com');
+        } else {
+          showToast(data.error || '다운로드에 실패했어요.');
+        }
+      }
+    } catch (err) {
+      showToast('다운로드 요청 실패: ' + err.message);
+    } finally {
+      btn.disabled = false;
+    }
+  });
 
   document.getElementById('logoutBtn').addEventListener('click', async () => {
     await fetch('/api/auth/logout', { method: 'POST' });

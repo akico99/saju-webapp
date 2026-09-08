@@ -17,7 +17,7 @@ const orders = require('../../db/orders');
 const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
-const OUTPUT_ROOT = path.join(__dirname, '..', '..', '..', 'output');
+const { OUTPUT_ROOT } = require('../../config/outputDir');
 
 function parsePerson(body, prefix) {
   const year = Number(body[`${prefix}Year`]), month = Number(body[`${prefix}Month`]), day = Number(body[`${prefix}Day`]);
