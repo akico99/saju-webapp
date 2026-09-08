@@ -81,70 +81,8 @@
   </nav>
 
   <div class="banner-slider" id="top">
-    <div class="banner-track" id="bannerTrack">
-      <a class="banner-slide" href="quick.html?topic=total">
-        <img src="/banners/1.png" alt="오늘의 나 — 총평 빠른 리딩" data-slide="1">
-        <div class="banner-copy">
-          <span class="eyebrow">TODAY'S PICK</span>
-          <div class="headline">깊게 볼 필요 없을 땐, 990원</div>
-          <div class="price">오늘의 나 — 총평 빠른 리딩</div>
-          <span class="banner-cta">지금 보기 →</span>
-        </div>
-      </a>
-      <a class="banner-slide" href="quick.html?topic=love">
-        <img src="/banners/2.png" alt="애정운 빠른 리딩" data-slide="2">
-        <div class="banner-copy">
-          <span class="eyebrow">HOT</span>
-          <div class="headline">지금 인연의 흐름이 궁금할 때</div>
-          <div class="price">애정운 빠른 리딩 · 990원</div>
-          <span class="banner-cta">지금 보기 →</span>
-        </div>
-      </a>
-      <a class="banner-slide" href="compat.html">
-        <img src="/banners/3.png" alt="궁합 리포트" data-slide="3">
-        <div class="banner-copy">
-          <span class="eyebrow">COMPATIBILITY</span>
-          <div class="headline">둘이 보는 진짜 궁합</div>
-          <div class="price">궁합 리포트 · 4,900원</div>
-          <span class="banner-cta">지금 보기 →</span>
-        </div>
-      </a>
-      <a class="banner-slide" href="quick.html?topic=wealth">
-        <img src="/banners/4.png" alt="재물운 빠른 리딩" data-slide="4">
-        <div class="banner-copy">
-          <span class="eyebrow">MONEY</span>
-          <div class="headline">돈이 들어오고 나가는 흐름</div>
-          <div class="price">재물운 빠른 리딩 · 990원</div>
-          <span class="banner-cta">지금 보기 →</span>
-        </div>
-      </a>
-      <a class="banner-slide" href="life-graph.html">
-        <img src="/banners/5.png" alt="인생 그래프 무료 체험" data-slide="5">
-        <div class="banner-copy">
-          <span class="eyebrow">FREE</span>
-          <div class="headline">내 인생, 흐름으로 한눈에 보기</div>
-          <div class="price">인생 그래프 · 무료 체험</div>
-          <span class="banner-cta">무료로 보기 →</span>
-        </div>
-      </a>
-      <a class="banner-slide" href="lifetime-report.html">
-        <img src="/banners/6.png" alt="평생사주 100페이지 정식 리포트" data-slide="6">
-        <div class="banner-copy">
-          <span class="eyebrow">FULL REPORT</span>
-          <div class="headline">인생 전체를 18장으로</div>
-          <div class="price">평생사주 100p 정식 리포트 · 14,900원</div>
-          <span class="banner-cta">지금 보기 →</span>
-        </div>
-      </a>
-    </div>
-    <div class="banner-dots" id="bannerDots">
-      <button class="dot active" data-i="0" aria-label="1번 배너로 이동"></button>
-      <button class="dot" data-i="1" aria-label="2번 배너로 이동"></button>
-      <button class="dot" data-i="2" aria-label="3번 배너로 이동"></button>
-      <button class="dot" data-i="3" aria-label="4번 배너로 이동"></button>
-      <button class="dot" data-i="4" aria-label="5번 배너로 이동"></button>
-      <button class="dot" data-i="5" aria-label="6번 배너로 이동"></button>
-    </div>
+    <div class="banner-track" id="bannerTrack"></div>
+    <div class="banner-dots" id="bannerDots"></div>
     <button type="button" class="banner-nav prev" id="bannerPrev" aria-label="이전 배너">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
     </button>
@@ -500,10 +438,68 @@
     observer.observe(footer);
   })();
 
-  (function initBanner() {
+  // 관리자가 배너를 자유롭게 추가/삭제할 수 있어서(admin-banners.html), 개수를 6개로
+  // 가정하고 마크업에 하드코딩하지 않는다 — /api/banners가 주는 배열 그대로 슬라이드를
+  // 만든다. API가 실패하는 극히 드문 경우에도 히어로가 완전히 비어보이지 않도록 예전
+  // 기본 6개 구성을 폴백으로 둔다.
+  const FALLBACK_BANNERS = [
+    { image: '/banners/1.png', imagePosition: '50% 50%', eyebrow: "TODAY'S PICK", headline: '깊게 볼 필요 없을 땐, 990원', price: '오늘의 나 — 총평 빠른 리딩', cta: '지금 보기 →', href: 'quick.html?topic=total', textAlign: 'left', textVAlign: 'bottom', textScale: 1 },
+    { image: '/banners/2.png', imagePosition: '50% 50%', eyebrow: 'HOT', headline: '지금 인연의 흐름이 궁금할 때', price: '애정운 빠른 리딩 · 990원', cta: '지금 보기 →', href: 'quick.html?topic=love', textAlign: 'left', textVAlign: 'bottom', textScale: 1 },
+    { image: '/banners/3.png', imagePosition: '50% 50%', eyebrow: 'COMPATIBILITY', headline: '둘이 보는 진짜 궁합', price: '궁합 리포트 · 4,900원', cta: '지금 보기 →', href: 'compat.html', textAlign: 'left', textVAlign: 'bottom', textScale: 1 },
+    { image: '/banners/4.png', imagePosition: '50% 50%', eyebrow: 'MONEY', headline: '돈이 들어오고 나가는 흐름', price: '재물운 빠른 리딩 · 990원', cta: '지금 보기 →', href: 'quick.html?topic=wealth', textAlign: 'left', textVAlign: 'bottom', textScale: 1 },
+    { image: '/banners/5.png', imagePosition: '50% 50%', eyebrow: 'FREE', headline: '내 인생, 흐름으로 한눈에 보기', price: '인생 그래프 · 무료 체험', cta: '무료로 보기 →', href: 'life-graph.html', textAlign: 'left', textVAlign: 'bottom', textScale: 1 },
+    { image: '/banners/6.png', imagePosition: '50% 50%', eyebrow: 'FULL REPORT', headline: '인생 전체를 18장으로', price: '평생사주 100p 정식 리포트 · 14,900원', cta: '지금 보기 →', href: 'lifetime-report.html', textAlign: 'left', textVAlign: 'bottom', textScale: 1 }
+  ];
+
+  function escapeHtml(s) {
+    return String(s || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  function buildBannerSlide(cfg) {
+    const a = document.createElement('a');
+    a.className = 'banner-slide';
+    a.href = cfg.href || '#';
+    a.style.alignItems = cfg.textVAlign === 'top' ? 'flex-start' : cfg.textVAlign === 'center' ? 'center' : 'flex-end';
+    const scale = Number(cfg.textScale) || 1;
+    a.innerHTML = `
+      <img src="${escapeHtml(cfg.image)}" alt="${escapeHtml(cfg.headline)}" style="object-position:${escapeHtml(cfg.imagePosition || '50% 50%')};">
+      <div class="banner-copy" style="text-align:${escapeHtml(cfg.textAlign || 'left')};">
+        <span class="eyebrow" style="font-size:${11 * scale}px;">${escapeHtml(cfg.eyebrow)}</span>
+        <div class="headline" style="font-size:${18 * scale}px;">${escapeHtml(cfg.headline)}</div>
+        <div class="price" style="font-size:${13 * scale}px;">${escapeHtml(cfg.price)}</div>
+        <span class="banner-cta">${escapeHtml(cfg.cta || '지금 보기 →')}</span>
+      </div>
+    `;
+    return a;
+  }
+
+  async function initBannerSlider() {
     const track = document.getElementById('bannerTrack');
-    const dots = Array.from(document.querySelectorAll('#bannerDots .dot'));
-    const slideCount = track.children.length;
+    const dotsContainer = document.getElementById('bannerDots');
+    let banners = FALLBACK_BANNERS;
+    try {
+      const res = await fetch('/api/banners');
+      const data = await res.json();
+      if (Array.isArray(data.banners) && data.banners.length) banners = data.banners;
+    } catch (e) {
+      // 실패해도 폴백 배너로 그대로 보임
+    }
+
+    track.innerHTML = '';
+    banners.forEach((cfg) => track.appendChild(buildBannerSlide(cfg)));
+    dotsContainer.innerHTML = '';
+    banners.forEach((_, i) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'dot' + (i === 0 ? ' active' : '');
+      btn.dataset.i = i;
+      btn.setAttribute('aria-label', `${i + 1}번 배너로 이동`);
+      dotsContainer.appendChild(btn);
+    });
+
+    const dots = Array.from(dotsContainer.querySelectorAll('.dot'));
+    const slideCount = banners.length;
+    if (!slideCount) return;
     const AUTO_INTERVAL_MS = 4000;
     const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let autoTimer = null;
@@ -522,7 +518,7 @@
     }
 
     function startAuto() {
-      if (reduceMotion || autoTimer) return;
+      if (reduceMotion || autoTimer || slideCount < 2) return;
       autoTimer = setInterval(() => {
         const current = Math.round(track.scrollLeft / track.clientWidth);
         goTo((current + 1) % slideCount);
@@ -563,39 +559,8 @@
     });
 
     startAuto();
-  })();
-
-  async function loadBannerPositions() {
-    try {
-      const res = await fetch('/api/banners');
-      const data = await res.json();
-      document.querySelectorAll('.banner-slide img[data-slide]').forEach((img) => {
-        const cfg = data.positions[img.dataset.slide];
-        if (!cfg) return;
-        img.style.objectPosition = cfg.imagePosition;
-
-        const slide = img.closest('.banner-slide');
-        if (cfg.href) slide.setAttribute('href', cfg.href);
-        slide.style.alignItems = cfg.textVAlign === 'top' ? 'flex-start' : cfg.textVAlign === 'center' ? 'center' : 'flex-end';
-
-        const copy = slide.querySelector('.banner-copy');
-        copy.style.textAlign = cfg.textAlign || 'left';
-        const scale = Number(cfg.textScale) || 1;
-        const eyebrow = copy.querySelector('.eyebrow');
-        eyebrow.textContent = cfg.eyebrow;
-        eyebrow.style.fontSize = (11 * scale) + 'px';
-        const headline = copy.querySelector('.headline');
-        headline.textContent = cfg.headline;
-        headline.style.fontSize = (18 * scale) + 'px';
-        const price = copy.querySelector('.price');
-        price.textContent = cfg.price;
-        price.style.fontSize = (13 * scale) + 'px';
-      });
-    } catch (e) {
-      // 실패해도 기본 문구·위치(50% 50%)로 그대로 보임 — 배너용 하드코딩 값이 그대로 폴백
-    }
   }
-  loadBannerPositions();
+  initBannerSlider();
 
   async function loadStatCount() {
     try {
