@@ -40,7 +40,17 @@
   .hero h1 { font-size: 28px; line-height: 1.5; margin-bottom: 22px; }
   .hero p { font-size: 15.5px; color: var(--text-sub); margin-bottom: 32px; }
 
-  .sample-slider { margin-bottom: 14px; }
+  .sample-slider { margin-bottom: 14px; position: relative; }
+  .slider-nav {
+    position: absolute; top: 50%; transform: translateY(-50%); z-index: 3;
+    width: 34px; height: 34px; border-radius: 50%; border: none; cursor: pointer;
+    background: rgba(0,0,0,0.32); color: #fff; display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(2px); padding: 0;
+  }
+  .slider-nav svg { width: 18px; height: 18px; }
+  .slider-nav.prev { left: 10px; }
+  .slider-nav.next { right: 10px; }
+  .slider-nav:active { background: rgba(0,0,0,0.5); }
   .sample-slider-track {
     display: flex; align-items: flex-start; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
     border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); background: #0f1420;
@@ -184,6 +194,12 @@
         <button type="button" class="dot" data-i="1" aria-label="명식 원국표 미리보기"></button>
         <button type="button" class="dot" data-i="2" aria-label="총평 챕터 미리보기"></button>
       </div>
+      <button type="button" class="slider-nav prev" id="sliderPrev" aria-label="이전 미리보기">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+      </button>
+      <button type="button" class="slider-nav next" id="sliderNext" aria-label="다음 미리보기">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
       <p class="sample-slider-label">실제 샘플 리포트 미리보기 · 가상 인물 "홍길동" 기준</p>
     </div>
 
@@ -488,6 +504,20 @@
       goTo(Number(dot.dataset.i));
     });
   });
+  var prevBtn = document.getElementById('sliderPrev');
+  var nextBtn = document.getElementById('sliderNext');
+  if (prevBtn && nextBtn) {
+    prevBtn.addEventListener('click', function () {
+      stopAuto();
+      var current = Math.round(track.scrollLeft / track.clientWidth);
+      goTo((current - 1 + slideCount) % slideCount);
+    });
+    nextBtn.addEventListener('click', function () {
+      stopAuto();
+      var current = Math.round(track.scrollLeft / track.clientWidth);
+      goTo((current + 1) % slideCount);
+    });
+  }
   track.addEventListener('scroll', function () {
     var i = Math.round(track.scrollLeft / track.clientWidth);
     dots.forEach(function (d, idx) { d.classList.toggle('active', idx === i); });
