@@ -63,13 +63,18 @@ body {
 }
 .cover .subtitle { font-size: 11.5pt; color: var(--muted); margin-bottom: 10mm; }
 .cover-summary {
-  background: var(--bg2); border: 1px solid var(--line); border-radius: 4mm;
+  /* 표지 배경(--bg)과 예전 배경(--bg2)이 색상 차이가 미미해서 박스가 배경에 묻혀
+     보였다 — 금색 톤을 살짝 섞은 더 밝은 배경 + 좌측 금색 강조선(다른 곳의
+     .myeongsik-summary와 같은 패턴)으로 눈에 띄게 한다. */
+  background: linear-gradient(135deg, rgba(199,161,58,0.14), rgba(199,161,58,0.05));
+  border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 4mm;
   padding: 8mm 10mm; margin-bottom: 10mm; max-width: 130mm;
 }
-.cover-summary-ttl { font-size: 9pt; letter-spacing: 0.16em; color: var(--gold); margin-bottom: 4mm; }
+.cover-summary-ttl { font-size: 9pt; letter-spacing: 0.16em; color: var(--gold); margin-bottom: 4mm; font-weight: 700; }
 /* .cover 전체가 가운데정렬이라 그대로 두면 2~3줄짜리 문장이 매번 다른 위치에서
-   꺾여 읽기 불편하다 — 이 문단만 왼쪽정렬로 되돌린다. */
-.cover-summary p { font-size: 12.5pt; line-height: 1.9; color: var(--star); margin: 0 0 2mm; text-align: left; }
+   꺾여 읽기 불편하다 — 이 문단만 왼쪽정렬로 되돌린다. 굵기·크기도 살짝 키워서
+   본문 시작 전 가장 먼저 읽히는 "훅"답게 시각적 무게를 준다. */
+.cover-summary p { font-size: 13.5pt; font-weight: 600; line-height: 1.85; color: var(--star); margin: 0 0 2.5mm; text-align: left; }
 .cover-summary p:last-child { margin-bottom: 0; }
 .cover .meta { font-size: 11pt; color: var(--text); line-height: 2.0; }
 .cover .meta b { color: var(--gold); }

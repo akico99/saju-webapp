@@ -211,6 +211,17 @@ header .logout, button.logout {
 .banner-dots .dot { width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.45); padding: 0; cursor: pointer; }
 .banner-dots .dot.active { background: #fff; width: 16px; border-radius: 3px; }
 
+.banner-nav {
+  position: absolute; top: 50%; transform: translateY(-50%); z-index: 3;
+  width: 34px; height: 34px; border-radius: 50%; border: none; cursor: pointer;
+  background: rgba(0,0,0,0.32); color: #fff; display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(2px);
+}
+.banner-nav svg { width: 18px; height: 18px; }
+.banner-nav.prev { left: 10px; }
+.banner-nav.next { right: 10px; }
+.banner-nav:active { background: rgba(0,0,0,0.5); }
+
 /* 하단 고정 내비게이션 바로 위 — 스크롤 중인 콘텐츠가 내비와 만나는 지점이 뚝
    끊기지 않도록 배경색으로 부드럽게 페이드되는 장식용 그라데이션. 내비(.bottom-nav,
    z-index 30)보다 z-index를 낮춰서 겹치게 그리면, 내비의 불투명 배경이 자연스럽게

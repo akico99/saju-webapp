@@ -145,6 +145,12 @@
       <button class="dot" data-i="4" aria-label="5번 배너로 이동"></button>
       <button class="dot" data-i="5" aria-label="6번 배너로 이동"></button>
     </div>
+    <button type="button" class="banner-nav prev" id="bannerPrev" aria-label="이전 배너">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+    </button>
+    <button type="button" class="banner-nav next" id="bannerNext" aria-label="다음 배너">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+    </button>
   </div>
 
   <div class="today-fortune-card" id="todayFortuneCard">
@@ -528,6 +534,19 @@
         stopAuto(); // 직접 골랐으면 자동재생을 멈춘다 — 보고 있는 걸 강제로 넘기지 않도록
         goTo(Number(dot.dataset.i));
       });
+    });
+
+    const prevBtn = document.getElementById('bannerPrev');
+    const nextBtn = document.getElementById('bannerNext');
+    prevBtn.addEventListener('click', () => {
+      stopAuto();
+      const current = Math.round(track.scrollLeft / track.clientWidth);
+      goTo((current - 1 + slideCount) % slideCount);
+    });
+    nextBtn.addEventListener('click', () => {
+      stopAuto();
+      const current = Math.round(track.scrollLeft / track.clientWidth);
+      goTo((current + 1) % slideCount);
     });
 
     // 스와이프/드래그로 직접 넘겨도 자동재생을 멈춘다(한 번만 걸리면 충분).
