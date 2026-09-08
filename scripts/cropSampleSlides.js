@@ -23,9 +23,9 @@ const DIR = path.join(__dirname, '..', 'public', 'samples', 'slides');
 // table: 명식 원국표(8글자·십신·신살) + 요약 바 + 오행 레이더 차트 시작부까지
 // chapter1: 챕터 제목 + 키워드 칩 + 첫 문단까지
 const CROPS = {
-  'cover.png': { out: 'cover-hook.png', height: 1700 },
-  'table.png': { out: 'table-hook.png', height: 1580 },
-  'chapter1.png': { out: 'chapter1-hook.png', height: 1580 }
+  'cover.png': { out: 'cover-hook.png', height: 1760 },
+  'table.png': { out: 'table-hook.png', height: 1700 },
+  'chapter1.png': { out: 'chapter1-hook.png', height: 900 }
 };
 
 async function cropTop(browser, srcPath, destPath, cropHeight) {
