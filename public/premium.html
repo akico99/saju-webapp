@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="/favicon.png">
+<title>평생사주 100p 정식 리포트 — 사주보는 수달</title>
+<style>
+  :root {
+    --lp-bg: #faf6ee;
+    --lp-card: #ffffff;
+    --lp-ink: #221c12;
+    --lp-muted: #7a7263;
+    --lp-gold: #c9a24a;
+    --lp-gold-deep: #8a6420;
+    --lp-line: #ece3d1;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--lp-bg); color: var(--lp-ink); font-family: 'Pretendard', -apple-system, 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; }
+  a { color: inherit; }
+  .lp { max-width: 480px; margin: 0 auto; min-height: 100vh; background: var(--lp-bg); padding-bottom: 96px; position: relative; }
+
+  .lp-head { display: flex; align-items: center; gap: 8px; padding: 18px 20px 6px; }
+  .lp-head img { width: 26px; height: 26px; border-radius: 7px; }
+  .lp-head span { font-size: 14px; font-weight: 800; letter-spacing: -0.01em; }
+
+  .hero { padding: 12px 20px 28px; text-align: center; }
+  .eyebrow-tag {
+    display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 0.1em;
+    color: var(--lp-gold-deep); background: rgba(184,137,47,0.12); border: 1px solid rgba(184,137,47,0.3);
+    padding: 6px 14px; border-radius: 999px; margin-bottom: 16px;
+  }
+  .hero h1 { font-size: 22px; line-height: 1.45; margin: 0 0 10px; font-weight: 800; letter-spacing: -0.01em; }
+  .hero p.sub { font-size: 13.5px; color: var(--lp-muted); line-height: 1.7; margin: 0 auto 22px; max-width: 340px; }
+
+  .hero-visual { border-radius: 20px; overflow: hidden; margin-bottom: 20px; box-shadow: 0 12px 28px rgba(138,100,32,0.16); }
+  .hero-visual img { width: 100%; display: block; }
+
+  .price-card { background: var(--lp-card); border: 1px solid var(--lp-line); border-radius: 18px; padding: 20px; box-shadow: 0 6px 20px rgba(138,100,32,0.08); margin-bottom: 14px; text-align: left; }
+  .price-card .label { font-size: 12px; color: var(--lp-muted); font-weight: 700; margin-bottom: 6px; }
+  .price-card .amount { font-size: 28px; font-weight: 800; color: var(--lp-ink); }
+  .price-card .amount span { font-size: 14px; font-weight: 700; color: var(--lp-muted); margin-left: 4px; }
+  .price-card .note { font-size: 11.5px; color: var(--lp-muted); margin-top: 8px; line-height: 1.6; }
+
+  .cta-btn {
+    display: block; width: 100%; text-align: center; background: linear-gradient(135deg, var(--lp-gold), var(--lp-gold-deep));
+    color: #fff; font-weight: 800; font-size: 15px; padding: 16px; border-radius: 14px; text-decoration: none;
+    box-shadow: 0 8px 20px rgba(169,124,40,0.32);
+  }
+
+  section { padding: 26px 20px; border-top: 1px solid var(--lp-line); }
+  section h2 { font-size: 16.5px; font-weight: 800; margin: 0 0 6px; }
+  section .lead { font-size: 12.5px; color: var(--lp-muted); margin: 0 0 16px; line-height: 1.7; }
+
+  .chapter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .chapter-cell { display: flex; align-items: flex-start; gap: 8px; background: var(--lp-card); border: 1px solid var(--lp-line); border-radius: 12px; padding: 10px 10px; }
+  .chapter-cell .num { font-size: 10.5px; font-weight: 800; color: var(--lp-gold-deep); background: rgba(184,137,47,0.12); width: 20px; height: 20px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+  .chapter-cell .ttl { font-size: 12px; font-weight: 600; line-height: 1.4; }
+
+  .assure-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .assure-grid div { text-align: center; background: var(--lp-card); border: 1px solid var(--lp-line); border-radius: 12px; padding: 14px 6px; }
+  .assure-grid .ico { width: 34px; height: 34px; margin: 0 auto 8px; border-radius: 50%; background: rgba(184,137,47,0.12); color: var(--lp-gold-deep); display: flex; align-items: center; justify-content: center; }
+  .assure-grid .ico svg { width: 17px; height: 17px; }
+  .assure-grid p { font-size: 10.5px; color: var(--lp-muted); line-height: 1.5; margin: 0; }
+
+  .free-row { display: flex; flex-direction: column; gap: 8px; }
+  .free-row a { display: flex; align-items: center; justify-content: space-between; background: var(--lp-card); border: 1px solid var(--lp-line); border-radius: 12px; padding: 13px 15px; text-decoration: none; font-size: 13px; font-weight: 700; }
+  .free-row a .go { font-size: 12px; font-weight: 700; color: var(--lp-gold-deep); }
+  .free-row a .free-badge { font-size: 10.5px; font-weight: 800; color: #fff; background: var(--lp-gold-deep); padding: 3px 8px; border-radius: 999px; margin-left: 8px; }
+
+  footer.lp-foot { padding: 24px 20px 20px; text-align: center; }
+  footer.lp-foot img { width: 48px; margin-bottom: 10px; opacity: 0.85; }
+  footer.lp-foot p { font-size: 10.5px; color: var(--lp-muted); line-height: 1.8; margin: 0; }
+  footer.lp-foot a { color: var(--lp-muted); text-decoration: underline; }
+
+  .sticky-cta { position: fixed; left: 0; right: 0; bottom: 0; max-width: 480px; margin: 0 auto; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); background: rgba(250,246,238,0.94); backdrop-filter: blur(6px); border-top: 1px solid var(--lp-line); }
+</style>
+</head>
+<body>
+<div class="lp">
+
+  <div class="lp-head">
+    <img src="/logo.png" alt="">
+    <span>사주보는 수달</span>
+  </div>
+
+  <div class="hero">
+    <span class="eyebrow-tag">PREMIUM · 실제 만세력 계산</span>
+    <h1>태어난 순간부터 지금까지,<br>인생 전체를 18장으로</h1>
+    <p class="sub">생년월일시를 실제 만세력 엔진으로 계산해서, 성격·재물·직업·애정·건강·대운까지 한 번에 정리한 평생사주 정식 리포트예요.</p>
+
+    <div class="hero-visual"><img src="/tiles/lifetime.png" alt="평생사주 100페이지 리포트"></div>
+
+    <div class="price-card">
+      <div class="label">평생사주 100p 정식 리포트</div>
+      <div class="amount">14,900<span>원 · 1회 결제</span></div>
+      <div class="note">한 번 생성한 리포트는 마이페이지에서 언제든 다시 내려받을 수 있어요.</div>
+    </div>
+
+    <a class="cta-btn" href="/lifetime-report.html">지금 만들어보기 →</a>
+  </div>
+
+  <section>
+    <h2>18장에 무엇이 담겨있나요</h2>
+    <p class="lead">지어낸 목차가 아니라, 실제로 리포트에 들어가는 18개 챕터 그대로예요.</p>
+    <div class="chapter-grid">
+      <div class="chapter-cell"><span class="num">1</span><span class="ttl">총평</span></div>
+      <div class="chapter-cell"><span class="num">2</span><span class="ttl">타고난 성격과 기질</span></div>
+      <div class="chapter-cell"><span class="num">3</span><span class="ttl">오행 밸런스</span></div>
+      <div class="chapter-cell"><span class="num">4</span><span class="ttl">십신 구조 — 내 에너지 지도</span></div>
+      <div class="chapter-cell"><span class="num">5</span><span class="ttl">격국과 그릇</span></div>
+      <div class="chapter-cell"><span class="num">6</span><span class="ttl">용신 — 평생 나를 살리는 기운</span></div>
+      <div class="chapter-cell"><span class="num">7</span><span class="ttl">대운 흐름 — 10년 단위 인생 그래프</span></div>
+      <div class="chapter-cell"><span class="num">8</span><span class="ttl">재물운</span></div>
+      <div class="chapter-cell"><span class="num">9</span><span class="ttl">직업·적성운</span></div>
+      <div class="chapter-cell"><span class="num">10</span><span class="ttl">학업·시험·자격운</span></div>
+      <div class="chapter-cell"><span class="num">11</span><span class="ttl">애정·결혼운</span></div>
+      <div class="chapter-cell"><span class="num">12</span><span class="ttl">건강운</span></div>
+      <div class="chapter-cell"><span class="num">13</span><span class="ttl">대인관계·인복</span></div>
+      <div class="chapter-cell"><span class="num">14</span><span class="ttl">가족운</span></div>
+      <div class="chapter-cell"><span class="num">15</span><span class="ttl">신살 풀이</span></div>
+      <div class="chapter-cell"><span class="num">16</span><span class="ttl">평생 길흉 캘린더</span></div>
+      <div class="chapter-cell"><span class="num">17</span><span class="ttl">개운법</span></div>
+      <div class="chapter-cell"><span class="num">18</span><span class="ttl">마무리 — 인생 총조언</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>이렇게 계산해요</h2>
+    <p class="lead">부풀리지 않고, 있는 그대로 말씀드려요.</p>
+    <div class="assure-grid">
+      <div>
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 9.5h16"/><path d="M9 13.5l1.6 1.6L15 11"/></svg></div>
+        <p>실제 만세력<br>엔진 계산</p>
+      </div>
+      <div>
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 4.5H5v4.5L14 18l4.5-4.5-9-9z"/><circle cx="7.7" cy="7.2" r="1" fill="currentColor" stroke="none"/><path d="M3 3l18 18"/></svg></div>
+        <p>부적·굿<br>추가 결제 없음</p>
+      </div>
+      <div>
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg></div>
+        <p>참고용 자료,<br>단정하지 않음</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>먼저 무료로 확인해보고 싶다면</h2>
+    <p class="lead">생년월일만 입력하면 지금 바로 무료로 볼 수 있어요.</p>
+    <div class="free-row">
+      <a href="/today-preview.html">오늘의 운세<span class="free-badge">무료</span><span style="flex:1"></span><span class="go">보러가기 →</span></a>
+      <a href="/life-graph.html">인생 그래프<span class="free-badge">무료</span><span style="flex:1"></span><span class="go">보러가기 →</span></a>
+    </div>
+  </section>
+
+  <footer class="lp-foot">
+    <img src="/logo.png" alt="사주보는 수달">
+    <p>
+      상호: 길잡이 여울 · 대표: 이용수 · 사업자등록번호: 279-25-01684<br>
+      사업장 소재지: 전북특별자치도 무주군 무주읍 당산길 20-5<br>
+      본 서비스의 모든 콘텐츠는 명리학적 통계 경향에 근거한 참고 자료이며, 의학적·법적·재정적 조언을 대체하지 않습니다.<br>
+      문의: sooky2001@gmail.com<br>
+      <a href="/terms.html">이용약관</a> · <a href="/privacy.html">개인정보처리방침</a>
+    </p>
+  </footer>
+</div>
+
+<div class="sticky-cta">
+  <a class="cta-btn" href="/lifetime-report.html">14,900원 · 지금 만들어보기 →</a>
+</div>
+
+</body>
+</html>

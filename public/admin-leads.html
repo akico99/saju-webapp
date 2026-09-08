@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="/favicon.png">
+<title>사주보는 수달 — 상담 접수</title>
+<link rel="stylesheet" href="/theme.css">
+<style>
+  .note { font-size: 11.5px; color: var(--muted); margin: -10px 0 18px; }
+  .status-select { font-size: 11.5px; padding: 3px 6px; border-radius: 6px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); }
+  .concern-cell { max-width: 220px; white-space: pre-wrap; font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1><svg class="otter-mark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="7" cy="7" r="2.4" fill="currentColor"/><circle cx="17" cy="7" r="2.4" fill="currentColor"/><ellipse cx="12" cy="13.5" rx="8" ry="7" fill="currentColor"/><circle cx="9" cy="12.5" r="1.1" fill="var(--paper)"/><circle cx="15" cy="12.5" r="1.1" fill="var(--paper)"/><ellipse cx="12" cy="16" rx="1.6" ry="1.1" fill="var(--paper)"/></svg> 상담 접수</h1>
+    <div style="display:flex;align-items:center;gap:14px;">
+      <a href="/admin.html" style="font-size:12.5px;color:var(--muted);text-decoration:none;">← 포인트 승인으로</a>
+      <a href="/admin-orders.html" style="font-size:12.5px;color:var(--muted);text-decoration:none;">생성 원가 →</a>
+      <button class="logout" id="logoutBtn">관리자 로그아웃</button>
+    </div>
+  </header>
+
+  <p class="note">
+    consult.html(카카오톡 상담 랜딩페이지)의 정보입력 폼으로 들어온 접수 목록이에요.
+    카카오톡 채널로 채팅이 오면 이름·생년월일·연락처로 대조해서 확인하세요.
+  </p>
+
+  <table>
+    <thead><tr><th>접수번호</th><th>일시</th><th>이름</th><th>성별</th><th>생년월일시</th><th>고민</th><th>연락처</th><th>상태</th></tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+  <div class="empty hidden" id="empty" style="text-align:center;padding:30px;color:var(--muted);">접수된 상담이 없습니다.</div>
+</div>
+
+<script>
+  async function checkAdmin() {
+    const res = await fetch('/api/admin/me');
+    const data = await res.json();
+    if (!data.isAdmin) { location.href = '/admin-login.html'; return false; }
+    return true;
+  }
+
+  function fmtBirth(l) {
+    const cal = l.is_lunar ? '음력' : '양력';
+    const date = `${l.birth_year}-${String(l.birth_month).padStart(2, '0')}-${String(l.birth_day).padStart(2, '0')}`;
+    const time = l.hour_unknown ? '시간모름' : (l.birth_hour != null ? `${String(l.birth_hour).padStart(2, '0')}:${String(l.birth_minute || 0).padStart(2, '0')}` : '시간모름');
+    return `${cal} ${date} ${time}`;
+  }
+
+  function row(l) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>#${l.id}</td>
+      <td>${l.created_at.slice(0, 16).replace('T', ' ')}</td>
+      <td>${l.name || '-'}</td>
+      <td>${l.gender || '-'}</td>
+      <td>${fmtBirth(l)}</td>
+      <td class="concern-cell">${l.concern ? l.concern.replace(/</g, '&lt;') : '-'}</td>
+      <td style="font-size:12px;">${l.contact || '-'}</td>
+      <td>
+        <select class="status-select" data-id="${l.id}">
+          <option value="new" ${l.status === 'new' ? 'selected' : ''}>신규</option>
+          <option value="contacted" ${l.status === 'contacted' ? 'selected' : ''}>상담중</option>
+          <option value="done" ${l.status === 'done' ? 'selected' : ''}>완료</option>
+        </select>
+      </td>
+    `;
+    return tr;
+  }
+
+  async function loadLeads() {
+    const res = await fetch('/api/admin/leads?limit=200');
+    const data = await res.json();
+    const tbody = document.getElementById('tbody');
+    const empty = document.getElementById('empty');
+    tbody.innerHTML = '';
+    if (!data.leads.length) { empty.classList.remove('hidden'); return; }
+    empty.classList.add('hidden');
+    data.leads.forEach((l) => tbody.appendChild(row(l)));
+  }
+
+  document.getElementById('tbody').addEventListener('change', async (e) => {
+    const sel = e.target.closest('.status-select');
+    if (!sel) return;
+    await fetch(`/api/admin/leads/${sel.dataset.id}/status`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: sel.value })
+    });
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    await fetch('/api/admin/logout', { method: 'POST' });
+    location.href = '/admin-login.html';
+  });
+
+  (async () => {
+    if (!(await checkAdmin())) return;
+    loadLeads();
+  })();
+</script>
+</body>
+</html>

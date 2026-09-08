@@ -87,6 +87,23 @@ db.exec(`
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
 
+  CREATE TABLE IF NOT EXISTS leads (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT,
+    gender TEXT,
+    birth_year INTEGER,
+    birth_month INTEGER,
+    birth_day INTEGER,
+    birth_hour INTEGER,
+    birth_minute INTEGER,
+    hour_unknown INTEGER NOT NULL DEFAULT 0,
+    is_lunar INTEGER NOT NULL DEFAULT 0,
+    concern TEXT,
+    contact TEXT,
+    status TEXT NOT NULL DEFAULT 'new',
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+
   CREATE TABLE IF NOT EXISTS saved_profiles (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL REFERENCES users(id),
