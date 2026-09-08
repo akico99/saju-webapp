@@ -37,7 +37,7 @@
   <div class="stat-row" id="summaryRow"></div>
 
   <table>
-    <thead><tr><th>일시</th><th>상품</th><th>회원</th><th>판매가</th><th>실제 원가</th><th>마진(참고)</th></tr></thead>
+    <thead><tr><th>일시</th><th>상품</th><th>회원</th><th>판매가</th><th>실제 원가</th><th>마진(참고)</th><th>파일</th></tr></thead>
     <tbody id="tbody"></tbody>
   </table>
   <div class="empty hidden" id="empty" style="text-align:center;padding:30px;color:var(--muted);">표시할 내역이 없습니다.</div>
@@ -55,6 +55,11 @@
 
   function fmtUsd(v) { return v == null ? '-' : '$' + v.toFixed(3); }
   function fmtKrw(v) { return v == null ? '-' : Math.round(v).toLocaleString('ko-KR') + '원'; }
+  function fmtBytes(n) {
+    if (n == null) return '';
+    if (n < 1024 * 1024) return (n / 1024).toFixed(0) + 'KB';
+    return (n / 1024 / 1024).toFixed(1) + 'MB';
+  }
 
   async function loadSummary() {
     const res = await fetch('/api/admin/orders/cost-summary');
@@ -83,6 +88,13 @@
     const tr = document.createElement('tr');
     const costKrw = o.llmCostUsd != null ? o.llmCostUsd * FX_KRW_PER_USD : null;
     const margin = o.priceKrw != null && costKrw != null ? o.priceKrw - costKrw : null;
+    const fileCell = o.fileExists
+      ? `<span style="color:var(--success);">있음</span> <span style="color:var(--muted);font-size:11px;">${fmtBytes(o.fileSizeBytes)}</span>
+         <div class="actions" style="margin-top:4px;">
+           <button type="button" class="approve-btn" data-action="dl" data-job="${o.jobId}">받기</button>
+           <button type="button" class="reject-btn" data-action="del" data-job="${o.jobId}">삭제</button>
+         </div>`
+      : `<span style="color:var(--danger);">없음</span>`;
     tr.innerHTML = `
       <td>${o.createdAt.slice(0, 16).replace('T', ' ')}</td>
       <td>${o.label || o.productKey}</td>
@@ -90,6 +102,7 @@
       <td>${fmtKrw(o.priceKrw)}</td>
       <td>${fmtUsd(o.llmCostUsd)}</td>
       <td class="margin ${margin != null && margin >= 0 ? 'good' : 'bad'}">${fmtKrw(margin)}</td>
+      <td>${fileCell}</td>
     `;
     return tr;
   }
@@ -104,6 +117,23 @@
     empty.classList.add('hidden');
     data.orders.forEach((o) => tbody.appendChild(row(o)));
   }
+
+  document.getElementById('tbody').addEventListener('click', async (e) => {
+    const btn = e.target.closest('button[data-action]');
+    if (!btn) return;
+    const jobId = btn.dataset.job;
+    if (btn.dataset.action === 'dl') {
+      location.href = `/api/admin/download/${jobId}`;
+      return;
+    }
+    if (btn.dataset.action === 'del') {
+      if (!confirm('이 주문의 결과 파일을 서버에서 삭제할까요? 주문 기록 자체는 남지만, 파일은 복구할 수 없어요.')) return;
+      const res = await fetch(`/api/admin/orders/${jobId}/file`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) { alert(data.error || '삭제 실패'); return; }
+      loadOrders();
+    }
+  });
 
   document.getElementById('logoutBtn').addEventListener('click', async () => {
     await fetch('/api/admin/logout', { method: 'POST' });

@@ -3,6 +3,8 @@
    검색·조회하고, 포인트를 수동으로 조정하거나 계정을 정지시킨다.
    별도 로그인(ADMIN_PASSWORD)이며 일반 사용자 세션과는 완전히 분리되어 있다. */
 const express = require('express');
+const fs = require('fs');
+const path = require('path');
 const points = require('../../db/points');
 const users = require('../../db/users');
 const orders = require('../../db/orders');
@@ -91,16 +93,53 @@ router.post('/admin/users/:id/status', requireAdmin, (req, res) => {
 });
 
 /* 완료된 주문 최근 내역 — 건별 실제 LLM 원가(llm_cost_usd)를 판매가(PRICES)와 함께
-   보여줘서 상품별 마진을 한눈에 확인하는 용도. */
+   보여줘서 상품별 마진을 한눈에 확인하는 용도. result_path가 실제로 디스크(영구
+   디스크)에 남아있는지도 같이 알려줘서 — "이 파일 사라졌나?"를 대표님이 직접
+   추측하지 않고 바로 확인할 수 있게 한다. */
 router.get('/admin/orders', requireAdmin, (req, res) => {
   const limit = Math.min(Number(req.query.limit) || 50, 200);
   const offset = Number(req.query.offset) || 0;
-  const rows = orders.listRecentDone({ limit, offset }).map((o) => ({
-    id: o.id, jobId: o.job_id, productKey: o.product_key, label: o.label,
-    userEmail: o.user_email, priceKrw: points.PRICES[o.product_key] || null,
-    llmCostUsd: o.llm_cost_usd, createdAt: o.created_at, finishedAt: o.finished_at
-  }));
+  const rows = orders.listRecentDone({ limit, offset }).map((o) => {
+    let fileExists = false, fileSizeBytes = null;
+    if (o.result_path) {
+      try {
+        const stat = fs.statSync(o.result_path);
+        fileExists = true;
+        fileSizeBytes = stat.size;
+      } catch (e) { /* 파일 없음 — fileExists: false로 둔다 */ }
+    }
+    return {
+      id: o.id, jobId: o.job_id, productKey: o.product_key, label: o.label,
+      userEmail: o.user_email, priceKrw: points.PRICES[o.product_key] || null,
+      llmCostUsd: o.llm_cost_usd, createdAt: o.created_at, finishedAt: o.finished_at,
+      fileExists, fileSizeBytes
+    };
+  });
   res.json({ orders: rows });
+});
+
+/* 관리자가 아무 주문의 결과 파일이나 직접 받아볼 수 있게(고객 지원·확인용) —
+   일반 다운로드(/api/download/:jobId)는 그 주문의 소유자만 받을 수 있어 관리자도
+   막힌다. */
+router.get('/admin/download/:jobId', requireAdmin, (req, res) => {
+  const order = orders.findByJobId(req.params.jobId);
+  if (!order || !order.result_path) return res.status(404).json({ error: '주문을 찾을 수 없습니다.' });
+  if (!fs.existsSync(order.result_path)) return res.status(410).json({ error: '파일이 서버에 없습니다.' });
+  res.download(order.result_path);
+});
+
+/* 디스크 용량 관리용 — 특정 주문의 결과 파일(디렉터리 전체)만 지운다. DB의 orders
+   행 자체는 건드리지 않는다(주문 이력은 남기고 실제 파일만 정리하는 용도). */
+router.delete('/admin/orders/:jobId/file', requireAdmin, (req, res) => {
+  const order = orders.findByJobId(req.params.jobId);
+  if (!order) return res.status(404).json({ error: '주문을 찾을 수 없습니다.' });
+  if (!order.result_path) return res.json({ ok: true });
+  try {
+    fs.rmSync(path.dirname(order.result_path), { recursive: true, force: true });
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: '파일 삭제 실패: ' + e.message });
+  }
 });
 
 /* 상품별 원가 요약 — 건수/평균/합계. 판매가(PRICES)를 같이 내려줘서 마진율 계산은
