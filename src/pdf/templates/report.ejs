@@ -13,7 +13,7 @@
 <%- include('partials/myeongsik-table', { engine }) %>
 
 <% chapters.forEach(function(chapter) { %>
-<%- include('partials/chapter', { chapter, engine }) %>
+<%- include('partials/chapter', { chapter, engine, getChapterKeywords, buildOhaengQuest }) %>
 <% }) %>
 
 <script><%- chartJsSource %></script>
@@ -25,6 +25,49 @@
     pending--;
     if (pending <= 0) window.__chartsReady = true;
   }
+  // 서버(charts.js)에서 만든 config는 JSON.stringify를 거쳐 여기로 오기 때문에
+  // 함수(플러그인)는 다 사라진다 — config.calloutData 같은 순수 데이터만 살아남고,
+  // 실제로 캔버스에 그리는 코드는 여기 클라이언트 쪽에 둔다.
+  function drawRoundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+  function calloutPlugin(callouts) {
+    return {
+      id: 'callouts',
+      afterDraw: function (chart) {
+        var meta = chart.getDatasetMeta(0);
+        var ctx = chart.ctx;
+        callouts.forEach(function (c) {
+          var point = meta.data[c.index];
+          if (!point) return;
+          var label = c.age + '세 · ' + c.phrase;
+          ctx.save();
+          ctx.font = "700 13px 'ReportGothic','Malgun Gothic',sans-serif";
+          var textWidth = ctx.measureText(label).width;
+          var boxW = textWidth + 18, boxH = 26;
+          var boxX = Math.min(Math.max(point.x - boxW / 2, 4), chart.width - boxW - 4);
+          var boxY = Math.max(point.y - boxH - 14, 4);
+          ctx.fillStyle = 'rgba(15,20,32,0.94)';
+          ctx.strokeStyle = '#c7a13a';
+          ctx.lineWidth = 1.2;
+          drawRoundRect(ctx, boxX, boxY, boxW, boxH, 7);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = '#ece2c4';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(label, boxX + boxW / 2, boxY + boxH / 2);
+          ctx.restore();
+        });
+      }
+    };
+  }
   function mount(canvasId, config) {
     var el = document.getElementById(canvasId);
     if (!el) return;
@@ -35,6 +78,9 @@
       id: 'doneSignal-' + canvasId,
       afterRender: function () { onDone(); }
     }];
+    if (config.calloutData && config.calloutData.length) {
+      config.plugins.push(calloutPlugin(config.calloutData));
+    }
     new Chart(el.getContext('2d'), config);
   }
   window.__chartsReady = false;

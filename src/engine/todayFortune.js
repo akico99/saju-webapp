@@ -171,4 +171,4 @@ function getTodayFortune(birth, now = new Date()) {
   };
 }
 
-module.exports = { getTodayFortune };
+module.exports = { getTodayFortune, OHAENG_COLOR, OHAENG_DIRECTION_ACTION, OHAENG_TASTE };

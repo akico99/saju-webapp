@@ -6,9 +6,26 @@
     第 <%= String(chapter.id).padStart(2,'0') %> 章
   </div>
   <h2><%= chapter.title %></h2>
+  <% var keywords = getChapterKeywords(chapter.id, engine); %>
+  <% if (keywords.length) { %>
+  <div class="chapter-keywords">
+    <% keywords.forEach(function(k) { %><span class="kw-chip"><%= k %></span><% }) %>
+  </div>
+  <% } %>
   <% chapter.text.split(/\n\n+/).forEach(function(para) { if (para.trim()) { %>
   <p><%- renderMarkup(para.trim()) %></p>
   <% } }) %>
+  <% if (chapter.id === 17) { %>
+  <div class="quest-card avoid-break">
+    <div class="quest-card-ttl">📱 오늘부터 실천할 개운 체크리스트</div>
+    <ul class="quest-list">
+      <% buildOhaengQuest(engine.yongshin.final.main).forEach(function(item) { %>
+      <li><span class="quest-box"></span><%= item %></li>
+      <% }) %>
+    </ul>
+    <p class="quest-hint">이 화면을 캡처해두고 매일 확인해보세요.</p>
+  </div>
+  <% } %>
   <% if (chapter.id === 7) { %>
   <% var firstDaewoon = engine.daewoon.find(function(d) { return d.ganZhi; }); %>
   <div class="chart-container avoid-break">

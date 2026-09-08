@@ -9,6 +9,8 @@ const { ohaengRadarConfig, shipsinDonutConfig, daewoonScoreLineConfig } = requir
 const { renderMarkup } = require('./textMarkup');
 const { getReportCss } = require('./reportCss');
 const { safeName } = require('./personName');
+const { getChapterKeywords } = require('./chapterKeywords');
+const { buildOhaengQuest } = require('./ohaengQuest');
 
 const TEMPLATE_PATH = path.join(__dirname, 'templates', 'report.ejs');
 const CHARTJS_PATH = path.join(__dirname, '..', '..', 'node_modules', 'chart.js', 'dist', 'chart.umd.min.js');
@@ -44,7 +46,7 @@ function renderHtml(engine, chapters, person, coverSummary) {
       engine, chapters, generatedDate,
       reportCss, chartJsSource, coverSummary,
       ohaengConfig, shipsinConfig, daewoonConfig,
-      renderMarkup, safeName
+      renderMarkup, safeName, getChapterKeywords, buildOhaengQuest
     },
     { filename: TEMPLATE_PATH }
   );

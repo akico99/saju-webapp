@@ -145,6 +145,32 @@ body {
 }
 .chapter p { margin: 0 0 5mm 0; text-align: justify; color: var(--text); }
 
+/* 챕터 도입부 키워드 칩 — 긴 줄글을 읽기 전에 이 장의 핵심 사실을 먼저 스캔할 수 있게. */
+.chapter-keywords { display: flex; flex-wrap: wrap; gap: 2.5mm; margin: 0 0 7mm; }
+.chapter-keywords .kw-chip {
+  font-size: 9.5pt; font-weight: 700; color: var(--gold);
+  border: 1px solid rgba(199,161,58,0.4); background: rgba(199,161,58,0.08);
+  border-radius: 999px; padding: 1.5mm 4mm;
+}
+
+/* 개운법(17장) 끝 — 캡처해서 매일 볼 수 있는 실천 체크리스트 카드.
+   .myeongsik-summary와 같은 좌측 금색 강조선 패턴으로 통일감을 준다. */
+.quest-card {
+  margin-top: 10mm; border: 1px solid var(--line); border-left: 4px solid var(--gold);
+  border-radius: 4mm; padding: 7mm 8mm; background: rgba(199,161,58,0.06);
+}
+.quest-card-ttl { font-size: 11.5pt; font-weight: 800; color: var(--star); margin-bottom: 5mm; }
+.quest-list { list-style: none; padding: 0; margin: 0; }
+.quest-list li {
+  display: flex; align-items: center; gap: 4mm; font-size: 11pt; color: var(--text);
+  padding: 2.2mm 0; border-bottom: 1px dotted var(--line);
+}
+.quest-list li:last-child { border-bottom: none; }
+.quest-box {
+  flex-shrink: 0; width: 4.5mm; height: 4.5mm; border: 1.4px solid var(--gold); border-radius: 1mm;
+}
+.quest-hint { font-size: 9pt; color: var(--muted); margin: 5mm 0 0; }
+
 /* 형광펜 강조(핵심 결론) — LLM이 **로 감싼 문구를 <mark>로 변환해 넣는다.
    브라우저 기본 mark 스타일(검은 글자 위 노란 배경)은 다크 테마와 안 맞아 직접 재정의한다. */
 mark {

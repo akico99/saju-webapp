@@ -144,8 +144,32 @@ function computeDaewoonScores(daewoon, yongshinMain) {
   });
 }
 
+// 점수 구간별 고정 문구 — LLM이 그때그때 만드는 게 아니라 todayFortune.js의 점수
+// 등급 문구와 같은 방식(고정 테이블)으로, 그래프 변곡점에 붙일 말풍선 라벨을 정한다.
+function scoreTierPhrase(score) {
+  if (score >= 80) return '성취의 황금기';
+  if (score >= 65) return '순조로운 흐름';
+  if (score >= 40) return '무난한 시기';
+  if (score >= 25) return '조심스러운 시기';
+  return '신중이 필요한 때';
+}
+
+// 전체 구간 중 가장 높은/낮은 지점만 골라 말풍선을 단다 — 지역 변곡점을 전부 달면
+// 8~10개 점 중 절반 가까이가 대상이 되어 오히려 복잡해진다.
+function findScoreCallouts(rows) {
+  if (rows.length < 2) return [];
+  let maxIdx = 0, minIdx = 0;
+  rows.forEach((r, i) => {
+    if (r.score > rows[maxIdx].score) maxIdx = i;
+    if (r.score < rows[minIdx].score) minIdx = i;
+  });
+  if (maxIdx === minIdx) return [{ index: maxIdx, ...rows[maxIdx], phrase: scoreTierPhrase(rows[maxIdx].score) }];
+  return [maxIdx, minIdx].map((idx) => ({ index: idx, ...rows[idx], phrase: scoreTierPhrase(rows[idx].score) }));
+}
+
 function daewoonScoreLineConfig(daewoon, yongshinMain) {
   const rows = computeDaewoonScores(daewoon, yongshinMain);
+  const callouts = findScoreCallouts(rows);
   return {
     type: 'line',
     data: {
@@ -164,9 +188,14 @@ function daewoonScoreLineConfig(daewoon, yongshinMain) {
         tension: 0.35
       }]
     },
+    // 함수는 아래에서 JSON.stringify로 클라이언트에 넘기는 과정에서 사라지므로,
+    // 여기선 직렬화 가능한 데이터만 담아 보내고 실제로 캔버스에 그리는 코드는
+    // report.ejs의 인라인 스크립트(클라이언트 쪽)에 둔다.
+    calloutData: callouts,
     options: {
       responsive: false,
       animation: false,
+      layout: { padding: { top: 30 } },
       plugins: {
         legend: { display: false },
         title: {
