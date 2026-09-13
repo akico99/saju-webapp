@@ -70,6 +70,8 @@ function buildChapterPrompt(chapter, engineResult, person, priorSummaries) {
     ? `\n\n## 이전 챕터 핵심 요지(중복 서술 방지용)\n${priorSummaries.map(s => `- ${s}`).join('\n')}`
     : '';
 
+  const angleBlock = chapter.angle ? `\n\n## 이 챕터만의 관점(다른 챕터와 겹치지 않게)\n${chapter.angle}` : '';
+
   const userMessage = `# 챕터: 제${chapter.id}장 "${chapter.title}"
 
 ## 이 챕터에서 쓸 수 있는 명식 데이터 (이 JSON에 없는 사실은 언급 금지)
@@ -79,13 +81,17 @@ ${JSON.stringify(engineSlice, null, 2)}
 
 ## 참고 해석 사전 (이 내용에 근거해 서술)
 ${refText || '(해당 챕터는 명식 데이터만으로 서술)'}
-${priorBlock}
+${priorBlock}${angleBlock}
 
 ## 이 사람 정보
 이름: ${person.name || '(익명)'} / 성별: ${person.gender || '(미상)'}
 
 ## 지시
-위 명식 데이터와 해석 사전만 근거로 "${chapter.title}" 챕터를 작성하세요. 분량은 한글 기준 ${chapter.targetWords}자에 최대한 가깝게(짧게 끝내지 말고 이 근처까지) 채워주세요. 부족하면 근거 데이터를 다른 각도(궁위·육친·개운법 등)에서 더 풀어써서 채우되, 빈 말로 늘리지는 마세요. 챕터 제목은 쓰지 말고 본문만 작성하세요.`;
+위 명식 데이터와 해석 사전만 근거로 "${chapter.title}" 챕터를 작성하세요. 분량은 한글 기준 ${chapter.targetWords}자에 최대한 가깝게(짧게 끝내지 말고 이 근처까지) 채워주세요. 부족하면 근거 데이터를 다른 각도(궁위·육친·개운법 등)에서 더 풀어써서 채우되, 빈 말로 늘리지는 마세요.
+
+일간·격국·용신·오행 분포 같은 기초 사실은 "이전 챕터 핵심 요지"에서 이미 여러 번 나왔다면 그 사실을 처음부터 다시 설명하지 말고, 이미 안다는 전제로 바로 이 챕터의 주제(${chapter.title})에 적용한 해석으로 들어가세요.
+
+챕터 마지막 문단은 반드시 이 챕터에서 실제로 다룬 내용을 압축한 "핵심 요약" 1~2문장과, 그 내용에 바로 이어지는 구체적인 실천 포인트 2개로 마무리하세요. "긍정적으로 생각하세요", "노력하세요" 같은 뻔한 조언이 아니라, 이 챕터에서 나온 근거(예: 특정 오행 부족, 특정 십신 강세 등)에 실제로 대응하는 행동이어야 합니다. 챕터 제목은 쓰지 말고 본문만 작성하세요.`;
 
   return userMessage;
 }

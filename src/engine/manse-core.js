@@ -61,19 +61,41 @@ function analyze(input, lib) {
   });
   Object.keys(shipsinWeighted).forEach(k => { shipsinWeighted[k] = Math.round(shipsinWeighted[k] * 10) / 10; });
 
+  // 대운/세운 기둥 하나(간지 2글자)의 십신·12운성을 원국 기둥과 동일한 방식으로 계산.
+  // 대운·세운은 "원국에 없던 새 기둥"이 일시적으로 얹히는 것으로 보고 똑같이 일간 기준
+  // 십신, 일간 기준 12운성을 적용한다(정통 감명 방식과 동일).
+  function shipsinAndUnseongFor(stem, branch) {
+    const stemShipsin = getShipsin(dayStem, stem);
+    const mainHidden = BRANCH_MAIN_STEM[branch];
+    const branchShipsin = mainHidden ? getShipsin(dayStem, mainHidden) : null;
+    const unseong = (UNSEONG_TABLE[dayStem] || {})[branch] || '';
+    return {
+      stemShipsin, stemShipsinKo: stemShipsin ? SHIPSIN_KO[stemShipsin] : null,
+      branchShipsin, branchShipsinKo: branchShipsin ? SHIPSIN_KO[branchShipsin] : null,
+      unseong
+    };
+  }
+
   // 대운 (성별 기반 순행/역행은 lunar-javascript가 처리)
   const yun = ec.getYun(gender === '남' ? 1 : 0);
-  const daewoon = yun.getDaYun().slice(0, 9).map(d => ({
-    startYear: d.getStartYear(),
-    startAge: d.getStartAge(),
-    ganZhi: d.getGanZhi(),
-    stem: d.getGanZhi()[0],
-    branch: d.getGanZhi()[1],
-    // 세운(1년 단위) — 이 대운 구간에 속한 개별 연도들. 1년 단위 그래프에 쓴다.
-    years: d.getLiuNian(10).map(l => ({
-      year: l.getYear(), age: l.getAge(), ganZhi: l.getGanZhi()
-    }))
-  }));
+  const daewoon = yun.getDaYun().slice(0, 9).map(d => {
+    const ganZhi = d.getGanZhi();
+    const stem = ganZhi[0], branch = ganZhi[1];
+    return {
+      startYear: d.getStartYear(),
+      startAge: d.getStartAge(),
+      ganZhi, stem, branch,
+      ...shipsinAndUnseongFor(stem, branch),
+      // 세운(1년 단위) — 이 대운 구간에 속한 개별 연도들. 1년 단위 그래프에 쓴다.
+      years: d.getLiuNian(10).map(l => {
+        const yGanZhi = l.getGanZhi();
+        return {
+          year: l.getYear(), age: l.getAge(), ganZhi: yGanZhi,
+          ...shipsinAndUnseongFor(yGanZhi[0], yGanZhi[1])
+        };
+      })
+    };
+  });
 
   // 기둥별 십신/12운성 (일지 자신은 십신 없음 — 일간 기준점이므로)
   const pillars = { year: yearPillar, month: monthPillar, day: dayPillar, hour: hourPillar };
