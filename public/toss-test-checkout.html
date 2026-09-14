@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="/favicon.png">
+<title>사주보는 수달 — 결제(테스트)</title>
+<link rel="stylesheet" href="/theme.css">
+<style>
+  .order-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); padding: 16px 18px; margin-bottom: 18px; }
+  .order-card .name { font-size: 15px; font-weight: 800; color: var(--ink); margin-bottom: 4px; }
+  .order-card .desc { font-size: 12.5px; color: var(--muted); margin-bottom: 10px; }
+  .order-card .amount { font-size: 20px; font-weight: 800; color: var(--ink); text-align: right; }
+  .test-badge {
+    display: inline-block; font-size: 11px; font-weight: 800; color: var(--danger);
+    background: var(--danger-soft); padding: 4px 10px; border-radius: var(--radius-pill); margin-bottom: 14px;
+  }
+</style>
+</head>
+<body>
+<div class="app no-nav">
+  <header>
+    <a class="back" href="/">←</a>
+    <div class="ttl">결제하기</div>
+    <a class="home-link" href="/" aria-label="홈으로"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M4 11.5L12 4l8 7.5"/><path d="M6 10v9.5h12V10"/></svg></a>
+  </header>
+  <main>
+    <span class="test-badge">TEST MODE · 실제 결제 아님</span>
+
+    <div class="order-card">
+      <div class="name">평생사주 100p 정식 리포트</div>
+      <div class="desc">실제 만세력 엔진으로 계산한 명식을 바탕으로 만든 18챕터 정식 리포트</div>
+      <div class="amount">14,900원</div>
+    </div>
+
+    <button type="button" id="payBtn" disabled>결제 준비 중...</button>
+    <div class="error-box hidden" id="errorBox" style="margin-top:12px;"></div>
+  </main>
+</div>
+
+<script src="https://js.tosspayments.com/v2/standard"></script>
+<script>
+  const AMOUNT = 14900;
+  const ORDER_NAME = '평생사주 100p 정식 리포트';
+
+  function randomOrderId() {
+    return 'order_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10);
+  }
+
+  async function init() {
+    const errorBox = document.getElementById('errorBox');
+    const payBtn = document.getElementById('payBtn');
+    try {
+      const keyRes = await fetch('/api/toss-test/client-key');
+      const { clientKey } = await keyRes.json();
+
+      const tossPayments = TossPayments(clientKey);
+      // 비회원 테스트 결제라 익명 customerKey를 사용한다.
+      const payment = tossPayments.payment({ customerKey: TossPayments.ANONYMOUS });
+
+      payBtn.disabled = false;
+      payBtn.textContent = '14,900원 결제하기';
+      payBtn.addEventListener('click', async () => {
+        payBtn.disabled = true;
+        payBtn.textContent = '결제창 여는 중...';
+        try {
+          await payment.requestPayment({
+            method: 'CARD',
+            amount: { value: AMOUNT, currency: 'KRW' },
+            orderId: randomOrderId(),
+            orderName: ORDER_NAME,
+            successUrl: window.location.origin + '/toss-test-success.html',
+            failUrl: window.location.origin + '/toss-test-fail.html',
+            customerName: '테스트 고객',
+            customerEmail: 'test@sajuotter.com'
+          });
+        } catch (e) {
+          payBtn.disabled = false;
+          payBtn.textContent = '14,900원 결제하기';
+          if (e.code !== 'USER_CANCEL') {
+            errorBox.textContent = e.message || '결제 요청 중 오류가 발생했어요.';
+            errorBox.classList.remove('hidden');
+          }
+        }
+      });
+    } catch (e) {
+      errorBox.textContent = '결제창을 불러오지 못했어요: ' + e.message;
+      errorBox.classList.remove('hidden');
+    }
+  }
+  init();
+</script>
+</body>
+</html>

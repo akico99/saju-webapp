@@ -21,6 +21,7 @@ const newTopicsRouter = require('./routes/newTopics');
 const profilesRouter = require('./routes/profiles');
 const dateSelectRouter = require('./routes/dateSelect');
 const lifeTopicsRouter = require('./routes/lifeTopics');
+const tossTestRouter = require('./routes/tossTest');
 
 const app = express();
 app.use(express.json());
@@ -50,5 +51,6 @@ app.use('/api', newTopicsRouter);
 app.use('/api', profilesRouter);
 app.use('/api', dateSelectRouter);
 app.use('/api', lifeTopicsRouter);
+app.use('/api', tossTestRouter);
 
 module.exports = app;
