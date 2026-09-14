@@ -79,6 +79,18 @@ router.get('/admin/storage-check', requireAdmin, (req, res) => {
   });
 });
 
+// 자동(24시간 주기) 백업과 별개로, 지금 당장 백업 메일이 잘 가는지 확인하고 싶을 때
+// 관리자가 수동으로 트리거하는 용도.
+router.post('/admin/backup/run', requireAdmin, async (req, res) => {
+  const { backupDbToEmail } = require('../../jobs/backupDb');
+  try {
+    const result = await backupDbToEmail();
+    res.json({ ok: true, ...result });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 router.get('/admin/points/pending', requireAdmin, (req, res) => {
   res.json({ requests: points.listPendingRequests() });
 });

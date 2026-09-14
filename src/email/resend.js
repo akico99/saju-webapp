@@ -12,14 +12,17 @@ const RESEND_FROM_NAME = process.env.RESEND_FROM_NAME || '길잡이 여울';
 // 메일함으로 Reply-To를 걸어서, 발신 표시는 noreply@로 유지하되 답장은 여기로 오게 한다.
 const RESEND_REPLY_TO = process.env.RESEND_REPLY_TO || 'sooky2001@gmail.com';
 
-async function sendEmail({ to, subject, html }) {
+// attachments: [{ filename, content }] — content는 base64 인코딩된 문자열(Resend 규격).
+async function sendEmail({ to, subject, html, attachments }) {
   if (!RESEND_API_KEY) {
     throw new Error('이메일 발송이 아직 설정되지 않았습니다 (RESEND_API_KEY 없음).');
   }
+  const body = { from: `${RESEND_FROM_NAME} <${RESEND_FROM}>`, to, subject, html, reply_to: RESEND_REPLY_TO };
+  if (attachments && attachments.length) body.attachments = attachments;
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from: `${RESEND_FROM_NAME} <${RESEND_FROM}>`, to, subject, html, reply_to: RESEND_REPLY_TO })
+    body: JSON.stringify(body)
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
