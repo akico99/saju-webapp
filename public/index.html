@@ -13,7 +13,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" type="image/png" href="/favicon.png">
-<title>사주보는 수달 — 990원부터 보는 오늘의 사주</title>
+<title>사주보는 수달 — 고민에서, 나만의 방향으로</title>
 <link rel="stylesheet" href="/theme.css">
 </head>
 <body>
@@ -27,10 +27,8 @@
           <a href="/login.html">로그인</a>
         </div>
         <div class="menu-btn-wrap">
-          <span class="menu-hook" id="menuHook">더 궁금하다면?</span>
           <button class="menu-btn" id="menuBtn" aria-label="전체 메뉴 열기">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
-            <span class="menu-dot" id="menuDot"></span>
           </button>
         </div>
       </div>
@@ -49,6 +47,10 @@
       <div class="menu-section-ttl">무료로 먼저 보기</div>
       <a href="/today-preview.html" id="menuTodayFortune">오늘의 운세</a>
       <a href="/life-graph.html">인생 그래프</a>
+    </div>
+    <div class="menu-section">
+      <div class="menu-section-ttl">전체 서비스</div>
+      <a href="/services.html">서비스 전체 둘러보기</a>
     </div>
     <div class="menu-section">
       <div class="menu-section-ttl">궁금한 사주</div>
@@ -99,190 +101,51 @@
     <div class="main-hero-copy">
       <p class="eyebrow">고민에서, 나만의 방향으로</p>
       <h1>요즘 가장 마음에<br>걸리는 건 무엇인가요?</h1>
-      <p class="lead">돈, 직업, 관계, 중요한 날짜까지.<br>가장 궁금한 고민 하나부터 확인해보세요.</p>
+      <p class="lead">돈, 직업, 관계, 중요한 날짜까지.<br>지금 필요한 흐름부터 무료로 확인해보세요.</p>
     </div>
+  </section>
+
+  <div class="today-fortune-card hero-free-card" id="todayFortuneCard">
+    <div class="row-top">
+      <span class="eyebrow">오늘의 운세</span>
+      <span class="free-badge">무료</span>
+    </div>
+    <h3>로그인 없이 지금 바로 볼 수 있어요</h3>
+    <p>생년월일만 입력하면 오늘 하루의 흐름을 바로 알려드려요.</p>
+    <a class="login-cta" href="/today-preview.html">무료로 사주 보기 →</a>
+  </div>
+
+  <section id="topics">
+    <div class="section-head"><h2>궁금한 주제 선택하기</h2></div>
+    <p class="section-lead">고민 하나부터 골라보세요. 그 흐름부터 바로 확인할 수 있어요.</p>
     <div class="concern-list">
-      <a class="concern-card" href="quick.html?topic=career">
+      <a class="concern-card" href="/quick.html?topic=career">
         <span class="num">01</span>
         <span class="txt"><strong>직업과 이직</strong><em>지금 버틸까, 새로운 일을 찾을까?</em></span>
         <span class="arrow">→</span>
       </a>
-      <a class="concern-card" href="life-topics.html?topic=wealth">
+      <a class="concern-card" href="/life-topics.html?topic=wealth">
         <span class="num">02</span>
         <span class="txt"><strong>돈과 재물</strong><em>열심히 버는데, 왜 남는 게 없을까?</em></span>
         <span class="arrow">→</span>
       </a>
-      <a class="concern-card" href="quick.html?topic=relationship">
+      <a class="concern-card" href="/quick.html?topic=relationship">
         <span class="num">03</span>
         <span class="txt"><strong>연애와 관계</strong><em>왜 같은 지점에서 자꾸 엇갈릴까?</em></span>
         <span class="arrow">→</span>
       </a>
-      <a class="concern-card" href="date-select.html?occasion=moving">
+      <a class="concern-card" href="/date-select.html?occasion=moving">
         <span class="num">04</span>
         <span class="txt"><strong>중요한 날짜</strong><em>새 출발, 어떤 날로 정하면 좋을까?</em></span>
         <span class="arrow">→</span>
       </a>
     </div>
-    <a class="hero-browse-link" href="#products">전체 서비스 둘러보기 →</a>
   </section>
 
-  <div class="banner-slider">
-    <div class="banner-track" id="bannerTrack"></div>
-    <div class="banner-dots" id="bannerDots"></div>
-    <button type="button" class="banner-nav prev" id="bannerPrev" aria-label="이전 배너">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
-    </button>
-    <button type="button" class="banner-nav next" id="bannerNext" aria-label="다음 배너">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
-    </button>
+  <div class="hero-actions-footer">
+    <a class="hero-browse-link" href="/services.html">전체 서비스 둘러보기 →</a>
+    <small>무료 요약 · 회원가입 없이 체험</small>
   </div>
-
-  <div class="today-fortune-card" id="todayFortuneCard">
-    <div class="row-top">
-      <span class="eyebrow">오늘의 운세</span>
-      <span class="free-badge">무료</span>
-    </div>
-    <h3 id="tfTitle">로그인 없이 지금 바로 볼 수 있어요</h3>
-    <p id="tfDesc">생년월일만 입력하면 오늘 하루의 흐름을 바로 알려드려요. 매일 자동으로 받아보고 싶으면 나중에 저장해두면 돼요.</p>
-    <a class="login-cta" id="tfCta" href="/today-preview.html">지금 바로 보기 →</a>
-  </div>
-
-  <a class="today-fortune-card" href="/life-graph.html">
-    <div class="row-top">
-      <span class="eyebrow">인생 그래프</span>
-      <span class="free-badge">무료</span>
-    </div>
-    <h3>내 인생, 흐름으로 한눈에 보기</h3>
-    <p>대운·세운이 바뀔 때마다 내 기운이 어떻게 출렁이는지 그래프 하나로 확인해보세요.</p>
-    <span class="login-cta">그래프 보러가기 →</span>
-  </a>
-
-  <div class="stat-counter" id="statCounter" hidden>
-    <div class="num"><span id="statCounterNum">0</span><span class="unit">건</span></div>
-    <div class="label">실제 만세력으로 완성된 리포트</div>
-  </div>
-
-  <section id="products">
-    <div class="section-head"><h2>궁금한 사주, 골라보기</h2></div>
-    <p class="section-lead">가벼운 질문 하나부터 100페이지 정식 리포트까지, 필요한 만큼만 골라서 볼 수 있어요.</p>
-
-    <div class="tile-grid">
-      <a class="tile" href="life-topics.html?topic=wealth">
-        <img class="tile-img" src="/tiles/wealth.png" alt="재물운">
-        <div class="name">재물운</div>
-        <div class="desc">돈이 들어오고 나가는 흐름을 지금 바로</div>
-        <div class="price">990원</div>
-      </a>
-      <a class="tile" href="life-topics.html?topic=compat">
-        <span class="badge hot">인기</span>
-        <img class="tile-img" src="/tiles/compat.png" alt="궁합운">
-        <div class="name">궁합운</div>
-        <div class="desc">지금 인연의 상성과 관계가 나아갈 때</div>
-        <div class="price">2,900원</div>
-      </a>
-      <a class="tile" href="life-topics.html?topic=health">
-        <img class="tile-img" src="/tiles/health.png" alt="건강운">
-        <div class="name">건강운</div>
-        <div class="desc">타고난 체질과 맞춤 루틴이 궁금할 때</div>
-        <div class="price">990원</div>
-      </a>
-      <a class="tile" href="lifetime-report.html">
-        <img class="tile-img" src="/tiles/lifetime.png" alt="평생사주">
-        <div class="name">평생사주</div>
-        <div class="desc">태어난 순간부터 지금까지, 100페이지 정식 리포트</div>
-        <div class="price">14,900원</div>
-      </a>
-    </div>
-  </section>
-
-  <section id="dateSelect">
-    <div class="section-head"><h2>언제가 좋을까, 날짜로 보는 사주</h2></div>
-    <p class="section-lead">이사·개업·결혼·임신·출산처럼 중요한 순간, 날짜부터 챙길 것들까지 담은 리포트를 만들어드려요.</p>
-    <div class="tile-grid">
-      <a class="tile" href="date-select.html?occasion=moving">
-        <img class="tile-img" src="/tiles/moving.png" alt="이사">
-        <div class="name">이사 리포트</div>
-        <div class="desc">좋은 날짜와 방향, 첫 물건까지</div>
-        <div class="price">990원</div>
-      </a>
-      <a class="tile" href="date-select.html?occasion=opening">
-        <img class="tile-img" src="/tiles/opening.png" alt="개업">
-        <div class="name">개업 리포트</div>
-        <div class="desc">좋은 날짜와 공간 세팅, 마음가짐까지</div>
-        <div class="price">990원</div>
-      </a>
-      <a class="tile" href="date-select.html?occasion=wedding">
-        <img class="tile-img" src="/tiles/wedding.png" alt="결혼">
-        <div class="name">결혼 리포트</div>
-        <div class="desc">혼인신고 좋은 날과 두 사람의 궁합</div>
-        <div class="price">990원</div>
-      </a>
-      <a class="tile" href="date-select.html?occasion=birth">
-        <img class="tile-img" src="/tiles/birth.png" alt="임신·출산">
-        <div class="name">임신·출산 리포트</div>
-        <div class="desc">오행이 갖춰지는 때와 아이의 기질</div>
-        <div class="price">990원</div>
-      </a>
-    </div>
-  </section>
-
-  <section id="packages">
-    <div class="section-head"><h2>연결된 고민은 함께</h2></div>
-    <p class="section-lead">하나의 선택에는 여러 흐름이 얽혀 있어요. 관련된 질문을 묶어봤어요. 가격은 각 상품 개별 가격 그대로예요.</p>
-    <div class="pack-list">
-      <article class="pack-card">
-        <div class="pack-head">
-          <h3>커리어 방향팩</h3>
-          <p>일을 바꾸기 전에, 나의 일과 돈을 함께.</p>
-        </div>
-        <ul class="pack-items">
-          <li><a href="quick.html?topic=career">직업·적성운 <span>990원</span></a></li>
-          <li><a href="career-timing.html">이직 시기 <span>990원</span></a></li>
-          <li><a href="life-topics.html?topic=wealth">재물운 <span>990원</span></a></li>
-        </ul>
-      </article>
-      <article class="pack-card">
-        <div class="pack-head">
-          <h3>관계 이해팩</h3>
-          <p>나의 관계 방식부터 두 사람의 차이까지.</p>
-        </div>
-        <ul class="pack-items">
-          <li><a href="quick.html?topic=relationship">인간관계 <span>990원</span></a></li>
-          <li><a href="life-topics.html?topic=compat">궁합운 <span>2,900원</span></a></li>
-          <li><a href="reunion-check.html">재회 가능성 <span>990원</span></a></li>
-        </ul>
-      </article>
-      <article class="pack-card">
-        <div class="pack-head">
-          <h3>새출발 준비팩</h3>
-          <p>새 공간, 새 일. 준비의 방향을 한 번에.</p>
-        </div>
-        <ul class="pack-items">
-          <li><a href="date-select.html?occasion=opening">개업 리포트 <span>990원</span></a></li>
-          <li><a href="quick.html?topic=career">직업·적성운 <span>990원</span></a></li>
-          <li><a href="life-topics.html?topic=wealth">재물운 <span>990원</span></a></li>
-        </ul>
-      </article>
-    </div>
-  </section>
-
-  <a class="today-fortune-card" href="lifetime-report.html">
-    <div class="row-top">
-      <span class="eyebrow">평생사주 100페이지 정식 리포트</span>
-      <span class="free-badge">3초 요약카드 무료 포함</span>
-    </div>
-    <h3>태어난 순간부터 지금까지, 인생 전체를 18장으로</h3>
-    <p>14,900원 · 지금까지 쌓인 만세력·격국·용신·형충회합을 전부 담은 정식 리포트예요.</p>
-    <span class="login-cta">100페이지 리포트 보러가기 →</span>
-  </a>
-
-  <section id="assure">
-    <div class="assure">
-      <div><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 9.5h16"/><path d="M9 13.5l1.6 1.6L15 11"/></svg></div><p>실제 만세력<br>엔진 계산</p></div>
-      <div><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 4.5H5v4.5L14 18l4.5-4.5-9-9z"/><circle cx="7.7" cy="7.2" r="1" fill="currentColor" stroke="none"/><path d="M3 3l18 18"/></svg></div><p>부적·굿<br>추가 결제 없음</p></div>
-      <div><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg></div><p>참고용 자료,<br>단정하지 않음</p></div>
-    </div>
-  </section>
 
   <footer>
     <img class="brand-logo" src="/logo.png" alt="사주보는 수달">
@@ -297,170 +160,36 @@
   </footer>
 
   <div class="bottom-fade"></div>
-  <div class="scroll-hint" id="scrollHint" aria-hidden="true">
-    <span>더 궁금하다면</span>
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-  </div>
   <nav class="bottom-nav">
     <a href="#top" class="active"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5L12 4l8 7.5"/><path d="M6 10v9.5h12V10"/></svg></span>홈</a>
-    <a href="#products"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l1 12H5z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg></span>상품</a>
-    <a href="compat.html"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="12" r="5"/><circle cx="15" cy="12" r="5"/></svg></span>궁합</a>
+    <a href="/services.html#products"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l1 12H5z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg></span>상품</a>
+    <a href="/compat.html"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="12" r="5"/><circle cx="15" cy="12" r="5"/></svg></span>궁합</a>
     <a href="/mypage.html"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c0-3.9 3.1-6.5 7-6.5s7 2.6 7 6.5"/></svg></span>마이</a>
   </nav>
 
   <div class="toast" id="toast"></div>
-
-  <div class="wizard-overlay" id="wizardOverlay"></div>
-  <div class="wizard-modal" id="wizardModal" role="dialog" aria-modal="true" aria-label="오늘의 운세 무료로 보기">
-    <div class="wizard-head">
-      <button class="wizard-back" id="wizardBack" type="button" aria-label="이전 단계">‹</button>
-      <div class="wizard-progress"><div class="wizard-progress-fill" id="wizardProgressFill"></div></div>
-      <button class="wizard-close" id="wizardClose" type="button" aria-label="닫기">×</button>
-    </div>
-    <div class="wizard-step-label" id="wizardStepLabel"></div>
-
-    <div class="wizard-bubble">
-      <img class="wizard-mascot" src="/logo.png" alt="">
-      <p id="wizardMsg"></p>
-    </div>
-
-    <div id="wizardBody">
-      <div class="wizard-step" data-step="name">
-        <div class="field">
-          <label>이름 (선택)</label>
-          <input type="text" id="wName" placeholder="홍길동" autocomplete="off">
-          <p class="hint">이름은 사주 계산과는 관계없어요 — 결과에서 편하게 불러드릴 이름만 적어주세요. 그냥 넘어가도 괜찮아요.</p>
-        </div>
-      </div>
-      <div class="wizard-step" data-step="gender" hidden>
-        <div class="field">
-          <label>성별</label>
-          <div class="wizard-choice-row" id="wGenderRow">
-            <button type="button" class="wizard-choice" data-value="남">남성</button>
-            <button type="button" class="wizard-choice" data-value="여">여성</button>
-          </div>
-          <p class="hint">사주 계산 기준을 맞추기 위한 정보예요.</p>
-        </div>
-      </div>
-      <div class="wizard-step" data-step="calendar" hidden>
-        <div class="field">
-          <label>양력 · 음력</label>
-          <div class="wizard-choice-row" id="wCalendarRow">
-            <button type="button" class="wizard-choice" data-value="양력">양력</button>
-            <button type="button" class="wizard-choice" data-value="음력">음력</button>
-          </div>
-        </div>
-      </div>
-      <div class="wizard-step" data-step="birth" hidden>
-        <div class="field">
-          <label>생년월일</label>
-          <div class="date-inputs">
-            <input type="number" id="wYear" placeholder="년" min="1900" max="2100">
-            <input type="number" id="wMonth" placeholder="월" min="1" max="12">
-            <input type="number" id="wDay" placeholder="일" min="1" max="31">
-          </div>
-        </div>
-      </div>
-      <div class="wizard-step" data-step="time" hidden>
-        <div class="field">
-          <label>태어난 시간</label>
-          <div class="date-inputs">
-            <input type="number" id="wHour" placeholder="시" min="0" max="23">
-            <input type="number" id="wMinute" placeholder="분" min="0" max="59">
-          </div>
-          <label class="checkbox-field"><input type="checkbox" id="wHourUnknown"> 태어난 시간을 몰라요</label>
-        </div>
-      </div>
-
-      <div class="error-box hidden" id="wizardError"></div>
-
-      <div class="wizard-step wizard-result" data-step="result" hidden>
-        <div class="wizard-result-card">
-          <div class="eyebrow" id="wResultDate">오늘의 운세</div>
-          <h3 id="wResultTitle"></h3>
-          <p id="wResultDesc"></p>
-        </div>
-        <div class="wizard-upsell">
-          <p class="wizard-upsell-lead">오늘 하루만 살짝 보여드린 맛보기예요. 진짜 궁금한 건 따로 있죠?</p>
-          <a class="wizard-cta wizard-cta-primary" href="/quick.html?topic=love">990원으로 애정운 빠르게 보기 →</a>
-          <a class="wizard-cta wizard-cta-secondary" href="/lifetime-report.html">평생사주 100페이지 정식 리포트 보기</a>
-        </div>
-      </div>
-    </div>
-
-    <button type="button" class="wizard-next" id="wizardNext">다음</button>
-  </div>
 </div>
 
 <script>
-  function showToast(msg) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.classList.add('show');
-    clearTimeout(window.__toastTimer);
-    window.__toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
-  }
-
   async function loadAccountState() {
     try {
       const res = await fetch('/api/auth/me');
       const data = await res.json();
       const accountArea = document.getElementById('accountArea');
-      const tfCta = document.getElementById('tfCta');
-      const tfTitle = document.getElementById('tfTitle');
-      const tfDesc = document.getElementById('tfDesc');
-
       if (!data.user) return; // 로그아웃 상태 — 기본 마크업(로그인 버튼) 그대로 둠
 
       accountArea.innerHTML = `
         <span class="point-pill">${data.user.pointBalance.toLocaleString('ko-KR')}P</span>
         <a href="/mypage.html">마이페이지</a>
       `;
-      // 로그인 상태에서도 햄버거 메뉴의 "오늘의 운세"가 계속 비로그인 미리보기로 가던
-      // 버그 — 로그인 확인되면 실제 운세 페이지로 바꿔준다.
       const menuTodayFortune = document.getElementById('menuTodayFortune');
       if (menuTodayFortune) menuTodayFortune.href = '/today-fortune.html';
       document.getElementById('menuLogoutSection').classList.remove('hidden');
-
-      if (!data.user.birth) {
-        tfTitle.textContent = '생년월일을 등록하면 오늘의 운세가 열려요';
-        tfDesc.textContent = '마이페이지에서 생년월일시를 등록해주세요.';
-        tfCta.textContent = '마이페이지로 →';
-        tfCta.href = '/mypage.html';
-        return;
-      }
-
-      const fRes = await fetch('/api/today-fortune');
-      const fData = await fRes.json();
-      if (fRes.ok) {
-        tfTitle.textContent = `${fData.fortune.score}점 · ${fData.fortune.title}`;
-        tfDesc.textContent = fData.fortune.tip;
-        tfCta.textContent = '오늘의 운세 더 보기 →';
-        tfCta.href = '/today-fortune.html';
-      }
     } catch (e) {
-      // 계정 상태 확인 실패해도 스토어 자체는 정상 노출
+      // 계정 상태 확인 실패해도 페이지 자체는 정상 노출
     }
   }
   loadAccountState();
-
-  // 실제 완료된 주문 건수를 후기 대신 신뢰 신호로 보여준다 — 지어낸 숫자가 아니라
-  // orders 테이블의 진짜 카운트(GET /api/orders/count). 서비스 초반에는 숫자가
-  // 너무 작아서(2026-09) 오히려 "안 팔리는 곳"으로 보일 수 있어 대표님 요청으로
-  // 잠시 꺼둔다 — 나중에 주문이 충분히 쌓이면 STAT_COUNTER_ENABLED만 true로
-  // 바꾸면 바로 다시 켜진다(로직·API는 그대로 둠).
-  const STAT_COUNTER_ENABLED = false;
-  const STAT_COUNTER_MIN = 10;
-  (async function loadStatCounter() {
-    if (!STAT_COUNTER_ENABLED) return;
-    try {
-      const res = await fetch('/api/orders/count');
-      const data = await res.json();
-      if (!res.ok || !(data.count >= STAT_COUNTER_MIN)) return;
-      document.getElementById('statCounterNum').textContent = data.count.toLocaleString('ko-KR');
-      document.getElementById('statCounter').hidden = false;
-    } catch (e) { /* 실패해도 조용히 안 보여줄 뿐, 페이지 전체엔 영향 없음 */ }
-  })();
 
   document.getElementById('menuLogoutBtn').addEventListener('click', async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
@@ -472,37 +201,11 @@
     const overlay = document.getElementById('menuOverlay');
     const drawer = document.getElementById('menuDrawer');
     const closeBtn = document.getElementById('menuCloseBtn');
-    const hook = document.getElementById('menuHook');
-    const dot = document.getElementById('menuDot');
-
-    // 메뉴 안에 궁합·택일 같은 다양한 주제가 숨어 있는데 아이콘만 봐서는 그걸 모른다 —
-    // 그래서 문구를 몇 개 돌려가며 살짝 튀어 보이게 해서 클릭을 유도한다. 한 번이라도
-    // 메뉴를 열어본 사람에게는 더 이상 보여줄 필요가 없어서 localStorage로 기억해둔다.
-    const HOOK_PHRASES = ['더 궁금하다면?', '이런 운도 있어요', '다른 사주도 볼까요?'];
-    let hookTimer = null;
-    function stopHook() {
-      clearInterval(hookTimer);
-      if (hook) hook.classList.add('hidden');
-      if (dot) dot.classList.add('hidden');
-    }
-    if (hook && dot) {
-      if (localStorage.getItem('menuHookSeen') === '1') {
-        stopHook();
-      } else {
-        let hookIdx = 0;
-        hookTimer = setInterval(() => {
-          hookIdx = (hookIdx + 1) % HOOK_PHRASES.length;
-          hook.textContent = HOOK_PHRASES[hookIdx];
-        }, 2600);
-      }
-    }
 
     function open() {
       overlay.classList.add('open');
       drawer.classList.add('open');
       document.body.style.overflow = 'hidden';
-      try { localStorage.setItem('menuHookSeen', '1'); } catch (e) { /* 저장 실패해도 메뉴는 정상 동작 */ }
-      stopHook();
     }
     function close() {
       overlay.classList.remove('open');
@@ -513,328 +216,6 @@
     closeBtn.addEventListener('click', close);
     overlay.addEventListener('click', close);
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
-  })();
-
-  (function initScrollHint() {
-    const hint = document.getElementById('scrollHint');
-    const footer = document.querySelector('footer');
-    if (!hint || !footer || !('IntersectionObserver' in window)) return;
-    const observer = new IntersectionObserver(([entry]) => {
-      hint.classList.toggle('hidden-hint', entry.isIntersecting);
-    }, { rootMargin: '0px 0px -20% 0px' });
-    observer.observe(footer);
-  })();
-
-  // 관리자가 배너를 자유롭게 추가/삭제할 수 있어서(admin-banners.html), 개수를 6개로
-  // 가정하고 마크업에 하드코딩하지 않는다 — /api/banners가 주는 배열 그대로 슬라이드를
-  // 만든다. API가 실패하는 극히 드문 경우에도 히어로가 완전히 비어보이지 않도록 예전
-  // 기본 6개 구성을 폴백으로 둔다.
-  const FALLBACK_BANNERS = [
-    { image: '/banners/1.png', imagePosition: '50% 50%', eyebrow: "TODAY'S PICK", headline: '깊게 볼 필요 없을 땐, 990원', price: '오늘의 나 — 총평 빠른 리딩', cta: '지금 보기 →', href: 'quick.html?topic=total', textAlign: 'left', textVAlign: 'bottom', textScale: 1 },
-    { image: '/banners/2.png', imagePosition: '50% 50%', eyebrow: 'HOT', headline: '지금 인연의 흐름이 궁금할 때', price: '애정운 빠른 리딩 · 990원', cta: '지금 보기 →', href: 'quick.html?topic=love', textAlign: 'left', textVAlign: 'bottom', textScale: 1 },
-    { image: '/banners/3.png', imagePosition: '50% 50%', eyebrow: 'COMPATIBILITY', headline: '둘이 보는 진짜 궁합', price: '궁합 리포트 · 4,900원', cta: '지금 보기 →', href: 'compat.html', textAlign: 'left', textVAlign: 'bottom', textScale: 1 },
-    { image: '/banners/4.png', imagePosition: '50% 50%', eyebrow: 'MONEY', headline: '돈이 들어오고 나가는 흐름', price: '재물운 빠른 리딩 · 990원', cta: '지금 보기 →', href: 'quick.html?topic=wealth', textAlign: 'left', textVAlign: 'bottom', textScale: 1 },
-    { image: '/banners/5.png', imagePosition: '50% 50%', eyebrow: 'FREE', headline: '내 인생, 흐름으로 한눈에 보기', price: '인생 그래프 · 무료 체험', cta: '무료로 보기 →', href: 'life-graph.html', textAlign: 'left', textVAlign: 'bottom', textScale: 1 },
-    { image: '/banners/6.png', imagePosition: '50% 50%', eyebrow: 'FULL REPORT', headline: '인생 전체를 18장으로', price: '평생사주 100p 정식 리포트 · 14,900원', cta: '지금 보기 →', href: 'lifetime-report.html', textAlign: 'left', textVAlign: 'bottom', textScale: 1 }
-  ];
-
-  function escapeHtml(s) {
-    return String(s || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  }
-
-  function buildBannerSlide(cfg) {
-    const a = document.createElement('a');
-    a.className = 'banner-slide';
-    a.href = cfg.href || '#';
-    a.style.alignItems = cfg.textVAlign === 'top' ? 'flex-start' : cfg.textVAlign === 'center' ? 'center' : 'flex-end';
-    const scale = Number(cfg.textScale) || 1;
-    a.innerHTML = `
-      <img src="${escapeHtml(cfg.image)}" alt="${escapeHtml(cfg.headline)}" style="object-position:${escapeHtml(cfg.imagePosition || '50% 50%')};">
-      <div class="banner-copy" style="text-align:${escapeHtml(cfg.textAlign || 'left')};">
-        <span class="eyebrow" style="font-size:${11 * scale}px;">${escapeHtml(cfg.eyebrow)}</span>
-        <div class="headline" style="font-size:${18 * scale}px;">${escapeHtml(cfg.headline)}</div>
-        <div class="price" style="font-size:${13 * scale}px;">${escapeHtml(cfg.price)}</div>
-        <span class="banner-cta">${escapeHtml(cfg.cta || '지금 보기 →')}</span>
-      </div>
-    `;
-    return a;
-  }
-
-  async function initBannerSlider() {
-    const track = document.getElementById('bannerTrack');
-    const dotsContainer = document.getElementById('bannerDots');
-    let banners = FALLBACK_BANNERS;
-    try {
-      const res = await fetch('/api/banners');
-      const data = await res.json();
-      if (Array.isArray(data.banners) && data.banners.length) banners = data.banners;
-    } catch (e) {
-      // 실패해도 폴백 배너로 그대로 보임
-    }
-
-    track.innerHTML = '';
-    banners.forEach((cfg) => track.appendChild(buildBannerSlide(cfg)));
-    dotsContainer.innerHTML = '';
-    banners.forEach((_, i) => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'dot' + (i === 0 ? ' active' : '');
-      btn.dataset.i = i;
-      btn.setAttribute('aria-label', `${i + 1}번 배너로 이동`);
-      dotsContainer.appendChild(btn);
-    });
-
-    const dots = Array.from(dotsContainer.querySelectorAll('.dot'));
-    const slideCount = banners.length;
-    if (!slideCount) return;
-    const AUTO_INTERVAL_MS = 4000;
-    const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    let autoTimer = null;
-
-    // scrollIntoView는 배너 트랙뿐 아니라 페이지 전체(바깥 스크롤 컨테이너)까지 "이 배너가
-    // 보이게" 끌어올릴 수 있다 — 사용자가 아래로 스크롤해서 배너가 화면 밖으로 나간 상태에서
-    // 4초마다 자동 전환이 걸리면 그때마다 페이지가 맨 위로 튀는 원인이었다. track.scrollTo로
-    // 배너 트랙 자신의 가로 스크롤만 움직이면 바깥 페이지 스크롤에는 전혀 영향을 주지 않는다.
-    function goTo(i) {
-      track.scrollTo({ left: track.children[i].offsetLeft, behavior: 'smooth' });
-    }
-
-    function stopAuto() {
-      clearInterval(autoTimer);
-      autoTimer = null;
-    }
-
-    function startAuto() {
-      if (reduceMotion || autoTimer || slideCount < 2) return;
-      autoTimer = setInterval(() => {
-        const current = Math.round(track.scrollLeft / track.clientWidth);
-        goTo((current + 1) % slideCount);
-      }, AUTO_INTERVAL_MS);
-    }
-
-    dots.forEach((dot) => {
-      dot.addEventListener('click', () => {
-        stopAuto(); // 직접 골랐으면 자동재생을 멈춘다 — 보고 있는 걸 강제로 넘기지 않도록
-        goTo(Number(dot.dataset.i));
-      });
-    });
-
-    const prevBtn = document.getElementById('bannerPrev');
-    const nextBtn = document.getElementById('bannerNext');
-    prevBtn.addEventListener('click', () => {
-      stopAuto();
-      const current = Math.round(track.scrollLeft / track.clientWidth);
-      goTo((current - 1 + slideCount) % slideCount);
-    });
-    nextBtn.addEventListener('click', () => {
-      stopAuto();
-      const current = Math.round(track.scrollLeft / track.clientWidth);
-      goTo((current + 1) % slideCount);
-    });
-
-    // 스와이프/드래그로 직접 넘겨도 자동재생을 멈춘다(한 번만 걸리면 충분).
-    track.addEventListener('pointerdown', stopAuto, { once: true });
-
-    track.addEventListener('scroll', () => {
-      const i = Math.round(track.scrollLeft / track.clientWidth);
-      dots.forEach((d, idx) => d.classList.toggle('active', idx === i));
-    }, { passive: true });
-
-    // 다른 탭 등으로 화면이 안 보일 때는 자동재생을 멈춰서 자원 낭비 없게 한다.
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) stopAuto(); else startAuto();
-    });
-
-    startAuto();
-  }
-  initBannerSlider();
-
-  async function loadStatCount() {
-    try {
-      const res = await fetch('/api/orders/count');
-      const data = await res.json();
-      document.getElementById('statCount').textContent = data.count.toLocaleString('ko-KR');
-    } catch (e) {
-      // 실패해도 스토어 자체는 정상 노출 — 0으로 둠
-    }
-  }
-  (function initFortuneWizard() {
-    const overlay = document.getElementById('wizardOverlay');
-    const modal = document.getElementById('wizardModal');
-    const backBtn = document.getElementById('wizardBack');
-    const closeBtn = document.getElementById('wizardClose');
-    const nextBtn = document.getElementById('wizardNext');
-    const progressFill = document.getElementById('wizardProgressFill');
-    const stepLabel = document.getElementById('wizardStepLabel');
-    const msgEl = document.getElementById('wizardMsg');
-    const errorBox = document.getElementById('wizardError');
-    const steps = Array.from(document.querySelectorAll('.wizard-step'));
-    const inputSteps = steps.filter((s) => s.dataset.step !== 'result');
-
-    const state = { name: '', gender: '', calendar: '양력', year: '', month: '', day: '', hour: '', minute: '', hourUnknown: false };
-    let stepIndex = 0;
-    let submitted = false;
-
-    const MESSAGES = {
-      name: () => '생년월일만 알려주면 오늘 하루 흐름을 바로 봐줄게요. 먼저, 편하게 부를 이름이 있을까요?',
-      gender: () => `${state.name ? state.name + '님, ' : ''}사주 계산 기준을 맞추려면 성별이 필요해요.`,
-      calendar: () => '생일이 양력 기준인가요, 음력 기준인가요?',
-      birth: () => '태어난 날짜를 알려주세요.',
-      time: () => '태어난 시간까지 알면 더 정확해요. 모르면 아래 체크만 해도 괜찮아요.',
-      result: () => `${state.name ? state.name + '님, ' : ''}오늘의 흐름을 봐드렸어요.`
-    };
-
-    function setupChoiceRow(rowId, key) {
-      const row = document.getElementById(rowId);
-      row.querySelectorAll('.wizard-choice').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          state[key] = btn.dataset.value;
-          row.querySelectorAll('.wizard-choice').forEach((b) => b.classList.toggle('active', b === btn));
-          errorBox.classList.add('hidden');
-        });
-      });
-    }
-    setupChoiceRow('wGenderRow', 'gender');
-    setupChoiceRow('wCalendarRow', 'calendar');
-    document.querySelector('#wCalendarRow .wizard-choice[data-value="양력"]').classList.add('active');
-
-    function currentStepEl() { return inputSteps[stepIndex]; }
-
-    function showError(msg) {
-      errorBox.textContent = msg;
-      errorBox.classList.remove('hidden');
-    }
-
-    function render() {
-      steps.forEach((s) => { s.hidden = true; });
-      errorBox.classList.add('hidden');
-      if (submitted) {
-        document.querySelector('.wizard-step[data-step="result"]').hidden = false;
-        backBtn.hidden = true;
-        nextBtn.hidden = true;
-        progressFill.style.width = '100%';
-        stepLabel.textContent = '완료';
-        msgEl.textContent = MESSAGES.result();
-        return;
-      }
-      const stepEl = currentStepEl();
-      stepEl.hidden = false;
-      backBtn.hidden = stepIndex === 0;
-      nextBtn.hidden = false;
-      nextBtn.disabled = false;
-      nextBtn.textContent = stepIndex === inputSteps.length - 1 ? '오늘의 운세 보기' : '다음';
-      progressFill.style.width = `${Math.round(((stepIndex + 1) / inputSteps.length) * 100)}%`;
-      stepLabel.textContent = `${stepIndex + 1}/${inputSteps.length}단계`;
-      msgEl.textContent = MESSAGES[stepEl.dataset.step]();
-    }
-
-    function validateStep() {
-      const step = currentStepEl().dataset.step;
-      if (step === 'name') {
-        state.name = document.getElementById('wName').value.trim();
-        return true;
-      }
-      if (step === 'gender') {
-        if (!state.gender) { showError('성별을 선택해주세요.'); return false; }
-        return true;
-      }
-      if (step === 'calendar') {
-        if (!state.calendar) { showError('양력/음력을 선택해주세요.'); return false; }
-        return true;
-      }
-      if (step === 'birth') {
-        const y = document.getElementById('wYear').value;
-        const m = document.getElementById('wMonth').value;
-        const d = document.getElementById('wDay').value;
-        if (!y || !m || !d) { showError('생년월일을 모두 입력해주세요.'); return false; }
-        state.year = y; state.month = m; state.day = d;
-        return true;
-      }
-      if (step === 'time') {
-        state.hourUnknown = document.getElementById('wHourUnknown').checked;
-        if (!state.hourUnknown) {
-          const h = document.getElementById('wHour').value;
-          const mi = document.getElementById('wMinute').value;
-          if (h === '' || mi === '') { showError('시간을 모르면 아래 "태어난 시간을 몰라요"를 체크해주세요.'); return false; }
-          state.hour = h; state.minute = mi;
-        }
-        return true;
-      }
-      return true;
-    }
-
-    async function submitWizard() {
-      nextBtn.disabled = true;
-      nextBtn.textContent = '분석 중...';
-      try {
-        const res = await fetch('/api/today-fortune-preview', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            year: state.year, month: state.month, day: state.day,
-            hour: state.hourUnknown ? '' : state.hour, minute: state.hourUnknown ? '' : state.minute,
-            hourUnknown: state.hourUnknown, gender: state.gender, calendar: state.calendar
-          })
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          showError(data.error || '계산에 실패했어요. 입력값을 확인해주세요.');
-          nextBtn.disabled = false;
-          nextBtn.textContent = '오늘의 운세 보기';
-          return;
-        }
-        document.getElementById('wResultDate').textContent = `오늘의 운세 · ${data.fortune.date}`;
-        document.getElementById('wResultTitle').textContent = data.fortune.title;
-        document.getElementById('wResultDesc').textContent = data.fortune.desc;
-        submitted = true;
-        render();
-      } catch (e) {
-        showError('네트워크 오류로 실패했어요. 잠시 후 다시 시도해주세요.');
-        nextBtn.disabled = false;
-        nextBtn.textContent = '오늘의 운세 보기';
-      }
-    }
-
-    nextBtn.addEventListener('click', () => {
-      if (!validateStep()) return;
-      if (stepIndex === inputSteps.length - 1) { submitWizard(); return; }
-      stepIndex += 1;
-      render();
-    });
-
-    backBtn.addEventListener('click', () => {
-      if (stepIndex === 0) return;
-      stepIndex -= 1;
-      render();
-    });
-
-    function open() {
-      stepIndex = 0;
-      submitted = false;
-      overlay.classList.add('open');
-      modal.classList.add('open');
-      document.body.style.overflow = 'hidden';
-      render();
-    }
-    function close() {
-      overlay.classList.remove('open');
-      modal.classList.remove('open');
-      document.body.style.overflow = '';
-    }
-
-    overlay.addEventListener('click', close);
-    closeBtn.addEventListener('click', close);
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && overlay.classList.contains('open')) close(); });
-
-    const tfCard = document.getElementById('todayFortuneCard');
-    if (tfCard) {
-      tfCard.addEventListener('click', (e) => {
-        const tfCta = document.getElementById('tfCta');
-        if (tfCta && tfCta.getAttribute('href') === '/today-preview.html') {
-          e.preventDefault();
-          open();
-        }
-      });
-    }
   })();
 </script>
 </body>

@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-THWHBPH5WR"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-THWHBPH5WR');
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="/favicon.png">
+<title>사주보는 수달 — 전체 서비스 둘러보기</title>
+<link rel="stylesheet" href="/theme.css">
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div class="row">
+      <a class="logo" href="/"><img src="/logo.png" alt="사주보는 수달"></a>
+      <div class="header-right">
+        <div class="account-area" id="accountArea">
+          <a href="/login.html">로그인</a>
+        </div>
+        <div class="menu-btn-wrap">
+          <span class="menu-hook" id="menuHook">더 궁금하다면?</span>
+          <button class="menu-btn" id="menuBtn" aria-label="전체 메뉴 열기">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+            <span class="menu-dot" id="menuDot"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="menu-overlay" id="menuOverlay"></div>
+  <nav class="menu-drawer" id="menuDrawer" aria-label="전체 메뉴">
+    <div class="menu-drawer-head">
+      <span>전체 메뉴</span>
+      <button class="menu-close" id="menuCloseBtn" aria-label="메뉴 닫기">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="menu-section">
+      <div class="menu-section-ttl">무료로 먼저 보기</div>
+      <a href="/today-preview.html" id="menuTodayFortune">오늘의 운세</a>
+      <a href="/life-graph.html">인생 그래프</a>
+    </div>
+    <div class="menu-section">
+      <div class="menu-section-ttl">궁금한 사주</div>
+      <a href="/life-topics.html?topic=wealth">재물운 · 990원</a>
+      <a href="/life-topics.html?topic=compat">궁합운 · 2,900원</a>
+      <a href="/life-topics.html?topic=health">건강운 · 990원</a>
+    </div>
+    <div class="menu-section">
+      <div class="menu-section-ttl">나를 위한 빠른 리딩 · 990원</div>
+      <a href="/quick.html?topic=total">오늘의 나 — 총평</a>
+      <a href="/quick.html?topic=career">직업·적성운</a>
+      <a href="/quick.html?topic=relationship">인간관계</a>
+      <a href="/career-timing.html">이직 시기</a>
+    </div>
+    <div class="menu-section">
+      <div class="menu-section-ttl">둘의 관계</div>
+      <a href="/reunion-check.html">재회 가능성 · 990원</a>
+    </div>
+    <div class="menu-section">
+      <div class="menu-section-ttl">언제가 좋을까</div>
+      <a href="/date-select.html?occasion=moving">이사 리포트 · 990원 <span class="badge new">신규</span></a>
+      <a href="/date-select.html?occasion=opening">개업 리포트 · 990원 <span class="badge new">신규</span></a>
+      <a href="/date-select.html?occasion=wedding">결혼 리포트 · 990원 <span class="badge new">신규</span></a>
+      <a href="/date-select.html?occasion=birth">임신·출산 리포트 · 990원 <span class="badge new">신규</span></a>
+    </div>
+    <div class="menu-section">
+      <div class="menu-section-ttl">가장 깊이 보기</div>
+      <a href="/lifetime-report.html">평생사주 100p · 14,900원</a>
+    </div>
+    <div class="menu-section">
+      <div class="menu-section-ttl">내 계정</div>
+      <a href="/mypage.html">마이페이지</a>
+      <a href="/profiles.html">저장된 인물</a>
+      <a href="/charge.html">포인트 충전</a>
+    </div>
+    <div class="menu-section hidden" id="menuLogoutSection">
+      <button type="button" class="menu-logout-btn" id="menuLogoutBtn">로그아웃</button>
+    </div>
+  </nav>
+
+  <div class="banner-slider" id="top">
+    <div class="banner-track" id="bannerTrack"></div>
+    <div class="banner-dots" id="bannerDots"></div>
+    <button type="button" class="banner-nav prev" id="bannerPrev" aria-label="이전 배너">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+    </button>
+    <button type="button" class="banner-nav next" id="bannerNext" aria-label="다음 배너">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+    </button>
+  </div>
+
+  <a class="today-fortune-card" href="/today-preview.html" id="todayFortuneCard">
+    <div class="row-top">
+      <span class="eyebrow">오늘의 운세</span>
+      <span class="free-badge">무료</span>
+    </div>
+    <h3 id="tfTitle">로그인 없이 지금 바로 볼 수 있어요</h3>
+    <p id="tfDesc">생년월일만 입력하면 오늘 하루의 흐름을 바로 알려드려요. 매일 자동으로 받아보고 싶으면 나중에 저장해두면 돼요.</p>
+    <span class="login-cta" id="tfCta">지금 바로 보기 →</span>
+  </a>
+
+  <a class="today-fortune-card" href="/life-graph.html">
+    <div class="row-top">
+      <span class="eyebrow">인생 그래프</span>
+      <span class="free-badge">무료</span>
+    </div>
+    <h3>내 인생, 흐름으로 한눈에 보기</h3>
+    <p>대운·세운이 바뀔 때마다 내 기운이 어떻게 출렁이는지 그래프 하나로 확인해보세요.</p>
+    <span class="login-cta">그래프 보러가기 →</span>
+  </a>
+
+  <div class="stat-counter" id="statCounter" hidden>
+    <div class="num"><span id="statCounterNum">0</span><span class="unit">건</span></div>
+    <div class="label">실제 만세력으로 완성된 리포트</div>
+  </div>
+
+  <section id="products">
+    <div class="section-head"><h2>궁금한 사주, 골라보기</h2></div>
+    <p class="section-lead">가벼운 질문 하나부터 100페이지 정식 리포트까지, 필요한 만큼만 골라서 볼 수 있어요.</p>
+
+    <div class="tile-grid">
+      <a class="tile" href="/life-topics.html?topic=wealth">
+        <img class="tile-img" src="/tiles/wealth.png" alt="재물운">
+        <div class="name">재물운</div>
+        <div class="desc">돈이 들어오고 나가는 흐름을 지금 바로</div>
+        <div class="price">990원</div>
+      </a>
+      <a class="tile" href="/life-topics.html?topic=compat">
+        <span class="badge hot">인기</span>
+        <img class="tile-img" src="/tiles/compat.png" alt="궁합운">
+        <div class="name">궁합운</div>
+        <div class="desc">지금 인연의 상성과 관계가 나아갈 때</div>
+        <div class="price">2,900원</div>
+      </a>
+      <a class="tile" href="/life-topics.html?topic=health">
+        <img class="tile-img" src="/tiles/health.png" alt="건강운">
+        <div class="name">건강운</div>
+        <div class="desc">타고난 체질과 맞춤 루틴이 궁금할 때</div>
+        <div class="price">990원</div>
+      </a>
+      <a class="tile" href="/lifetime-report.html">
+        <img class="tile-img" src="/tiles/lifetime.png" alt="평생사주">
+        <div class="name">평생사주</div>
+        <div class="desc">태어난 순간부터 지금까지, 100페이지 정식 리포트</div>
+        <div class="price">14,900원</div>
+      </a>
+    </div>
+  </section>
+
+  <section id="dateSelect">
+    <div class="section-head"><h2>언제가 좋을까, 날짜로 보는 사주</h2></div>
+    <p class="section-lead">이사·개업·결혼·임신·출산처럼 중요한 순간, 날짜부터 챙길 것들까지 담은 리포트를 만들어드려요.</p>
+    <div class="tile-grid">
+      <a class="tile" href="/date-select.html?occasion=moving">
+        <img class="tile-img" src="/tiles/moving.png" alt="이사">
+        <div class="name">이사 리포트</div>
+        <div class="desc">좋은 날짜와 방향, 첫 물건까지</div>
+        <div class="price">990원</div>
+      </a>
+      <a class="tile" href="/date-select.html?occasion=opening">
+        <img class="tile-img" src="/tiles/opening.png" alt="개업">
+        <div class="name">개업 리포트</div>
+        <div class="desc">좋은 날짜와 공간 세팅, 마음가짐까지</div>
+        <div class="price">990원</div>
+      </a>
+      <a class="tile" href="/date-select.html?occasion=wedding">
+        <img class="tile-img" src="/tiles/wedding.png" alt="결혼">
+        <div class="name">결혼 리포트</div>
+        <div class="desc">혼인신고 좋은 날과 두 사람의 궁합</div>
+        <div class="price">990원</div>
+      </a>
+      <a class="tile" href="/date-select.html?occasion=birth">
+        <img class="tile-img" src="/tiles/birth.png" alt="임신·출산">
+        <div class="name">임신·출산 리포트</div>
+        <div class="desc">오행이 갖춰지는 때와 아이의 기질</div>
+        <div class="price">990원</div>
+      </a>
+    </div>
+  </section>
+
+  <section id="packages">
+    <div class="section-head"><h2>연결된 고민은 함께</h2></div>
+    <p class="section-lead">하나의 선택에는 여러 흐름이 얽혀 있어요. 관련된 질문을 묶어봤어요. 가격은 각 상품 개별 가격 그대로예요.</p>
+    <div class="pack-list">
+      <article class="pack-card">
+        <div class="pack-head">
+          <h3>커리어 방향팩</h3>
+          <p>일을 바꾸기 전에, 나의 일과 돈을 함께.</p>
+        </div>
+        <ul class="pack-items">
+          <li><a href="/quick.html?topic=career">직업·적성운 <span>990원</span></a></li>
+          <li><a href="/career-timing.html">이직 시기 <span>990원</span></a></li>
+          <li><a href="/life-topics.html?topic=wealth">재물운 <span>990원</span></a></li>
+        </ul>
+      </article>
+      <article class="pack-card">
+        <div class="pack-head">
+          <h3>관계 이해팩</h3>
+          <p>나의 관계 방식부터 두 사람의 차이까지.</p>
+        </div>
+        <ul class="pack-items">
+          <li><a href="/quick.html?topic=relationship">인간관계 <span>990원</span></a></li>
+          <li><a href="/life-topics.html?topic=compat">궁합운 <span>2,900원</span></a></li>
+          <li><a href="/reunion-check.html">재회 가능성 <span>990원</span></a></li>
+        </ul>
+      </article>
+      <article class="pack-card">
+        <div class="pack-head">
+          <h3>새출발 준비팩</h3>
+          <p>새 공간, 새 일. 준비의 방향을 한 번에.</p>
+        </div>
+        <ul class="pack-items">
+          <li><a href="/date-select.html?occasion=opening">개업 리포트 <span>990원</span></a></li>
+          <li><a href="/quick.html?topic=career">직업·적성운 <span>990원</span></a></li>
+          <li><a href="/life-topics.html?topic=wealth">재물운 <span>990원</span></a></li>
+        </ul>
+      </article>
+    </div>
+  </section>
+
+  <a class="today-fortune-card" href="/lifetime-report.html">
+    <div class="row-top">
+      <span class="eyebrow">평생사주 100페이지 정식 리포트</span>
+      <span class="free-badge">3초 요약카드 무료 포함</span>
+    </div>
+    <h3>태어난 순간부터 지금까지, 인생 전체를 18장으로</h3>
+    <p>14,900원 · 지금까지 쌓인 만세력·격국·용신·형충회합을 전부 담은 정식 리포트예요.</p>
+    <span class="login-cta">100페이지 리포트 보러가기 →</span>
+  </a>
+
+  <section id="assure">
+    <div class="assure">
+      <div><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 9.5h16"/><path d="M9 13.5l1.6 1.6L15 11"/></svg></div><p>실제 만세력<br>엔진 계산</p></div>
+      <div><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 4.5H5v4.5L14 18l4.5-4.5-9-9z"/><circle cx="7.7" cy="7.2" r="1" fill="currentColor" stroke="none"/><path d="M3 3l18 18"/></svg></div><p>부적·굿<br>추가 결제 없음</p></div>
+      <div><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg></div><p>참고용 자료,<br>단정하지 않음</p></div>
+    </div>
+  </section>
+
+  <footer>
+    <img class="brand-logo" src="/logo.png" alt="사주보는 수달">
+    <p>
+      상호: 길잡이 여울 · 대표: 이용수 · 사업자등록번호: 279-25-01684<br>
+      통신판매업신고번호: 제2025-전북무주-0018호<br>
+      사업장 소재지: 전북특별자치도 무주군 무주읍 당산길 20-5<br>
+      본 서비스의 모든 콘텐츠는 명리학적 통계 경향에 근거한 참고 자료이며, 의학적·법적·재정적 조언을 대체하지 않습니다.<br>
+      문의: sooky2001@gmail.com<br>
+      <a href="/terms.html">이용약관</a> · <a href="/privacy.html">개인정보처리방침</a>
+    </p>
+  </footer>
+
+  <div class="bottom-fade"></div>
+  <div class="scroll-hint" id="scrollHint" aria-hidden="true">
+    <span>더 궁금하다면</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+  </div>
+  <nav class="bottom-nav">
+    <a href="/"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5L12 4l8 7.5"/><path d="M6 10v9.5h12V10"/></svg></span>홈</a>
+    <a href="#products" class="active"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l1 12H5z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg></span>상품</a>
+    <a href="/compat.html"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="12" r="5"/><circle cx="15" cy="12" r="5"/></svg></span>궁합</a>
+    <a href="/mypage.html"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c0-3.9 3.1-6.5 7-6.5s7 2.6 7 6.5"/></svg></span>마이</a>
+  </nav>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+  async function loadAccountState() {
+    try {
+      const res = await fetch('/api/auth/me');
+      const data = await res.json();
+      const accountArea = document.getElementById('accountArea');
+      const tfTitle = document.getElementById('tfTitle');
+      const tfDesc = document.getElementById('tfDesc');
+      const tfCta = document.getElementById('tfCta');
+      const tfCard = document.getElementById('todayFortuneCard');
+
+      if (!data.user) return; // 로그아웃 상태 — 기본 마크업(로그인 버튼) 그대로 둠
+
+      accountArea.innerHTML = `
+        <span class="point-pill">${data.user.pointBalance.toLocaleString('ko-KR')}P</span>
+        <a href="/mypage.html">마이페이지</a>
+      `;
+      const menuTodayFortune = document.getElementById('menuTodayFortune');
+      if (menuTodayFortune) menuTodayFortune.href = '/today-fortune.html';
+      document.getElementById('menuLogoutSection').classList.remove('hidden');
+
+      if (!data.user.birth) {
+        tfTitle.textContent = '생년월일을 등록하면 오늘의 운세가 열려요';
+        tfDesc.textContent = '마이페이지에서 생년월일시를 등록해주세요.';
+        tfCta.textContent = '마이페이지로 →';
+        tfCard.href = '/mypage.html';
+        return;
+      }
+
+      const fRes = await fetch('/api/today-fortune');
+      const fData = await fRes.json();
+      if (fRes.ok) {
+        tfTitle.textContent = `${fData.fortune.score}점 · ${fData.fortune.title}`;
+        tfDesc.textContent = fData.fortune.tip;
+        tfCta.textContent = '오늘의 운세 더 보기 →';
+        tfCard.href = '/today-fortune.html';
+      }
+    } catch (e) {
+      // 계정 상태 확인 실패해도 페이지 자체는 정상 노출
+    }
+  }
+  loadAccountState();
+
+  // 실제 완료된 주문 건수를 후기 대신 신뢰 신호로 보여준다 — 지어낸 숫자가 아니라
+  // orders 테이블의 진짜 카운트(GET /api/orders/count). 서비스 초반에는 숫자가
+  // 너무 작아서(2026-09) 오히려 "안 팔리는 곳"으로 보일 수 있어 대표님 요청으로
+  // 잠시 꺼둔다 — 나중에 주문이 충분히 쌓이면 STAT_COUNTER_ENABLED만 true로
+  // 바꾸면 바로 다시 켜진다(로직·API는 그대로 둠).
+  const STAT_COUNTER_ENABLED = false;
+  const STAT_COUNTER_MIN = 10;
+  (async function loadStatCounter() {
+    if (!STAT_COUNTER_ENABLED) return;
+    try {
+      const res = await fetch('/api/orders/count');
+      const data = await res.json();
+      if (!res.ok || !(data.count >= STAT_COUNTER_MIN)) return;
+      document.getElementById('statCounterNum').textContent = data.count.toLocaleString('ko-KR');
+      document.getElementById('statCounter').hidden = false;
+    } catch (e) { /* 실패해도 조용히 안 보여줄 뿐, 페이지 전체엔 영향 없음 */ }
+  })();
+
+  document.getElementById('menuLogoutBtn').addEventListener('click', async () => {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    location.href = '/';
+  });
+
+  (function initMenu() {
+    const btn = document.getElementById('menuBtn');
+    const overlay = document.getElementById('menuOverlay');
+    const drawer = document.getElementById('menuDrawer');
+    const closeBtn = document.getElementById('menuCloseBtn');
+    const hook = document.getElementById('menuHook');
+    const dot = document.getElementById('menuDot');
+
+    const HOOK_PHRASES = ['더 궁금하다면?', '이런 운도 있어요', '다른 사주도 볼까요?'];
+    let hookTimer = null;
+    function stopHook() {
+      clearInterval(hookTimer);
+      if (hook) hook.classList.add('hidden');
+      if (dot) dot.classList.add('hidden');
+    }
+    if (hook && dot) {
+      if (localStorage.getItem('menuHookSeen') === '1') {
+        stopHook();
+      } else {
+        let hookIdx = 0;
+        hookTimer = setInterval(() => {
+          hookIdx = (hookIdx + 1) % HOOK_PHRASES.length;
+          hook.textContent = HOOK_PHRASES[hookIdx];
+        }, 2600);
+      }
+    }
+
+    function open() {
+      overlay.classList.add('open');
+      drawer.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      try { localStorage.setItem('menuHookSeen', '1'); } catch (e) { /* 저장 실패해도 메뉴는 정상 동작 */ }
+      stopHook();
+    }
+    function close() {
+      overlay.classList.remove('open');
+      drawer.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+    btn.addEventListener('click', open);
+    closeBtn.addEventListener('click', close);
+    overlay.addEventListener('click', close);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+  })();
+
+  (function initScrollHint() {
+    const hint = document.getElementById('scrollHint');
+    const footer = document.querySelector('footer');
+    if (!hint || !footer || !('IntersectionObserver' in window)) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      hint.classList.toggle('hidden-hint', entry.isIntersecting);
+    }, { rootMargin: '0px 0px -20% 0px' });
+    observer.observe(footer);
+  })();
+
+  // 관리자가 배너를 자유롭게 추가/삭제할 수 있어서(admin-banners.html), 개수를 6개로
+  // 가정하고 마크업에 하드코딩하지 않는다 — /api/banners가 주는 배열 그대로 슬라이드를
+  // 만든다. API가 실패하는 극히 드문 경우에도 히어로가 완전히 비어보이지 않도록 예전
+  // 기본 6개 구성을 폴백으로 둔다.
+  const FALLBACK_BANNERS = [
+    { image: '/banners/1.png', imagePosition: '50% 50%', eyebrow: "TODAY'S PICK", headline: '깊게 볼 필요 없을 땐, 990원', price: '오늘의 나 — 총평 빠른 리딩', cta: '지금 보기 →', href: '/quick.html?topic=total', textAlign: 'left', textVAlign: 'bottom', textScale: 1 },
+    { image: '/banners/2.png', imagePosition: '50% 50%', eyebrow: 'HOT', headline: '지금 인연의 흐름이 궁금할 때', price: '애정운 빠른 리딩 · 990원', cta: '지금 보기 →', href: '/quick.html?topic=love', textAlign: 'left', textVAlign: 'bottom', textScale: 1 },
+    { image: '/banners/3.png', imagePosition: '50% 50%', eyebrow: 'COMPATIBILITY', headline: '둘이 보는 진짜 궁합', price: '궁합 리포트 · 4,900원', cta: '지금 보기 →', href: '/compat.html', textAlign: 'left', textVAlign: 'bottom', textScale: 1 },
+    { image: '/banners/4.png', imagePosition: '50% 50%', eyebrow: 'MONEY', headline: '돈이 들어오고 나가는 흐름', price: '재물운 빠른 리딩 · 990원', cta: '지금 보기 →', href: '/quick.html?topic=wealth', textAlign: 'left', textVAlign: 'bottom', textScale: 1 },
+    { image: '/banners/5.png', imagePosition: '50% 50%', eyebrow: 'FREE', headline: '내 인생, 흐름으로 한눈에 보기', price: '인생 그래프 · 무료 체험', cta: '무료로 보기 →', href: '/life-graph.html', textAlign: 'left', textVAlign: 'bottom', textScale: 1 },
+    { image: '/banners/6.png', imagePosition: '50% 50%', eyebrow: 'FULL REPORT', headline: '인생 전체를 18장으로', price: '평생사주 100p 정식 리포트 · 14,900원', cta: '지금 보기 →', href: '/lifetime-report.html', textAlign: 'left', textVAlign: 'bottom', textScale: 1 }
+  ];
+
+  function escapeHtml(s) {
+    return String(s || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  function buildBannerSlide(cfg) {
+    const a = document.createElement('a');
+    a.className = 'banner-slide';
+    a.href = cfg.href || '#';
+    a.style.alignItems = cfg.textVAlign === 'top' ? 'flex-start' : cfg.textVAlign === 'center' ? 'center' : 'flex-end';
+    const scale = Number(cfg.textScale) || 1;
+    a.innerHTML = `
+      <img src="${escapeHtml(cfg.image)}" alt="${escapeHtml(cfg.headline)}" style="object-position:${escapeHtml(cfg.imagePosition || '50% 50%')};">
+      <div class="banner-copy" style="text-align:${escapeHtml(cfg.textAlign || 'left')};">
+        <span class="eyebrow" style="font-size:${11 * scale}px;">${escapeHtml(cfg.eyebrow)}</span>
+        <div class="headline" style="font-size:${18 * scale}px;">${escapeHtml(cfg.headline)}</div>
+        <div class="price" style="font-size:${13 * scale}px;">${escapeHtml(cfg.price)}</div>
+        <span class="banner-cta">${escapeHtml(cfg.cta || '지금 보기 →')}</span>
+      </div>
+    `;
+    return a;
+  }
+
+  async function initBannerSlider() {
+    const track = document.getElementById('bannerTrack');
+    const dotsContainer = document.getElementById('bannerDots');
+    let banners = FALLBACK_BANNERS;
+    try {
+      const res = await fetch('/api/banners');
+      const data = await res.json();
+      if (Array.isArray(data.banners) && data.banners.length) banners = data.banners;
+    } catch (e) {
+      // 실패해도 폴백 배너로 그대로 보임
+    }
+
+    track.innerHTML = '';
+    banners.forEach((cfg) => track.appendChild(buildBannerSlide(cfg)));
+    dotsContainer.innerHTML = '';
+    banners.forEach((_, i) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'dot' + (i === 0 ? ' active' : '');
+      btn.dataset.i = i;
+      btn.setAttribute('aria-label', `${i + 1}번 배너로 이동`);
+      dotsContainer.appendChild(btn);
+    });
+
+    const dots = Array.from(dotsContainer.querySelectorAll('.dot'));
+    const slideCount = banners.length;
+    if (!slideCount) return;
+    const AUTO_INTERVAL_MS = 4000;
+    const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let autoTimer = null;
+
+    function goTo(i) {
+      track.scrollTo({ left: track.children[i].offsetLeft, behavior: 'smooth' });
+    }
+
+    function stopAuto() {
+      clearInterval(autoTimer);
+      autoTimer = null;
+    }
+
+    function startAuto() {
+      if (reduceMotion || autoTimer || slideCount < 2) return;
+      autoTimer = setInterval(() => {
+        const current = Math.round(track.scrollLeft / track.clientWidth);
+        goTo((current + 1) % slideCount);
+      }, AUTO_INTERVAL_MS);
+    }
+
+    dots.forEach((dot) => {
+      dot.addEventListener('click', () => {
+        stopAuto();
+        goTo(Number(dot.dataset.i));
+      });
+    });
+
+    const prevBtn = document.getElementById('bannerPrev');
+    const nextBtn = document.getElementById('bannerNext');
+    prevBtn.addEventListener('click', () => {
+      stopAuto();
+      const current = Math.round(track.scrollLeft / track.clientWidth);
+      goTo((current - 1 + slideCount) % slideCount);
+    });
+    nextBtn.addEventListener('click', () => {
+      stopAuto();
+      const current = Math.round(track.scrollLeft / track.clientWidth);
+      goTo((current + 1) % slideCount);
+    });
+
+    track.addEventListener('pointerdown', stopAuto, { once: true });
+
+    track.addEventListener('scroll', () => {
+      const i = Math.round(track.scrollLeft / track.clientWidth);
+      dots.forEach((d, idx) => d.classList.toggle('active', idx === i));
+    }, { passive: true });
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) stopAuto(); else startAuto();
+    });
+
+    startAuto();
+  }
+  initBannerSlider();
+</script>
+</body>
+</html>

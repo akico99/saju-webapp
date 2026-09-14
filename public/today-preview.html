@@ -66,6 +66,12 @@
       <p id="tpDesc"></p>
     </div>
 
+    <div class="wizard-upsell hidden" id="upsellPrompt">
+      <p class="wizard-upsell-lead">오늘 하루만 살짝 보여드린 맛보기예요. 진짜 궁금한 건 따로 있죠?</p>
+      <a class="wizard-cta wizard-cta-primary" href="/quick.html?topic=love">990원으로 애정운 빠르게 보기 →</a>
+      <a class="wizard-cta wizard-cta-secondary" href="/lifetime-report.html">평생사주 100페이지 정식 리포트 보기</a>
+    </div>
+
     <div class="card hidden" id="signupPrompt">
       <h3>매일 자동으로 받아보고 싶다면</h3>
       <p class="lead" style="margin-bottom:14px;">회원가입하면 생년월일을 한 번만 등록해두고, 매일 아침 새로 입력할 필요 없이 볼 수 있어요.</p>
@@ -93,6 +99,7 @@
       document.getElementById('tpTitle').textContent = data.fortune.title;
       document.getElementById('tpDesc').textContent = data.fortune.desc;
       document.getElementById('fortuneResult').classList.remove('hidden');
+      document.getElementById('upsellPrompt').classList.remove('hidden');
       document.getElementById('signupPrompt').classList.remove('hidden');
     } catch (err) {
       errorBox.textContent = '요청 실패: ' + err.message;
