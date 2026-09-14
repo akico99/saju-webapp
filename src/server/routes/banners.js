@@ -9,7 +9,13 @@ const { requireAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
-const BANNERS_DIR = path.join(__dirname, '..', '..', '..', 'public', 'banners');
+// 업로드된 배너 이미지는 public/banners(=git 배포 트리)가 아니라 data/ 아래에 저장한다.
+// public/은 배포할 때마다 git 커밋 내용으로 통째로 교체되므로, 런타임에 업로드한 파일을
+// 거기 저장하면 다음 배포에서 그대로 사라진다(2026-09-08에 output/ PDF 파일로 겪었던
+// 것과 같은 문제 — data/ 는 Render 영구 디스크가 마운트된 경로라 배포와 무관하게 남는다).
+// URL은 기존과 동일하게 /banners/*로 유지하기 위해 app.js에서 이 폴더를 같은 경로에
+// 추가로 static 서빙한다(기본 6개 배너는 여전히 public/banners에서 서빙됨).
+const BANNERS_DIR = path.join(__dirname, '..', '..', '..', 'data', 'uploads', 'banners');
 fs.mkdirSync(BANNERS_DIR, { recursive: true });
 const ALLOWED_EXT = { 'image/png': '.png', 'image/jpeg': '.jpg', 'image/webp': '.webp' };
 
