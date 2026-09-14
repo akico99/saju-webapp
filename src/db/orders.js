@@ -29,12 +29,16 @@ const stmts = {
   findPendingByUserAndProduct: db.prepare(
     "SELECT * FROM orders WHERE user_id = ? AND product_key = ? AND status IN ('pending', 'generating', 'rendering') ORDER BY id DESC LIMIT 1"
   ),
-  listAllPending: db.prepare("SELECT * FROM orders WHERE status IN ('pending', 'generating', 'rendering')"),
+  // 'recovering'도 포함한다 — claim은 했는데 환불·error 처리 전에 프로세스가 또 죽으면
+  // 그 주문이 'recovering'에 영원히 멈춰서 다음 재시작 때도 안 잡히는 사각지대가 생긴다.
+  listAllPending: db.prepare("SELECT * FROM orders WHERE status IN ('pending', 'generating', 'rendering', 'recovering')"),
   // 재시작 복구 전용 — 여러 프로세스가 동시에 뜨는 극단적인 상황에서도 한 프로세스만
   // 이 주문을 처리하게 선점한다. WHERE 조건까지 만족해야 바뀌므로, 이미 다른 프로세스가
-  // 'recovering'으로 바꿔놨다면(=선점됐다면) changes가 0이 되어 알 수 있다.
+  // 'recovering'으로 바꿔놨다면(=선점됐다면) changes가 0이 되어 알 수 있다. 'recovering'
+  // 자체도 다시 선점 가능하게 둔다 — 그래야 위 사각지대(claim 후 죽음)를 다음 재시작이
+  // 복구할 수 있다.
   claimForRecovery: db.prepare(
-    "UPDATE orders SET status='recovering' WHERE job_id=@jobId AND status IN ('pending', 'generating', 'rendering')"
+    "UPDATE orders SET status='recovering' WHERE job_id=@jobId AND status IN ('pending', 'generating', 'rendering', 'recovering')"
   ),
   updateStatus: db.prepare('UPDATE orders SET status=@status WHERE job_id=@jobId'),
   updateProgress: db.prepare('UPDATE orders SET progress_current=@current, progress_total=@total WHERE job_id=@jobId'),

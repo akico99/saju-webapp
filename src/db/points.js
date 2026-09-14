@@ -38,7 +38,10 @@ const stmts = {
     INSERT INTO point_transactions (user_id, delta, reason, ref_type, ref_id)
     VALUES (@userId, @delta, @reason, @refType, @refId)
   `),
-  listTxByUser: db.prepare('SELECT * FROM point_transactions WHERE user_id = ? ORDER BY id DESC')
+  listTxByUser: db.prepare('SELECT * FROM point_transactions WHERE user_id = ? ORDER BY id DESC'),
+  findRefundByRefId: db.prepare(
+    "SELECT id FROM point_transactions WHERE ref_type='refund' AND ref_id=? LIMIT 1"
+  )
 };
 
 /** 상품 구매 시 포인트를 차감한다. 잔액 부족이면 code='insufficient_points'인 Error를 던진다.
@@ -80,6 +83,10 @@ function chargeForProductAndCreateOrder(userId, productKey, { label, jobId }) {
 /** 생성 실패 시 차감했던 포인트를 되돌린다. refId를 넘기면(예: jobId) 거래 내역에서
     어떤 작업 때문에 환불됐는지 추적할 수 있다 — 서버 재시작 복구 로직이 사용한다. */
 function refund(userId, amount, reason, refId) {
+  // refId(jobId)가 있으면 멱등하게 처리한다 — 같은 작업에 대해 두 번 호출돼도(예: 재시작
+  // 복구와 실패 콜백이 겹치는 극단적인 경우) 두 번째 호출은 조용히 무시한다.
+  if (refId && stmts.findRefundByRefId.get(refId)) return;
+
   const tx = db.transaction(() => {
     stmts.insertTx.run({ userId, delta: amount, reason, refType: 'refund', refId: refId || null });
     adjustPointBalance(userId, amount);
