@@ -188,26 +188,44 @@ header .logout, button.logout {
   display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch;
 }
 .banner-track::-webkit-scrollbar { display: none; }
-/* 배너 높이 — 첫 화면에서 배너가 전부를 차지하면 "밑에 볼 게 더 있다"는 신호가 안 생긴다.
-   상품 줄이 스크롤 없이 살짝 보이도록 의도적으로 낮게 잡는다(2026-09, 메인 카탈로그 개편). */
+/* 배너 비율 — 4:3 고정.
+   예전에는 높이를 42vh(화면 높이 기준)로 잡았는데, 가로는 화면 너비를 따르고 세로는 화면
+   높이를 따르다 보니 기기마다 비율이 0.95:1 ~ 1.85:1까지 흔들렸다. 그러면 관리자가 이미지
+   위치를 한 기기에서 맞춰놔도 다른 기기에서는 다른 데가 잘린다(2026-09).
+   비율을 고정하면 어디서나 같은 구도로 보인다. .app이 최대 480px이라 배너도 최대 480px,
+   4:3이면 높이 360px — 예전 max-height와 같아서 첫 화면 차지 비중은 그대로다. */
 .banner-slide {
-  flex: 0 0 100%; scroll-snap-align: start; position: relative; height: 42vh; min-height: 260px; max-height: 360px;
+  flex: 0 0 100%; scroll-snap-align: start; position: relative; aspect-ratio: 4 / 3;
   display: flex; align-items: flex-end; text-decoration: none; color: #fff; overflow: hidden;
   background: linear-gradient(160deg, var(--surface-2), var(--surface));
 }
 .banner-slide img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+/* 이미지 위 어둠 — 밝은 이미지에 흰 글씨를 올리면 글자가 묻히므로 기본은 켜둔다.
+   하단을 의도적으로 비워서 만든 이미지라면 관리자가 배너별로 끄거나 약하게 할 수 있다. */
 .banner-slide::after {
   content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 60%;
   background: linear-gradient(to top, rgba(0,0,0,0.7), rgba(0,0,0,0)); pointer-events: none;
 }
+.banner-slide.overlay-weak::after { background: linear-gradient(to top, rgba(0,0,0,0.38), rgba(0,0,0,0)); }
+.banner-slide.overlay-none::after { content: none; }
 .banner-copy { position: relative; z-index: 2; padding: 20px 20px 40px; width: 100%; box-sizing: border-box; }
-.banner-copy .eyebrow { font-size: 11px; letter-spacing: 0.12em; opacity: 0.85; text-transform: uppercase; font-weight: 700; }
-.banner-copy .headline { font-size: 18px; font-weight: 800; margin: 4px 0 6px; line-height: 1.4; }
-.banner-copy .price { font-size: 13px; font-weight: 700; opacity: 0.9; }
+/* 배너 텍스트 블록 — 관리자가 admin-banners.html에서 종류·개수·순서를 자유롭게 정한다.
+   클래스 이름(eyebrow/headline/price/banner-cta)은 예전 고정 네 칸 시절 그대로 쓴다.
+   블록 종류 label/title/body/button이 각각 이 네 클래스로 그려지므로, 예전에 저장해둔
+   배너는 블록으로 옮겨져도 화면이 픽셀 단위로 똑같이 보인다.
+   white-space: pre-line — 관리자가 넣은 줄바꿈을 그대로 살린다. */
+.banner-copy .eyebrow { font-size: 11px; letter-spacing: 0.12em; opacity: 0.85; text-transform: uppercase; font-weight: 700; white-space: pre-line; }
+.banner-copy .headline { font-size: 18px; font-weight: 800; margin: 4px 0 6px; line-height: 1.4; white-space: pre-line; }
+.banner-copy .price { font-size: 13px; font-weight: 700; opacity: 0.9; white-space: pre-line; }
 .banner-copy .banner-cta {
   display: inline-block; margin-top: 12px; font-size: 12px; font-weight: 800; color: var(--ink);
-  background: #fff; padding: 8px 14px; border-radius: var(--radius-pill);
+  background: #fff; padding: 8px 14px; border-radius: var(--radius-pill); white-space: pre-line;
 }
+/* 같은 종류 블록이 연달아 올 때 서로 붙어버리지 않게 최소 간격만 준다 */
+.banner-copy .eyebrow + .eyebrow, .banner-copy .price + .price { margin-top: 4px; }
+.banner-copy .banner-cta + .banner-cta { margin-left: 8px; }
+/* 블록은 한 줄에 하나씩 쌓인다. 버튼만 내용 폭에 맞춰 나란히 설 수 있게 inline-block. */
+.banner-copy .eyebrow, .banner-copy .price { display: block; }
 
 .banner-dots { position: absolute; left: 0; right: 0; bottom: 14px; z-index: 3; display: flex; justify-content: center; gap: 6px; }
 .banner-dots .dot { width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.45); padding: 0; cursor: pointer; }

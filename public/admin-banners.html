@@ -49,6 +49,51 @@
     cursor: pointer; font-family: inherit;
   }
   .add-btn:hover { border-color: var(--ink); color: var(--ink); }
+
+  /* ---------- 텍스트 블록 편집 ----------
+     배너에 올릴 글을 정해진 칸에 끼워넣는 대신, 블록을 원하는 만큼 넣고 순서를 바꾼다. */
+  .blocks { display: flex; flex-direction: column; gap: 8px; }
+  .block {
+    border: 1px solid var(--line); border-radius: 10px; padding: 10px; background: var(--surface);
+  }
+  .block-head { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+  .block-type { flex: 1; display: flex; gap: 4px; }
+  .block-type button {
+    flex: 1; padding: 6px 2px; font-size: 11px; border: 1px solid var(--line); border-radius: 7px;
+    background: var(--paper); color: var(--muted); cursor: pointer; font-family: inherit;
+  }
+  .block-type button.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .block-move { display: flex; gap: 4px; }
+  .block-move button, .block-del {
+    width: 28px; height: 28px; padding: 0; font-size: 13px; line-height: 1; border: 1px solid var(--line);
+    border-radius: 7px; background: var(--paper); color: var(--muted); cursor: pointer; font-family: inherit;
+  }
+  .block-del { color: var(--danger); border-color: var(--danger-soft); }
+  .block textarea {
+    width: 100%; box-sizing: border-box; padding: 9px 11px; border: 1px solid var(--line);
+    border-radius: 8px; font-size: 13px; font-family: inherit; resize: vertical; min-height: 40px; line-height: 1.5;
+  }
+  .block-scale { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--muted); margin-top: 6px; }
+  .block-scale input[type="range"] { flex: 1; }
+  .block-scale .val { width: 42px; text-align: right; font-weight: 700; color: var(--ink); }
+  .block-colors { display: flex; gap: 12px; margin-top: 8px; }
+  .color-ctl { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); }
+  .color-ctl input[type="color"] {
+    width: 30px; height: 26px; padding: 0; border: 1px solid var(--line); border-radius: 6px;
+    background: none; cursor: pointer;
+  }
+  .color-ctl .reset {
+    font-size: 10.5px; padding: 3px 7px; border: 1px solid var(--line); border-radius: 6px;
+    background: var(--paper); color: var(--muted); cursor: pointer; font-family: inherit;
+  }
+  .color-ctl .reset.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .block-add-row { display: flex; gap: 6px; margin-top: 8px; }
+  .block-add-row button {
+    flex: 1; padding: 9px 4px; font-size: 11.5px; border: 1.5px dashed var(--line); border-radius: 8px;
+    background: none; color: var(--muted); cursor: pointer; font-family: inherit; font-weight: 700;
+  }
+  .block-add-row button:hover { border-color: var(--ink); color: var(--ink); }
+  .blocks-empty { font-size: 11.5px; color: var(--muted-2); padding: 10px 2px; }
 </style>
 </head>
 <body>
@@ -60,6 +105,7 @@
   </header>
   <p class="lead" style="padding:16px 20px 0;margin-bottom:0;">
     메인 페이지 배너를 자유롭게 추가·삭제하고, 이미지·문구·위치·크기를 조정할 수 있어요.
+    문구는 블록 단위라 원하는 만큼 넣고 순서를 바꿀 수 있고, 버튼도 넣지 않아도 됩니다.
     아래 미리보기는 실제 메인 페이지 배너와 폭·높이가 완전히 동일합니다.
   </p>
 
@@ -71,6 +117,7 @@
 </div>
 <div class="toast" id="toast"></div>
 
+<script src="/banner-slider.js"></script>
 <script>
   function showToast(msg) {
     const t = document.getElementById('toast');
@@ -82,10 +129,8 @@
 
   const H_ALIGNS = [['left', '왼쪽'], ['center', '가운데'], ['right', '오른쪽']];
   const V_ALIGNS = [['top', '위'], ['center', '가운데'], ['bottom', '아래']];
-  const BLANK_BANNER = {
-    image: '', imagePosition: '50% 50%', eyebrow: '', headline: '', price: '', cta: '지금 보기 →',
-    href: '', textAlign: 'left', textVAlign: 'bottom', textScale: 1
-  };
+  const BLOCK_TYPES = [['label', '작은 라벨'], ['title', '큰 제목'], ['body', '본문'], ['button', '버튼']];
+  const OVERLAYS = [['none', '없음'], ['weak', '약하게'], ['strong', '진하게']];
 
   async function checkAdmin() {
     const res = await fetch('/api/admin/me');
@@ -94,23 +139,35 @@
     return true;
   }
 
+  /* 미리보기는 실제 배너와 같은 그리기 코드(banner-slider.js)를 쓴다 — 여기서 따로 그리면
+     실제 화면과 조금씩 어긋나고, 그 차이는 저장하고 메인에 가봐야 드러난다. */
   function applyPreview(row) {
-    const cfg = row.dataset;
-    const slide = row.querySelector('.banner-slide');
-    const img = row.querySelector('img');
-    img.style.objectPosition = cfg.imagePosition;
-    img.src = cfg.image || '';
-    slide.style.alignItems = cfg.textValign === 'top' ? 'flex-start' : cfg.textValign === 'center' ? 'center' : 'flex-end';
-    const copy = row.querySelector('.banner-copy');
-    copy.style.textAlign = cfg.textAlign;
-    const scale = Number(cfg.textScale) || 1;
-    row.querySelector('.eyebrow').textContent = row.querySelector('input[data-field="eyebrow"]').value;
-    row.querySelector('.eyebrow').style.fontSize = (11 * scale) + 'px';
-    row.querySelector('.headline').textContent = row.querySelector('input[data-field="headline"]').value;
-    row.querySelector('.headline').style.fontSize = (18 * scale) + 'px';
-    row.querySelector('.price').textContent = row.querySelector('input[data-field="price"]').value;
-    row.querySelector('.price').style.fontSize = (13 * scale) + 'px';
-    row.querySelector('.banner-cta').textContent = row.querySelector('input[data-field="cta"]').value;
+    const fresh = window.BannerSlider.buildSlide(readRow(row));
+    fresh.classList.add('banner-slide');
+    row.querySelector('.banner-slide').replaceWith(fresh);
+  }
+
+  function readBlocks(row) {
+    return Array.from(row.querySelectorAll('.block')).map((b) => ({
+      type: b.dataset.type,
+      text: b.querySelector('textarea').value,
+      scale: Number(b.dataset.scale) || 1,
+      color: b.dataset.color || '',
+      bgColor: b.dataset.bgColor || ''
+    }));
+  }
+
+  function readRow(row) {
+    return {
+      id: row.dataset.id || undefined,
+      image: row.dataset.image,
+      imagePosition: row.dataset.imagePosition,
+      href: row.querySelector('input[data-field="href"]').value,
+      textAlign: row.dataset.textAlign,
+      textVAlign: row.dataset.textValign,
+      overlay: row.dataset.overlay,
+      blocks: readBlocks(row)
+    };
   }
 
   function buildAlignRow(row, key, options, label) {
@@ -135,6 +192,115 @@
     return wrap;
   }
 
+  function refreshBlockState(row) {
+    const list = row.querySelector('.blocks');
+    const blocks = Array.from(list.querySelectorAll('.block'));
+    const empty = row.querySelector('.blocks-empty');
+    empty.style.display = blocks.length ? 'none' : 'block';
+    blocks.forEach((b, i) => {
+      b.querySelector('.move-up').disabled = (i === 0);
+      b.querySelector('.move-down').disabled = (i === blocks.length - 1);
+    });
+  }
+
+  function buildBlock(row, cfg) {
+    const block = document.createElement('div');
+    block.className = 'block';
+    block.dataset.type = cfg.type || 'body';
+    block.dataset.scale = Number(cfg.scale) || 1;
+
+    const pct = Math.round((Number(cfg.scale) || 1) * 100);
+    block.innerHTML = `
+      <div class="block-head">
+        <div class="block-type"></div>
+        <div class="block-move">
+          <button type="button" class="move-up" aria-label="위로">↑</button>
+          <button type="button" class="move-down" aria-label="아래로">↓</button>
+        </div>
+        <button type="button" class="block-del" aria-label="블록 삭제">×</button>
+      </div>
+      <textarea rows="2" placeholder="배너에 넣을 글 (엔터로 줄바꿈)"></textarea>
+      <div class="block-scale">크기 <input type="range" min="60" max="300" value="${pct}"> <span class="val">${pct}%</span></div>
+      <div class="block-colors">
+        <span class="color-ctl">글자색 <input type="color" data-color="color"> <button type="button" class="reset" data-reset="color">기본</button></span>
+        <span class="color-ctl">배경색 <input type="color" data-color="bgColor"> <button type="button" class="reset" data-reset="bgColor">기본</button></span>
+      </div>
+    `;
+    block.querySelector('textarea').value = cfg.text || '';
+
+    /* 색은 "기본(비움)" 상태가 있어야 한다 — 흰 글씨/흰 버튼이라는 원래 스타일을 그대로 쓰는
+       경우다. <input type="color">는 빈 값을 표현하지 못하므로, 실제 값은 dataset에 두고
+       입력칸은 보기용으로만 쓴다. '기본' 버튼이 켜져 있으면 dataset은 빈 문자열이다. */
+    ['color', 'bgColor'].forEach((key) => {
+      const initial = cfg[key] || '';
+      block.dataset[key] = initial;
+      const input = block.querySelector(`input[data-color="${key}"]`);
+      const resetBtn = block.querySelector(`button[data-reset="${key}"]`);
+      input.value = initial || (key === 'color' ? '#ffffff' : '#ffffff');
+      resetBtn.classList.toggle('on', !initial);
+      input.addEventListener('input', () => {
+        block.dataset[key] = input.value;
+        resetBtn.classList.remove('on');
+        applyPreview(row);
+      });
+      resetBtn.addEventListener('click', () => {
+        block.dataset[key] = '';
+        resetBtn.classList.add('on');
+        applyPreview(row);
+      });
+    });
+
+    const typeWrap = block.querySelector('.block-type');
+    BLOCK_TYPES.forEach(([value, text]) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = text;
+      btn.classList.toggle('active', block.dataset.type === value);
+      btn.addEventListener('click', () => {
+        block.dataset.type = value;
+        typeWrap.querySelectorAll('button').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        applyPreview(row);
+      });
+      typeWrap.appendChild(btn);
+    });
+
+    block.querySelector('textarea').addEventListener('input', () => applyPreview(row));
+
+    const range = block.querySelector('input[type="range"]');
+    range.addEventListener('input', () => {
+      block.dataset.scale = Number(range.value) / 100;
+      block.querySelector('.block-scale .val').textContent = range.value + '%';
+      applyPreview(row);
+    });
+
+    block.querySelector('.move-up').addEventListener('click', () => {
+      const prev = block.previousElementSibling;
+      if (prev) block.parentNode.insertBefore(block, prev);
+      refreshBlockState(row);
+      applyPreview(row);
+    });
+    block.querySelector('.move-down').addEventListener('click', () => {
+      const next = block.nextElementSibling;
+      if (next) block.parentNode.insertBefore(next, block);
+      refreshBlockState(row);
+      applyPreview(row);
+    });
+    block.querySelector('.block-del').addEventListener('click', () => {
+      block.remove();
+      refreshBlockState(row);
+      applyPreview(row);
+    });
+
+    return block;
+  }
+
+  function addBlock(row, cfg) {
+    row.querySelector('.blocks').appendChild(buildBlock(row, cfg || {}));
+    refreshBlockState(row);
+    applyPreview(row);
+  }
+
   function renumberRows() {
     document.querySelectorAll('.banner-row').forEach((row, i) => {
       row.querySelector('.banner-row-head h3').textContent = `배너 ${i + 1}`;
@@ -142,7 +308,7 @@
   }
 
   function buildRow(cfg) {
-    const c = Object.assign({}, BLANK_BANNER, cfg);
+    const c = Object.assign({ image: '', imagePosition: '50% 50%', href: '', textAlign: 'left', textVAlign: 'bottom', overlay: 'strong', blocks: [] }, cfg);
     const m = /^(\d{1,3})% (\d{1,3})%$/.exec(c.imagePosition || '50% 50%');
     const x = m ? Number(m[1]) : 50, y = m ? Number(m[2]) : 50;
 
@@ -153,19 +319,11 @@
     row.dataset.imagePosition = `${x}% ${y}%`;
     row.dataset.textAlign = c.textAlign || 'left';
     row.dataset.textValign = c.textVAlign || 'bottom';
-    row.dataset.textScale = c.textScale || 1;
+    row.dataset.overlay = c.overlay || 'strong';
 
     row.innerHTML = `
       <div class="banner-row-head"><h3></h3><button type="button" class="remove-btn">삭제</button></div>
-      <div class="banner-slide">
-        <img src="${(c.image || '').replace(/"/g, '&quot;')}" alt="">
-        <div class="banner-copy">
-          <span class="eyebrow"></span>
-          <div class="headline"></div>
-          <div class="price"></div>
-          <span class="banner-cta"></span>
-        </div>
-      </div>
+      <div class="banner-slide"></div>
       <div class="edit-panel">
         <div class="field">
           <label>배너 이미지</label>
@@ -175,19 +333,22 @@
             <span class="upload-status"></span>
           </div>
         </div>
-        <div class="field"><label>eyebrow (짧은 라벨)</label><input type="text" data-field="eyebrow" value="${(c.eyebrow || '').replace(/"/g, '&quot;')}" maxlength="30"></div>
-        <div class="field"><label>제목</label><input type="text" data-field="headline" value="${(c.headline || '').replace(/"/g, '&quot;')}" maxlength="60"></div>
-        <div class="field"><label>부제/가격</label><input type="text" data-field="price" value="${(c.price || '').replace(/"/g, '&quot;')}" maxlength="60"></div>
-        <div class="field"><label>버튼 문구</label><input type="text" data-field="cta" value="${(c.cta || '').replace(/"/g, '&quot;')}" maxlength="20"></div>
-        <div class="field"><label>연결 링크</label><input type="text" data-field="href" value="${(c.href || '').replace(/"/g, '&quot;')}" maxlength="200"></div>
 
-        <div class="align-group-ttl">텍스트 크기</div>
-        <div class="pos-controls">
-          <label>배율 <input type="range" min="70" max="160" value="${Math.round((c.textScale || 1) * 100)}" data-field="scaleRange"> <span class="val scale-val">${Math.round((c.textScale || 1) * 100)}%</span></label>
+        <div class="align-group-ttl">배너 문구</div>
+        <div class="blocks"></div>
+        <div class="blocks-empty">문구 블록이 없어요. 아래에서 추가하면 이미지만 있는 배너도 만들 수 있어요.</div>
+        <div class="block-add-row">
+          <button type="button" data-add="label">+ 작은 라벨</button>
+          <button type="button" data-add="title">+ 큰 제목</button>
+          <button type="button" data-add="body">+ 본문</button>
+          <button type="button" data-add="button">+ 버튼</button>
         </div>
+
+        <div class="field" style="margin-top:14px;"><label>연결 링크 (배너 전체를 누르면 이동)</label><input type="text" data-field="href" value="${(c.href || '').replace(/"/g, '&quot;')}" maxlength="200"></div>
 
         <div class="align-placeholder-h"></div>
         <div class="align-placeholder-v"></div>
+        <div class="align-placeholder-o"></div>
 
         <div class="align-group-ttl">이미지 위치</div>
         <div class="pos-controls">
@@ -199,16 +360,18 @@
 
     row.querySelector('.align-placeholder-h').replaceWith(buildAlignRow(row, 'textAlign', H_ALIGNS, '텍스트 가로 위치'));
     row.querySelector('.align-placeholder-v').replaceWith(buildAlignRow(row, 'textValign', V_ALIGNS, '텍스트 세로 위치'));
+    row.querySelector('.align-placeholder-o').replaceWith(buildAlignRow(row, 'overlay', OVERLAYS, '이미지 위 어둠 (글자 가독성)'));
 
-    row.querySelectorAll('input[data-field="eyebrow"], input[data-field="headline"], input[data-field="price"], input[data-field="cta"]').forEach((input) => {
-      input.addEventListener('input', () => applyPreview(row));
+    (c.blocks || []).forEach((b) => row.querySelector('.blocks').appendChild(buildBlock(row, b)));
+
+    row.querySelectorAll('[data-add]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const type = btn.dataset.add;
+        addBlock(row, { type, text: type === 'button' ? '지금 보기 →' : '' });
+      });
     });
 
-    row.querySelector('input[data-field="scaleRange"]').addEventListener('input', (e) => {
-      row.dataset.textScale = Number(e.target.value) / 100;
-      row.querySelector('.scale-val').textContent = e.target.value + '%';
-      applyPreview(row);
-    });
+    row.querySelector('input[data-field="href"]').addEventListener('input', () => applyPreview(row));
 
     row.querySelectorAll('input[data-axis]').forEach((input) => {
       input.addEventListener('input', () => {
@@ -236,7 +399,12 @@
         if (!res.ok) { uploadStatus.textContent = data.error || '업로드 실패'; return; }
         row.dataset.image = data.path;
         applyPreview(row);
-        uploadStatus.textContent = '업로드 완료';
+        // 서버가 1440px JPEG로 줄여서 저장한다 — 얼마나 줄었는지 보여주면
+        // 너무 큰 파일을 올렸을 때 감이 온다.
+        const kb = (n) => Math.round(n / 1024).toLocaleString('ko-KR') + 'KB';
+        uploadStatus.textContent = data.bytes
+          ? `완료 · ${kb(data.originalBytes)} → ${kb(data.bytes)}`
+          : '업로드 완료';
       } catch (e) {
         uploadStatus.textContent = '업로드 실패';
       }
@@ -248,6 +416,7 @@
       renumberRows();
     });
 
+    refreshBlockState(row);
     applyPreview(row);
     return row;
   }
@@ -274,19 +443,7 @@
     const missingImage = rows.some((row) => !row.dataset.image);
     if (missingImage) { showToast('이미지가 없는 배너가 있어요. 이미지를 업로드하거나 삭제해주세요.'); return; }
 
-    const banners = rows.map((row) => ({
-      id: row.dataset.id || undefined,
-      image: row.dataset.image,
-      imagePosition: row.dataset.imagePosition,
-      eyebrow: row.querySelector('input[data-field="eyebrow"]').value,
-      headline: row.querySelector('input[data-field="headline"]').value,
-      price: row.querySelector('input[data-field="price"]').value,
-      cta: row.querySelector('input[data-field="cta"]').value,
-      href: row.querySelector('input[data-field="href"]').value,
-      textAlign: row.dataset.textAlign,
-      textVAlign: row.dataset.textValign,
-      textScale: Number(row.dataset.textScale)
-    }));
+    const banners = rows.map(readRow);
     const res = await fetch('/api/admin/banners', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ banners })
