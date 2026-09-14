@@ -608,4 +608,33 @@ tr:last-child td { border-bottom: none; }
 #orderTable th:nth-child(2), #orderTable td:nth-child(2) { width: 34%; }
 .actions button { padding: 7px 13px; border-radius: var(--radius-pill); border: none; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; margin-right: 6px; }
 .approve-btn { background: var(--ink); color: #fff; }
+
+/* ---------- 메인페이지 "고민 선택" 진입부 — 상품명이 아니라 고민으로 먼저 묻는 카드 ---------- */
+.concern-list { display: flex; flex-direction: column; gap: 10px; }
+.concern-card {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-card);
+  padding: 14px 16px; text-decoration: none; color: var(--ink);
+}
+.concern-card .num { font-size: 12px; font-weight: 800; color: var(--accent); flex-shrink: 0; }
+.concern-card .txt { flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.concern-card .txt strong { font-size: 14.5px; font-weight: 800; }
+.concern-card .txt em { font-style: normal; font-size: 12px; color: var(--muted); }
+.concern-card .arrow { color: var(--muted-2); font-size: 16px; flex-shrink: 0; }
+.concern-card:active { background: var(--surface); }
+
+/* ---------- 메인페이지 "연결된 고민" 묶음 안내 — 실제 묶음결제 상품이 아니라 관련 상품
+   교차 안내다. 그래서 할인된 "묶음가"를 따로 만들지 않고, 각 항목의 실제 개별 가격을
+   그대로 보여준다(허위 표시 방지). ---------- */
+.pack-list { display: flex; flex-direction: column; gap: 14px; }
+.pack-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); padding: 16px; }
+.pack-head h3 { font-size: 14.5px; font-weight: 800; margin: 0 0 4px; }
+.pack-head p { font-size: 12px; color: var(--muted); margin: 0 0 12px; line-height: 1.5; }
+.pack-items { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.pack-items a {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--paper); border: 1px solid var(--line); border-radius: 10px;
+  padding: 10px 12px; text-decoration: none; color: var(--ink); font-size: 13px; font-weight: 600;
+}
+.pack-items a span { font-size: 12.5px; font-weight: 800; color: var(--accent); flex-shrink: 0; margin-left: 10px; }
 .reject-btn { background: var(--danger-soft); color: var(--danger); }
