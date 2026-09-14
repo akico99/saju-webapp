@@ -57,32 +57,32 @@ router.post('/generate', requireAuth, async (req, res) => {
     });
   }
 
+  const person = { name: input.name, gender: engineResult.meta.genderGiven ? input.gender : null };
+  const jobId = crypto.randomUUID();
+  const label = `평생사주 100p 정식 리포트${person.name ? ` — ${person.name}` : ''}`;
+
+  // 포인트 차감과 주문 생성을 하나의 트랜잭션으로 묶는다 — 실패하면 전부 롤백되므로
+  // 별도 환불이 필요 없다.
   let price;
   try {
-    price = points.chargeForProduct(req.session.userId, 'full');
+    price = points.chargeForProductAndCreateOrder(req.session.userId, 'full', { label, jobId });
   } catch (e) {
     if (e.code === 'insufficient_points') {
       return res.status(402).json({ error: e.message, code: e.code, required: e.required, balance: e.balance });
     }
-    return res.status(400).json({ error: e.message });
+    return res.status(500).json({ error: '결제 처리 중 오류가 발생했습니다. 포인트는 차감되지 않았습니다.' });
   }
 
-  // 포인트는 이미 차감됐다(위) — 이 블록에서 뭔가 실패하면(디스크 오류 등) 주문 기록
-  // 없이 포인트만 빠진 상태가 되므로, 반드시 환불하고 에러로 응답한다.
-  const jobId = crypto.randomUUID();
-  let jobDir, person;
+  // 포인트는 이미 차감됐다(위) — 이 블록(파일시스템 작업)은 DB 트랜잭션 밖이라, 여기서
+  // 실패하면(디스크 오류 등) 반드시 환불하고 에러로 응답한다.
+  let jobDir;
   try {
     jobDir = path.join(OUTPUT_ROOT, jobId);
     fs.mkdirSync(jobDir, { recursive: true });
     fs.writeFileSync(path.join(jobDir, 'engine.json'), JSON.stringify(engineResult, null, 2));
-
-    person = { name: input.name, gender: engineResult.meta.genderGiven ? input.gender : null };
-    orders.createOrder({
-      userId: req.session.userId, productKey: 'full',
-      label: `평생사주 100p 정식 리포트${person.name ? ` — ${person.name}` : ''}`, jobId
-    });
   } catch (e) {
-    points.refund(req.session.userId, price, '생성 준비 실패 환불: full');
+    orders.markError(jobId, e.message || String(e));
+    points.refund(req.session.userId, price, '생성 준비 실패 환불: full', jobId);
     return res.status(500).json({ error: '생성 준비 중 오류가 발생했습니다. 포인트는 환불되었습니다.' });
   }
 
@@ -112,11 +112,13 @@ router.post('/generate', requireAuth, async (req, res) => {
       const html = renderHtml(engineResult, chapters, person, coverSummary);
       const pdfPath = path.join(jobDir, 'report.pdf');
       await renderPdf(html, pdfPath, person);
+      if (!fs.existsSync(pdfPath)) throw new Error('PDF 파일 생성 확인 실패');
 
       // 3초 요약 카드 — 본편 PDF를 보내기 전에 당근마켓/카톡으로 먼저 공유할 미리보기 이미지
       const cardPath = path.join(jobDir, 'summary-card.png');
       const cardHtml = renderCardHtml(engineResult, person);
       await renderCardImage(cardHtml, cardPath);
+      if (!fs.existsSync(cardPath)) throw new Error('요약 카드 생성 확인 실패');
 
       // 18챕터 + 표지요약 전체 usage를 합쳐 이 리포트 한 건의 실제 LLM 원가(달러)를 계산·저장.
       const totalUsage = sumUsage([...chapters.map((c) => c.usage), coverResult && coverResult.usage]);
@@ -126,7 +128,7 @@ router.post('/generate', requireAuth, async (req, res) => {
     })
     .catch((e) => {
       orders.markError(jobId, e.message);
-      points.refund(req.session.userId, price, '생성 실패 환불: full');
+      points.refund(req.session.userId, price, '생성 실패 환불: full', jobId);
     });
 });
 

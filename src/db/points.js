@@ -2,6 +2,7 @@
 /* 포인트 충전 신청 + 관리자 수동 승인 + 상품 구매 차감. 1포인트 = 1원(고정, v1). */
 const db = require('./index');
 const { adjustPointBalance, findById } = require('./users');
+const orders = require('./orders');
 
 // 상품 가격은 서버가 유일한 기준이다 — 클라이언트가 보내는 price 쿼리파라미터는
 // 화면 표시용일 뿐 절대 신뢰하지 않는다(가격 위조 방지).
@@ -40,8 +41,9 @@ const stmts = {
   listTxByUser: db.prepare('SELECT * FROM point_transactions WHERE user_id = ? ORDER BY id DESC')
 };
 
-/** 상품 구매 시 포인트를 차감한다. 잔액 부족이면 code='insufficient_points'인 Error를 던진다. */
-function chargeForProduct(userId, productKey) {
+/** 상품 구매 시 포인트를 차감한다. 잔액 부족이면 code='insufficient_points'인 Error를 던진다.
+    refId를 넘기면(예: jobId) 이 차감 거래와 나중의 환불·주문을 같은 값으로 묶어 추적할 수 있다. */
+function chargeForProduct(userId, productKey, refId) {
   const price = PRICES[productKey];
   if (!price) throw new Error('알 수 없는 상품입니다: ' + productKey);
 
@@ -55,8 +57,21 @@ function chargeForProduct(userId, productKey) {
   }
 
   const tx = db.transaction(() => {
-    stmts.insertTx.run({ userId, delta: -price, reason: `상품 구매: ${productKey}`, refType: 'product_purchase', refId: null });
+    stmts.insertTx.run({ userId, delta: -price, reason: `상품 구매: ${productKey}`, refType: 'product_purchase', refId: refId || null });
     adjustPointBalance(userId, -price);
+  });
+  tx();
+  return price;
+}
+
+/** 포인트 차감 + 주문 생성을 하나의 트랜잭션으로 묶는다 — 둘 중 하나라도 실패하면(디스크
+    오류 등) 전부 롤백되어 "차감만 되고 주문 기록이 없는" 반쪽 상태 자체가 생기지 않는다.
+    그래서 이 함수가 실패하면 별도로 환불할 필요가 없다 — 애초에 차감이 커밋되지 않았다. */
+function chargeForProductAndCreateOrder(userId, productKey, { label, jobId }) {
+  let price;
+  const tx = db.transaction(() => {
+    price = chargeForProduct(userId, productKey, jobId);
+    orders.createOrder({ userId, productKey, label, jobId });
   });
   tx();
   return price;
@@ -132,7 +147,7 @@ function listMyTransactions(userId) {
 }
 
 module.exports = {
-  PRICES, chargeForProduct, refund, adminAdjust,
+  PRICES, chargeForProduct, chargeForProductAndCreateOrder, refund, adminAdjust,
   createRequest, listMyRequests, listPendingRequests, listAllRequests,
   approveRequest, rejectRequest, listMyTransactions
 };

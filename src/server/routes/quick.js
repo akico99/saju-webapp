@@ -56,29 +56,31 @@ router.post('/quick', requireAuth, async (req, res) => {
     });
   }
 
+  const person = { name: parsed.name, gender: parsed.gender };
+  const topicLabel = QUICK_TOPICS[parsed.topic].label;
+  const jobId = crypto.randomUUID();
+  const label = `${topicLabel} 빠른 리딩${person.name ? ` — ${person.name}` : ''}`;
+
+  // 포인트 차감과 주문 생성을 하나의 트랜잭션으로 묶는다 — 둘 중 하나라도 실패하면
+  // 전부 롤백되므로, 이 단계에서 실패하면 애초에 차감 자체가 안 일어난 것이라 별도
+  // 환불이 필요 없다.
   let price;
   try {
-    price = points.chargeForProduct(req.session.userId, 'quick');
+    price = points.chargeForProductAndCreateOrder(req.session.userId, 'quick', { label, jobId });
   } catch (e) {
     if (e.code === 'insufficient_points') {
       return res.status(402).json({ error: e.message, code: e.code, required: e.required, balance: e.balance });
     }
-    return res.status(400).json({ error: e.message });
+    return res.status(500).json({ error: '결제 처리 중 오류가 발생했습니다. 포인트는 차감되지 않았습니다.' });
   }
 
-  const person = { name: parsed.name, gender: parsed.gender };
-  const jobId = crypto.randomUUID();
-  let jobDir, topicLabel;
+  let jobDir;
   try {
     jobDir = path.join(OUTPUT_ROOT, jobId);
     fs.mkdirSync(jobDir, { recursive: true });
-    topicLabel = QUICK_TOPICS[parsed.topic].label;
-    orders.createOrder({
-      userId: req.session.userId, productKey: 'quick',
-      label: `${topicLabel} 빠른 리딩${person.name ? ` — ${person.name}` : ''}`, jobId
-    });
   } catch (e) {
-    points.refund(req.session.userId, price, '생성 준비 실패 환불: quick');
+    orders.markError(jobId, e.message || String(e));
+    points.refund(req.session.userId, price, '생성 준비 실패 환불: quick', jobId);
     return res.status(500).json({ error: '생성 준비 중 오류가 발생했습니다. 포인트는 환불되었습니다.' });
   }
 
@@ -91,11 +93,12 @@ router.post('/quick', requireAuth, async (req, res) => {
       const html = renderQuickHtml(engineResult, person, title, text);
       const pdfPath = path.join(jobDir, 'quick-report.pdf');
       await renderPdf(html, pdfPath, { name: person.name, label: title });
+      if (!fs.existsSync(pdfPath)) throw new Error('PDF 파일 생성 확인 실패');
       orders.markDone(jobId, { resultPath: pdfPath, llmCostUsd: costUsd(usage) });
     })
     .catch((e) => {
       orders.markError(jobId, e.message);
-      points.refund(req.session.userId, price, '생성 실패 환불: quick');
+      points.refund(req.session.userId, price, '생성 실패 환불: quick', jobId);
     });
 });
 

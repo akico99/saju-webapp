@@ -14,9 +14,15 @@ function recoverPendingOrders() {
 
   let refunded = 0;
   for (const order of pending) {
+    // 여러 프로세스가 동시에 뜨는 극단적인 상황(예: 배포 중 순간적으로 신·구 인스턴스가
+    // 겹치는 경우)에도 한 프로세스만 이 주문을 처리하도록 먼저 선점한다 — 선점 못 하면
+    // 이미 다른 프로세스가 처리 중이라는 뜻이므로 건너뛴다.
+    if (!orders.claimForRecovery(order.job_id)) continue;
+
     const price = points.PRICES[order.product_key];
     if (!price) {
       console.warn(`[재시작 복구] 알 수 없는 상품(${order.product_key}), 주문 ${order.job_id} 환불 건너뜀 — 수동 확인 필요`);
+      orders.markError(order.job_id, '서버 재시작으로 인해 완료되지 못함(상품 정보 불명, 수동 환불 필요)');
       continue;
     }
     points.refund(order.user_id, price, `서버 재시작으로 중단된 작업 자동 환불: ${order.product_key}`, order.job_id);

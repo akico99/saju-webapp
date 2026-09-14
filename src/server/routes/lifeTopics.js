@@ -260,6 +260,7 @@ async function finishReport({ jobId, userId, productKey, name, label, title, eye
     fs.mkdirSync(jobDir, { recursive: true });
     const pdfPath = path.join(jobDir, 'life-topic-report.pdf');
     await renderPdf(html, pdfPath, { name, label });
+    if (!fs.existsSync(pdfPath)) throw new Error('PDF 파일 생성 확인 실패');
     orders.markDone(jobId, { resultPath: pdfPath, llmCostUsd: costUsd(usage), resultText: text });
   } catch (e) {
     orders.markError(jobId, e.message || String(e));
@@ -304,11 +305,17 @@ async function runCompat(req, res, topic) {
     });
   }
 
+  const displayName = isSolo ? basics.personName : [basics.personName, spouseBasics?.personName].filter(Boolean).join(' · ');
+  const jobId = crypto.randomUUID();
+  const orderLabel = `${topic.label} 리포트${displayName ? ' — ' + displayName : ''}`;
+
+  // 포인트 차감과 주문 생성을 하나의 트랜잭션으로 묶는다 — 실패하면 전부 롤백되므로
+  // 별도 환불이 필요 없다.
   try {
-    points.chargeForProduct(req.session.userId, topic.productKey);
+    points.chargeForProductAndCreateOrder(req.session.userId, topic.productKey, { label: orderLabel, jobId });
   } catch (e) {
     if (e.code === 'insufficient_points') return res.status(402).json({ error: e.message, code: e.code, required: e.required, balance: e.balance });
-    return res.status(400).json({ error: e.message });
+    return res.status(500).json({ error: '결제 처리 중 오류가 발생했습니다. 포인트는 차감되지 않았습니다.' });
   }
 
   const yongshinKo = OHAENG_KO[basics.yongshinMain] || basics.yongshinMain;
@@ -339,18 +346,6 @@ async function runCompat(req, res, topic) {
     personDayStem: basics.personDayStem, personDayBranch: basics.personDayBranch, months: 2
   });
   const bestOut = best ? { ...best, dateValue: formatDateValue(best) } : null;
-
-  const displayName = isSolo ? basics.personName : [basics.personName, spouseBasics?.personName].filter(Boolean).join(' · ');
-  const jobId = crypto.randomUUID();
-  try {
-    orders.createOrder({
-      userId: req.session.userId, productKey: topic.productKey,
-      label: `${topic.label} 리포트${displayName ? ' — ' + displayName : ''}`, jobId
-    });
-  } catch (e) {
-    points.refund(req.session.userId, points.PRICES[topic.productKey], `생성 준비 실패 환불: ${topic.productKey}`);
-    return res.status(500).json({ error: '생성 준비 중 오류가 발생했습니다. 포인트는 환불되었습니다.' });
-  }
 
   res.json({ topic: 'compat', topicLabel: topic.label, name: basics.personName, spouseName: spouseBasics?.personName || null, jobId, best: bestOut, compatScore: compat?.score || null });
 
@@ -400,11 +395,13 @@ async function runWealth(req, res, topic) {
     });
   }
 
+  const jobId = crypto.randomUUID();
+  const orderLabel = `${topic.label} 리포트${basics.personName ? ' — ' + basics.personName : ''}`;
   try {
-    points.chargeForProduct(req.session.userId, topic.productKey);
+    points.chargeForProductAndCreateOrder(req.session.userId, topic.productKey, { label: orderLabel, jobId });
   } catch (e) {
     if (e.code === 'insufficient_points') return res.status(402).json({ error: e.message, code: e.code, required: e.required, balance: e.balance });
-    return res.status(400).json({ error: e.message });
+    return res.status(500).json({ error: '결제 처리 중 오류가 발생했습니다. 포인트는 차감되지 않았습니다.' });
   }
 
   const jeongjae = basics.engine.counts.shipsinDetail['정재'] || 0;
@@ -418,17 +415,6 @@ async function runWealth(req, res, topic) {
 
   const banansal = bananSalBranch(basics.yearBranch);
   const direction = banansal ? BRANCH_DIRECTION_KO[banansal] : null;
-
-  const jobId = crypto.randomUUID();
-  try {
-    orders.createOrder({
-      userId: req.session.userId, productKey: topic.productKey,
-      label: `${topic.label} 리포트${basics.personName ? ' — ' + basics.personName : ''}`, jobId
-    });
-  } catch (e) {
-    points.refund(req.session.userId, points.PRICES[topic.productKey], `생성 준비 실패 환불: ${topic.productKey}`);
-    return res.status(500).json({ error: '생성 준비 중 오류가 발생했습니다. 포인트는 환불되었습니다.' });
-  }
 
   res.json({ topic: 'wealth', topicLabel: topic.label, name: basics.personName, jobId, best: goodDay ? { ...goodDay, dateValue: formatDateValue(goodDay) } : null });
 
@@ -475,11 +461,13 @@ async function runHealth(req, res, topic) {
     });
   }
 
+  const jobId = crypto.randomUUID();
+  const orderLabel = `${topic.label} 리포트${basics.personName ? ' — ' + basics.personName : ''}`;
   try {
-    points.chargeForProduct(req.session.userId, topic.productKey);
+    points.chargeForProductAndCreateOrder(req.session.userId, topic.productKey, { label: orderLabel, jobId });
   } catch (e) {
     if (e.code === 'insufficient_points') return res.status(402).json({ error: e.message, code: e.code, required: e.required, balance: e.balance });
-    return res.status(400).json({ error: e.message });
+    return res.status(500).json({ error: '결제 처리 중 오류가 발생했습니다. 포인트는 차감되지 않았습니다.' });
   }
 
   const grades = basics.engine.counts.ohaengGrade;
@@ -492,17 +480,6 @@ async function runHealth(req, res, topic) {
 
   const banansal = bananSalBranch(basics.yearBranch);
   const direction = banansal ? BRANCH_DIRECTION_KO[banansal] : null;
-
-  const jobId = crypto.randomUUID();
-  try {
-    orders.createOrder({
-      userId: req.session.userId, productKey: topic.productKey,
-      label: `${topic.label} 리포트${basics.personName ? ' — ' + basics.personName : ''}`, jobId
-    });
-  } catch (e) {
-    points.refund(req.session.userId, points.PRICES[topic.productKey], `생성 준비 실패 환불: ${topic.productKey}`);
-    return res.status(500).json({ error: '생성 준비 중 오류가 발생했습니다. 포인트는 환불되었습니다.' });
-  }
 
   res.json({ topic: 'health', topicLabel: topic.label, name: basics.personName, jobId, best: goodDay ? { ...goodDay, dateValue: formatDateValue(goodDay) } : null });
 

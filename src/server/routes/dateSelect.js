@@ -265,6 +265,7 @@ async function finishReport({ jobId, userId, occasion, name, title, eyebrow, met
     fs.mkdirSync(jobDir, { recursive: true });
     const pdfPath = path.join(jobDir, 'date-select-report.pdf');
     await renderPdf(html, pdfPath, { name, label: `${occasion.label} 리포트` });
+    if (!fs.existsSync(pdfPath)) throw new Error('PDF 파일 생성 확인 실패');
     orders.markDone(jobId, { resultPath: pdfPath, llmCostUsd: costUsd(usage), resultText: text });
   } catch (e) {
     orders.markError(jobId, e.message || String(e));
@@ -352,13 +353,15 @@ async function runMonthSearch(req, res, occasionKey, occasion) {
     });
   }
 
+  const jobId = crypto.randomUUID();
+  const orderLabel = `${occasion.label} 리포트${personName ? ' — ' + personName : ''}`;
   try {
-    points.chargeForProduct(req.session.userId, occasion.productKey);
+    points.chargeForProductAndCreateOrder(req.session.userId, occasion.productKey, { label: orderLabel, jobId });
   } catch (e) {
     if (e.code === 'insufficient_points') {
       return res.status(402).json({ error: e.message, code: e.code, required: e.required, balance: e.balance });
     }
-    return res.status(400).json({ error: e.message });
+    return res.status(500).json({ error: '결제 처리 중 오류가 발생했습니다. 포인트는 차감되지 않았습니다.' });
   }
 
   const ctx = { occasionKey, yongshinMain, personDayStem, personDayBranch };
@@ -382,17 +385,6 @@ async function runMonthSearch(req, res, occasionKey, occasion) {
 
   const bestOut = best ? { year: bestDay.year, month: bestDay.month, day: bestDay.day, hour: best.hour, ganZhiKo: best.ganZhiKo, hourGanZhiKo: best.hourGanZhiKo, score: best.score } : null;
   const bestValue = formatBestValue(best ? { ...best, year: bestDay.year, month: bestDay.month, day: bestDay.day } : null);
-
-  const jobId = crypto.randomUUID();
-  try {
-    orders.createOrder({
-      userId: req.session.userId, productKey: occasion.productKey,
-      label: `${occasion.label} 리포트${personName ? ' — ' + personName : ''}`, jobId
-    });
-  } catch (e) {
-    points.refund(req.session.userId, points.PRICES[occasion.productKey], `생성 준비 실패 환불: ${occasion.productKey}`);
-    return res.status(500).json({ error: '생성 준비 중 오류가 발생했습니다. 포인트는 환불되었습니다.' });
-  }
 
   res.json({ occasion: occasionKey, occasionLabel: occasion.label, name: personName, jobId, best: bestOut, extras });
 
@@ -452,13 +444,16 @@ async function runWeddingSearch(req, res, occasionKey, occasion) {
     });
   }
 
+  const jobId = crypto.randomUUID();
+  const coupleName = [basicsA.personName, basicsB.personName].filter(Boolean).join(' · ');
+  const orderLabel = `${occasion.label} 리포트${coupleName ? ' — ' + coupleName : ''}`;
   try {
-    points.chargeForProduct(req.session.userId, occasion.productKey);
+    points.chargeForProductAndCreateOrder(req.session.userId, occasion.productKey, { label: orderLabel, jobId });
   } catch (e) {
     if (e.code === 'insufficient_points') {
       return res.status(402).json({ error: e.message, code: e.code, required: e.required, balance: e.balance });
     }
-    return res.status(400).json({ error: e.message });
+    return res.status(500).json({ error: '결제 처리 중 오류가 발생했습니다. 포인트는 차감되지 않았습니다.' });
   }
 
   const ctxA = { occasionKey, yongshinMain: basicsA.yongshinMain, personDayStem: basicsA.personDayStem, personDayBranch: basicsA.personDayBranch };
@@ -493,18 +488,6 @@ async function runWeddingSearch(req, res, occasionKey, occasion) {
 
   const bestValue = formatBestValue(best && bestDay ? { ...best, year: bestDay.year, month: bestDay.month, day: bestDay.day } : null);
   const bestOut = best && bestDay ? { year: bestDay.year, month: bestDay.month, day: bestDay.day, hour: best.hour, ganZhiKo: best.ganZhiKo, hourGanZhiKo: best.hourGanZhiKo, score: best.score } : null;
-  const coupleName = [basicsA.personName, basicsB.personName].filter(Boolean).join(' · ');
-
-  const jobId = crypto.randomUUID();
-  try {
-    orders.createOrder({
-      userId: req.session.userId, productKey: occasion.productKey,
-      label: `${occasion.label} 리포트${coupleName ? ' — ' + coupleName : ''}`, jobId
-    });
-  } catch (e) {
-    points.refund(req.session.userId, points.PRICES[occasion.productKey], `생성 준비 실패 환불: ${occasion.productKey}`);
-    return res.status(500).json({ error: '생성 준비 중 오류가 발생했습니다. 포인트는 환불되었습니다.' });
-  }
 
   res.json({
     occasion: occasionKey, occasionLabel: occasion.label, name: basicsA.personName, spouseName: basicsB.personName,
@@ -595,13 +578,16 @@ async function runBirthSearch(req, res, occasionKey, occasion) {
     });
   }
 
+  const jobId = crypto.randomUUID();
+  const parentDisplayName = parentNames.join(' · ');
+  const orderLabel = `${occasion.label} 리포트${parentDisplayName ? ' — ' + parentDisplayName : ''}`;
   try {
-    points.chargeForProduct(req.session.userId, occasion.productKey);
+    points.chargeForProductAndCreateOrder(req.session.userId, occasion.productKey, { label: orderLabel, jobId });
   } catch (e) {
     if (e.code === 'insufficient_points') {
       return res.status(402).json({ error: e.message, code: e.code, required: e.required, balance: e.balance });
     }
-    return res.status(400).json({ error: e.message });
+    return res.status(500).json({ error: '결제 처리 중 오류가 발생했습니다. 포인트는 차감되지 않았습니다.' });
   }
 
   const base = new Date(Date.UTC(by, bm - 1, bd));
@@ -637,20 +623,8 @@ async function runBirthSearch(req, res, occasionKey, occasion) {
   const best = candidates[0] || null;
 
   const parentLabel = parentNames.length ? parentNames.join(' · ') + ' 부모님' : '';
-  const parentDisplayName = parentNames.join(' · ');
   const bestValue = formatBestValue(best);
   const bestOut = best ? { year: best.year, month: best.month, day: best.day, hour: best.hour, ganZhiKo: best.ganZhiKo, hourGanZhiKo: best.hourGanZhiKo, score: best.score } : null;
-
-  const jobId = crypto.randomUUID();
-  try {
-    orders.createOrder({
-      userId: req.session.userId, productKey: occasion.productKey,
-      label: `${occasion.label} 리포트${parentDisplayName ? ' — ' + parentDisplayName : ''}`, jobId
-    });
-  } catch (e) {
-    points.refund(req.session.userId, points.PRICES[occasion.productKey], `생성 준비 실패 환불: ${occasion.productKey}`);
-    return res.status(500).json({ error: '생성 준비 중 오류가 발생했습니다. 포인트는 환불되었습니다.' });
-  }
 
   res.json({ occasion: occasionKey, occasionLabel: occasion.label, jobId, best: bestOut });
 

@@ -177,4 +177,17 @@ if (!orderColumns.includes('result_text')) {
   db.exec('ALTER TABLE orders ADD COLUMN result_text TEXT');
 }
 
+/* 같은 사용자가 같은 상품을 동시에 두 번 진행 중으로 만들 수 없게 하는 DB 레벨 안전장치.
+   애플리케이션 코드(findPendingByUserAndProduct)로도 막고 있지만, 코드가 틀리거나
+   나중에 인스턴스가 여러 개로 늘어나는 경우까지 대비한 이중 방어다. 기존에 위반하는
+   데이터가 있으면 생성이 실패할 수 있으므로, 실패해도 앱이 죽지 않게 감싼다. */
+try {
+  db.exec(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_active_unique
+    ON orders(user_id, product_key) WHERE status IN ('pending', 'generating', 'rendering')
+  `);
+} catch (e) {
+  console.warn('[DB] 진행 중 주문 고유 인덱스 생성 실패 — 중복된 활성 주문이 있는지 확인 필요:', e.message);
+}
+
 module.exports = db;

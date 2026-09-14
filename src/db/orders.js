@@ -30,6 +30,12 @@ const stmts = {
     "SELECT * FROM orders WHERE user_id = ? AND product_key = ? AND status IN ('pending', 'generating', 'rendering') ORDER BY id DESC LIMIT 1"
   ),
   listAllPending: db.prepare("SELECT * FROM orders WHERE status IN ('pending', 'generating', 'rendering')"),
+  // 재시작 복구 전용 — 여러 프로세스가 동시에 뜨는 극단적인 상황에서도 한 프로세스만
+  // 이 주문을 처리하게 선점한다. WHERE 조건까지 만족해야 바뀌므로, 이미 다른 프로세스가
+  // 'recovering'으로 바꿔놨다면(=선점됐다면) changes가 0이 되어 알 수 있다.
+  claimForRecovery: db.prepare(
+    "UPDATE orders SET status='recovering' WHERE job_id=@jobId AND status IN ('pending', 'generating', 'rendering')"
+  ),
   updateStatus: db.prepare('UPDATE orders SET status=@status WHERE job_id=@jobId'),
   updateProgress: db.prepare('UPDATE orders SET progress_current=@current, progress_total=@total WHERE job_id=@jobId'),
   listRecentDone: db.prepare(`
@@ -77,6 +83,11 @@ function listAllPending() {
   return stmts.listAllPending.all();
 }
 
+function claimForRecovery(jobId) {
+  const info = stmts.claimForRecovery.run({ jobId });
+  return info.changes === 1;
+}
+
 function updateStatus(jobId, status) {
   stmts.updateStatus.run({ jobId, status });
 }
@@ -95,5 +106,5 @@ function costSummaryByProduct() {
 
 module.exports = {
   createOrder, findByJobId, markDone, markError, listByUser, countDone, findPendingByUserAndProduct,
-  listAllPending, updateStatus, updateProgress, listRecentDone, costSummaryByProduct
+  listAllPending, claimForRecovery, updateStatus, updateProgress, listRecentDone, costSummaryByProduct
 };
