@@ -169,4 +169,12 @@ if (!orderColumns.includes('progress_total')) {
   db.exec('ALTER TABLE orders ADD COLUMN progress_total INTEGER');
 }
 
+/* 재물운/건강운/궁합운·이사/개업/결혼/임신출산은 PDF와 별개로 화면에 리포트 본문을
+   바로 보여준다 — 비동기 job 패턴으로 통일하면서(요청 즉시 jobId 응답, 생성은
+   백그라운드) 그 본문 텍스트를 여기 저장해뒀다가 /api/status가 완료 시점에 같이
+   내려준다. */
+if (!orderColumns.includes('result_text')) {
+  db.exec('ALTER TABLE orders ADD COLUMN result_text TEXT');
+}
+
 module.exports = db;

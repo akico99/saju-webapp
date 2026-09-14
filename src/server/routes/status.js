@@ -19,7 +19,8 @@ router.get('/status/:jobId', requireAuth, (req, res) => {
   res.json({
     status: order.status,
     progress: { current: order.progress_current, total: order.progress_total },
-    error: order.error
+    error: order.error,
+    report: order.result_text
   });
 });
 

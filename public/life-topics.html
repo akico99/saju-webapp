@@ -262,7 +262,7 @@
     return escapeHtml(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
   }
 
-  function render(data) {
+  function renderSummary(data) {
     const summaryBox = document.getElementById('dsSummary');
     if (data.best && data.best.dateValue) {
       const summaryWho = `${data.name || ''}${data.spouseName ? ' · ' + data.spouseName : ''}`.trim();
@@ -274,20 +274,51 @@
     } else {
       summaryBox.classList.add('hidden');
     }
+    document.getElementById('dsReportBody').innerHTML = '리포트를 쓰는 중이에요...';
+    document.getElementById('dsDownload').classList.add('hidden');
+    document.getElementById('dsResult').style.display = 'block';
+  }
 
-    document.getElementById('dsReportBody').innerHTML = data.report
-      ? boldify(data.report)
-      : '리포트를 만드는 데 문제가 생겼어요. 잠시 후 다시 시도해주세요.';
+  function renderReport(report, jobId) {
+    document.getElementById('dsReportBody').innerHTML = report
+      ? boldify(report)
+      : '리포트를 만드는 데 문제가 생겼어요. 포인트는 환불되었습니다. 잠시 후 다시 시도해주세요.';
 
     const downloadBox = document.getElementById('dsDownload');
-    if (data.jobId) {
-      document.getElementById('dsDownloadLink').href = `/api/download/${data.jobId}`;
+    if (report && jobId) {
+      document.getElementById('dsDownloadLink').href = `/api/download/${jobId}`;
       downloadBox.classList.remove('hidden');
     } else {
       downloadBox.classList.add('hidden');
     }
+  }
 
-    document.getElementById('dsResult').style.display = 'block';
+  async function poll(jobId) {
+    try {
+      const res = await fetch(`/api/status/${jobId}`);
+      const data = await res.json();
+      if (data.error) {
+        errorBox.textContent = data.error;
+        errorBox.classList.remove('hidden');
+        setFormBusy(false);
+        return;
+      }
+      if (data.status === 'done') {
+        renderReport(data.report, jobId);
+        setFormBusy(false);
+        return;
+      }
+      if (data.status === 'error') {
+        renderReport(null, null);
+        setFormBusy(false);
+        return;
+      }
+      setTimeout(() => poll(jobId), 2000);
+    } catch (e) {
+      errorBox.textContent = '상태 조회 실패: ' + e.message;
+      errorBox.classList.remove('hidden');
+      setFormBusy(false);
+    }
   }
 
   form.addEventListener('submit', async (e) => {
@@ -306,6 +337,14 @@
       });
       const data = await res.json();
       if (!res.ok) {
+        if (data.code === 'already_pending' && data.jobId) {
+          // 이미 생성 중이던 작업이 있다 — 새로 만들지 않고 그 작업 진행 상황에 다시 붙는다.
+          errorBox.textContent = data.error;
+          errorBox.classList.remove('hidden');
+          document.getElementById('dsResult').style.display = 'block';
+          poll(data.jobId);
+          return;
+        }
         setFormBusy(false);
         if (res.status === 401) { location.href = '/login.html?redirect=' + encodeURIComponent(location.pathname + location.search); return; }
         if (res.status === 402) { alert(`포인트가 부족합니다 (필요 ${data.required}P / 보유 ${data.balance}P). 마이페이지에서 충전해주세요.`); location.href = '/mypage.html'; return; }
@@ -313,8 +352,9 @@
         errorBox.classList.remove('hidden');
         return;
       }
-      render(data);
-      setFormBusy(false);
+      renderSummary(data);
+      poll(data.jobId);
+      // submitBtn은 여기서 다시 켜지 않는다 — poll()이 done/error로 끝날 때만 다시 켠다.
     } catch (err) {
       setFormBusy(false);
       errorBox.textContent = '요청 실패: ' + err.message;

@@ -243,17 +243,15 @@ function currentDaewoon(engine) {
   return current;
 }
 
-// LLM 생성 실패(text 없음) 또는 PDF 렌더링 실패 시, 주문 행은 항상 남기고(관리자가
-// 추적할 수 있게) 차감했던 포인트를 반드시 돌려준다 — 예전엔 text가 없으면 그냥
-// null을 반환하고 끝이라 주문 기록도 없이 포인트만 빠진 채로 남는 경우가 있었다.
-async function savePdfAndOrder({ userId, productKey, label, name, title, eyebrow, metaLine, bestLabel, bestValue, text, usage }) {
-  const jobId = crypto.randomUUID();
-  orders.createOrder({ userId, productKey, label: `${label}${name ? ' — ' + name : ''}`, jobId });
-
+// 비동기 job 패턴(quick/compat/generate와 동일) — 요청 시점에 이미 만들어둔 주문(jobId)에
+// 대해, 여기서 LLM 결과를 받아 PDF까지 만들고 완료 처리한다. LLM 생성 실패(text 없음)
+// 또는 PDF 렌더링 실패 시, 주문 행은 남겨두고(관리자가 추적할 수 있게) 차감했던 포인트를
+// 반드시 돌려준다.
+async function finishReport({ jobId, userId, productKey, name, label, title, eyebrow, metaLine, bestLabel, bestValue, text, usage }) {
   if (!text) {
     orders.markError(jobId, 'LLM 리포트 생성 실패(빈 응답)');
-    points.refund(userId, points.PRICES[productKey], `생성 실패 환불: ${productKey}`);
-    return null;
+    points.refund(userId, points.PRICES[productKey], `생성 실패 환불: ${productKey}`, jobId);
+    return;
   }
 
   try {
@@ -262,12 +260,10 @@ async function savePdfAndOrder({ userId, productKey, label, name, title, eyebrow
     fs.mkdirSync(jobDir, { recursive: true });
     const pdfPath = path.join(jobDir, 'life-topic-report.pdf');
     await renderPdf(html, pdfPath, { name, label });
-    orders.markDone(jobId, { resultPath: pdfPath, llmCostUsd: costUsd(usage) });
-    return jobId;
+    orders.markDone(jobId, { resultPath: pdfPath, llmCostUsd: costUsd(usage), resultText: text });
   } catch (e) {
     orders.markError(jobId, e.message || String(e));
-    points.refund(userId, points.PRICES[productKey], `생성 실패 환불: ${productKey}`);
-    return null;
+    points.refund(userId, points.PRICES[productKey], `생성 실패 환불: ${productKey}`, jobId);
   }
 }
 
@@ -297,6 +293,15 @@ async function runCompat(req, res, topic) {
   if (!isSolo) {
     spouseBasics = computePersonBasics(req.body, 'p');
     if (spouseBasics.error) return res.status(400).json({ error: '상대방 정보: ' + spouseBasics.error });
+  }
+
+  // 이미 생성 중인 같은 상품이 있으면 또 결제/생성하지 않는다.
+  const pending = orders.findPendingByUserAndProduct(req.session.userId, topic.productKey);
+  if (pending) {
+    return res.status(409).json({
+      error: `이미 생성 중인 ${topic.label} 리포트가 있어요. 완료될 때까지 잠시만 기다려주세요.`,
+      code: 'already_pending', jobId: pending.job_id
+    });
   }
 
   try {
@@ -333,31 +338,51 @@ async function runCompat(req, res, topic) {
     groupOrder: TOPIC_GROUP_ORDER.compat, yongshinMain: basics.yongshinMain,
     personDayStem: basics.personDayStem, personDayBranch: basics.personDayBranch, months: 2
   });
-
-  const compatResult = await safeReport(() => generateLifeTopicReport({
-    topic: 'compat',
-    name: basics.personName, gender: basics.personGender, personGanZhiKo: basics.personGanZhiKo,
-    dayNature: OHAENG_NATURE[dayOhaeng], yongshinOhaengKo: yongshinKo,
-    status, spouseName: spouseBasics?.personName, spouseNature, spouseYongshinOhaengKo: spouseYongshinKo,
-    elementRelation, compat: compat ? { score: compat.score, yukhapCount: compat.crossYukhap.length, chungCount: compat.crossChung.length, dayRelationType: compat.dayRelation?.type || null } : null,
-    soloDaewoonGroup,
-    best: best ? { ...best, dateValue: formatDateValue(best) } : null,
-    dateColor: OHAENG_COLOR[basics.yongshinMain], dateSpot: OHAENG_DATE_SPOT[basics.yongshinMain]
-  }));
-  const report = compatResult ? compatResult.text : null;
+  const bestOut = best ? { ...best, dateValue: formatDateValue(best) } : null;
 
   const displayName = isSolo ? basics.personName : [basics.personName, spouseBasics?.personName].filter(Boolean).join(' · ');
-  const jobId = await savePdfAndOrder({
-    userId: req.session.userId, productKey: topic.productKey, label: `${topic.label} 리포트`,
-    name: displayName,
-    title: `${displayName || '고객'} 님의 ${topic.label} 리포트`,
-    eyebrow: `命 式 關 係 圖 · ${topic.label} 리포트`,
-    metaLine: isSolo ? '현재 상태: 솔로' : `현재 상태: ${{ seeing: '썸', dating: '연애 중', breaking: '이별 중' }[status]}`,
-    bestLabel: '관계 진전에 좋은 때', bestValue: best ? formatDateValue(best) : null,
-    text: report, usage: compatResult ? compatResult.usage : null
-  });
+  const jobId = crypto.randomUUID();
+  try {
+    orders.createOrder({
+      userId: req.session.userId, productKey: topic.productKey,
+      label: `${topic.label} 리포트${displayName ? ' — ' + displayName : ''}`, jobId
+    });
+  } catch (e) {
+    points.refund(req.session.userId, points.PRICES[topic.productKey], `생성 준비 실패 환불: ${topic.productKey}`);
+    return res.status(500).json({ error: '생성 준비 중 오류가 발생했습니다. 포인트는 환불되었습니다.' });
+  }
 
-  res.json({ topic: 'compat', topicLabel: topic.label, name: basics.personName, spouseName: spouseBasics?.personName || null, report, jobId, best: best ? { ...best, dateValue: formatDateValue(best) } : null, compatScore: compat?.score || null });
+  res.json({ topic: 'compat', topicLabel: topic.label, name: basics.personName, spouseName: spouseBasics?.personName || null, jobId, best: bestOut, compatScore: compat?.score || null });
+
+  // 이후 LLM 생성 + PDF 렌더는 비동기로 진행 (응답은 이미 보냄)
+  orders.updateStatus(jobId, 'generating');
+  (async () => {
+    try {
+      const compatResult = await safeReport(() => generateLifeTopicReport({
+        topic: 'compat',
+        name: basics.personName, gender: basics.personGender, personGanZhiKo: basics.personGanZhiKo,
+        dayNature: OHAENG_NATURE[dayOhaeng], yongshinOhaengKo: yongshinKo,
+        status, spouseName: spouseBasics?.personName, spouseNature, spouseYongshinOhaengKo: spouseYongshinKo,
+        elementRelation, compat: compat ? { score: compat.score, yukhapCount: compat.crossYukhap.length, chungCount: compat.crossChung.length, dayRelationType: compat.dayRelation?.type || null } : null,
+        soloDaewoonGroup,
+        best: bestOut,
+        dateColor: OHAENG_COLOR[basics.yongshinMain], dateSpot: OHAENG_DATE_SPOT[basics.yongshinMain]
+      }));
+      orders.updateStatus(jobId, 'rendering');
+      await finishReport({
+        jobId, userId: req.session.userId, productKey: topic.productKey,
+        name: displayName, label: `${topic.label} 리포트`,
+        title: `${displayName || '고객'} 님의 ${topic.label} 리포트`,
+        eyebrow: `命 式 關 係 圖 · ${topic.label} 리포트`,
+        metaLine: isSolo ? '현재 상태: 솔로' : `현재 상태: ${{ seeing: '썸', dating: '연애 중', breaking: '이별 중' }[status]}`,
+        bestLabel: '관계 진전에 좋은 때', bestValue: best ? formatDateValue(best) : null,
+        text: compatResult ? compatResult.text : null, usage: compatResult ? compatResult.usage : null
+      });
+    } catch (e) {
+      orders.markError(jobId, e.message || String(e));
+      points.refund(req.session.userId, points.PRICES[topic.productKey], `생성 실패 환불: ${topic.productKey}`, jobId);
+    }
+  })();
 }
 
 // ── 재물운 ──────────────────────────────────────────────────────────────
@@ -366,6 +391,14 @@ async function runWealth(req, res, topic) {
   const interest = sanitizeText(req.body.interestArea, 20);
   const basics = computePersonBasics(req.body, '');
   if (basics.error) return res.status(400).json({ error: basics.error });
+
+  const pending = orders.findPendingByUserAndProduct(req.session.userId, topic.productKey);
+  if (pending) {
+    return res.status(409).json({
+      error: `이미 생성 중인 ${topic.label} 리포트가 있어요. 완료될 때까지 잠시만 기다려주세요.`,
+      code: 'already_pending', jobId: pending.job_id
+    });
+  }
 
   try {
     points.chargeForProduct(req.session.userId, topic.productKey);
@@ -386,28 +419,46 @@ async function runWealth(req, res, topic) {
   const banansal = bananSalBranch(basics.yearBranch);
   const direction = banansal ? BRANCH_DIRECTION_KO[banansal] : null;
 
-  const wealthResult = await safeReport(() => generateLifeTopicReport({
-    topic: 'wealth',
-    name: basics.personName, gender: basics.personGender, personGanZhiKo: basics.personGanZhiKo,
-    yongshinOhaengKo: yongshinKo, incomeSource: income, interestArea: interest,
-    jeongjae, pyeonjae, bigyeopGrade, siksangGrade,
-    goodDay: goodDay ? { ...goodDay, dateValue: formatDateValue(goodDay) } : null,
-    badDay: badDay ? { ...badDay, dateValue: formatDateValue(badDay) } : null,
-    walletColor: OHAENG_COLOR[basics.yongshinMain], direction
-  }));
-  const report = wealthResult ? wealthResult.text : null;
+  const jobId = crypto.randomUUID();
+  try {
+    orders.createOrder({
+      userId: req.session.userId, productKey: topic.productKey,
+      label: `${topic.label} 리포트${basics.personName ? ' — ' + basics.personName : ''}`, jobId
+    });
+  } catch (e) {
+    points.refund(req.session.userId, points.PRICES[topic.productKey], `생성 준비 실패 환불: ${topic.productKey}`);
+    return res.status(500).json({ error: '생성 준비 중 오류가 발생했습니다. 포인트는 환불되었습니다.' });
+  }
 
-  const jobId = await savePdfAndOrder({
-    userId: req.session.userId, productKey: topic.productKey, label: `${topic.label} 리포트`,
-    name: basics.personName,
-    title: `${basics.personName || '고객'} 님의 ${topic.label} 리포트`,
-    eyebrow: `命 式 關 係 圖 · ${topic.label} 리포트`,
-    metaLine: `주수입원 <b>${income || '미입력'}</b> · 관심 분야 <b>${interest || '미입력'}</b>`,
-    bestLabel: '투자·계약에 좋은 때', bestValue: goodDay ? formatDateValue(goodDay) : null,
-    text: report, usage: wealthResult ? wealthResult.usage : null
-  });
+  res.json({ topic: 'wealth', topicLabel: topic.label, name: basics.personName, jobId, best: goodDay ? { ...goodDay, dateValue: formatDateValue(goodDay) } : null });
 
-  res.json({ topic: 'wealth', topicLabel: topic.label, name: basics.personName, report, jobId, best: goodDay ? { ...goodDay, dateValue: formatDateValue(goodDay) } : null });
+  orders.updateStatus(jobId, 'generating');
+  (async () => {
+    try {
+      const wealthResult = await safeReport(() => generateLifeTopicReport({
+        topic: 'wealth',
+        name: basics.personName, gender: basics.personGender, personGanZhiKo: basics.personGanZhiKo,
+        yongshinOhaengKo: yongshinKo, incomeSource: income, interestArea: interest,
+        jeongjae, pyeonjae, bigyeopGrade, siksangGrade,
+        goodDay: goodDay ? { ...goodDay, dateValue: formatDateValue(goodDay) } : null,
+        badDay: badDay ? { ...badDay, dateValue: formatDateValue(badDay) } : null,
+        walletColor: OHAENG_COLOR[basics.yongshinMain], direction
+      }));
+      orders.updateStatus(jobId, 'rendering');
+      await finishReport({
+        jobId, userId: req.session.userId, productKey: topic.productKey,
+        name: basics.personName, label: `${topic.label} 리포트`,
+        title: `${basics.personName || '고객'} 님의 ${topic.label} 리포트`,
+        eyebrow: `命 式 關 係 圖 · ${topic.label} 리포트`,
+        metaLine: `주수입원 <b>${income || '미입력'}</b> · 관심 분야 <b>${interest || '미입력'}</b>`,
+        bestLabel: '투자·계약에 좋은 때', bestValue: goodDay ? formatDateValue(goodDay) : null,
+        text: wealthResult ? wealthResult.text : null, usage: wealthResult ? wealthResult.usage : null
+      });
+    } catch (e) {
+      orders.markError(jobId, e.message || String(e));
+      points.refund(req.session.userId, points.PRICES[topic.productKey], `생성 실패 환불: ${topic.productKey}`, jobId);
+    }
+  })();
 }
 
 // ── 건강운 ──────────────────────────────────────────────────────────────
@@ -415,6 +466,14 @@ async function runHealth(req, res, topic) {
   const concern = sanitizeText(req.body.concern, 20);
   const basics = computePersonBasics(req.body, '');
   if (basics.error) return res.status(400).json({ error: basics.error });
+
+  const pending = orders.findPendingByUserAndProduct(req.session.userId, topic.productKey);
+  if (pending) {
+    return res.status(409).json({
+      error: `이미 생성 중인 ${topic.label} 리포트가 있어요. 완료될 때까지 잠시만 기다려주세요.`,
+      code: 'already_pending', jobId: pending.job_id
+    });
+  }
 
   try {
     points.chargeForProduct(req.session.userId, topic.productKey);
@@ -434,28 +493,46 @@ async function runHealth(req, res, topic) {
   const banansal = bananSalBranch(basics.yearBranch);
   const direction = banansal ? BRANCH_DIRECTION_KO[banansal] : null;
 
-  const healthResult = await safeReport(() => generateLifeTopicReport({
-    topic: 'health',
-    name: basics.personName, gender: basics.personGender, personGanZhiKo: basics.personGanZhiKo,
-    yongshinOhaengKo: yongshinKo, concern,
-    weakOhaengKo: OHAENG_KO[weakOhaeng] || null, organ: OHAENG_ORGAN[weakOhaeng] || null, symptom: OHAENG_SYMPTOM[weakOhaeng] || null,
-    exercise: OHAENG_EXERCISE[basics.yongshinMain], taste: OHAENG_TASTE[basics.yongshinMain],
-    goodDay: goodDay ? { ...goodDay, dateValue: formatDateValue(goodDay) } : null,
-    pillowDirection: direction, colorTone: OHAENG_COLOR[basics.yongshinMain]
-  }));
-  const report = healthResult ? healthResult.text : null;
+  const jobId = crypto.randomUUID();
+  try {
+    orders.createOrder({
+      userId: req.session.userId, productKey: topic.productKey,
+      label: `${topic.label} 리포트${basics.personName ? ' — ' + basics.personName : ''}`, jobId
+    });
+  } catch (e) {
+    points.refund(req.session.userId, points.PRICES[topic.productKey], `생성 준비 실패 환불: ${topic.productKey}`);
+    return res.status(500).json({ error: '생성 준비 중 오류가 발생했습니다. 포인트는 환불되었습니다.' });
+  }
 
-  const jobId = await savePdfAndOrder({
-    userId: req.session.userId, productKey: topic.productKey, label: `${topic.label} 리포트`,
-    name: basics.personName,
-    title: `${basics.personName || '고객'} 님의 ${topic.label} 리포트`,
-    eyebrow: `命 式 關 係 圖 · ${topic.label} 리포트`,
-    metaLine: `요즘 고민 <b>${concern || '미입력'}</b>`,
-    bestLabel: '새 건강 습관 시작하기 좋은 때', bestValue: goodDay ? formatDateValue(goodDay) : null,
-    text: report, usage: healthResult ? healthResult.usage : null
-  });
+  res.json({ topic: 'health', topicLabel: topic.label, name: basics.personName, jobId, best: goodDay ? { ...goodDay, dateValue: formatDateValue(goodDay) } : null });
 
-  res.json({ topic: 'health', topicLabel: topic.label, name: basics.personName, report, jobId, best: goodDay ? { ...goodDay, dateValue: formatDateValue(goodDay) } : null });
+  orders.updateStatus(jobId, 'generating');
+  (async () => {
+    try {
+      const healthResult = await safeReport(() => generateLifeTopicReport({
+        topic: 'health',
+        name: basics.personName, gender: basics.personGender, personGanZhiKo: basics.personGanZhiKo,
+        yongshinOhaengKo: yongshinKo, concern,
+        weakOhaengKo: OHAENG_KO[weakOhaeng] || null, organ: OHAENG_ORGAN[weakOhaeng] || null, symptom: OHAENG_SYMPTOM[weakOhaeng] || null,
+        exercise: OHAENG_EXERCISE[basics.yongshinMain], taste: OHAENG_TASTE[basics.yongshinMain],
+        goodDay: goodDay ? { ...goodDay, dateValue: formatDateValue(goodDay) } : null,
+        pillowDirection: direction, colorTone: OHAENG_COLOR[basics.yongshinMain]
+      }));
+      orders.updateStatus(jobId, 'rendering');
+      await finishReport({
+        jobId, userId: req.session.userId, productKey: topic.productKey,
+        name: basics.personName, label: `${topic.label} 리포트`,
+        title: `${basics.personName || '고객'} 님의 ${topic.label} 리포트`,
+        eyebrow: `命 式 關 係 圖 · ${topic.label} 리포트`,
+        metaLine: `요즘 고민 <b>${concern || '미입력'}</b>`,
+        bestLabel: '새 건강 습관 시작하기 좋은 때', bestValue: goodDay ? formatDateValue(goodDay) : null,
+        text: healthResult ? healthResult.text : null, usage: healthResult ? healthResult.usage : null
+      });
+    } catch (e) {
+      orders.markError(jobId, e.message || String(e));
+      points.refund(req.session.userId, points.PRICES[topic.productKey], `생성 실패 환불: ${topic.productKey}`, jobId);
+    }
+  })();
 }
 
 async function safeReport(fn) {
