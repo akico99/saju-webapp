@@ -1,13 +1,17 @@
 'use strict';
 /* 신규 저가 상품 3종 — 이직 시기 / 재회 가능성 / 출산택일.
    전부 LLM 없이 순수 계산이라 동기 응답으로 바로 결과를 준다(작업 폴링 불필요).
-   결제는 기존 포인트 시스템(points.chargeForProduct) 그대로 쓴다. */
+   PDF는 없지만, 다른 상품과 똑같이 orders 테이블에 기록을 남긴다 — 그래야 계산 도중
+   예외가 나도(엔진 버그 등) 차감된 포인트를 추적해서 환불할 수 있다. 전에는 주문
+   기록이 아예 없어서 계산 실패 시 포인트만 소리 없이 사라지는 문제가 있었다. */
+const crypto = require('crypto');
 const express = require('express');
 const { computeSaju } = require('../../engine/index');
 const { analyzeCompatibility, classifyPair, PILLAR_KO } = require('../../engine/compatibility');
 const { computeCareerTimeline, balanceScoreOf } = require('../../engine/timing');
 const { STEM_KO, BRANCH_KO } = require('../../engine/constants');
 const points = require('../../db/points');
+const orders = require('../../db/orders');
 const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
@@ -90,21 +94,29 @@ router.post('/career-timing', requireAuth, (req, res) => {
     return res.status(400).json({ error: '명식 계산 실패: ' + e.message });
   }
 
+  const jobId = crypto.randomUUID();
   try {
-    points.chargeForProduct(req.session.userId, 'career_timing');
+    points.chargeForProductAndCreateOrder(req.session.userId, 'career_timing', { label: '이직 시기', jobId });
   } catch (e) {
     if (e.code === 'insufficient_points') {
       return res.status(402).json({ error: e.message, code: e.code, required: e.required, balance: e.balance });
     }
-    return res.status(400).json({ error: e.message });
+    return res.status(500).json({ error: '결제 처리 중 오류가 발생했습니다. 포인트는 차감되지 않았습니다.' });
   }
 
-  const thisYear = new Date().getFullYear();
-  const timeline = computeCareerTimeline(engineResult, thisYear, 5)
-    .map((t) => ({ ...t, ganZhiKo: (STEM_KO[t.ganZhi[0]] || '') + (BRANCH_KO[t.ganZhi[1]] || '') }));
-  const best = timeline.slice().sort((a, b) => b.score - a.score)[0] || null;
+  try {
+    const thisYear = new Date().getFullYear();
+    const timeline = computeCareerTimeline(engineResult, thisYear, 5)
+      .map((t) => ({ ...t, ganZhiKo: (STEM_KO[t.ganZhi[0]] || '') + (BRANCH_KO[t.ganZhi[1]] || '') }));
+    const best = timeline.slice().sort((a, b) => b.score - a.score)[0] || null;
 
-  res.json({ ilgan: engineResult.ilgan, timeline, best });
+    orders.markDone(jobId, {});
+    res.json({ ilgan: engineResult.ilgan, timeline, best });
+  } catch (e) {
+    orders.markError(jobId, e.message || String(e));
+    points.refund(req.session.userId, points.PRICES.career_timing, '생성 실패 환불: career_timing', jobId);
+    res.status(500).json({ error: '계산 중 오류가 발생했습니다. 포인트는 환불되었습니다.' });
+  }
 });
 
 /* ---------- 2. 재회 가능성 (990원) ---------- */
@@ -125,74 +137,82 @@ router.post('/reunion-check', requireAuth, (req, res) => {
     return res.status(400).json({ error: '명식 계산 실패: ' + e.message });
   }
 
+  const jobId = crypto.randomUUID();
   try {
-    points.chargeForProduct(req.session.userId, 'reunion');
+    points.chargeForProductAndCreateOrder(req.session.userId, 'reunion', { label: '재회 가능성', jobId });
   } catch (e) {
     if (e.code === 'insufficient_points') {
       return res.status(402).json({ error: e.message, code: e.code, required: e.required, balance: e.balance });
     }
-    return res.status(400).json({ error: e.message });
+    return res.status(500).json({ error: '결제 처리 중 오류가 발생했습니다. 포인트는 차감되지 않았습니다.' });
   }
 
-  const compat = analyzeCompatibility(engineA, engineB);
+  try {
+    const compat = analyzeCompatibility(engineA, engineB);
 
-  // 앞으로 3년(올해 포함) 흐름 — 본인의 그 해 세운 지지가 상대방 일지와 합/충인지로
-  // "언제가 다시 이어지기 좋은 시기인지"를 한 해만이 아니라 흐름으로 보여준다.
-  const thisYear = new Date().getFullYear();
-  const yearEntries = engineA.daewoon.flatMap((d) => d.years);
-  const partnerDayBranch = engineB.palja.dayPillar.branch;
-  const yearSignals = [];
-  for (let y = thisYear; y < thisYear + 3; y++) {
-    const entry = yearEntries.find((yy) => yy.year === y && yy.ganZhi);
-    if (!entry) continue;
-    const rel = classifyPair(entry.ganZhi[1], partnerDayBranch);
-    const relationType = rel ? rel.type : null;
-    yearSignals.push({
-      year: y, ganZhi: entry.ganZhi, relationType,
-      text: THIS_YEAR_SIGNAL_TEXT[relationType] || '특별히 강한 신호 없이 평범하게 흘러가는 해예요.'
-    });
+    // 앞으로 3년(올해 포함) 흐름 — 본인의 그 해 세운 지지가 상대방 일지와 합/충인지로
+    // "언제가 다시 이어지기 좋은 시기인지"를 한 해만이 아니라 흐름으로 보여준다.
+    const thisYear = new Date().getFullYear();
+    const yearEntries = engineA.daewoon.flatMap((d) => d.years);
+    const partnerDayBranch = engineB.palja.dayPillar.branch;
+    const yearSignals = [];
+    for (let y = thisYear; y < thisYear + 3; y++) {
+      const entry = yearEntries.find((yy) => yy.year === y && yy.ganZhi);
+      if (!entry) continue;
+      const rel = classifyPair(entry.ganZhi[1], partnerDayBranch);
+      const relationType = rel ? rel.type : null;
+      yearSignals.push({
+        year: y, ganZhi: entry.ganZhi, relationType,
+        text: THIS_YEAR_SIGNAL_TEXT[relationType] || '특별히 강한 신호 없이 평범하게 흘러가는 해예요.'
+      });
+    }
+    const thisYearSignal = yearSignals[0] || null;
+    const bestYearSignal = yearSignals.slice().sort((a, b) => {
+      const rank = { samhap: 2, yukhap: 1 };
+      return (rank[b.relationType] || 0) - (rank[a.relationType] || 0);
+    })[0] || null;
+
+    // 일지 외 같은 자리끼리(연지-연지, 월지-월지, 시지-시지)의 합/충 중 눈에 띄는 것 최대 2개
+    // — 일지(day)는 이미 dayRelationText로 다루니 제외한다.
+    const notablePillarMatches = [...compat.crossSamhap, ...compat.crossYukhap, ...compat.crossChung]
+      .filter((m) => m.pillarA === m.pillarB && m.pillarA !== 'day')
+      .reduce((acc, m) => {
+        if (acc.some((x) => x.pillarA === m.pillarA)) return acc; // 자리당 하나만
+        const type = compat.crossSamhap.includes(m) ? 'samhap' : compat.crossYukhap.includes(m) ? 'yukhap' : 'chung';
+        const text = PILLAR_CONTEXT_TEXT[m.pillarA] && PILLAR_CONTEXT_TEXT[m.pillarA][type];
+        if (text) acc.push({ pillar: m.pillarA, pillarKo: PILLAR_KO[m.pillarA], type, text });
+        return acc;
+      }, [])
+      .slice(0, 2);
+
+    const totalGoodLinks = compat.crossYukhap.length + compat.crossSamhap.length;
+    const totalClashes = compat.crossChung.length;
+    const overallText = totalGoodLinks === 0 && totalClashes === 0
+      ? '전체 여덟 자리 사이에 두드러진 합이나 충은 없어요 — 강한 인연도, 강한 마찰도 아닌 무난한 조합이에요.'
+      : totalGoodLinks > totalClashes * 1.5
+        ? `사주 전체 여덟 자리를 비교했을 때 합이 ${totalGoodLinks}번, 충돌이 ${totalClashes}번 나타나요. 전체적으로 합이 더 많아서 인연이 이어질 여지가 있는 조합이에요.`
+        : totalClashes > totalGoodLinks
+          ? `사주 전체 여덟 자리를 비교했을 때 합이 ${totalGoodLinks}번, 충돌이 ${totalClashes}번 나타나요. 충돌이 더 많아서 다시 만나더라도 서로 맞춰가는 노력이 필요한 조합이에요.`
+          : `사주 전체 여덟 자리를 비교했을 때 합이 ${totalGoodLinks}번, 충돌이 ${totalClashes}번 나타나요. 좋을 때와 부딪힐 때가 뚜렷하게 갈리는 조합이에요.`;
+
+    const plain = {
+      dayRelationText: DAY_RELATION_TEXT[compat.dayRelation && compat.dayRelation.type]
+        || '두 사람의 가장 중요한 자리(일지)끼리 직접적인 합·충은 없어요 — 무난하게 흘러가는 조합이에요.',
+      partnerToMeText: compat.shipsinAtoBKo ? SHIPSIN_RELATION_TEXT[compat.shipsinAtoBKo] : null,
+      meToPartnerText: compat.shipsinBtoAKo ? SHIPSIN_RELATION_TEXT[compat.shipsinBtoAKo] : null,
+      scoreText: compat.score >= 75 ? '전체적으로 잘 맞는 편이에요'
+        : compat.score >= 50 ? '무난하게 맞는 편이에요'
+        : '서로 다른 점이 꽤 있는 편이에요',
+      overallText
+    };
+
+    orders.markDone(jobId, {});
+    res.json({ compat, thisYearSignal, yearSignals, bestYearSignal, notablePillarMatches, plain });
+  } catch (e) {
+    orders.markError(jobId, e.message || String(e));
+    points.refund(req.session.userId, points.PRICES.reunion, '생성 실패 환불: reunion', jobId);
+    res.status(500).json({ error: '계산 중 오류가 발생했습니다. 포인트는 환불되었습니다.' });
   }
-  const thisYearSignal = yearSignals[0] || null;
-  const bestYearSignal = yearSignals.slice().sort((a, b) => {
-    const rank = { samhap: 2, yukhap: 1 };
-    return (rank[b.relationType] || 0) - (rank[a.relationType] || 0);
-  })[0] || null;
-
-  // 일지 외 같은 자리끼리(연지-연지, 월지-월지, 시지-시지)의 합/충 중 눈에 띄는 것 최대 2개
-  // — 일지(day)는 이미 dayRelationText로 다루니 제외한다.
-  const notablePillarMatches = [...compat.crossSamhap, ...compat.crossYukhap, ...compat.crossChung]
-    .filter((m) => m.pillarA === m.pillarB && m.pillarA !== 'day')
-    .reduce((acc, m) => {
-      if (acc.some((x) => x.pillarA === m.pillarA)) return acc; // 자리당 하나만
-      const type = compat.crossSamhap.includes(m) ? 'samhap' : compat.crossYukhap.includes(m) ? 'yukhap' : 'chung';
-      const text = PILLAR_CONTEXT_TEXT[m.pillarA] && PILLAR_CONTEXT_TEXT[m.pillarA][type];
-      if (text) acc.push({ pillar: m.pillarA, pillarKo: PILLAR_KO[m.pillarA], type, text });
-      return acc;
-    }, [])
-    .slice(0, 2);
-
-  const totalGoodLinks = compat.crossYukhap.length + compat.crossSamhap.length;
-  const totalClashes = compat.crossChung.length;
-  const overallText = totalGoodLinks === 0 && totalClashes === 0
-    ? '전체 여덟 자리 사이에 두드러진 합이나 충은 없어요 — 강한 인연도, 강한 마찰도 아닌 무난한 조합이에요.'
-    : totalGoodLinks > totalClashes * 1.5
-      ? `사주 전체 여덟 자리를 비교했을 때 합이 ${totalGoodLinks}번, 충돌이 ${totalClashes}번 나타나요. 전체적으로 합이 더 많아서 인연이 이어질 여지가 있는 조합이에요.`
-      : totalClashes > totalGoodLinks
-        ? `사주 전체 여덟 자리를 비교했을 때 합이 ${totalGoodLinks}번, 충돌이 ${totalClashes}번 나타나요. 충돌이 더 많아서 다시 만나더라도 서로 맞춰가는 노력이 필요한 조합이에요.`
-        : `사주 전체 여덟 자리를 비교했을 때 합이 ${totalGoodLinks}번, 충돌이 ${totalClashes}번 나타나요. 좋을 때와 부딪힐 때가 뚜렷하게 갈리는 조합이에요.`;
-
-  const plain = {
-    dayRelationText: DAY_RELATION_TEXT[compat.dayRelation && compat.dayRelation.type]
-      || '두 사람의 가장 중요한 자리(일지)끼리 직접적인 합·충은 없어요 — 무난하게 흘러가는 조합이에요.',
-    partnerToMeText: compat.shipsinAtoBKo ? SHIPSIN_RELATION_TEXT[compat.shipsinAtoBKo] : null,
-    meToPartnerText: compat.shipsinBtoAKo ? SHIPSIN_RELATION_TEXT[compat.shipsinBtoAKo] : null,
-    scoreText: compat.score >= 75 ? '전체적으로 잘 맞는 편이에요'
-      : compat.score >= 50 ? '무난하게 맞는 편이에요'
-      : '서로 다른 점이 꽤 있는 편이에요',
-    overallText
-  };
-
-  res.json({ compat, thisYearSignal, yearSignals, bestYearSignal, notablePillarMatches, plain });
 });
 
 /* ---------- 3. 출산택일 (2,900원) ---------- */
@@ -223,51 +243,59 @@ router.post('/birth-timing', requireAuth, (req, res) => {
     return res.status(400).json({ error: e.message });
   }
 
+  const jobId = crypto.randomUUID();
   try {
-    points.chargeForProduct(req.session.userId, 'birth_timing');
+    points.chargeForProductAndCreateOrder(req.session.userId, 'birth_timing', { label: '출산택일', jobId });
   } catch (e) {
     if (e.code === 'insufficient_points') {
       return res.status(402).json({ error: e.message, code: e.code, required: e.required, balance: e.balance });
     }
-    return res.status(400).json({ error: e.message });
+    return res.status(500).json({ error: '결제 처리 중 오류가 발생했습니다. 포인트는 차감되지 않았습니다.' });
   }
 
-  const base = new Date(Date.UTC(by, bm - 1, bd));
-  const candidates = [];
-  for (let offset = -rangeDays; offset <= rangeDays; offset++) {
-    const d = new Date(base);
-    d.setUTCDate(d.getUTCDate() + offset);
-    const y = d.getUTCFullYear(), m = d.getUTCMonth() + 1, day = d.getUTCDate();
-    hours.forEach((hour) => {
-      let engineResult;
-      try {
-        engineResult = computeSaju({ year: y, month: m, day, hour, minute: 0 });
-      } catch (e) {
-        return; // 계산 실패한 후보는 그냥 건너뜀(예: 범위 밖 날짜)
-      }
-      let score = balanceScoreOf(engineResult.counts.ohaeng);
-      const dayStem = engineResult.palja.dayPillar.stem, dayBranch = engineResult.palja.dayPillar.branch;
-      const clashesWithParent = parentDayBranches.some((pb) => isChung(dayBranch, pb));
-      if (clashesWithParent) score -= 25;
-      score = Math.max(5, Math.min(95, score));
+  try {
+    const base = new Date(Date.UTC(by, bm - 1, bd));
+    const candidates = [];
+    for (let offset = -rangeDays; offset <= rangeDays; offset++) {
+      const d = new Date(base);
+      d.setUTCDate(d.getUTCDate() + offset);
+      const y = d.getUTCFullYear(), m = d.getUTCMonth() + 1, day = d.getUTCDate();
+      hours.forEach((hour) => {
+        let engineResult;
+        try {
+          engineResult = computeSaju({ year: y, month: m, day, hour, minute: 0 });
+        } catch (e) {
+          return; // 계산 실패한 후보는 그냥 건너뜀(예: 범위 밖 날짜)
+        }
+        let score = balanceScoreOf(engineResult.counts.ohaeng);
+        const dayStem = engineResult.palja.dayPillar.stem, dayBranch = engineResult.palja.dayPillar.branch;
+        const clashesWithParent = parentDayBranches.some((pb) => isChung(dayBranch, pb));
+        if (clashesWithParent) score -= 25;
+        score = Math.max(5, Math.min(95, score));
 
-      const lackingCount = engineResult.counts.lacking.length;
-      let reasonText = lackingCount === 0
-        ? '오행 다섯 가지가 골고루 있어서 한쪽으로 치우치지 않는 사주예요.'
-        : `사주에 ${engineResult.counts.lacking.join('·')} 기운이 비어있어서 조금 치우친 사주예요.`;
-      if (clashesWithParent) reasonText += ' 다만 부모님 사주와 부딪히는 부분이 있어요.';
+        const lackingCount = engineResult.counts.lacking.length;
+        let reasonText = lackingCount === 0
+          ? '오행 다섯 가지가 골고루 있어서 한쪽으로 치우치지 않는 사주예요.'
+          : `사주에 ${engineResult.counts.lacking.join('·')} 기운이 비어있어서 조금 치우친 사주예요.`;
+        if (clashesWithParent) reasonText += ' 다만 부모님 사주와 부딪히는 부분이 있어요.';
 
-      candidates.push({
-        year: y, month: m, day, hour,
-        ganZhi: dayStem + dayBranch, ganZhiKo: (STEM_KO[dayStem] || '') + (BRANCH_KO[dayBranch] || ''),
-        ohaeng: engineResult.counts.ohaeng, lacking: engineResult.counts.lacking,
-        clashesWithParent, score, reasonText
+        candidates.push({
+          year: y, month: m, day, hour,
+          ganZhi: dayStem + dayBranch, ganZhiKo: (STEM_KO[dayStem] || '') + (BRANCH_KO[dayBranch] || ''),
+          ohaeng: engineResult.counts.ohaeng, lacking: engineResult.counts.lacking,
+          clashesWithParent, score, reasonText
+        });
       });
-    });
-  }
+    }
 
-  candidates.sort((a, b) => b.score - a.score);
-  res.json({ candidates: candidates.slice(0, 8) });
+    candidates.sort((a, b) => b.score - a.score);
+    orders.markDone(jobId, {});
+    res.json({ candidates: candidates.slice(0, 8) });
+  } catch (e) {
+    orders.markError(jobId, e.message || String(e));
+    points.refund(req.session.userId, points.PRICES.birth_timing, '생성 실패 환불: birth_timing', jobId);
+    res.status(500).json({ error: '계산 중 오류가 발생했습니다. 포인트는 환불되었습니다.' });
+  }
 });
 
 module.exports = router;

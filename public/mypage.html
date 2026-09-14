@@ -126,7 +126,10 @@
     document.getElementById('balanceValue').textContent = data.balance.toLocaleString('ko-KR');
   }
 
-  const ORDER_STATUS_CLASS = { pending: 'pending', done: 'approved', error: 'rejected' };
+  const ORDER_STATUS_CLASS = {
+    pending: 'pending', generating: 'pending', rendering: 'pending', recovering: 'pending',
+    done: 'approved', error: 'rejected'
+  };
 
   let ordersPollTimer = null;
 
@@ -144,9 +147,9 @@
     empty.classList.add('hidden');
     data.orders.forEach((o) => {
       const tr = document.createElement('tr');
-      const action = o.status === 'done'
+      const action = (o.status === 'done' && o.hasFile)
         ? `<button type="button" class="download-link" data-job-id="${o.jobId}">다운로드</button>`
-        : (o.status === 'pending' ? '생성 중...' : '-');
+        : (o.inProgress ? '생성 중...' : '-');
       tr.innerHTML = `
         <td>#${o.orderNo}</td>
         <td>${o.label || o.productKey}</td>
@@ -158,8 +161,11 @@
     });
 
     // "생성 중..."인 주문이 있으면 몇 초마다 자동으로 다시 확인해서, 완료되면 새로고침 없이
-    // 바로 다운로드 링크로 바뀌게 한다. 다 끝나면(더 이상 pending이 없으면) 자동으로 멈춘다.
-    const hasPending = data.orders.some((o) => o.status === 'pending');
+    // 바로 다운로드 링크로 바뀌게 한다. 다 끝나면(더 이상 진행 중인 주문이 없으면) 자동으로
+    // 멈춘다. pending은 아주 잠깐만 머무는 상태라(거의 바로 generating으로 넘어감) 그것만
+    // 보면 폴링이 사실상 안 걸린다 — inProgress(pending/generating/rendering/recovering)
+    // 전체를 봐야 한다.
+    const hasPending = data.orders.some((o) => o.inProgress);
     if (hasPending) {
       ordersPollTimer = setTimeout(loadOrders, 5000);
     }

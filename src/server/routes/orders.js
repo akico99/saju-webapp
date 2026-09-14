@@ -5,7 +5,11 @@ const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
 
-const STATUS_LABEL = { pending: '생성 중', done: '완료', error: '실패' };
+const STATUS_LABEL = {
+  pending: '생성 중', generating: '생성 중', rendering: '생성 중', recovering: '처리 중',
+  done: '완료', error: '실패'
+};
+const IN_PROGRESS_STATUSES = ['pending', 'generating', 'rendering', 'recovering'];
 
 router.get('/orders/count', (req, res) => {
   res.json({ count: orders.countDone() });
@@ -19,8 +23,10 @@ router.get('/orders/mine', requireAuth, (req, res) => {
     label: o.label,
     status: o.status,
     statusLabel: STATUS_LABEL[o.status] || o.status,
+    inProgress: IN_PROGRESS_STATUSES.includes(o.status),
     createdAt: o.created_at,
-    hasCard: !!o.card_path
+    hasCard: !!o.card_path,
+    hasFile: !!o.result_path
   }));
   res.json({ orders: rows });
 });
