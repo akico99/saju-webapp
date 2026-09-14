@@ -24,6 +24,7 @@ const stmts = {
   findPendingByUserAndProduct: db.prepare(
     "SELECT * FROM orders WHERE user_id = ? AND product_key = ? AND status = 'pending' ORDER BY id DESC LIMIT 1"
   ),
+  listAllPending: db.prepare("SELECT * FROM orders WHERE status = 'pending'"),
   listRecentDone: db.prepare(`
     SELECT o.*, u.email AS user_email FROM orders o JOIN users u ON u.id = o.user_id
     WHERE o.status = 'done' ORDER BY o.id DESC LIMIT ? OFFSET ?
@@ -62,6 +63,10 @@ function findPendingByUserAndProduct(userId, productKey) {
   return stmts.findPendingByUserAndProduct.get(userId, productKey);
 }
 
+function listAllPending() {
+  return stmts.listAllPending.all();
+}
+
 function listRecentDone({ limit = 50, offset = 0 } = {}) {
   return stmts.listRecentDone.all(limit, offset);
 }
@@ -72,5 +77,5 @@ function costSummaryByProduct() {
 
 module.exports = {
   createOrder, findByJobId, markDone, markError, listByUser, countDone, findPendingByUserAndProduct,
-  listRecentDone, costSummaryByProduct
+  listAllPending, listRecentDone, costSummaryByProduct
 };

@@ -62,10 +62,11 @@ function chargeForProduct(userId, productKey) {
   return price;
 }
 
-/** 생성 실패 시 차감했던 포인트를 되돌린다. */
-function refund(userId, amount, reason) {
+/** 생성 실패 시 차감했던 포인트를 되돌린다. refId를 넘기면(예: jobId) 거래 내역에서
+    어떤 작업 때문에 환불됐는지 추적할 수 있다 — 서버 재시작 복구 로직이 사용한다. */
+function refund(userId, amount, reason, refId) {
   const tx = db.transaction(() => {
-    stmts.insertTx.run({ userId, delta: amount, reason, refType: 'refund', refId: null });
+    stmts.insertTx.run({ userId, delta: amount, reason, refType: 'refund', refId: refId || null });
     adjustPointBalance(userId, amount);
   });
   tx();
