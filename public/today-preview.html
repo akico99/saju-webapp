@@ -15,6 +15,39 @@
 <link rel="icon" type="image/png" href="/favicon.png">
 <title>사주보는 수달 — 오늘의 운세 무료 체험</title>
 <link rel="stylesheet" href="/theme.css">
+<style>
+  /* 결과 영역은 로그인판(today-fortune.html)과 같은 모양이어야 한다 — 무료로 본 화면과
+     로그인 후 화면이 달라 보이면 "무료는 대충 준 거였나" 싶어진다. 같은 클래스를 쓴다. */
+  .tf-summary-list { margin: 0; padding-left: 18px; font-size: 13.5px; line-height: 1.9; color: #fff; opacity: .92; }
+  .tf-weather { display: flex; align-items: center; gap: 14px; }
+  .tf-weather .icon { font-size: 40px; line-height: 1; }
+  .tf-weather .label { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
+  .tf-weather .note { font-size: 12.5px; color: var(--muted); line-height: 1.6; }
+  .tf-dodont { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .tf-dodont .col-ttl { font-size: 12px; font-weight: 800; margin-bottom: 8px; }
+  .tf-dodont .do .col-ttl { color: var(--success); }
+  .tf-dodont .dont .col-ttl { color: var(--danger); }
+  .tf-dodont ul { margin: 0; padding-left: 16px; font-size: 12px; line-height: 1.7; color: var(--ink); }
+  /* 업셀은 누를 수 있는 물건처럼 보여야 한다 — 글자와 가격만 나란히 두면 그냥 설명문으로
+     읽히고 아무도 누르지 않는다. 페이지의 다른 버튼(.download-btn)과 같은 언어를 쓴다. */
+  .tf-upsell {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    width: 100%; box-sizing: border-box; padding: 14px 18px; margin-top: 14px;
+    background: var(--accent-grad); border-radius: var(--radius-btn);
+    box-shadow: var(--accent-glow); text-decoration: none; color: var(--accent);
+  }
+  /* 상품 이름이 길어도 단어 중간에서 끊기지 않게 한다 — "직업·적성운 보기"가
+     "직업·적성운 / 보기"로 갈라지면 버튼이 아니라 사고처럼 보인다. */
+  .tf-upsell .name { font-size: 14.5px; font-weight: 800; word-break: keep-all; }
+  .tf-upsell .price { font-size: 14px; font-weight: 800; flex-shrink: 0; }
+
+  /* 폼 위 "뭘 알려주는지" 예고 — 생년월일부터 요구하면 뭘 받는지 모르는 채로 개인정보를
+     넣어야 해서 그 자리에서 나간다. 받게 될 것을 먼저 보여준다. */
+  .preview-teaser { margin: 0 0 20px; padding-left: 18px; font-size: 13.5px; line-height: 2; color: var(--ink); }
+  .preview-teaser li::marker { color: var(--accent); }
+  .tf-topic-lead { font-size: 13px; line-height: 1.7; color: var(--muted); margin: 0 0 10px; }
+  .tf-topic-lead b { color: var(--ink); }
+</style>
 </head>
 <body>
 <div class="app">
@@ -24,11 +57,17 @@
       <a class="home-link" href="/" aria-label="홈으로"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M4 11.5L12 4l8 7.5"/><path d="M6 10v9.5h12V10"/></svg></a>
   </header>
   <main>
-    <h1>로그인 없이 바로 보기</h1>
-    <p class="lead">
-      생년월일만 입력하면 오늘 하루의 흐름을 바로 확인할 수 있어요. 매일 아침 자동으로
-      받아보고 싶으면 나중에 회원가입해서 저장해두면 됩니다.
-    </p>
+    <div id="introBox">
+      <h1>로그인 없이 바로 보기</h1>
+      <p class="lead" style="margin-bottom:14px;">
+        생년월일만 넣으면, 오늘 하루에 대해 이런 것들을 알려드려요.
+      </p>
+      <ul class="preview-teaser">
+        <li>오늘 내 기운은 몇 점이고, 어떤 날인지</li>
+        <li>오늘 하면 좋은 일과, 피하면 좋은 일</li>
+        <li>오늘 특히 신경 쓰이는 영역이 어디인지</li>
+      </ul>
+    </div>
 
     <form id="tpForm">
       <div class="field-row">
@@ -60,27 +99,95 @@
 
     <div id="errorBox" class="error-box hidden"></div>
 
-    <div class="card fortune-card hidden" id="fortuneResult">
-      <div class="eyebrow" id="tpDate">오늘의 운세</div>
-      <h2 id="tpTitle"></h2>
-      <p id="tpDesc"></p>
-    </div>
+    <div id="result" class="hidden">
+      <div class="card fortune-card">
+        <div class="row-top">
+          <div class="eyebrow" id="tpDate"></div>
+          <span class="fortune-score" id="tpScore"></span>
+        </div>
+        <h2 id="tpTitle"></h2>
+        <ul class="tf-summary-list" id="tpSummary"></ul>
+      </div>
 
-    <div class="wizard-upsell hidden" id="upsellPrompt">
-      <p class="wizard-upsell-lead">오늘 하루만 살짝 보여드린 맛보기예요. 진짜 궁금한 건 따로 있죠?</p>
-      <a class="wizard-cta wizard-cta-primary" href="/quick.html?topic=love">990원으로 애정운 빠르게 보기 →</a>
-      <a class="wizard-cta wizard-cta-secondary" href="/lifetime-report.html">평생사주 100페이지 정식 리포트 보기</a>
-    </div>
+      <div class="card">
+        <h3>오늘의 운세 날씨</h3>
+        <div class="tf-weather">
+          <div class="icon" id="tpWeatherIcon"></div>
+          <div>
+            <div class="label" id="tpWeatherLabel"></div>
+            <div class="note" id="tpWeatherNote"></div>
+          </div>
+        </div>
+      </div>
 
-    <div class="card hidden" id="signupPrompt">
-      <h3>매일 자동으로 받아보고 싶다면</h3>
-      <p class="lead" style="margin-bottom:14px;">회원가입하면 생년월일을 한 번만 등록해두고, 매일 아침 새로 입력할 필요 없이 볼 수 있어요.</p>
-      <a href="/signup.html" class="download-btn">회원가입하고 저장하기</a>
+      <div class="card">
+        <h3>오늘 하루는 이렇게</h3>
+        <p id="tpDesc" style="font-size:13px;line-height:1.8;color:var(--muted);margin:0 0 16px;"></p>
+        <div class="tf-dodont">
+          <div class="do">
+            <div class="col-ttl">DO</div>
+            <ul id="tpDos"></ul>
+          </div>
+          <div class="dont">
+            <div class="col-ttl">DON'T</div>
+            <ul id="tpDonts"></ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <p class="tf-topic-lead" id="tpTopicLead"></p>
+        <a class="tf-upsell" id="tpUpsell" href="#">
+          <span class="name" id="tpUpsellName"></span>
+          <span class="price" id="tpUpsellPrice"></span>
+        </a>
+      </div>
+
+      <div class="card">
+        <h3>내일도, 모레도 이어서 보고 싶다면</h3>
+        <p class="lead" style="margin-bottom:14px;">
+          운세는 매일 바뀌어요. 회원가입하고 생년월일을 한 번만 저장해두면, 다음부터는
+          입력 없이 바로 그날의 운세를 볼 수 있어요.
+        </p>
+        <a href="/signup.html" class="download-btn">회원가입하고 저장하기</a>
+      </div>
     </div>
   </main>
 </div>
 
 <script>
+  function render(fortune) {
+    document.getElementById('tpDate').textContent = `${fortune.date} · ${fortune.gapja}`;
+    document.getElementById('tpScore').textContent = fortune.score + '점';
+    document.getElementById('tpTitle').textContent = fortune.title;
+    document.getElementById('tpSummary').innerHTML = fortune.summary3.map((s) => `<li>${s}</li>`).join('');
+
+    document.getElementById('tpWeatherIcon').textContent = fortune.weather.icon;
+    document.getElementById('tpWeatherLabel').textContent = fortune.weather.label;
+    document.getElementById('tpWeatherNote').textContent = fortune.weather.note;
+
+    document.getElementById('tpDesc').textContent = fortune.desc;
+    document.getElementById('tpDos').innerHTML = fortune.dos.map((s) => `<li>${s}</li>`).join('');
+    document.getElementById('tpDonts').innerHTML = fortune.donts.map((s) => `<li>${s}</li>`).join('');
+
+    // 오늘 나온 주제를 먼저 말해주고, 그 주제에 맞는 상품을 잇는다 — 읽은 내용과
+    // 권하는 상품이 같은 흐름이라야 추천으로 읽힌다.
+    const lead = document.getElementById('tpTopicLead');
+    lead.innerHTML = '';
+    lead.append('오늘은 ');
+    const b = document.createElement('b');
+    b.textContent = fortune.topicLabel;
+    lead.append(b, ' 쪽으로 기운이 기울어 있어요. 오늘 하루가 아니라 이 흐름 자체를 보고 싶다면요.');
+
+    // 버튼 안에는 "무엇을 보는지"만 넣는다 — 위 문장이 이미 권유를 했으므로
+    // 버튼에서 "~궁금하다면"을 한 번 더 말하면 같은 말이 두 번 나온다.
+    document.getElementById('tpUpsellName').textContent = fortune.upsell.name + ' 보기';
+    document.getElementById('tpUpsellPrice').textContent = fortune.upsell.price;
+    document.getElementById('tpUpsell').href = fortune.upsell.href;
+
+    document.getElementById('result').classList.remove('hidden');
+  }
+
   document.getElementById('tpForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const errorBox = document.getElementById('errorBox');
@@ -95,17 +202,16 @@
       const data = await res.json();
       if (!res.ok) { errorBox.textContent = data.error || '계산 실패'; errorBox.classList.remove('hidden'); return; }
 
-      document.getElementById('tpDate').textContent = `${data.fortune.date} · ${data.fortune.gapja}`;
-      document.getElementById('tpTitle').textContent = data.fortune.title;
-      document.getElementById('tpDesc').textContent = data.fortune.desc;
-      document.getElementById('fortuneResult').classList.remove('hidden');
-      document.getElementById('upsellPrompt').classList.remove('hidden');
-      document.getElementById('signupPrompt').classList.remove('hidden');
+      render(data.fortune);
+      // 결과가 나오면 "뭘 알려주는지" 예고는 역할이 끝났다 — 남겨두면 결과가 밀려 내려간다.
+      document.getElementById('introBox').classList.add('hidden');
+      document.getElementById('result').scrollIntoView({ behavior: 'smooth', block: 'start' });
     } catch (err) {
       errorBox.textContent = '요청 실패: ' + err.message;
       errorBox.classList.remove('hidden');
     }
   });
 </script>
+<script src="/form-enhance.js"></script>
 </body>
 </html>

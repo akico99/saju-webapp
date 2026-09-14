@@ -104,16 +104,21 @@ function questOf(yongshinMain, questAction) {
 }
 
 // 랜덤 서비스 추천(업셀) — 실제 존재하는 상품만 담는다.
-const UPSELL_CANDIDATES = [
-  { label: '지금 인연이 궁금하다면', name: '궁합운', href: '/life-topics.html?topic=compat', price: '2,900원' },
-  { label: '돈 흐름이 궁금하다면', name: '재물운', href: '/life-topics.html?topic=wealth', price: '990원' },
-  { label: '요즘 컨디션이 궁금하다면', name: '건강운', href: '/life-topics.html?topic=health', price: '990원' },
-  { label: '이사를 계획 중이라면', name: '이사 리포트', href: '/date-select.html?occasion=moving', price: '990원' },
-  { label: '개업을 준비 중이라면', name: '개업 리포트', href: '/date-select.html?occasion=opening', price: '990원' },
-  { label: '내 인생 전체가 궁금하다면', name: '평생사주 100p', href: '/lifetime-report.html', price: '14,900원' }
-];
-function randomUpsell() {
-  return UPSELL_CANDIDATES[Math.floor(Math.random() * UPSELL_CANDIDATES.length)];
+/* 업셀 추천은 그날 실제로 나온 주제(topic)를 따라간다.
+   예전에는 후보 6개 중 무작위로 골랐는데, 그러면 "오늘은 직업·적성 쪽으로 기운이
+   기울어 있다"고 읽어준 다음 엉뚱하게 이사 리포트를 권하게 된다. 읽은 내용과 권하는
+   상품이 어긋나면 추천이 아니라 광고로 읽힌다(2026-09).
+   topic은 오늘 십성 그룹에서 나온 계산값이라, 날짜가 바뀌면 추천도 같이 바뀐다. */
+const TOPIC_UPSELL = {
+  relationship: { label: '사람 사이가 신경 쓰인다면', name: '인간관계', href: '/quick.html?topic=relationship', price: '990원' },
+  career: { label: '일의 방향이 궁금하다면', name: '직업·적성운', href: '/quick.html?topic=career', price: '990원' },
+  wealth: { label: '돈 흐름이 궁금하다면', name: '재물운', href: '/life-topics.html?topic=wealth', price: '990원' },
+  total: { label: '오늘 하루를 더 깊이 보고 싶다면', name: '오늘의 나 — 총평', href: '/quick.html?topic=total', price: '990원' }
+};
+const FALLBACK_UPSELL = { label: '내 인생 전체가 궁금하다면', name: '평생사주 100p', href: '/lifetime-report.html', price: '14,900원' };
+
+function upsellFor(topic) {
+  return TOPIC_UPSELL[topic] || FALLBACK_UPSELL;
 }
 
 /**
@@ -167,7 +172,7 @@ function getTodayFortune(birth, now = new Date()) {
     dos: content.dos,
     donts: content.donts,
     quest: questOf(yongshinMain, content.questAction),
-    upsell: randomUpsell()
+    upsell: upsellFor(content.topic)
   };
 }
 
