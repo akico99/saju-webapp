@@ -1,12 +1,12 @@
 'use strict';
-/* 궁합 리포트 — generate.js와 같은 job 패턴(비동기 생성 + jobManager)을 그대로 따른다.
-   /api/download/:jobId 라우트는 jobManager의 resultPath만 보므로 그대로 재사용 가능. */
+/* 궁합 리포트 — generate.js와 같은 job 패턴(비동기 생성, orders 테이블에 상태 기록)을
+   그대로 따른다. /api/download/:jobId 라우트는 orders.result_path만 보므로 그대로 재사용 가능. */
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const { computeSaju } = require('../../engine/index');
 const { analyzeCompatibility } = require('../../engine/compatibility');
-const { createJob, updateJob } = require('../../jobs/jobManager');
 const { generateCompatReport } = require('../../llm/generateCompatReport');
 const { costUsd } = require('../../llm/client');
 const { renderCompatHtml } = require('../../pdf/renderCompatHtml');
@@ -72,7 +72,7 @@ router.post('/compat', requireAuth, async (req, res) => {
   const personB = { name: personBInput.name };
   const compat = analyzeCompatibility(engineA, engineB);
 
-  const jobId = createJob();
+  const jobId = crypto.randomUUID();
   let jobDir;
   try {
     jobDir = path.join(OUTPUT_ROOT, jobId);
@@ -88,18 +88,16 @@ router.post('/compat', requireAuth, async (req, res) => {
 
   res.json({ jobId, compatSummary: { score: compat.score } });
 
-  updateJob(jobId, { status: 'generating' });
+  orders.updateStatus(jobId, 'generating');
   generateCompatReport(engineA, engineB, personA, personB, compat)
     .then(async ({ text, usage }) => {
-      updateJob(jobId, { status: 'rendering' });
+      orders.updateStatus(jobId, 'rendering');
       const html = renderCompatHtml(engineA, engineB, personA, personB, compat, text);
       const pdfPath = path.join(jobDir, 'compat-report.pdf');
       await renderPdf(html, pdfPath, { name: `${safeName(personA.name, '본인')} · ${safeName(personB.name, '상대방')}` });
-      updateJob(jobId, { status: 'done', resultPath: pdfPath });
       orders.markDone(jobId, { resultPath: pdfPath, llmCostUsd: costUsd(usage) });
     })
     .catch((e) => {
-      updateJob(jobId, { status: 'error', error: e.message });
       orders.markError(jobId, e.message);
       points.refund(req.session.userId, price, '생성 실패 환불: compat');
     });

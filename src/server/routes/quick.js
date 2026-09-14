@@ -3,8 +3,8 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const { computeSaju } = require('../../engine/index');
-const { createJob, updateJob } = require('../../jobs/jobManager');
 const { generateQuickReading, QUICK_TOPICS } = require('../../llm/quickReading');
 const { costUsd } = require('../../llm/client');
 const { renderQuickHtml } = require('../../pdf/renderQuickHtml');
@@ -67,7 +67,7 @@ router.post('/quick', requireAuth, async (req, res) => {
   }
 
   const person = { name: parsed.name, gender: parsed.gender };
-  const jobId = createJob();
+  const jobId = crypto.randomUUID();
   let jobDir, topicLabel;
   try {
     jobDir = path.join(OUTPUT_ROOT, jobId);
@@ -84,18 +84,16 @@ router.post('/quick', requireAuth, async (req, res) => {
 
   res.json({ jobId, topic: topicLabel });
 
-  updateJob(jobId, { status: 'generating' });
+  orders.updateStatus(jobId, 'generating');
   generateQuickReading(engineResult, person, parsed.topic)
     .then(async ({ title, text, usage }) => {
-      updateJob(jobId, { status: 'rendering' });
+      orders.updateStatus(jobId, 'rendering');
       const html = renderQuickHtml(engineResult, person, title, text);
       const pdfPath = path.join(jobDir, 'quick-report.pdf');
       await renderPdf(html, pdfPath, { name: person.name, label: title });
-      updateJob(jobId, { status: 'done', resultPath: pdfPath });
       orders.markDone(jobId, { resultPath: pdfPath, llmCostUsd: costUsd(usage) });
     })
     .catch((e) => {
-      updateJob(jobId, { status: 'error', error: e.message });
       orders.markError(jobId, e.message);
       points.refund(req.session.userId, price, '생성 실패 환불: quick');
     });

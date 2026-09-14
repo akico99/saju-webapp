@@ -159,4 +159,14 @@ if (!orderColumns.includes('llm_cost_usd')) {
   db.exec('ALTER TABLE orders ADD COLUMN llm_cost_usd REAL');
 }
 
+/* 작업 진행 상태(생성중/렌더링중 등)를 메모리(jobManager)가 아니라 여기 저장한다 —
+   서버가 재시작돼도 상태가 남아있어야 재시작 복구 로직(recoverPendingOrders)과
+   /api/status가 정확한 값을 볼 수 있다. */
+if (!orderColumns.includes('progress_current')) {
+  db.exec('ALTER TABLE orders ADD COLUMN progress_current INTEGER');
+}
+if (!orderColumns.includes('progress_total')) {
+  db.exec('ALTER TABLE orders ADD COLUMN progress_total INTEGER');
+}
+
 module.exports = db;

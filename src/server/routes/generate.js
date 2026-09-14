@@ -2,8 +2,8 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const { computeSaju } = require('../../engine/index');
-const { createJob, updateJob } = require('../../jobs/jobManager');
 const { generateReport } = require('../../llm/generateReport');
 const { generateCoverSummary } = require('../../llm/coverSummary');
 const { costUsd, sumUsage } = require('../../llm/client');
@@ -69,7 +69,7 @@ router.post('/generate', requireAuth, async (req, res) => {
 
   // 포인트는 이미 차감됐다(위) — 이 블록에서 뭔가 실패하면(디스크 오류 등) 주문 기록
   // 없이 포인트만 빠진 상태가 되므로, 반드시 환불하고 에러로 응답한다.
-  const jobId = createJob();
+  const jobId = crypto.randomUUID();
   let jobDir, person;
   try {
     jobDir = path.join(OUTPUT_ROOT, jobId);
@@ -99,15 +99,15 @@ router.post('/generate', requireAuth, async (req, res) => {
   });
 
   // 이후 LLM 생성 + PDF 렌더는 비동기로 진행 (응답은 이미 보냄)
-  updateJob(jobId, { status: 'generating' });
+  orders.updateStatus(jobId, 'generating');
   Promise.all([
     generateReport(engineResult, person, jobDir, (progress) => {
-      updateJob(jobId, { progress });
+      orders.updateProgress(jobId, progress);
     }),
     generateCoverSummary(engineResult, person).catch(() => null) // 실패해도 표지 요약만 빠질 뿐 본편은 그대로 진행
   ])
     .then(async ([chapters, coverResult]) => {
-      updateJob(jobId, { status: 'rendering' });
+      orders.updateStatus(jobId, 'rendering');
       const coverSummary = coverResult ? coverResult.lines : null;
       const html = renderHtml(engineResult, chapters, person, coverSummary);
       const pdfPath = path.join(jobDir, 'report.pdf');
@@ -122,11 +122,9 @@ router.post('/generate', requireAuth, async (req, res) => {
       const totalUsage = sumUsage([...chapters.map((c) => c.usage), coverResult && coverResult.usage]);
       const llmCostUsd = costUsd(totalUsage);
 
-      updateJob(jobId, { status: 'done', resultPath: pdfPath, cardPath });
       orders.markDone(jobId, { resultPath: pdfPath, cardPath, llmCostUsd });
     })
     .catch((e) => {
-      updateJob(jobId, { status: 'error', error: e.message });
       orders.markError(jobId, e.message);
       points.refund(req.session.userId, price, '생성 실패 환불: full');
     });

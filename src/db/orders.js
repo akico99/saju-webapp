@@ -1,7 +1,8 @@
 'use strict';
-/* 생성 요청(주문) 이력 — "다시보기" 기능의 기반.
-   jobManager는 메모리에만 있어 서버 재시작하면 사라지지만, 여기 기록된 result_path는
-   디스크의 실제 PDF 파일을 그대로 가리키므로 재시작 후에도 다시 받을 수 있다. */
+/* 생성 요청(주문) 이력 — "다시보기" 기능과 /api/status 진행률 조회의 기반.
+   상태(status)·진행률(progress_current/total)까지 전부 여기 저장하므로, 서버가
+   재시작돼도 남아있다. result_path는 디스크의 실제 PDF 파일을 그대로 가리키므로
+   재시작 후에도 다시 받을 수 있다. */
 const db = require('./index');
 
 const stmts = {
@@ -25,6 +26,8 @@ const stmts = {
     "SELECT * FROM orders WHERE user_id = ? AND product_key = ? AND status = 'pending' ORDER BY id DESC LIMIT 1"
   ),
   listAllPending: db.prepare("SELECT * FROM orders WHERE status = 'pending'"),
+  updateStatus: db.prepare('UPDATE orders SET status=@status WHERE job_id=@jobId'),
+  updateProgress: db.prepare('UPDATE orders SET progress_current=@current, progress_total=@total WHERE job_id=@jobId'),
   listRecentDone: db.prepare(`
     SELECT o.*, u.email AS user_email FROM orders o JOIN users u ON u.id = o.user_id
     WHERE o.status = 'done' ORDER BY o.id DESC LIMIT ? OFFSET ?
@@ -67,6 +70,14 @@ function listAllPending() {
   return stmts.listAllPending.all();
 }
 
+function updateStatus(jobId, status) {
+  stmts.updateStatus.run({ jobId, status });
+}
+
+function updateProgress(jobId, progress) {
+  stmts.updateProgress.run({ jobId, current: progress.current, total: progress.total });
+}
+
 function listRecentDone({ limit = 50, offset = 0 } = {}) {
   return stmts.listRecentDone.all(limit, offset);
 }
@@ -77,5 +88,5 @@ function costSummaryByProduct() {
 
 module.exports = {
   createOrder, findByJobId, markDone, markError, listByUser, countDone, findPendingByUserAndProduct,
-  listAllPending, listRecentDone, costSummaryByProduct
+  listAllPending, updateStatus, updateProgress, listRecentDone, costSummaryByProduct
 };
