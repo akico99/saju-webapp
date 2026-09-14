@@ -11,7 +11,10 @@
 const express = require('express');
 const router = express.Router();
 
-const TOSS_TEST_CLIENT_KEY = process.env.TOSS_TEST_CLIENT_KEY || 'test_ck_D5GePWvyJnrK0W0k6q8gLzN97Eoq';
+// 토스페이먼츠 "주문서형·결제창형 연동 키" 카테고리의 문서 예제 키(누구나 개발자센터에서
+// 동일하게 보게 되는 공용 테스트 키 — PG 심사/전자결제 신청과 무관하게 바로 쓸 수 있다).
+// 실제 계약된 키는 전자결제 신청 승인 후 개발자센터에서 별도로 발급된다.
+const TOSS_TEST_CLIENT_KEY = process.env.TOSS_TEST_CLIENT_KEY || 'test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm';
 const TOSS_CONFIRM_URL = 'https://api.tosspayments.com/v1/payments/confirm';
 
 // 체크아웃 페이지가 클라이언트 키를 받아가는 용도 — 시크릿 키는 여기서 절대 내려주지 않는다.
