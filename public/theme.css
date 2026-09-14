@@ -609,44 +609,7 @@ tr:last-child td { border-bottom: none; }
 .actions button { padding: 7px 13px; border-radius: var(--radius-pill); border: none; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; margin-right: 6px; }
 .approve-btn { background: var(--ink); color: #fff; }
 
-/* ---------- 메인페이지 히어로 — "상품 목록"이 아니라 "고민"으로 먼저 묻는 첫 화면.
-   배너 캐러셀(관리자가 관리하는 프로모션)보다 앞에 둬서, 페이지에 들어오자마자
-   보이는 첫인상이 고민 후킹이 되게 한다. */
-.main-hero { padding-top: 0; }
-.main-hero-art-wrap {
-  margin: -26px -20px 0; position: relative; max-height: 42vh; min-height: 240px;
-  overflow: hidden; background: var(--ink);
-}
-.main-hero-art { width: 100%; height: 100%; object-fit: cover; object-position: 50% 10%; display: block; }
-.main-hero-art-wrap::after {
-  content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 48%;
-  background: linear-gradient(to bottom, rgba(17,17,17,0) 0%, var(--paper) 92%);
-  pointer-events: none;
-}
-.main-hero-copy { position: relative; z-index: 2; text-align: center; margin-top: -14px; }
-.main-hero-copy .eyebrow { font-size: 11.5px; font-weight: 700; color: var(--accent); letter-spacing: 0.04em; }
-.main-hero-copy h1 { font-size: 23px; font-weight: 800; line-height: 1.35; margin: 6px 0 10px; letter-spacing: -0.01em; }
-.main-hero-copy .lead { font-size: 13px; color: var(--muted); line-height: 1.7; margin: 0 0 18px; }
-.hero-browse-link {
-  display: block; text-align: center; margin-top: 14px; font-size: 12.5px; font-weight: 700;
-  color: var(--muted); text-decoration: none;
-}
-
-/* "고민 선택" 카드 — 상품명이 아니라 고민으로 먼저 묻는 카드 ---------- */
-.concern-list { display: flex; flex-direction: column; gap: 10px; }
-.concern-card {
-  display: flex; align-items: center; gap: 12px;
-  background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-card);
-  padding: 14px 16px; text-decoration: none; color: var(--ink);
-}
-.concern-card .num { font-size: 12px; font-weight: 800; color: var(--accent); flex-shrink: 0; }
-.concern-card .txt { flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-.concern-card .txt strong { font-size: 14.5px; font-weight: 800; }
-.concern-card .txt em { font-style: normal; font-size: 12px; color: var(--muted); }
-.concern-card .arrow { color: var(--muted-2); font-size: 16px; flex-shrink: 0; }
-.concern-card:active { background: var(--surface); }
-
-/* ---------- 메인페이지 "연결된 고민" 묶음 안내 — 실제 묶음결제 상품이 아니라 관련 상품
+/* ---------- 마이페이지 등에서 쓰는 "연결된 고민" 묶음 안내(services.html) — 실제 묶음결제 상품이 아니라 관련 상품
    교차 안내다. 그래서 할인된 "묶음가"를 따로 만들지 않고, 각 항목의 실제 개별 가격을
    그대로 보여준다(허위 표시 방지). ---------- */
 .pack-list { display: flex; flex-direction: column; gap: 14px; }
