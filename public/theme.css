@@ -188,8 +188,10 @@ header .logout, button.logout {
   display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch;
 }
 .banner-track::-webkit-scrollbar { display: none; }
+/* 배너 높이 — 첫 화면에서 배너가 전부를 차지하면 "밑에 볼 게 더 있다"는 신호가 안 생긴다.
+   상품 줄이 스크롤 없이 살짝 보이도록 의도적으로 낮게 잡는다(2026-09, 메인 카탈로그 개편). */
 .banner-slide {
-  flex: 0 0 100%; scroll-snap-align: start; position: relative; height: 56vh; min-height: 340px; max-height: 480px;
+  flex: 0 0 100%; scroll-snap-align: start; position: relative; height: 42vh; min-height: 260px; max-height: 360px;
   display: flex; align-items: flex-end; text-decoration: none; color: #fff; overflow: hidden;
   background: linear-gradient(160deg, var(--surface-2), var(--surface));
 }
@@ -368,6 +370,23 @@ h1 { font-size: 20px; font-weight: 800; margin: 0 0 4px; letter-spacing: -0.01em
 
 /* 아이콘 대신 사진을 넣는 타일 — public/tiles/*.png 채워 넣으면 바로 반영됨 */
 .tile-img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; border-radius: 10px; background: var(--surface-2); display: block; }
+
+/* ---------- 홈 테마별 가로 스크롤 줄 ----------
+   메인(index.html)은 상품을 기능별로 길게 나열하는 대신, 고민별로 묶은 줄을 가로로
+   넘겨보게 한다. 줄 구성은 index.html에 하드코딩이다 — 관리자가 화면에서 고칠 수 있는
+   건 상단 배너(admin-banners.html)뿐이고, 줄 제목/구성을 바꾸려면 코드를 고쳐야 한다.
+   전체 목록은 services.html에 그대로 남아있고 각 줄의 "전체보기"가 그리로 보낸다. */
+.row-scroll {
+  display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x proximity;
+  margin: 0 -20px; padding: 2px 20px 6px;
+  scrollbar-width: none; -webkit-overflow-scrolling: touch;
+}
+.row-scroll::-webkit-scrollbar { display: none; }
+.row-scroll .tile { flex: 0 0 150px; scroll-snap-align: start; }
+.row-scroll .tile .desc { min-height: 30px; }
+/* 타일 사진이 없는 상품은 글리프를 같은 정사각형으로 키워 줄 안에서 높이를 맞춘다 */
+.row-scroll .tile .glyph { width: 100%; height: auto; aspect-ratio: 1 / 1; border-radius: 10px; }
+.row-scroll .tile .glyph svg { width: 34px; height: 34px; }
 
 /* ---------- 칩 ---------- */
 .topic-panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); padding: 16px; margin-top: 12px; }
