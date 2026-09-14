@@ -9,10 +9,11 @@ const points = require('../../db/points');
 const users = require('../../db/users');
 const orders = require('../../db/orders');
 const { requireAdmin } = require('../middleware/auth');
+const { adminLoginLimiter } = require('../middleware/rateLimit');
 
 const router = express.Router();
 
-router.post('/admin/login', (req, res) => {
+router.post('/admin/login', adminLoginLimiter, (req, res) => {
   const password = req.body.password || '';
   if (!process.env.ADMIN_PASSWORD) {
     return res.status(500).json({ error: '.env에 ADMIN_PASSWORD가 설정되어 있지 않습니다.' });
@@ -20,8 +21,14 @@ router.post('/admin/login', (req, res) => {
   if (password !== process.env.ADMIN_PASSWORD) {
     return res.status(401).json({ error: '비밀번호가 올바르지 않습니다.' });
   }
-  req.session.isAdmin = true;
-  res.json({ ok: true });
+  // 세션 고정(session fixation) 방지 — 로그인 전 세션 ID를 그대로 관리자 권한에 쓰지 않고
+  // 새 세션으로 갈아탄다(regenerate). 콜백 안에서 isAdmin을 다시 세팅해야 한다 —
+  // regenerate가 기존 세션 데이터를 비우기 때문.
+  req.session.regenerate((err) => {
+    if (err) return res.status(500).json({ error: '로그인 처리 중 오류가 발생했습니다.' });
+    req.session.isAdmin = true;
+    res.json({ ok: true });
+  });
 });
 
 router.post('/admin/logout', (req, res) => {

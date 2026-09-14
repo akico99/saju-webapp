@@ -253,13 +253,21 @@ function computePersonBasics(body, prefix) {
 // 자체는 정상 완료로 본다 — 다만 주문 행을 'pending'으로 방치하면 마이페이지에
 // "생성 중"이라고 영원히 뜨는 거짓 상태가 되므로, 실패는 반드시 'error'로 마감한다.
 async function savePdfAndOrder({ userId, occasion, name, title, eyebrow, metaLine, bestLabel, bestValue, text, usage }) {
-  if (!text) return null;
   const jobId = crypto.randomUUID();
   orders.createOrder({
     userId, productKey: occasion.productKey,
     label: `${occasion.label} 리포트${name ? ' — ' + name : ''}`,
     jobId
   });
+
+  // LLM 생성 실패(text 없음) 시에도 주문 행은 남기고 포인트를 돌려준다 — 예전엔 그냥
+  // null을 반환하고 끝이라 주문 기록도 없이 포인트만 빠진 채로 남는 경우가 있었다.
+  if (!text) {
+    orders.markError(jobId, 'LLM 리포트 생성 실패(빈 응답)');
+    points.refund(userId, points.PRICES[occasion.productKey], `생성 실패 환불: ${occasion.productKey}`);
+    return null;
+  }
+
   try {
     const html = renderDateSelectHtml({ title, eyebrow, metaLine, bestLabel, bestValue, text });
     const jobDir = path.join(OUTPUT_ROOT, jobId);
@@ -270,6 +278,7 @@ async function savePdfAndOrder({ userId, occasion, name, title, eyebrow, metaLin
     return jobId;
   } catch (e) {
     orders.markError(jobId, e.message || String(e));
+    points.refund(userId, points.PRICES[occasion.productKey], `생성 실패 환불: ${occasion.productKey}`);
     return null;
   }
 }

@@ -68,14 +68,19 @@ router.post('/quick', requireAuth, async (req, res) => {
 
   const person = { name: parsed.name, gender: parsed.gender };
   const jobId = createJob();
-  const jobDir = path.join(OUTPUT_ROOT, jobId);
-  fs.mkdirSync(jobDir, { recursive: true });
-
-  const topicLabel = QUICK_TOPICS[parsed.topic].label;
-  orders.createOrder({
-    userId: req.session.userId, productKey: 'quick',
-    label: `${topicLabel} 빠른 리딩${person.name ? ` — ${person.name}` : ''}`, jobId
-  });
+  let jobDir, topicLabel;
+  try {
+    jobDir = path.join(OUTPUT_ROOT, jobId);
+    fs.mkdirSync(jobDir, { recursive: true });
+    topicLabel = QUICK_TOPICS[parsed.topic].label;
+    orders.createOrder({
+      userId: req.session.userId, productKey: 'quick',
+      label: `${topicLabel} 빠른 리딩${person.name ? ` — ${person.name}` : ''}`, jobId
+    });
+  } catch (e) {
+    points.refund(req.session.userId, price, '생성 준비 실패 환불: quick');
+    return res.status(500).json({ error: '생성 준비 중 오류가 발생했습니다. 포인트는 환불되었습니다.' });
+  }
 
   res.json({ jobId, topic: topicLabel });
 

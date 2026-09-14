@@ -56,7 +56,26 @@ router.get('/download/:jobId', (req, res) => {
 });
 
 router.get('/download-card/:jobId', (req, res) => {
-  const job = getJob(req.params.jobId);
+  const jobId = req.params.jobId;
+
+  // /download/:jobId와 동일한 이유 — DB에 주문 기록이 있으면 소유자를 확인한다.
+  // 예전엔 jobId만 알면 로그인 없이도 남의 요약카드(이름 포함)를 받을 수 있었다.
+  const order = orders.findByJobId(jobId);
+  if (order) {
+    if (!req.session || !req.session.userId || req.session.userId !== order.user_id) {
+      return res.status(401).json({ error: '로그인이 필요합니다.' });
+    }
+    if (order.status !== 'done' || !order.card_path) {
+      return res.status(409).json({ error: '아직 요약 카드가 준비되지 않았습니다.' });
+    }
+    if (!fs.existsSync(order.card_path)) {
+      return res.status(410).json({ error: '이전에 완료된 요약 카드를 서버에서 찾을 수 없습니다. 문의: sooky2001@gmail.com', code: 'file_missing' });
+    }
+    return res.download(order.card_path, '길잡이여울_평생사주-요약카드.png');
+  }
+
+  // DB 기록이 없는 예전 방식 job — in-memory만 확인(레거시 호환, 서버 재시작 전까지만 유효).
+  const job = getJob(jobId);
   if (!job) return res.status(404).json({ error: 'job을 찾을 수 없습니다.' });
   if (job.status !== 'done' || !job.cardPath || !fs.existsSync(job.cardPath)) {
     return res.status(409).json({ error: '아직 요약 카드가 준비되지 않았습니다.' });

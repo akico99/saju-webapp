@@ -24,6 +24,12 @@ const lifeTopicsRouter = require('./routes/lifeTopics');
 const tossTestRouter = require('./routes/tossTest');
 
 const app = express();
+
+// Render(등 대부분의 PaaS)는 리버스 프록시 뒤에서 앱을 실행한다 — 이 설정이 없으면
+// req.ip가 항상 프록시의 IP로 찍혀서(모든 사용자가 "같은 IP"가 되어) IP 기반 rate
+// limit이 무의미해지고, 쿠키의 secure 옵션도 프록시-앱 구간(http)만 보고 거부당한다.
+app.set('trust proxy', 1);
+
 app.use(express.json());
 
 app.use(session({
@@ -31,7 +37,12 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'dev-only-insecure-secret-change-me',
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true, sameSite: 'lax' } // 30일
+  cookie: {
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30일
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production'
+  }
 }));
 
 app.use(express.static(path.join(__dirname, '..', '..', 'public')));

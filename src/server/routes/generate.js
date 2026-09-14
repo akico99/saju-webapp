@@ -67,16 +67,24 @@ router.post('/generate', requireAuth, async (req, res) => {
     return res.status(400).json({ error: e.message });
   }
 
+  // 포인트는 이미 차감됐다(위) — 이 블록에서 뭔가 실패하면(디스크 오류 등) 주문 기록
+  // 없이 포인트만 빠진 상태가 되므로, 반드시 환불하고 에러로 응답한다.
   const jobId = createJob();
-  const jobDir = path.join(OUTPUT_ROOT, jobId);
-  fs.mkdirSync(jobDir, { recursive: true });
-  fs.writeFileSync(path.join(jobDir, 'engine.json'), JSON.stringify(engineResult, null, 2));
+  let jobDir, person;
+  try {
+    jobDir = path.join(OUTPUT_ROOT, jobId);
+    fs.mkdirSync(jobDir, { recursive: true });
+    fs.writeFileSync(path.join(jobDir, 'engine.json'), JSON.stringify(engineResult, null, 2));
 
-  const person = { name: input.name, gender: engineResult.meta.genderGiven ? input.gender : null };
-  orders.createOrder({
-    userId: req.session.userId, productKey: 'full',
-    label: `평생사주 100p 정식 리포트${person.name ? ` — ${person.name}` : ''}`, jobId
-  });
+    person = { name: input.name, gender: engineResult.meta.genderGiven ? input.gender : null };
+    orders.createOrder({
+      userId: req.session.userId, productKey: 'full',
+      label: `평생사주 100p 정식 리포트${person.name ? ` — ${person.name}` : ''}`, jobId
+    });
+  } catch (e) {
+    points.refund(req.session.userId, price, '생성 준비 실패 환불: full');
+    return res.status(500).json({ error: '생성 준비 중 오류가 발생했습니다. 포인트는 환불되었습니다.' });
+  }
 
   res.json({
     jobId,

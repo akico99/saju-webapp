@@ -73,13 +73,18 @@ router.post('/compat', requireAuth, async (req, res) => {
   const compat = analyzeCompatibility(engineA, engineB);
 
   const jobId = createJob();
-  const jobDir = path.join(OUTPUT_ROOT, jobId);
-  fs.mkdirSync(jobDir, { recursive: true });
-
-  orders.createOrder({
-    userId: req.session.userId, productKey: 'compat',
-    label: `궁합 리포트 — ${personA.name || '본인'} · ${personB.name || '상대방'}`, jobId
-  });
+  let jobDir;
+  try {
+    jobDir = path.join(OUTPUT_ROOT, jobId);
+    fs.mkdirSync(jobDir, { recursive: true });
+    orders.createOrder({
+      userId: req.session.userId, productKey: 'compat',
+      label: `궁합 리포트 — ${personA.name || '본인'} · ${personB.name || '상대방'}`, jobId
+    });
+  } catch (e) {
+    points.refund(req.session.userId, price, '생성 준비 실패 환불: compat');
+    return res.status(500).json({ error: '생성 준비 중 오류가 발생했습니다. 포인트는 환불되었습니다.' });
+  }
 
   res.json({ jobId, compatSummary: { score: compat.score } });
 

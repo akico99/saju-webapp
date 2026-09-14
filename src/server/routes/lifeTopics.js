@@ -243,10 +243,19 @@ function currentDaewoon(engine) {
   return current;
 }
 
+// LLM 생성 실패(text 없음) 또는 PDF 렌더링 실패 시, 주문 행은 항상 남기고(관리자가
+// 추적할 수 있게) 차감했던 포인트를 반드시 돌려준다 — 예전엔 text가 없으면 그냥
+// null을 반환하고 끝이라 주문 기록도 없이 포인트만 빠진 채로 남는 경우가 있었다.
 async function savePdfAndOrder({ userId, productKey, label, name, title, eyebrow, metaLine, bestLabel, bestValue, text, usage }) {
-  if (!text) return null;
   const jobId = crypto.randomUUID();
   orders.createOrder({ userId, productKey, label: `${label}${name ? ' — ' + name : ''}`, jobId });
+
+  if (!text) {
+    orders.markError(jobId, 'LLM 리포트 생성 실패(빈 응답)');
+    points.refund(userId, points.PRICES[productKey], `생성 실패 환불: ${productKey}`);
+    return null;
+  }
+
   try {
     const html = renderDateSelectHtml({ title, eyebrow, metaLine, bestLabel, bestValue, text });
     const jobDir = path.join(OUTPUT_ROOT, jobId);
@@ -257,6 +266,7 @@ async function savePdfAndOrder({ userId, productKey, label, name, title, eyebrow
     return jobId;
   } catch (e) {
     orders.markError(jobId, e.message || String(e));
+    points.refund(userId, points.PRICES[productKey], `생성 실패 환불: ${productKey}`);
     return null;
   }
 }

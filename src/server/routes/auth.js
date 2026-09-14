@@ -8,6 +8,7 @@ const emailVerifications = require('../../db/emailVerifications');
 const { sendEmail } = require('../../email/resend');
 const { passwordResetEmail, verifyEmailEmail } = require('../../email/templates');
 const { requireAuth } = require('../middleware/auth');
+const { userLoginLimiter, signupLimiter, forgotPasswordLimiter } = require('../middleware/rateLimit');
 
 const router = express.Router();
 
@@ -39,7 +40,7 @@ async function sendVerificationEmail(user) {
   });
 }
 
-router.post('/auth/signup', async (req, res) => {
+router.post('/auth/signup', signupLimiter, async (req, res) => {
   try {
     const { email, password, name } = req.body;
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -55,18 +56,23 @@ router.post('/auth/signup', async (req, res) => {
     const passwordHash = await bcrypt.hash(password, 10);
     const row = users.createUser({ email, passwordHash, name: (name || '').slice(0, 30), ...birth });
 
-    req.session.userId = row.id;
-    res.json({ user: users.toPublicUser(row) });
+    // 세션 고정(session fixation) 방지 — 비로그인 상태에서 만들어져 있던 세션 ID를 그대로
+    // 승격시키지 않고 새 세션으로 갈아탄다.
+    req.session.regenerate((err) => {
+      if (err) return res.status(500).json({ error: '가입 처리 중 오류가 발생했습니다.' });
+      req.session.userId = row.id;
+      res.json({ user: users.toPublicUser(row) });
 
-    // 가입 자체는 인증 메일 발송 성공 여부와 무관하게 완료시킨다 — 응답은 이미 보냈으니
-    // 이 아래는 실패해도 사용자 경험에 영향 없이 로그로만 남는다.
-    sendVerificationEmail(row).catch((e) => console.error('가입 인증 메일 발송 실패:', e.message));
+      // 가입 자체는 인증 메일 발송 성공 여부와 무관하게 완료시킨다 — 응답은 이미 보냈으니
+      // 이 아래는 실패해도 사용자 경험에 영향 없이 로그로만 남는다.
+      sendVerificationEmail(row).catch((e2) => console.error('가입 인증 메일 발송 실패:', e2.message));
+    });
   } catch (e) {
     res.status(400).json({ error: e.message });
   }
 });
 
-router.post('/auth/login', async (req, res) => {
+router.post('/auth/login', userLoginLimiter, async (req, res) => {
   const { email, password } = req.body;
   const row = users.findByEmail(email || '');
   if (!row) return res.status(401).json({ error: '이메일 또는 비밀번호가 올바르지 않습니다.' });
@@ -78,8 +84,11 @@ router.post('/auth/login', async (req, res) => {
     return res.status(403).json({ error: '이용이 제한된 계정입니다. 문의: sooky2001@gmail.com' });
   }
 
-  req.session.userId = row.id;
-  res.json({ user: users.toPublicUser(row) });
+  req.session.regenerate((err) => {
+    if (err) return res.status(500).json({ error: '로그인 처리 중 오류가 발생했습니다.' });
+    req.session.userId = row.id;
+    res.json({ user: users.toPublicUser(row) });
+  });
 });
 
 router.post('/auth/logout', (req, res) => {
@@ -97,7 +106,7 @@ router.get('/auth/me', (req, res) => {
 // 메시지는 그 자체로 회원 여부를 노출하는 정보 유출이라 절대 구분해서 알려주지 않는다.
 const GENERIC_MSG = '해당 이메일로 가입된 계정이 있다면, 비밀번호 재설정 링크를 보내드렸어요.';
 
-router.post('/auth/forgot-password', async (req, res) => {
+router.post('/auth/forgot-password', forgotPasswordLimiter, async (req, res) => {
   const email = String(req.body.email || '').trim();
   if (!email) return res.status(400).json({ error: '이메일을 입력해주세요.' });
 
@@ -228,8 +237,12 @@ router.get('/auth/naver/callback', async (req, res) => {
       return res.redirect('/login.html?error=' + encodeURIComponent('이용이 제한된 계정입니다. 문의: sooky2001@gmail.com'));
     }
 
-    req.session.userId = user.id;
-    res.redirect(user.birth_year ? '/' : '/mypage.html');
+    req.session.regenerate((err) => {
+      if (err) return res.redirect('/login.html?error=' + encodeURIComponent('로그인 처리 중 오류가 발생했어요.'));
+      req.session.userId = user.id;
+      res.redirect(user.birth_year ? '/' : '/mypage.html');
+    });
+    return;
   } catch (e) {
     res.redirect('/login.html?error=' + encodeURIComponent('네이버 로그인 중 문제가 발생했어요: ' + e.message));
   }
@@ -300,8 +313,12 @@ router.get('/auth/google/callback', async (req, res) => {
       return res.redirect('/login.html?error=' + encodeURIComponent('이용이 제한된 계정입니다. 문의: sooky2001@gmail.com'));
     }
 
-    req.session.userId = user.id;
-    res.redirect(user.birth_year ? '/' : '/mypage.html');
+    req.session.regenerate((err) => {
+      if (err) return res.redirect('/login.html?error=' + encodeURIComponent('로그인 처리 중 오류가 발생했어요.'));
+      req.session.userId = user.id;
+      res.redirect(user.birth_year ? '/' : '/mypage.html');
+    });
+    return;
   } catch (e) {
     res.redirect('/login.html?error=' + encodeURIComponent('구글 로그인 중 문제가 발생했어요: ' + e.message));
   }
@@ -372,8 +389,12 @@ router.get('/auth/kakao/callback', async (req, res) => {
       return res.redirect('/login.html?error=' + encodeURIComponent('이용이 제한된 계정입니다. 문의: sooky2001@gmail.com'));
     }
 
-    req.session.userId = user.id;
-    res.redirect(user.birth_year ? '/' : '/mypage.html');
+    req.session.regenerate((err) => {
+      if (err) return res.redirect('/login.html?error=' + encodeURIComponent('로그인 처리 중 오류가 발생했어요.'));
+      req.session.userId = user.id;
+      res.redirect(user.birth_year ? '/' : '/mypage.html');
+    });
+    return;
   } catch (e) {
     res.redirect('/login.html?error=' + encodeURIComponent('카카오 로그인 중 문제가 발생했어요: ' + e.message));
   }

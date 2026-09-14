@@ -9,6 +9,7 @@
    계정별로 발급되는 진짜 비밀 값이라 .env의 TOSS_TEST_SECRET_KEY로만 받는다 — 이건
    대표님이 토스페이먼츠 개발자센터(무료 가입, PG 심사와 무관)에서 직접 발급받아야 한다. */
 const express = require('express');
+const { requireAdmin } = require('../middleware/auth');
 const router = express.Router();
 
 // 토스페이먼츠 "주문서형·결제창형 연동 키" 카테고리의 문서 예제 키(누구나 개발자센터에서
@@ -17,13 +18,15 @@ const router = express.Router();
 const TOSS_TEST_CLIENT_KEY = process.env.TOSS_TEST_CLIENT_KEY || 'test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm';
 const TOSS_CONFIRM_URL = 'https://api.tosspayments.com/v1/payments/confirm';
 
-// 체크아웃 페이지가 클라이언트 키를 받아가는 용도 — 시크릿 키는 여기서 절대 내려주지 않는다.
-router.get('/toss-test/client-key', (req, res) => {
+// PG 심사용 데모라 실제 고객에게 노출될 이유가 없다 — 관리자 세션이 있을 때만 동작하게
+// 막는다(체크아웃 페이지 자체는 public/이라 여전히 열리지만, 이 API가 막히면 결제위젯
+// 초기화가 실패해 사실상 기능하지 않는다). PG 심사가 끝나면 라우트 자체를 통째로 지운다.
+router.get('/toss-test/client-key', requireAdmin, (req, res) => {
   res.json({ clientKey: TOSS_TEST_CLIENT_KEY });
 });
 
 // successUrl에서 돌아온 뒤 호출 — paymentKey/orderId/amount로 실제 결제 승인을 완료한다.
-router.post('/toss-test/confirm', async (req, res) => {
+router.post('/toss-test/confirm', requireAdmin, async (req, res) => {
   const secretKey = process.env.TOSS_TEST_SECRET_KEY;
   if (!secretKey) {
     return res.status(503).json({ error: '.env에 TOSS_TEST_SECRET_KEY가 설정되어 있지 않습니다. 토스페이먼츠 개발자센터(무료 가입)에서 테스트 시크릿 키를 발급받아 넣어주세요.' });
