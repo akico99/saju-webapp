@@ -40,6 +40,45 @@ router.get('/admin/me', (req, res) => {
   res.json({ isAdmin: !!(req.session && req.session.isAdmin) });
 });
 
+// 영구 디스크 설정이 실제로 맞는지 확인하기 위한 진단용 엔드포인트 — data/, output/ 각각에
+// 마커 파일을 하나 만들어두고, 이 마커가 재배포 이후에도 그대로 남아있는지로 "이 경로가
+// 정말 영구 디스크 위에 있는지"를 판별한다. 배포 직후 1회, 재배포 이후 1회 호출해서
+// firstSeenAt이 그대로인지(=생존) 새 값으로 바뀌었는지(=초기화됨)를 비교하면 된다.
+router.get('/admin/storage-check', requireAdmin, (req, res) => {
+  const { OUTPUT_ROOT } = require('../../config/outputDir');
+  const DATA_DIR = path.join(__dirname, '..', '..', '..', 'data');
+
+  function checkMarker(dir) {
+    const markerPath = path.join(dir, '.persist-check.json');
+    fs.mkdirSync(dir, { recursive: true });
+    let marker;
+    if (fs.existsSync(markerPath)) {
+      marker = JSON.parse(fs.readFileSync(markerPath, 'utf8'));
+    } else {
+      marker = { firstSeenAt: new Date().toISOString() };
+      fs.writeFileSync(markerPath, JSON.stringify(marker));
+    }
+    return { resolvedPath: dir, ...marker, checkedAt: new Date().toISOString() };
+  }
+
+  let disk = null;
+  try {
+    const stat = fs.statfsSync(DATA_DIR);
+    disk = {
+      totalGB: +((stat.blocks * stat.bsize) / 1e9).toFixed(2),
+      freeGB: +((stat.bfree * stat.bsize) / 1e9).toFixed(2)
+    };
+  } catch (e) {
+    disk = { error: e.message };
+  }
+
+  res.json({
+    data: checkMarker(DATA_DIR),
+    output: checkMarker(OUTPUT_ROOT),
+    disk
+  });
+});
+
 router.get('/admin/points/pending', requireAdmin, (req, res) => {
   res.json({ requests: points.listPendingRequests() });
 });

@@ -9,3 +9,4 @@ data/*.db-wal
 data/*.db-shm
 결과물.mp4
 data/banner-positions.json
+data/.persist-check.json
