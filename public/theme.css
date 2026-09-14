@@ -405,6 +405,13 @@ h1 { font-size: 20px; font-weight: 800; margin: 0 0 4px; letter-spacing: -0.01em
 /* 타일 사진이 없는 상품은 글리프를 같은 정사각형으로 키워 줄 안에서 높이를 맞춘다 */
 .row-scroll .tile .glyph { width: 100%; height: auto; aspect-ratio: 1 / 1; border-radius: 10px; }
 .row-scroll .tile .glyph svg { width: 34px; height: 34px; }
+/* 전체 목록으로 가는 입구 — 줄마다 "전체보기"를 달면 네 개가 전부 같은 곳을 가리켜서
+   의미가 없다. 줄을 다 훑고 난 자리에 하나만 둔다(2026-09). */
+.browse-all {
+  display: block; margin-top: 22px; padding: 14px; border: 1px solid var(--line);
+  border-radius: var(--radius-btn); background: var(--surface); color: var(--ink);
+  font-size: 13.5px; font-weight: 700; text-align: center; text-decoration: none;
+}
 
 /* ---------- 칩 ---------- */
 .topic-panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); padding: 16px; margin-top: 12px; }
