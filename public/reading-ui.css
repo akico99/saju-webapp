@@ -1,0 +1,120 @@
+/* 고객용 입력·풀이 화면의 공통 시각 계층. 관리자·메인 배너에는 적용하지 않는다. */
+.reading-page { background: radial-gradient(ellipse 650px 480px at 50% -70px, #fff7e9 0, transparent 75%), var(--bg-outer); }
+.reading-page .app { background: var(--bg); }
+.reading-page main { padding-top: 30px; }
+.reading-page main > h1,
+.reading-page main > .lg-intro h1,
+.reading-page main > .tp-intro h1 { font-family: var(--font-serif); font-weight: 700; font-size: clamp(23px, 3.4vw, 32px); line-height: 1.42; letter-spacing: -.055em; margin-bottom: 12px; word-break: keep-all; }
+.reading-page main > .lead,
+.reading-page main > .lg-intro .lead,
+.reading-page main > .tp-intro .lead { color: #626c79; font-size: 14px; line-height: 1.8; word-break: keep-all; }
+.reading-page main > form,
+.reading-page main > .tp-intro + form { background: var(--paper); border: 1px solid var(--line); border-radius: 22px; padding: 22px; box-shadow: 0 16px 45px rgba(35,39,51,.055); }
+.reading-page .field { margin-bottom: 20px; }
+.reading-page .field label { font-size: 13px; margin-bottom: 8px; }
+.reading-page .field input:not([type="checkbox"]):not([type="radio"]),
+.reading-page .field select,
+.reading-page input[type="text"],
+.reading-page input[type="email"],
+.reading-page input[type="password"],
+.reading-page input[type="number"],
+.reading-page select { min-height: 52px; font-size: 16px; border-color: #e4e2dd; background: #fff; }
+.reading-page .field input:focus-visible,
+.reading-page .field select:focus-visible,
+.reading-page button:focus-visible,
+.reading-page a:focus-visible { outline: 3px solid var(--success); outline-offset: 2px; }
+.reading-page .date-inputs input { min-width: 0; }
+.reading-page .checkbox-field { min-height: 40px; }
+.reading-page .card { box-shadow: 0 14px 36px rgba(35,39,51,.045); }
+.reading-page main > .result,
+.reading-page main > section[id$="Result"],
+.reading-page main > .ds-report { margin-top: 34px; }
+.reading-page .result h2,
+.reading-page .ds-report h2,
+.reading-page .ct-result h2,
+.reading-page .bt-result h2,
+.reading-page .rc-result h2 { font-family: var(--font-serif); line-height: 1.4; letter-spacing: -.04em; word-break: keep-all; }
+.reading-page button[type="submit"] { background: var(--ink); color: #fff; box-shadow: 0 7px 17px rgba(23,36,61,.13); }
+.reading-page button[type="submit"]:hover:not(:disabled) { filter: brightness(1.16); }
+
+/* 무료 오늘 운세와 회원 운세는 한 가족의 결과처럼 읽히도록 정렬한다. */
+.reading-page #introBox { margin-bottom: 24px; }
+.reading-page #introBox h1 { font-family: var(--font-serif); font-size: clamp(24px,3.4vw,32px); line-height: 1.45; letter-spacing: -.05em; }
+.reading-page #introBox .lead { font-size: 14px; color: #626c79; }
+.reading-page .preview-teaser { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; margin: 0 0 20px; padding: 0; list-style: none; }
+.reading-page .preview-teaser li { padding: 12px 13px; background: #fff; border: 1px solid var(--line); border-radius: 12px; font-size: 12px; line-height: 1.5; }
+.reading-page .preview-teaser li::before { content: '✓ '; color: var(--success); font-weight: 800; }
+.reading-page #result:not(.hidden), .reading-page #content:not(.hidden) { margin-top: 28px; }
+.reading-page #result .fortune-card, .reading-page #content .fortune-card { padding: 26px; border-radius: 22px; box-shadow: 0 18px 42px rgba(23,36,61,.16); }
+.reading-page .fortune-card .eyebrow { color: #f1d39c; opacity: 1; font-weight: 800; letter-spacing: .08em; }
+.reading-page .fortune-card .fortune-score { color: #f1d39c; font-size: 22px; }
+.reading-page .fortune-card h2 { font-size: clamp(22px,3vw,28px); line-height: 1.48; margin: 10px 0 16px; }
+.reading-page #result .card h3, .reading-page #content .card h3 { font-size: 16px; }
+.reading-page .tf-upsell { min-height: 58px; }
+.reading-page #result .tf-dodont, .reading-page #content .tf-dodont { gap: 14px; }
+.reading-page .tf-dodont .do, .reading-page .tf-dodont .dont { background: #f7f8f5; border-radius: 13px; padding: 15px; }
+.reading-page .tf-dodont .dont { background: #fcf5f0; }
+
+/* 인생 그래프: 실제 데이터·입력 로직은 기존 것을 사용하고 결과의 위계만 바꾼다. */
+.life-graph-page .lg-intro:has(~ #lgResult[style*="block"]) { display: none; }
+.life-graph-page #lgResult { margin-top: 22px; }
+.life-graph-page .lg-hero { display: grid; grid-template-columns: 1.1fr .9fr; align-items: stretch; gap: 24px; }
+.life-graph-page .lg-hero-copy { padding: 28px 0 12px; }
+.life-graph-page .lg-headline .range { display: inline-block; color: #9b753d; font-size: 12px; font-weight: 800; letter-spacing: .06em; }
+.life-graph-page .lg-verdict { font-family: var(--font-serif); font-weight: 700; font-size: clamp(25px, 3vw, 38px); line-height: 1.43; margin: 14px 0; }
+.life-graph-page .lg-headline .desc { margin: 0; font-size: 13px; line-height: 1.7; color: #626c79; }
+.life-graph-page .lg-otter { margin-top: 24px; padding: 15px 17px; border-radius: 16px; background: #f5ecdc; }
+.life-graph-page .lg-otter p { font-size: 12.5px; line-height: 1.68; }
+.life-graph-page .lg-hero-art { min-height: 295px; border-radius: 23px; background: #f9ecde url('/hero/otter-hero-mobile.jpg') center 46%/cover no-repeat; box-shadow: 0 20px 48px rgba(35,39,51,.11); }
+.life-graph-page .lg-summary-band { display: grid; grid-template-columns: repeat(3,1fr); background: #fff; border: 1px solid var(--line); border-radius: 18px; margin: 25px 0 0; overflow: hidden; box-shadow: 0 14px 36px rgba(35,39,51,.05); }
+.life-graph-page .lg-summary-band > div { padding: 18px; min-width: 0; }
+.life-graph-page .lg-summary-band > div + div { border-left: 1px solid var(--line); }
+.life-graph-page .lg-summary-band small { display: block; font-size: 11.5px; color: #626c79; font-weight: 700; }
+.life-graph-page .lg-summary-band strong { display: block; font-size: 22px; line-height: 1.5; letter-spacing: -.035em; }
+.life-graph-page .lg-summary-band .unit { font-size: 12px; color: #626c79; }
+.life-graph-page .lg-section-heading { display: flex; justify-content: space-between; align-items: end; gap: 14px; margin: 56px 0 16px; }
+.life-graph-page .lg-section-heading h2 { margin: 0; font-family: var(--font-serif); font-size: 23px; letter-spacing: -.045em; }
+.life-graph-page .lg-section-heading p { margin: 5px 0 0; font-size: 12px; color: #626c79; }
+.life-graph-page .lg-section-heading .lg-granularity { margin: 0; flex: 0 0 auto; background: #eeece7; border-radius: 12px; padding: 4px; gap: 3px; }
+.life-graph-page .lg-section-heading .lg-granularity button { border: 0; margin: 0; padding: 8px 10px; background: transparent; white-space: nowrap; font-size: 11px; }
+.life-graph-page .lg-section-heading .lg-granularity button.active { background: #fff; color: var(--ink); box-shadow: 0 2px 7px rgba(23,36,61,.1); }
+.life-graph-page .lg-chart-panel { padding: 14px 22px 22px; border: 1px solid var(--line); background: #fff; border-radius: 20px; }
+.life-graph-page .lg-chart-wrap { margin-top: 10px; }
+.life-graph-page .lg-advice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 16px; }
+.life-graph-page .lg-advice-grid .card { margin: 0; }
+.life-graph-page .lg-advice-grid h3 { font-size: 15px; margin: 0 0 12px; }
+.life-graph-page .lg-advice-grid ul { font-size: 12.5px; padding-left: 17px; line-height: 1.72; }
+.life-graph-page .lg-advice-grid li + li { margin-top: 8px; }
+.life-graph-page .lg-advice-note { margin: 9px 2px 0; }
+.life-graph-page .lg-basis { display: block; margin: 20px 0 0; padding: 13px 17px; }
+.life-graph-page .lg-basis summary { cursor: pointer; font-size: 12px; font-weight: 800; color: var(--ink); }
+.life-graph-page .lg-premium-card { background: var(--ink); color: #fff; padding: 28px; margin-top: 44px; }
+.life-graph-page .lg-next-label { color: #e8c886; font-size: 10px; font-weight: 800; letter-spacing: .12em; }
+.life-graph-page .lg-premium-card h2 { font-family: var(--font-serif); font-size: 21px; margin: 7px 0 9px; }
+.life-graph-page .lg-premium-card .lg-cta-lead { color: #d7dce6; }
+.life-graph-page .lg-premium-card .lg-cta { background: #f1d39c; box-shadow: none; }
+
+@media (min-width: 900px) {
+  .life-graph-page .app { max-width: 980px !important; }
+  .reading-page .app:not(:has(.banner-slider)) { box-shadow: 0 0 0 1px var(--line), 0 24px 60px rgba(35,39,51,.065); }
+}
+@media (max-width: 700px) {
+  .reading-page main > form { padding: 18px; }
+  .reading-page .preview-teaser { grid-template-columns: 1fr 1fr; gap: 7px; }
+  .reading-page .preview-teaser li { padding: 10px; font-size: 11.5px; }
+  .reading-page #result .fortune-card, .reading-page #content .fortune-card { padding: 21px; }
+  .reading-page .tf-dodont .do, .reading-page .tf-dodont .dont { padding: 10px; }
+  .life-graph-page .lg-hero { display: flex; flex-direction: column-reverse; gap: 17px; }
+  .life-graph-page .lg-hero-art { min-height: 205px; background-position: center 42%; }
+  .life-graph-page .lg-hero-copy { padding: 0; }
+  .life-graph-page .lg-verdict { font-size: 27px; }
+  .life-graph-page .lg-otter { margin-top: 14px; }
+  .life-graph-page .lg-summary-band { grid-template-columns: 1fr 1fr; margin-top: 18px; }
+  .life-graph-page .lg-summary-band > div { padding: 14px; }
+  .life-graph-page .lg-summary-band > div:last-child { grid-column: 1/-1; border-top: 1px solid var(--line); border-left: 0; }
+  .life-graph-page .lg-section-heading { display: block; margin-top: 42px; }
+  .life-graph-page .lg-section-heading .lg-granularity { width: max-content; margin-top: 12px; }
+  .life-graph-page .lg-chart-panel { padding: 10px 13px 18px; }
+  .life-graph-page .lg-advice-grid { grid-template-columns: 1fr; gap: 10px; }
+  .life-graph-page .lg-premium-card { padding: 21px; }
+}

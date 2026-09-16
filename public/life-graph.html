@@ -15,6 +15,7 @@
 <link rel="icon" type="image/png" href="/favicon.png">
 <title>사주보는 수달 — 인생 그래프</title>
 <link rel="stylesheet" href="/theme.css">
+<link rel="stylesheet" href="/reading-ui.css">
 <script src="/analysis-loader.js"></script>
 <script src="/concern-step.js"></script>
 <style>
@@ -158,7 +159,7 @@
   .race-legend .sw { width: 9px; height: 9px; border-radius: 2px; }
 </style>
 </head>
-<body>
+<body class="reading-page life-graph-page">
 <div class="app">
   <header>
     <a class="back" href="/">←</a>
@@ -168,11 +169,7 @@
   <main>
     <div class="lg-intro">
       <h1>내 인생, 흐름으로 보기</h1>
-      <p class="lead">
-        태어난 순간 정해진 기운을 기준으로, 해마다(또는 10년마다) 바뀌는 운이 그 기운을
-        얼마나 도와주는지 그래프 하나로 봅니다. 숫자가 높을수록 나에게 유리하게 흘러가는
-        시기라는 뜻이에요. 10년 단위/1년 단위는 그래프 아래 버튼으로 바꿀 수 있어요.
-      </p>
+      <p class="lead">태어난 기운과 시기별 흐름을 함께 살펴봅니다. 결과를 먼저 보고, 궁금한 시기를 그래프에서 선택해보세요.</p>
     </div>
 
     <div class="lg-folded hidden" id="lgFolded">
@@ -220,20 +217,33 @@
     <div id="errorBox" class="error-box hidden"></div>
 
     <section id="lgResult">
-      <div class="lg-headline">
-        <div class="range" id="lgRange"></div>
-        <h2 class="lg-verdict" id="lgVerdict"></h2>
-        <div class="score-row">
-          <span class="score-label">현재 흐름</span>
-          <span class="score" id="lgScore">-</span>
-          <span class="trend" id="lgTrend"></span>
+      <div class="lg-hero">
+        <div class="lg-hero-copy">
+          <div class="lg-headline">
+            <div class="range" id="lgRange"></div>
+            <h2 class="lg-verdict" id="lgVerdict"></h2>
+            <p class="desc" id="lgDesc"></p>
+          </div>
+          <div class="lg-otter" id="lgOtter">
+            <p><span aria-hidden="true">🦦</span> <span id="lgOtterSay"></span></p>
+          </div>
         </div>
+        <div class="lg-hero-art" role="img" aria-label="나침반을 들고 흐름을 살펴보는 수달"></div>
+      </div>
+      <div class="lg-summary-band" aria-label="현재 흐름 요약">
+        <div><small>선택한 시기의 흐름</small><strong><span id="lgScore">-</span><span class="unit"> / 100</span></strong></div>
+        <div><small>이전 시기와 비교</small><strong class="trend" id="lgTrend"></strong></div>
+        <div><small>해석의 중심</small><strong id="lgTheme">-</strong></div>
       </div>
 
-      <div class="lg-otter" id="lgOtter">
-        <span class="face" aria-hidden="true">🦦</span>
-        <p id="lgOtterSay"></p>
+      <div class="lg-section-heading">
+        <div><h2>흐름은 어디에서 바뀔까요?</h2><p>한 시점을 선택하면 해석과 행동 조언이 함께 바뀝니다.</p></div>
+        <div class="lg-granularity">
+          <button type="button" class="active" data-mode="decade">10년 흐름</button>
+          <button type="button" data-mode="year">1년 흐름</button>
+        </div>
       </div>
+      <div class="lg-chart-panel">
 
       <div class="lg-chart-wrap" id="lgChartWrap">
         <div class="lg-today-badge hidden" id="lgTodayBadge">오늘</div>
@@ -263,27 +273,22 @@
         <span class="lg-item"><span class="sw" style="background:var(--down)"></span>50점 미만 — 조심할 흐름</span>
       </div>
 
-      <div class="lg-granularity">
-        <button type="button" class="active" data-mode="decade">10년 단위 (대운)</button>
-        <button type="button" data-mode="year">1년 단위 (세운)</button>
       </div>
 
-      <div class="card lg-advice">
-        <h3 id="lgAdviceTitle">이 시기에 하면 좋은 것</h3>
-        <ul class="lg-do" id="lgDos"></ul>
-        <h3 style="margin-top:16px;">피하면 좋은 것</h3>
-        <ul class="lg-dont" id="lgDonts"></ul>
+      <div class="lg-advice-grid">
+        <div class="card lg-advice lg-do-card"><h3 id="lgAdviceTitle">이 시기에 하면 좋은 것</h3><ul class="lg-do" id="lgDos"></ul></div>
+        <div class="card lg-advice lg-dont-card"><h3>서두르지 않아도 되는 것</h3><ul class="lg-dont" id="lgDonts"></ul></div>
+      </div>
         <p class="lg-advice-note">
           고른 시기가 바뀌면 이 내용도 함께 바뀌어요. 참고 자료이지 정해진 결과는 아닙니다.
         </p>
-      </div>
 
-      <div class="lg-basis">
-        <b>점수는 이렇게 나와요.</b> 태어날 때 정해진 내 사주를 도와주는 오행을 "용신"이라고
+      <details class="lg-basis">
+        <summary>점수는 어떻게 계산하나요?</summary> 태어날 때 정해진 내 사주를 도와주는 오행을 "용신"이라고
         불러요. 각 시기(10년 단위 대운, 또는 1년 단위 세운)의 오행이 이 용신과 같거나
         도와주면 점수가 높게, 용신을 눌러버리면 낮게 나옵니다. 그래프는 0~100점 기준이지만
         실제 계산값은 <b>5~95점</b> 사이로만 나오게 되어 있어요(양쪽 끝 극단값은 만들지 않음).
-      </div>
+      </details>
 
       <div class="race-wrap">
         <div class="section-head"><h2>이 시기엔 어떤 기운이 강할까</h2></div>
@@ -309,7 +314,9 @@
         <div class="race-legend" id="raceLegend"></div>
       </div>
 
-      <div class="card">
+      <div class="card lg-premium-card">
+        <span class="lg-next-label">NEXT QUESTION</span>
+        <h2>그래서, 내 삶의 어디에서 나타날까요?</h2>
         <p class="lg-cta-lead" id="lgCtaLead"></p>
         <a class="lg-cta" id="lgCta" href="/lifetime-report.html">
           <span class="name" id="lgCtaName"></span>
@@ -392,6 +399,8 @@
     care: '지금은 새로 벌이는 것보다, 이미 가진 걸 잃지 않는 게 훨씬 남는 구간이에요. 큰 결정은 가능하면 다음 구간으로 미뤄두세요.'
   };
 
+  const FLOW_THEME = { high: '시도와 확장', good: '기초와 유지', mid: '선택과 정리', low: '준비와 점검', care: '보호와 회복' };
+
   const ADVICE = {
     high: {
       dos: ['미뤄둔 시도나 도전 하나를 실제로 시작하기', '사람을 만나고 기회를 넓히기', '성과가 나는 동안 다음을 위한 기반 만들어두기'],
@@ -429,6 +438,7 @@
 
     document.getElementById('lgVerdict').textContent = VERDICT[band][trend];
     document.getElementById('lgOtterSay').textContent = OTTER_SAY[band];
+    document.getElementById('lgTheme').textContent = FLOW_THEME[band];
 
     const advice = ADVICE[band];
     document.getElementById('lgDos').innerHTML = advice.dos.map((s) => `<li>${s}</li>`).join('');
@@ -526,6 +536,7 @@
     }
     document.getElementById('lgRange').textContent = `${rangeText} · ${p.ganZhiKo || ''}${unit}`;
     document.getElementById('lgScore').textContent = p.score;
+    document.getElementById('lgDesc').textContent = scoreToDesc(p.score);
 
     const trend = document.getElementById('lgTrend');
     const delta = prev ? p.score - prev.score : null;
@@ -533,7 +544,7 @@
       trend.style.color = delta >= 0 ? 'var(--up)' : 'var(--down)';
       trend.textContent = (delta >= 0 ? '▲ ' : '▼ ') + Math.abs(delta);
     } else {
-      trend.textContent = '';
+      trend.textContent = '첫 시기';
     }
 
     // 점수·추세가 정해졌으면 그걸로 결론·수달 해설·행동 조언·다음 걸음까지 같이 바꾼다.
