@@ -1,42 +1,53 @@
 /* ============================================================
-   여울 디자인 시스템 — cheongwoldang.com 실측값 기준
-   getComputedStyle로 실제 사이트에서 뽑아낸 값: 배경은 순백, 본문 텍스트는
-   #111111, 브랜드 색은 딥네이비(#04336D) 하나 — 버튼은 필(pill)이 아니라
-   8px 라운드 사각형에 연한 하늘색→흰색 그라데이션 배경 + 네이비 글자,
-   은은한 글로우 그림자. 검정 배경으로 전부 칠하는 대신 이 네이비 하나를
-   브랜드 색으로 절제해서 쓴다. 에러/거절 같은 경고색은 브랜드색과 분리한다.
+   수달 디자인 시스템 — 따뜻한 동양 톤
+   2026-09 입출력 UI 개선안에 따라 청월당 실측 팔레트(순백 + 딥네이비)에서 크림 배경 +
+   남색 + 금색으로 바꿨다. 사주 서비스가 계산기처럼 보이지 않게 하되, 무속 서비스처럼
+   어둡게 가지도 않는다. 남색은 글자와 주요 버튼, 금색은 강조 포인트에만 절제해서 쓴다.
+
+   토큰 뜻:
+   --bg        앱 기둥(.app)의 바닥 — 크림
+   --bg-outer  PC에서 기둥 바깥 — 조금 더 깊은 크림
+   --paper     흰 면. 입력란·타일·서랍처럼 "종이 한 장" 느낌의 요소
+   --surface   카드 배경 — 크림 위에 얹히는 흰 카드
+   --surface-2 카드 안의 안쪽 블록(글리프 자리, 막대 트랙)
    모든 페이지가 이 파일 하나를 공유한다 — 페이지별 <style>은 최소한만 남긴다.
    ============================================================ */
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;700&display=swap');
 
 :root {
-  --ink: #111111;
-  --paper: #ffffff;
-  --surface: #f6f7f9;
-  --surface-2: #eef1f5;
-  --muted: #6b6b6b;
-  --muted-2: #9a9a9a;
-  --line: #e5e7eb;
-  --accent: #04336d;
-  --accent-soft: rgba(4,51,109,0.07);
-  --accent-grad: linear-gradient(91deg, #c9e0ff 6.71%, #ffffff 93.29%);
-  --accent-glow: 0 0 5px rgba(201,224,255,0.6);
-  --success: #1f7a4d;
-  --success-soft: rgba(31,122,77,0.08);
-  --warn: #8a6a10;
-  --warn-soft: rgba(138,106,16,0.10);
-  --danger: #b3432f;
-  --danger-soft: rgba(179,67,47,0.08);
-  --radius-card: 16px;
-  --radius-btn: 8px;
+  --bg: #FFF9EF;
+  --bg-outer: #F3EAD9;
+  --ink: #17243D;
+  --paper: #FFFFFF;
+  --surface: #FFFFFF;
+  --surface-2: #F5EDE0;
+  --muted: #73706B;
+  --muted-2: #A39F98;
+  --line: #EEE5D8;
+  --accent: #17243D;
+  --accent-soft: rgba(23,36,61,0.06);
+  --accent-grad: linear-gradient(91deg, #F3E3BE 6.71%, #FFFCF5 93.29%);
+  --accent-glow: 0 0 6px rgba(213,165,66,0.28);
+  --gold: #D5A542;
+  --gold-soft: rgba(213,165,66,0.14);
+  --success: #438779;
+  --success-soft: rgba(67,135,121,0.10);
+  --warn: #A67C1F;
+  --warn-soft: rgba(166,124,31,0.10);
+  --danger: #C9674B;
+  --danger-soft: rgba(201,103,75,0.10);
+  --radius-card: 20px;
+  --radius-btn: 12px;
   --radius-pill: 999px;
+  --font-serif: 'Noto Serif KR', 'Apple Myungjo', 'Nanum Myeongjo', serif;
 }
 
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 body {
   margin: 0;
-  background: var(--surface);
+  background: var(--bg-outer);
   color: var(--ink);
   font-family: 'Pretendard', -apple-system, 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
   line-height: 1.65;
@@ -46,7 +57,7 @@ a { color: inherit; }
 .hidden { display: none !important; }
 
 /* ---------- 모바일 앱형 컨테이너 ---------- */
-.app { max-width: 480px; margin: 0 auto; min-height: 100vh; background: var(--paper); position: relative; padding-bottom: 84px; }
+.app { max-width: 480px; margin: 0 auto; min-height: 100vh; background: var(--bg); position: relative; padding-bottom: 84px; }
 .app.no-nav { padding-bottom: 40px; }
 
 /* ---------- 상단 헤더 ----------
@@ -55,7 +66,7 @@ a { color: inherit; }
    둘 다 커버하도록 header 자체와 header .row 양쪽에 같은 flex 레이아웃을 둔다. */
 header {
   position: sticky; top: 0; z-index: 20;
-  background: rgba(255,255,255,0.92); backdrop-filter: blur(8px);
+  background: rgba(255,249,239,0.92); backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--line);
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
   padding: 16px 20px;
@@ -322,13 +333,13 @@ h1 { font-size: 20px; font-weight: 800; margin: 0 0 4px; letter-spacing: -0.01em
 .lead { font-size: 13px; color: var(--muted); margin-bottom: 20px; line-height: 1.6; }
 
 /* ---------- 카드 ---------- */
-.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); padding: 18px; margin-bottom: 16px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); padding: 18px; margin-bottom: 16px; box-shadow: 0 1px 2px rgba(60,40,20,0.03); }
 .card h3 { font-size: 14px; font-weight: 800; margin: 0 0 10px; }
 .fortune-card { background: var(--ink); color: #fff; border: none; }
 .fortune-card .row-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
 .fortune-card .eyebrow { font-size: 11px; opacity: 0.65; margin-bottom: 0; }
 .fortune-card .fortune-score { font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; }
-.fortune-card h2 { font-size: 17px; font-weight: 800; margin: 0 0 8px; }
+.fortune-card h2 { font-size: 19px; font-weight: 700; margin: 0 0 8px; font-family: var(--font-serif); letter-spacing: -0.01em; }
 .fortune-card p { font-size: 13px; opacity: 0.8; line-height: 1.7; margin: 0; }
 .fortune-card .fortune-tip {
   margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.15);
@@ -360,7 +371,7 @@ h1 { font-size: 20px; font-weight: 800; margin: 0 0 4px; letter-spacing: -0.01em
   background: var(--paper); border: 1px solid var(--line); color: var(--ink);
   box-shadow: 0 1px 4px rgba(0,0,0,0.18);
 }
-.badge.new, .badge.hot { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+.badge.new, .badge.hot { background: var(--gold-soft); color: #8A6412; border-color: transparent; }
 .badge.free { background: var(--success-soft); color: var(--success); border-color: transparent; }
 .tile .glyph {
   width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
@@ -440,7 +451,7 @@ footer p { font-size: 10.5px; color: var(--muted); line-height: 1.8; }
 /* ---------- 하단 고정 내비 ---------- */
 .bottom-nav {
   position: fixed; left: 50%; transform: translateX(-50%); bottom: 0; width: 100%; max-width: 480px;
-  background: #fff; border-top: 1px solid var(--line); display: flex; z-index: 30;
+  background: var(--paper); border-top: 1px solid var(--line); display: flex; z-index: 30;
 }
 .bottom-nav a, .bottom-nav button {
   flex: 1; border: none; background: none; padding: 10px 0 12px; display: flex; flex-direction: column;
@@ -507,7 +518,7 @@ input[type="text"], input[type="email"], input[type="password"], input[type="num
 
 /* ---------- 버튼 ---------- */
 button[type="submit"], .btn-primary, button.primary {
-  width: 100%; padding: 15px; background: var(--accent-grad); color: var(--accent); border: none; border-radius: var(--radius-btn);
+  width: 100%; padding: 16px; min-height: 54px; background: var(--accent-grad); color: var(--accent); border: none; border-radius: var(--radius-btn);
   font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; margin-top: 6px;
   box-shadow: var(--accent-glow); letter-spacing: -0.01em; transition: filter 0.15s;
 }

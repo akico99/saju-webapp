@@ -19,10 +19,12 @@
 <script src="/concern-step.js"></script>
 <style>
   :root {
-    --up: #E5484D;
-    --up-soft: rgba(229,72,77,0.14);
-    --down: #3182F6;
-    --down-soft: rgba(49,130,246,0.14);
+    /* 개선안 팔레트 — 유리한 흐름은 청록, 조심할 흐름은 주홍. 빨강/파랑은 주식 관례라
+       사주 화면에선 오르내림보다 경고/안정처럼 읽혀 헷갈렸다. */
+    --up: #438779;
+    --up-soft: rgba(67,135,121,0.14);
+    --down: #C9674B;
+    --down-soft: rgba(201,103,75,0.14);
   }
   .lg-intro { padding: 0 20px; }
   .lg-intro .lead { margin-bottom: 22px; }
@@ -237,12 +239,12 @@
         <svg id="lgSvg" viewBox="0 0 640 220" preserveAspectRatio="none">
           <defs>
             <linearGradient id="lgFillUp" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#E5484D" stop-opacity="0.22"/>
-              <stop offset="100%" stop-color="#E5484D" stop-opacity="0"/>
+              <stop offset="0%" stop-color="#438779" stop-opacity="0.22"/>
+              <stop offset="100%" stop-color="#438779" stop-opacity="0"/>
             </linearGradient>
             <linearGradient id="lgFillDown" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#3182F6" stop-opacity="0.22"/>
-              <stop offset="100%" stop-color="#3182F6" stop-opacity="0"/>
+              <stop offset="0%" stop-color="#C9674B" stop-opacity="0.22"/>
+              <stop offset="100%" stop-color="#C9674B" stop-opacity="0"/>
             </linearGradient>
           </defs>
           <line id="lgBaseline" x1="0" y1="110" x2="640" y2="110" stroke="#000" stroke-opacity="0.08" stroke-width="1" stroke-dasharray="4 4"/>
@@ -500,7 +502,7 @@
     selected = i;
     const p = points[i];
     const isUp = p.score >= 50;
-    const color = isUp ? '#E5484D' : '#3182F6';
+    const color = isUp ? '#438779' : '#C9674B';
 
     linePath.setAttribute('stroke', color);
     fillPath.setAttribute('fill', isUp ? 'url(#lgFillUp)' : 'url(#lgFillDown)');
