@@ -16,6 +16,7 @@
 <title>사주보는 수달 — 궁금한 사주</title>
 <link rel="stylesheet" href="/theme.css">
 <link rel="stylesheet" href="/reading-ui.css">
+<link rel="stylesheet" href="/paid-flow.css">
 <style>
   .ds-icon-badge { width: 52px; height: 52px; border-radius: 16px; background: var(--accent-soft);
     display: flex; align-items: center; justify-content: center; margin-bottom: 8px; }
@@ -45,7 +46,7 @@
   }
 </style>
 </head>
-<body class="reading-page">
+<body class="reading-page paid-flow">
 <div class="app">
   <header>
     <a class="back" href="/">←</a>
@@ -56,6 +57,7 @@
     <div class="ds-icon-badge" id="dsBadge"></div>
     <h1 id="dsH1">궁합운</h1>
     <p class="lead" id="dsLead"></p>
+    <div class="paid-steps" aria-label="진행 순서"><span class="active">01 · 정보 입력</span><span>02 · 주제 분석</span><span>03 · 결과 확인</span></div>
 
     <div class="point-notice" id="pointNotice">가격 확인 중...</div>
 

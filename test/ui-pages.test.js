@@ -15,13 +15,29 @@ const pages = [
 for (const name of pages) {
   test(`${name} uses the reading UI without changing its script syntax`, () => {
     const html = fs.readFileSync(path.join(publicDir, `${name}.html`), 'utf8');
-    assert.match(html, /<body class="reading-page(?: life-graph-page)?">/);
+    assert.match(html, /<body class="reading-page(?: life-graph-page| paid-flow)?">/);
     assert.match(html, /<link rel="stylesheet" href="\/reading-ui\.css">/);
     for (const match of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)) {
       new vm.Script(match[1], { filename: `${name}.html` });
     }
   });
 }
+
+test('paid forms preserve integration hooks and load the shared paid UI', () => {
+  for (const [name, formId, resultId] of [
+    ['quick', 'quickForm', 'result'], ['compat', 'compatForm', 'result'],
+    ['lifetime-report', 'sajuForm', 'result'], ['life-topics', 'dsForm', 'dsResult'],
+    ['date-select', 'dsForm', 'dsResult'], ['career-timing', 'ctForm', 'ctResult'],
+    ['birth-timing', 'btForm', 'btResult'], ['reunion-check', 'rcForm', 'rcResult']
+  ]) {
+    const html = fs.readFileSync(path.join(publicDir, `${name}.html`), 'utf8');
+    assert.match(html, /<link rel="stylesheet" href="\/paid-flow\.css">/);
+    assert.ok(html.includes(`id="${formId}"`), `${name}: missing form`);
+    assert.ok(html.includes(`id="${resultId}"`), `${name}: missing result`);
+    assert.match(html, /class="paid-steps"/);
+  }
+  assert.ok(fs.existsSync(path.join(publicDir, 'paid-flow.css')));
+});
 
 test('life graph retains IDs used by result rendering and control events', () => {
   const html = fs.readFileSync(path.join(publicDir, 'life-graph.html'), 'utf8');

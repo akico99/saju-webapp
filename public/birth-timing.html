@@ -16,6 +16,7 @@
 <title>사주보는 수달 — 출산택일</title>
 <link rel="stylesheet" href="/theme.css">
 <link rel="stylesheet" href="/reading-ui.css">
+<link rel="stylesheet" href="/paid-flow.css">
 <style>
   .bt-result { padding: 0 20px; display: none; }
   .bt-card {
@@ -34,7 +35,7 @@
   .bt-optional summary { font-size: 13px; font-weight: 700; color: var(--ink); cursor: pointer; padding: 4px 0; }
 </style>
 </head>
-<body class="reading-page">
+<body class="reading-page paid-flow">
 <div class="app">
   <header>
     <a class="back" href="/">←</a>
@@ -48,6 +49,7 @@
       골고루 갖춰진 사주가 나오는 날짜·시간을 찾아드려요.
     </p>
 
+    <div class="paid-steps" aria-label="진행 순서"><span class="active">01 · 예정일 입력</span><span>02 · 날짜 분석</span><span>03 · 후보 확인</span></div>
     <div class="point-notice" id="pointNotice">가격 확인 중...</div>
 
     <form id="btForm">

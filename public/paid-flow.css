@@ -1,0 +1,73 @@
+/* Paid reading pages: presentation only. Product forms, pricing and report logic remain unchanged. */
+.paid-flow { background: #f1eee8; }
+.paid-flow .app { background: #faf8f4; }
+.paid-flow main { padding: 34px clamp(20px, 5vw, 46px) 64px; }
+.paid-flow main > .brand-tag { color: #8f7042; font-size: 11px; letter-spacing: .15em; }
+.paid-flow main > h1 { max-width: 650px; color: #1f3045; font-size: clamp(29px, 4.2vw, 43px); line-height: 1.28; margin: 0 0 14px; }
+.paid-flow main > .lead { max-width: 610px; margin: 0 0 25px; color: #637080; font-size: 14px; line-height: 1.8; }
+.paid-flow .paid-steps { display: flex; gap: 7px; margin: 0 0 22px; overflow-x: auto; }
+.paid-flow .paid-steps span { flex: 1; min-width: max-content; padding: 11px 13px; border: 1px solid #e9e6df; border-radius: 12px; background: #f3f1eb; color: #78808b; font-size: 11px; font-weight: 750; text-align: center; }
+.paid-flow .paid-steps .active { background: #24344b; border-color: #24344b; color: #fff; }
+.paid-flow main > .point-notice, .paid-flow main > a.point-notice { display: block; padding: 15px 18px; border-radius: 14px; border-color: #dce4e0; background: #f1f6f2; color: #3a5b4c; line-height: 1.6; }
+.paid-flow main > a.point-notice { background: #f5f1e9; border-color: #e8dfce; color: #75633f; }
+.paid-flow main > form { padding: clamp(22px, 4vw, 36px); border: 1px solid #e7e3d9; border-radius: 24px; background: #fff; box-shadow: 0 20px 55px rgba(28, 40, 54, .065); }
+.paid-flow .paid-section-head { display: flex; align-items: flex-start; gap: 14px; margin: 8px 0 20px; padding-top: 23px; border-top: 1px solid #edeae3; }
+.paid-flow form .paid-section-head:first-of-type { padding-top: 0; border-top: 0; }
+.paid-flow .paid-section-head > span { display: grid; place-items: center; width: 34px; height: 34px; flex: 0 0 34px; border-radius: 11px; background: #eee6d6; color: #8a663b; font-size: 12px; font-weight: 850; }
+.paid-flow .paid-section-head h2 { margin: 1px 0 3px; font-family: var(--font-serif); font-size: 20px; line-height: 1.35; letter-spacing: -.04em; color: #23334a; }
+.paid-flow .paid-section-head p { margin: 0; font-size: 12px; line-height: 1.6; color: #7c8490; }
+.paid-flow form .section-title { margin: 24px 0 20px; padding-top: 25px; border-top: 1px solid #edeae3; font-family: var(--font-serif); font-size: 20px; letter-spacing: -.04em; }
+.paid-flow form .section-title:first-child { margin-top: 0; padding-top: 0; border: 0; }
+.paid-flow form .section-title small { display: block; margin-top: 3px; color: #7c8490; font-family: inherit; font-size: 11px; font-weight: 400; letter-spacing: 0; }
+.paid-flow .field { margin-bottom: 20px; }
+.paid-flow .field label { color: #29394b; font-size: 12px; font-weight: 800; }
+.paid-flow .field input:not([type="checkbox"]):not([type="radio"]), .paid-flow .field select { border: 1px solid #dedfdf; border-radius: 12px; background: #fcfcfb; transition: background .15s, border-color .15s, box-shadow .15s; }
+.paid-flow .field input:not([type="checkbox"]):not([type="radio"]):focus, .paid-flow .field select:focus { background: #fff; border-color: #7f987e; outline: none; box-shadow: 0 0 0 3px rgba(127, 152, 126, .17); }
+.paid-flow .field input::placeholder { color: #a4a9ae; }
+.paid-flow .date-inputs { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 7px; }
+.paid-flow .date-inputs:has(input[name$="hour" i]) { grid-template-columns: 1fr 1fr; }
+.paid-flow .date-inputs input { min-width: 0; padding-inline: 9px !important; text-align: center; font-variant-numeric: tabular-nums; }
+.paid-flow .field-row { gap: 14px; }
+.paid-flow .field .hint { color: #89919b; line-height: 1.65; }
+.paid-flow .field.checkbox-field { margin-top: -11px; margin-bottom: 19px; }
+.paid-flow .field .checkbox-field, .paid-flow label.checkbox-field, .paid-flow .field.checkbox-field label { color: #586675; font-size: 12px; line-height: 1.55; }
+.paid-flow input[type="checkbox"] { accent-color: #405c4c; }
+.paid-flow .paid-help { margin: 9px 0 14px; padding: 12px 14px; border-radius: 12px; background: #f7f6f2; color: #66727e; font-size: 12px; line-height: 1.7; }
+.paid-flow .paid-help summary { cursor: pointer; color: #314153; font-weight: 750; }
+.paid-flow .paid-help p { margin: 9px 0 0; }
+.paid-flow .paid-submit-note { padding: 15px 0 8px; border-top: 1px solid #edeae3; color: #77828c; font-size: 12px; line-height: 1.6; }
+.paid-flow form button[type="submit"] { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 58px; margin-top: 8px; border-radius: 14px; background: #24344b; color: #fff; font-size: 15px; box-shadow: 0 10px 24px rgba(36, 52, 75, .17); }
+.paid-flow form button[type="submit"]:disabled { background: #e5e6e5; color: #9299a0; box-shadow: none; }
+.paid-flow .result:not(.hidden), .paid-flow .ds-report[style*="block"], .paid-flow .ct-result[style*="block"], .paid-flow .bt-result[style*="block"], .paid-flow .rc-result[style*="block"] { margin-top: 34px; }
+.paid-flow .result { padding-top: 0; border-top: 0; }
+.paid-flow #progressBlock { position: relative; padding: 24px 24px 24px 58px; border: 1px solid #e5e9e6; border-radius: 18px; background: #f2f6f2; }
+.paid-flow #progressBlock::before { content: ''; position: absolute; left: 24px; top: 28px; width: 15px; height: 15px; border: 2px solid #bdcabc; border-top-color: #3e6851; border-radius: 50%; animation: paid-spin .85s linear infinite; }
+.paid-flow #progressBlock h3 { color: #243b30; font-size: 15px; }
+.paid-flow #progressText { line-height: 1.7; }
+@keyframes paid-spin { to { transform: rotate(360deg); } }
+.paid-flow .paid-result-heading { margin: 0 0 20px; padding: 24px; border-radius: 18px; background: #24344b; color: #fff; }
+.paid-flow .paid-result-heading span { color: #dec78d; font-size: 11px; font-weight: 800; letter-spacing: .07em; }
+.paid-flow .paid-result-heading h2 { margin: 8px 0; color: #fff; font-family: var(--font-serif); font-size: clamp(21px, 3vw, 27px); }
+.paid-flow .paid-result-heading p { margin: 0; color: #d7dfeb; font-size: 12px; line-height: 1.7; }
+.paid-flow #downloadBlock .download-btn { min-height: 47px; display: inline-flex; align-items: center; justify-content: center; padding: 12px 18px; border-radius: 12px; background: #24344b; color: #fff; box-shadow: none; }
+.paid-flow #downloadBlock .download-btn.card-btn { margin-left: 7px; border: 1px solid #dadfdd; background: #fff; color: #24344b; }
+.paid-flow .ds-report { padding: 0; border: 0; }
+.paid-flow .ds-summary, .paid-flow .ct-best, .paid-flow .rc-score-card { border-radius: 19px; padding: 26px; background: #24344b; box-shadow: 0 17px 38px rgba(36, 52, 75, .13); }
+.paid-flow .ds-report .body { margin-top: 16px; padding: clamp(22px, 4vw, 34px); border: 1px solid #e7e3d9; border-radius: 19px; background: #fff; color: #314052; line-height: 1.95; box-shadow: 0 12px 34px rgba(28, 40, 54, .045); }
+.paid-flow .ds-download, .paid-flow .rc-block, .paid-flow .bt-card { border: 1px solid #e7e3d9; border-radius: 17px; background: #fff; box-shadow: 0 10px 28px rgba(28, 40, 54, .045); }
+.paid-flow .ds-download { padding: 20px; }
+.paid-flow .bt-card.top { border-color: #c6ad7f; background: #fffcf6; }
+.paid-flow .ct-row { padding: 17px 3px; }
+.paid-flow .ct-row .bar-fill { background: #6e8a78; }
+.paid-flow .rc-block { padding: 20px; }
+.paid-flow .ds-disclaimer { line-height: 1.65; }
+@media (min-width: 800px) { .paid-flow .app { max-width: 760px; } }
+@media (max-width: 560px) {
+  .paid-flow main { padding: 27px 18px 48px; }
+  .paid-flow main > h1 { font-size: 30px; }
+  .paid-flow main > form { padding: 20px; }
+  .paid-flow .paid-steps span { font-size: 10px; padding: 9px; }
+  .paid-flow .field-row { grid-template-columns: 1fr; gap: 0; }
+  .paid-flow #downloadBlock .download-btn, .paid-flow #downloadBlock .download-btn.card-btn { display: flex; width: 100%; margin: 9px 0 0; }
+}
+@media (prefers-reduced-motion: reduce) { .paid-flow #progressBlock::before { animation: none; } }
