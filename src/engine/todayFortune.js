@@ -176,4 +176,26 @@ function getTodayFortune(birth, now = new Date()) {
   };
 }
 
-module.exports = { getTodayFortune, OHAENG_COLOR, OHAENG_DIRECTION_ACTION, OHAENG_TASTE };
+/* 7일 흐름 — 오늘부터 일주일치 점수만 뽑는다. 같은 계산을 날짜만 바꿔 7번 돌리는 것이라
+   지어내는 값이 없고, 오늘의 운세와 숫자가 어긋날 일도 없다.
+   무료로 주는 건 점수와 "이번 주 가장 좋은 날"까지. 날짜별 해설 전체는 그날그날 들어와서
+   보게 두는 편이 재방문 이유가 된다. */
+const WEEKDAY_KO = ['일', '월', '화', '수', '목', '금', '토'];
+function getWeekFortune(birth, now = new Date()) {
+  const days = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
+    const f = getTodayFortune(birth, d);
+    days.push({
+      offset: i,
+      date: f.date,
+      weekday: WEEKDAY_KO[d.getDay()],
+      score: f.score,
+      title: f.title
+    });
+  }
+  const best = days.reduce((a, b) => (b.score > a.score ? b : a), days[0]);
+  return { days, bestOffset: best.offset };
+}
+
+module.exports = { getTodayFortune, getWeekFortune, OHAENG_COLOR, OHAENG_DIRECTION_ACTION, OHAENG_TASTE };

@@ -15,6 +15,8 @@
 <link rel="icon" type="image/png" href="/favicon.png">
 <title>사주보는 수달 — 오늘의 운세 무료 체험</title>
 <link rel="stylesheet" href="/theme.css">
+<script src="/analysis-loader.js"></script>
+<script src="/concern-step.js"></script>
 <style>
   /* 결과 영역은 로그인판(today-fortune.html)과 같은 모양이어야 한다 — 무료로 본 화면과
      로그인 후 화면이 달라 보이면 "무료는 대충 준 거였나" 싶어진다. 같은 클래스를 쓴다. */
@@ -43,6 +45,21 @@
 
   /* 폼 위 "뭘 알려주는지" 예고 — 생년월일부터 요구하면 뭘 받는지 모르는 채로 개인정보를
      넣어야 해서 그 자리에서 나간다. 받게 될 것을 먼저 보여준다. */
+  /* 7일 흐름 — 막대 7개와 이번 주 최고일. 점수만 보여주고 날짜별 해설은 그날 들어와서
+     보게 둔다(재방문 이유). 최고일 막대는 accent, 오늘은 굵은 라벨. */
+  .tf-week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; align-items: end; height: 92px; margin-top: 6px; }
+  .tf-week .day { display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
+  .tf-week .bar { width: 100%; max-width: 26px; border-radius: 6px 6px 3px 3px; background: var(--surface-2); min-height: 6px; transition: height .3s; }
+  .tf-week .day.best .bar { background: var(--accent); }
+  .tf-week .day.today .bar { background: var(--ink); }
+  .tf-week .day.best.today .bar { background: var(--accent); }
+  .tf-week .num { font-size: 11px; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .tf-week .day.best .num, .tf-week .day.today .num { color: var(--ink); }
+  .tf-week .wd { font-size: 11px; color: var(--muted); }
+  .tf-week .day.today .wd { color: var(--ink); font-weight: 800; }
+  .tf-week-best { font-size: 12.5px; color: var(--muted); margin: 10px 0 0; }
+  .tf-week-best b { color: var(--accent); }
+
   .preview-teaser { margin: 0 0 20px; padding-left: 18px; font-size: 13.5px; line-height: 2; color: var(--ink); }
   .preview-teaser li::marker { color: var(--accent); }
   .tf-topic-lead { font-size: 13px; line-height: 1.7; color: var(--muted); margin: 0 0 10px; }
@@ -66,10 +83,11 @@
         <li>오늘 내 기운은 몇 점이고, 어떤 날인지</li>
         <li>오늘 하면 좋은 일과, 피하면 좋은 일</li>
         <li>오늘 특히 신경 쓰이는 영역이 어디인지</li>
+        <li>이번 주 7일 중 가장 좋은 날은 언제인지</li>
       </ul>
     </div>
 
-    <form id="tpForm">
+    <form id="tpForm" data-concern-step data-concern-submit="오늘의 운세 보기">
       <div class="field-row">
         <div class="field">
           <label>성별</label>
@@ -136,6 +154,12 @@
       </div>
 
       <div class="card">
+        <h3>이번 주 흐름</h3>
+        <div class="tf-week" id="tpWeek"></div>
+        <p class="tf-week-best" id="tpWeekBest"></p>
+      </div>
+
+      <div class="card">
         <p class="tf-topic-lead" id="tpTopicLead"></p>
         <a class="tf-upsell" id="tpUpsell" href="#">
           <span class="name" id="tpUpsellName"></span>
@@ -156,7 +180,36 @@
 </div>
 
 <script>
-  function render(fortune) {
+  function renderWeek(week, prefix) {
+    const box = document.getElementById(prefix + 'Week');
+    box.innerHTML = '';
+    week.days.forEach((d) => {
+      const el = document.createElement('div');
+      el.className = 'day' + (d.offset === 0 ? ' today' : '') + (d.offset === week.bestOffset ? ' best' : '');
+      el.title = d.date + ' · ' + d.title;
+      const bar = document.createElement('div');
+      bar.className = 'bar';
+      bar.style.height = Math.max(6, Math.round(d.score * 0.6)) + 'px';
+      const num = document.createElement('span'); num.className = 'num'; num.textContent = d.score;
+      const wd = document.createElement('span'); wd.className = 'wd'; wd.textContent = d.offset === 0 ? '오늘' : d.weekday;
+      el.append(num, bar, wd);
+      box.appendChild(el);
+    });
+    const best = week.days[week.bestOffset];
+    const bestEl = document.getElementById(prefix + 'WeekBest');
+    bestEl.innerHTML = '';
+    if (best.offset === 0) {
+      bestEl.append('이번 주에는 ');
+      const b = document.createElement('b'); b.textContent = '오늘'; bestEl.append(b);
+      bestEl.append('이 가장 좋은 날이에요. 미뤄둔 게 있다면 오늘 움직여보세요.');
+    } else {
+      bestEl.append('이번 주에는 ');
+      const b = document.createElement('b'); b.textContent = `${best.weekday}요일(${best.score}점)`; bestEl.append(b);
+      bestEl.append('이 가장 좋아요. 중요한 일정이 있다면 그날로 잡아보세요.');
+    }
+  }
+
+  function render(fortune, week, concern) {
     document.getElementById('tpDate').textContent = `${fortune.date} · ${fortune.gapja}`;
     document.getElementById('tpScore').textContent = fortune.score + '점';
     document.getElementById('tpTitle').textContent = fortune.title;
@@ -179,12 +232,25 @@
     b.textContent = fortune.topicLabel;
     lead.append(b, ' 쪽으로 기운이 기울어 있어요. 오늘 하루가 아니라 이 흐름 자체를 보고 싶다면요.');
 
+    // 권하는 상품은 본인이 고른 고민을 따른다 — 추측(오늘 주제)보다 직접 고른 게 우선이다.
+    // 고민을 안 골랐으면(공유 링크 등) 오늘 주제 기반 추천으로 돌아간다.
+    const picked = window.ConcernStep && concern ? ConcernStep.product(concern) : null;
+    const up = picked || fortune.upsell;
+    if (picked) {
+      lead.innerHTML = '';
+      lead.append('오늘은 ');
+      const b2 = document.createElement('b'); b2.textContent = fortune.topicLabel; lead.append(b2);
+      lead.append(' 쪽으로 기운이 기울어 있어요. 고르신 고민 ');
+      const b3 = document.createElement('b'); b3.textContent = ConcernStep.label(concern); lead.append(b3);
+      lead.append('은 오늘 하루를 넘어 이 흐름 자체로 볼 수 있어요.');
+    }
     // 버튼 안에는 "무엇을 보는지"만 넣는다 — 위 문장이 이미 권유를 했으므로
     // 버튼에서 "~궁금하다면"을 한 번 더 말하면 같은 말이 두 번 나온다.
-    document.getElementById('tpUpsellName').textContent = fortune.upsell.name + ' 보기';
-    document.getElementById('tpUpsellPrice').textContent = fortune.upsell.price;
-    document.getElementById('tpUpsell').href = fortune.upsell.href;
+    document.getElementById('tpUpsellName').textContent = up.name + ' 보기';
+    document.getElementById('tpUpsellPrice').textContent = up.price;
+    document.getElementById('tpUpsell').href = up.href;
 
+    if (week) renderWeek(week, 'tp');
     document.getElementById('result').classList.remove('hidden');
   }
 
@@ -196,13 +262,15 @@
     const body = Object.fromEntries(fd.entries());
 
     try {
-      const res = await fetch('/api/today-fortune-preview', {
+      const request = fetch('/api/today-fortune-preview', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
-      });
-      const data = await res.json();
+      }).then(async (res) => ({ res, data: await res.json() }));
+      const { res, data } = await AnalysisLoader.run(
+        ['타고난 오행 확인', '오늘 일진과 대조', '이번 주 흐름 계산'], request
+      );
       if (!res.ok) { errorBox.textContent = data.error || '계산 실패'; errorBox.classList.remove('hidden'); return; }
 
-      render(data.fortune);
+      render(data.fortune, data.week, body.concern);
       // 결과가 나오면 "뭘 알려주는지" 예고는 역할이 끝났다 — 남겨두면 결과가 밀려 내려간다.
       document.getElementById('introBox').classList.add('hidden');
       document.getElementById('result').scrollIntoView({ behavior: 'smooth', block: 'start' });

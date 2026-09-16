@@ -30,6 +30,21 @@
   .tf-quest-item:last-child { border-bottom: none; }
   .tf-quest-item input[type="checkbox"] { width: 18px; height: 18px; flex-shrink: 0; }
   .tf-quest-item.done span { text-decoration: line-through; color: var(--muted); }
+  /* 7일 흐름 — 막대 7개와 이번 주 최고일. 점수만 보여주고 날짜별 해설은 그날 들어와서
+     보게 둔다(재방문 이유). 최고일 막대는 accent, 오늘은 굵은 라벨. */
+  .tf-week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; align-items: end; height: 92px; margin-top: 6px; }
+  .tf-week .day { display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
+  .tf-week .bar { width: 100%; max-width: 26px; border-radius: 6px 6px 3px 3px; background: var(--surface-2); min-height: 6px; transition: height .3s; }
+  .tf-week .day.best .bar { background: var(--accent); }
+  .tf-week .day.today .bar { background: var(--ink); }
+  .tf-week .day.best.today .bar { background: var(--accent); }
+  .tf-week .num { font-size: 11px; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .tf-week .day.best .num, .tf-week .day.today .num { color: var(--ink); }
+  .tf-week .wd { font-size: 11px; color: var(--muted); }
+  .tf-week .day.today .wd { color: var(--ink); font-weight: 800; }
+  .tf-week-best { font-size: 12.5px; color: var(--muted); margin: 10px 0 0; }
+  .tf-week-best b { color: var(--accent); }
+
   .tf-upsell { display: flex; align-items: center; justify-content: space-between; gap: 12px; text-decoration: none; color: var(--ink); }
   .tf-upsell .txt .label { font-size: 11.5px; color: var(--muted); margin-bottom: 4px; }
   .tf-upsell .txt .name { font-size: 15px; font-weight: 800; }
@@ -86,6 +101,12 @@
         <h3>오늘 나의 하루 액땜 퀘스트</h3>
         <p class="hint" style="margin-top:-6px;">오늘 필요한 기운을 채워주는 작은 행동들이에요. 체크해보세요.</p>
         <div id="tfQuest"></div>
+      </div>
+
+      <div class="card">
+        <h3>이번 주 흐름</h3>
+        <div class="tf-week" id="tfWeek"></div>
+        <p class="tf-week-best" id="tfWeekBest"></p>
       </div>
 
       <a class="card tf-upsell" id="tfUpsell" href="#">
@@ -149,7 +170,36 @@
     });
   }
 
-  function render(fortune) {
+  function renderWeek(week, prefix) {
+    const box = document.getElementById(prefix + 'Week');
+    box.innerHTML = '';
+    week.days.forEach((d) => {
+      const el = document.createElement('div');
+      el.className = 'day' + (d.offset === 0 ? ' today' : '') + (d.offset === week.bestOffset ? ' best' : '');
+      el.title = d.date + ' · ' + d.title;
+      const bar = document.createElement('div');
+      bar.className = 'bar';
+      bar.style.height = Math.max(6, Math.round(d.score * 0.6)) + 'px';
+      const num = document.createElement('span'); num.className = 'num'; num.textContent = d.score;
+      const wd = document.createElement('span'); wd.className = 'wd'; wd.textContent = d.offset === 0 ? '오늘' : d.weekday;
+      el.append(num, bar, wd);
+      box.appendChild(el);
+    });
+    const best = week.days[week.bestOffset];
+    const bestEl = document.getElementById(prefix + 'WeekBest');
+    bestEl.innerHTML = '';
+    if (best.offset === 0) {
+      bestEl.append('이번 주에는 ');
+      const b = document.createElement('b'); b.textContent = '오늘'; bestEl.append(b);
+      bestEl.append('이 가장 좋은 날이에요. 미뤄둔 게 있다면 오늘 움직여보세요.');
+    } else {
+      bestEl.append('이번 주에는 ');
+      const b = document.createElement('b'); b.textContent = `${best.weekday}요일(${best.score}점)`; bestEl.append(b);
+      bestEl.append('이 가장 좋아요. 중요한 일정이 있다면 그날로 잡아보세요.');
+    }
+  }
+
+  function render(fortune, week) {
     document.getElementById('tfDate').textContent = `${fortune.date} · ${fortune.gapja}`;
     document.getElementById('tfScore').textContent = fortune.score + '점';
     document.getElementById('tfTitle').textContent = fortune.title;
@@ -169,6 +219,7 @@
     document.getElementById('tfUpsellPrice').textContent = fortune.upsell.price;
     document.getElementById('tfUpsell').href = fortune.upsell.href;
 
+    if (week) renderWeek(week, 'tf');
     document.getElementById('loadingBox').classList.add('hidden');
     document.getElementById('content').classList.remove('hidden');
   }
@@ -187,7 +238,7 @@
         errorBox.classList.remove('hidden');
         return;
       }
-      render(data.fortune);
+      render(data.fortune, data.week);
     } catch (err) {
       document.getElementById('loadingBox').classList.add('hidden');
       const errorBox = document.getElementById('errorBox');

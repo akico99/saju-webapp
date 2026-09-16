@@ -15,6 +15,8 @@
 <link rel="icon" type="image/png" href="/favicon.png">
 <title>사주보는 수달 — 인생 그래프</title>
 <link rel="stylesheet" href="/theme.css">
+<script src="/analysis-loader.js"></script>
+<script src="/concern-step.js"></script>
 <style>
   :root {
     --up: #E5484D;
@@ -25,7 +27,21 @@
   .lg-intro { padding: 0 20px; }
   .lg-intro .lead { margin-bottom: 22px; }
 
-  #lgResult { padding: 0 20px; display: none; }
+  #lgResult { padding: 0 20px; display: none; margin-top: 28px; }
+
+  /* 결과가 나오면 입력폼은 접는다 — 폼과 결과가 위아래로 다 펼쳐져 있으면 결과가 화면
+     아래로 밀리고, 첫인상이 입력 화면인지 결과 화면인지 애매해진다. 어떤 정보로 계산했는지
+     한 줄과 "출생정보 변경" 버튼만 남긴다. */
+  .lg-folded {
+    margin: 0 20px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card);
+    font-size: 12.5px; color: var(--muted);
+  }
+  .lg-folded button {
+    flex: 0 0 auto; width: auto; margin: 0; padding: 7px 12px; font-size: 12px; font-weight: 700;
+    background: var(--paper); color: var(--ink); border: 1px solid var(--line); border-radius: var(--radius-btn);
+    box-shadow: none; cursor: pointer; font-family: inherit;
+  }
 
   /* 결과는 숫자가 아니라 결론부터 읽히게 한다 — "65점"이 먼저 나오면 그 숫자가 현실에서
      뭘 뜻하는지 각자 해석해야 한다. 결론 문장을 가장 크게 두고, 점수는 그 근거로 내린다. */
@@ -61,14 +77,16 @@
   .lg-cta .name { font-size: 14.5px; font-weight: 800; word-break: keep-all; }
   .lg-cta .price { font-size: 14px; font-weight: 800; flex-shrink: 0; }
 
-  .lg-chart-wrap { position: relative; margin: 22px 0 6px; touch-action: pan-y; user-select: none; }
+  .lg-chart-wrap { position: relative; margin: 26px 0 6px; padding-top: 22px; touch-action: pan-y; user-select: none; }
   .lg-chart-wrap svg { width: 100%; height: auto; display: block; overflow: visible; }
   .lg-axis { display: flex; justify-content: space-between; padding: 0 2px; margin-top: 6px; }
   .lg-axis span { font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
   .lg-axis span.today { color: var(--ink); font-weight: 800; font-size: 12px; }
 
+  /* 배지는 그래프 영역 안쪽 상단에 둔다 — 위로 삐져나가게 두면 그 위 카드(수달 해설)를
+     덮는다. .lg-chart-wrap의 padding-top이 이 배지 자리다. */
   .lg-today-badge {
-    position: absolute; transform: translate(-50%, -100%); margin-top: -10px;
+    position: absolute; top: 0; transform: translateX(-50%);
     background: var(--ink); color: #fff; font-size: 10.5px; font-weight: 700;
     padding: 3px 8px; border-radius: var(--radius-pill); white-space: nowrap; pointer-events: none;
   }
@@ -154,7 +172,12 @@
       </p>
     </div>
 
-    <form id="lgForm">
+    <div class="lg-folded hidden" id="lgFolded">
+      <span id="lgFoldedText"></span>
+      <button type="button" id="lgUnfoldBtn">출생정보 변경</button>
+    </div>
+
+    <form id="lgForm" data-concern-step data-concern-submit="내 인생 그래프 보기">
       <div class="profile-picker hidden" id="profilePicker"></div>
       <div class="field-row">
         <div class="field">
@@ -202,7 +225,6 @@
           <span class="score" id="lgScore">-</span>
           <span class="trend" id="lgTrend"></span>
         </div>
-        <div class="desc" id="lgDesc"></div>
       </div>
 
       <div class="lg-otter" id="lgOtter">
@@ -253,14 +275,6 @@
         </p>
       </div>
 
-      <div class="card">
-        <p class="lg-cta-lead" id="lgCtaLead"></p>
-        <a class="lg-cta" id="lgCta" href="/lifetime-report.html">
-          <span class="name" id="lgCtaName"></span>
-          <span class="price" id="lgCtaPrice"></span>
-        </a>
-      </div>
-
       <div class="lg-basis">
         <b>점수는 이렇게 나와요.</b> 태어날 때 정해진 내 사주를 도와주는 오행을 "용신"이라고
         불러요. 각 시기(10년 단위 대운, 또는 1년 단위 세운)의 오행이 이 용신과 같거나
@@ -292,6 +306,14 @@
         <div class="race-legend" id="raceLegend"></div>
       </div>
 
+      <div class="card">
+        <p class="lg-cta-lead" id="lgCtaLead"></p>
+        <a class="lg-cta" id="lgCta" href="/lifetime-report.html">
+          <span class="name" id="lgCtaName"></span>
+          <span class="price" id="lgCtaPrice"></span>
+        </a>
+      </div>
+
       <div class="lg-actions">
         <button type="button" id="lgShareBtn">링크로 공유하기</button>
         <button type="button" id="lgSaveBtn">이미지로 저장</button>
@@ -313,6 +335,7 @@
   let rawData = null;
   let points = [];
   let currentAge = null;
+  let currentConcern = '';
   let selected = 0;
   let mode = 'decade';
 
@@ -408,11 +431,20 @@
     document.getElementById('lgDos').innerHTML = advice.dos.map((s) => `<li>${s}</li>`).join('');
     document.getElementById('lgDonts').innerHTML = advice.donts.map((s) => `<li>${s}</li>`).join('');
 
-    const step = NEXT_STEP[trend];
-    document.getElementById('lgCtaLead').textContent = step.lead;
-    document.getElementById('lgCtaName').textContent = step.name;
-    document.getElementById('lgCtaPrice').textContent = step.price;
-    document.getElementById('lgCta').href = step.href;
+    // 권하는 상품은 본인이 고른 고민을 따른다. 고민이 없을 때(옛 공유 링크)만 추세 기반.
+    const picked = window.ConcernStep && currentConcern ? ConcernStep.product(currentConcern) : null;
+    if (picked) {
+      document.getElementById('lgCtaLead').textContent = `고르신 고민 "${ConcernStep.label(currentConcern)}"을 지금 이 시기 기준으로 자세히 볼 수 있어요.`;
+      document.getElementById('lgCtaName').textContent = picked.name + ' 보기';
+      document.getElementById('lgCtaPrice').textContent = picked.price;
+      document.getElementById('lgCta').href = picked.href;
+    } else {
+      const step = NEXT_STEP[trend];
+      document.getElementById('lgCtaLead').textContent = step.lead;
+      document.getElementById('lgCtaName').textContent = step.name;
+      document.getElementById('lgCtaPrice').textContent = step.price;
+      document.getElementById('lgCta').href = step.href;
+    }
   }
 
   function xOf(i) { return (i / (points.length - 1)) * CHART_W; }
@@ -491,8 +523,6 @@
     }
     document.getElementById('lgRange').textContent = `${rangeText} · ${p.ganZhiKo || ''}${unit}`;
     document.getElementById('lgScore').textContent = p.score;
-    document.getElementById('lgScore').style.color = color;
-    document.getElementById('lgDesc').textContent = scoreToDesc(p.score);
 
     const trend = document.getElementById('lgTrend');
     const delta = prev ? p.score - prev.score : null;
@@ -700,8 +730,8 @@
       modeLabel: mode === 'year' ? '1년 단위 · 세운' : '10년 단위 · 대운',
       rangeText: document.getElementById('lgRange').textContent,
       scoreText: document.getElementById('lgScore').textContent,
-      scoreColor: document.getElementById('lgScore').style.color || '#14171C',
-      descText: document.getElementById('lgDesc').textContent,
+      scoreColor: '#14171C',
+      descText: document.getElementById('lgVerdict').textContent.replace(/\n/g, ' '),
       svgString: new XMLSerializer().serializeToString(svg),
       // 나이 축 라벨은 svg 밖의 별도 <div>(#lgAxis)에만 그려져 있어서, svg만 직렬화하는
       // 위 svgString에는 포함되지 않는다 — 그대로 두면 저장/공유되는 카드에 나이가
@@ -907,6 +937,24 @@
     });
   });
 
+  // 결과가 나오면 폼과 소개 문단을 접고, 무엇으로 계산했는지 한 줄만 남긴다.
+  function foldForm(body) {
+    const cal = body.calendar === '음력' ? '음력' : '양력';
+    const time = (body.hourUnknown === 'true' || body.hourUnknown === true || body.hour === '' || body.hour == null)
+      ? '시각 모름' : `${body.hour}시 ${body.minute || 0}분`;
+    const concernLabel = window.ConcernStep && body.concern ? ConcernStep.label(body.concern) : '';
+    document.getElementById('lgFoldedText').textContent = [`${cal} ${body.year}.${body.month}.${body.day}`, time, body.gender || '', concernLabel].filter(Boolean).join(' · ');
+    document.getElementById('lgForm').classList.add('hidden');
+    document.querySelector('.lg-intro').classList.add('hidden');
+    document.getElementById('lgFolded').classList.remove('hidden');
+  }
+  document.getElementById('lgUnfoldBtn').addEventListener('click', () => {
+    document.getElementById('lgFolded').classList.add('hidden');
+    document.querySelector('.lg-intro').classList.remove('hidden');
+    document.getElementById('lgForm').classList.remove('hidden');
+    document.getElementById('lgForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
   document.getElementById('lgForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const errorBox = document.getElementById('errorBox');
@@ -916,14 +964,18 @@
     body.hourUnknown = fd.get('hourUnknown') === 'on';
 
     try {
-      const res = await fetch('/api/life-graph', {
+      const request = fetch('/api/life-graph', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
-      });
-      const data = await res.json();
+      }).then(async (res) => ({ res, data: await res.json() }));
+      const { res, data } = await AnalysisLoader.run(
+        ['타고난 오행 확인', '용신 판별', '대운·세운 흐름 계산'], request
+      );
       if (!res.ok) { errorBox.textContent = data.error || '계산 실패'; errorBox.classList.remove('hidden'); return; }
 
       rawData = data;
       currentAge = data.currentAge;
+      currentConcern = body.concern || '';
+      foldForm(body);
       document.getElementById('lgResult').style.display = 'block';
       setMode('decade');
       encodeStateToUrl(body);
@@ -937,7 +989,7 @@
   // 이걸 그대로 공유하면 상대방이 열었을 때 아래 initFromUrl()이 똑같이 재현해서 보여준다.
   function encodeStateToUrl(body) {
     const params = new URLSearchParams();
-    ['year', 'month', 'day', 'hour', 'minute', 'gender', 'calendar'].forEach((k) => {
+    ['year', 'month', 'day', 'hour', 'minute', 'gender', 'calendar', 'concern'].forEach((k) => {
       if (body[k] !== undefined && body[k] !== null && body[k] !== '') params.set(k, body[k]);
     });
     if (body.hourUnknown) params.set('hourUnknown', '1');
@@ -954,6 +1006,10 @@
     if (params.get('gender')) form.gender.value = params.get('gender');
     if (params.get('calendar')) form.calendar.value = params.get('calendar');
     if (params.get('hourUnknown')) form.hourUnknown.checked = true;
+    if (params.get('concern')) {
+      const c = document.createElement('input'); c.type = 'hidden'; c.name = 'concern'; c.value = params.get('concern');
+      form.appendChild(c);
+    }
     if (form.requestSubmit) form.requestSubmit();
     else form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
   })();
