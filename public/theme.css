@@ -60,6 +60,29 @@ a { color: inherit; }
 .app { max-width: 480px; margin: 0 auto; min-height: 100vh; background: var(--bg); position: relative; padding-bottom: 84px; }
 .app.no-nav { padding-bottom: 40px; }
 
+/* ---------- PC ----------
+   모바일 폭(480px) 기둥을 그대로 가운데 두면 양옆이 텅 비어 미완성처럼 보인다.
+   배너가 있는 홈/전체목록은 카탈로그라 좁은 기둥이 맞으니 그대로 두고(청월당도 PC에서
+   좁다 — 배너를 넓히면 4:3 비율이 540px 높이가 되어 첫 화면을 다 먹는다), 그 외
+   입력·결과 페이지는 720px까지 넓힌다. 바깥에는 이미지 없이 금색·남색의 아주 옅은
+   빛 번짐만 깔아 비어 보이지 않게 한다. */
+@media (min-width: 900px) {
+  body {
+    background:
+      radial-gradient(ellipse 620px 420px at 12% 18%, rgba(213,165,66,0.13), transparent 70%),
+      radial-gradient(ellipse 560px 460px at 88% 82%, rgba(23,36,61,0.09), transparent 70%),
+      var(--bg-outer);
+    background-attachment: fixed;
+  }
+  .app { box-shadow: 0 0 0 1px var(--line), 0 24px 60px rgba(60,40,20,0.08); }
+  .app:not(:has(.banner-slider)) { max-width: 720px; }
+  .app:not(:has(.banner-slider)) .bottom-nav { max-width: 720px; }
+  .app:not(:has(.banner-slider)) main,
+  .app:not(:has(.banner-slider)) section { padding-left: 40px; padding-right: 40px; }
+  .app:not(:has(.banner-slider)) header { padding-left: 40px; padding-right: 40px; }
+  /* 결과 본문은 680~760px — 720 기둥에서 좌우 40px 패딩이면 640px 본문. 개선안 범위 안쪽. */
+}
+
 /* ---------- 상단 헤더 ----------
    index.html(메인)은 <header><div class="row">두 자식</div></header> 구조를,
    login/signup/mypage/admin은 <header>두 자식 바로</header> 구조를 쓴다 —

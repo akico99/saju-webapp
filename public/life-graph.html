@@ -26,16 +26,17 @@
     --down: #C9674B;
     --down-soft: rgba(201,103,75,0.14);
   }
-  .lg-intro { padding: 0 20px; }
+  /* main이 이미 20px 패딩을 준다 — 여기서 또 주면 폼(20px)과 결과(40px)의 좌우 여백이 어긋난다. */
+  .lg-intro { padding: 0; }
   .lg-intro .lead { margin-bottom: 22px; }
 
-  #lgResult { padding: 0 20px; display: none; margin-top: 28px; }
+  #lgResult { padding: 0; display: none; margin-top: 28px; }
 
   /* 결과가 나오면 입력폼은 접는다 — 폼과 결과가 위아래로 다 펼쳐져 있으면 결과가 화면
      아래로 밀리고, 첫인상이 입력 화면인지 결과 화면인지 애매해진다. 어떤 정보로 계산했는지
      한 줄과 "출생정보 변경" 버튼만 남긴다. */
   .lg-folded {
-    margin: 0 20px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    margin: 0; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px;
     background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card);
     font-size: 12.5px; color: var(--muted);
   }
