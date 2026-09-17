@@ -12,9 +12,7 @@
     <% keywords.forEach(function(k) { %><span class="kw-chip"><%= k %></span><% }) %>
   </div>
   <% } %>
-  <% chapter.text.split(/\n\n+/).forEach(function(para) { if (para.trim()) { %>
-  <p><%- renderMarkup(para.trim()) %></p>
-  <% } }) %>
+  <%- renderBody(chapter.text) %>
   <% if (chapter.id === 17) { %>
   <div class="quest-card avoid-break">
     <div class="quest-card-ttl">📱 오늘부터 실천할 개운 체크리스트</div>

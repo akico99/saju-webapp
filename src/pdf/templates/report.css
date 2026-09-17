@@ -227,6 +227,11 @@ body {
   padding-bottom: 5mm; margin: 0 0 8mm;
 }
 .chapter p { margin: 0 0 5mm 0; text-align: justify; color: var(--text); }
+/* 골격(outline) 소제목 — 챕터를 5~7개 소주제로 나눈다. 챕터 제목(h2)보다 한 단계 작게. */
+.chapter h3.sub { font-family: 'ReportMyeongjo','Batang','바탕',serif; font-size: 12.5pt; color: var(--star); margin: 8mm 0 3mm; padding-left: 3mm; border-left: 2.5px solid var(--star); break-after: avoid; }
+.chapter h3.sub:first-of-type { margin-top: 2mm; }
+.chapter ul.sub-list { margin: 0 0 5mm; padding-left: 6mm; color: var(--text); }
+.chapter ul.sub-list li { margin-bottom: 1.5mm; }
 
 /* 챕터 도입부 키워드 칩 — 긴 줄글을 읽기 전에 이 장의 핵심 사실을 먼저 스캔할 수 있게. */
 .chapter-keywords { display: flex; flex-wrap: wrap; gap: 2.5mm; margin: 0 0 7mm; }

@@ -6,7 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const ejs = require('ejs');
 const { computeDaewoonScores } = require('./charts');
-const { renderMarkup } = require('./textMarkup');
+const { renderMarkup, renderBody } = require('./textMarkup');
 const { getReportCss } = require('./reportCss');
 const { safeName } = require('./personName');
 const { getChapterKeywords } = require('./chapterKeywords');
@@ -40,7 +40,7 @@ function renderHtml(engine, chapters, person, coverSummary) {
       person: { ...person, birthDisplay },
       engine, chapters, generatedDate,
       reportCss, coverSummary, daewoonRows,
-      renderMarkup, safeName, getChapterKeywords, buildOhaengQuest
+      renderMarkup, renderBody, safeName, getChapterKeywords, buildOhaengQuest
     },
     { filename: TEMPLATE_PATH }
   );

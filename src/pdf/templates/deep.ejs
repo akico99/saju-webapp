@@ -24,6 +24,8 @@
   .deep-report .dr-sec .label { margin: 0 0 3mm; color: #6d846f; font-size: 8.5pt; font-weight: 800; letter-spacing: .08em; }
   .deep-report .dr-sec h2 { margin: 0 0 5mm; color: #24344b; font-family: 'ReportMyeongjo','Batang','바탕',serif; font-size: 17pt; line-height: 1.35; }
   .deep-report .dr-sec p { margin: 0 0 5mm; color: #354457; text-align: left; line-height: 1.78; overflow-wrap: break-word; }
+  .deep-report .dr-sec h3.sub { margin: 7mm 0 2.5mm; padding-left: 3mm; border-left: 2.5px solid #84977f; color: #24344b; font-family: 'ReportMyeongjo','Batang','바탕',serif; font-size: 12.5pt; break-after: avoid; }
+  .deep-report .dr-sec ul.sub-list { margin: 0 0 5mm; padding-left: 6mm; color: #354457; }
   .deep-report .dr-lead p { padding: 5mm 6mm; border-left: 3px solid #84977f; border-radius: 0 3mm 3mm 0; background: #eef2ec; color: #26384b; font-size: 12pt; font-weight: 700; line-height: 1.65; break-inside: avoid; }
 
   /* 01 명식 한 장 */
@@ -125,12 +127,14 @@
   </div>
 
   <!-- 02 타고난 구조 — 챕터 풀 분량 -->
-  <% chapters.forEach(function(ch, ci){ var ps = paras(ch.text); %>
+  <% /* 골격이 있는 본문은 "### 소주제"로 바로 시작한다 — 그때는 리드 문단을 따로 뽑지 않는다.
+        첫 블록이 소제목이 아닐 때(옛 본문)만 그 문단을 리드로 강조한다. */ %>
+  <% chapters.forEach(function(ch, ci){ var ps = paras(ch.text); var leadIdx = (ps.length && !/^###\s/.test(ps[0])) ? 0 : -1; %>
   <div class="dr-sec">
     <div class="label">02<%= chapters.length > 1 ? '-' + (ci + 1) : '' %> · 타고난 구조</div>
     <h2><%= ch.title %></h2>
-    <% if (ps.length) { %><div class="dr-lead"><p><%- renderMarkup(ps[0]) %></p></div><% } %>
-    <% ps.slice(1).forEach(function(p){ %><p><%- renderMarkup(p) %></p><% }); %>
+    <% if (leadIdx >= 0) { %><div class="dr-lead"><p><%- renderMarkup(ps[leadIdx]) %></p></div><% } %>
+    <%- renderBody(ps.filter(function(_, i){ return i !== leadIdx; }).join('\n\n')) %>
   </div>
   <% }); %>
 
@@ -164,7 +168,7 @@
     </table>
     <p class="tm-note">이직·승진 관점으로 본 5년 흐름입니다. 위 표와 함께 읽으세요.</p>
     <% } %>
-    <% paras(timing.flow).forEach(function(p){ %><p><%- renderMarkup(p) %></p><% }); %>
+    <%- renderBody(timing.flow) %>
   </div>
 
   <!-- 04 할 것 / 피할 것 -->

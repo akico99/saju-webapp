@@ -17,4 +17,27 @@ function renderMarkup(text) {
   return out;
 }
 
-module.exports = { renderMarkup };
+/* 챕터 본문 전체를 블록 단위로 그린다. 골격(outline)이 들어간 챕터는 "### 소제목" 줄로
+   소주제가 나뉘고, 할 것/피할 것처럼 "- " 불릿 묶음도 나온다. 소제목이 없는 옛 본문은
+   그대로 문단만 나온다. 반환값은 HTML 문자열. */
+function renderBody(text) {
+  const blocks = String(text || '').split(/\n\n+/).map((b) => b.trim()).filter(Boolean);
+  const out = [];
+  for (const block of blocks) {
+    if (/^###\s+/.test(block)) {
+      // "### 제목" 뒤에 같은 블록 안에서 바로 본문이 이어질 수 있다(빈 줄 없이).
+      const [first, ...rest] = block.split('\n');
+      out.push(`<h3 class="sub">${renderMarkup(first.replace(/^###\s+/, ''))}</h3>`);
+      const body = rest.join('\n').trim();
+      if (body) out.push(`<p>${renderMarkup(body)}</p>`);
+    } else if (/^[-•]\s+/m.test(block)) {
+      const items = block.split('\n').map((l) => l.replace(/^\s*[-•]\s*/, '').trim()).filter(Boolean);
+      out.push(`<ul class="sub-list">${items.map((i) => `<li>${renderMarkup(i)}</li>`).join('')}</ul>`);
+    } else {
+      out.push(`<p>${renderMarkup(block)}</p>`);
+    }
+  }
+  return out.join('\n');
+}
+
+module.exports = { renderMarkup, renderBody };

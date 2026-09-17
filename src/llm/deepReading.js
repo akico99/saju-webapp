@@ -117,7 +117,7 @@ ${timingBlockText(timing)}${careerBlockText(timing.careerTimeline)}
 위 점수 자료만 근거로, 오직 "${topic.label}" 관점(${topic.focus})에서 아래 형식 그대로 작성하세요. 다른 주제(예: 재물운 리딩에서 연애 얘기)는 꺼내지 마세요.
 
 ### 흐름
-현재 대운이 이 주제에 어떤 바탕을 깔고 있는지 1문단, 이어서 ${yearList} 각각을 1문단씩. 각 연도 문단은 반드시 그 해 점수와 십신·12운성을 근거로 들고, "이 해에는 이런 일이 풀리기 쉽다/막히기 쉽다"를 구체적으로 쓰세요. 점수가 높은 해와 낮은 해의 차이가 글에서 분명히 드러나야 합니다. 총 1,400~1,800자.
+현재 대운이 이 주제에 어떤 바탕을 깔고 있는지 1문단, 이어서 ${yearList} 각각을 1문단씩. 각 연도 문단은 반드시 그 해 점수와 십신·12운성을 근거로 들고, "이 해에는 이런 일이 풀리기 쉽다/막히기 쉽다"를 구체적으로 쓰세요. 점수가 높은 해와 낮은 해의 차이가 글에서 분명히 드러나야 합니다. 총 2,100~2,700자(현재 대운 문단 600자 이상, 연도 문단 각 500자 이상).
 
 ### 지금 할 것
 - 항목 5개. 각 항목은 한 줄, 위 흐름에서 나온 근거에 실제로 대응하는 행동. "긍정적으로 생각하기" 같은 뻔한 말 금지.
@@ -153,7 +153,16 @@ async function generateDeepReading(engineResult, person, topicKey) {
   const priorSummaries = [];
   for (const id of topic.chapterIds) {
     const base = CHAPTERS.find((c) => c.id === id);
-    const chapter = topic.perChapterWords ? { ...base, targetWords: topic.perChapterWords } : base;
+    // 분량을 줄여 쓰는 주제(첫 풀이)는 골격의 소주제별 분량도 같은 비율로 줄인다 —
+    // 안 그러면 소주제 합이 5,500인데 목표는 2,000이라 지시가 서로 어긋난다.
+    let chapter = base;
+    if (topic.perChapterWords) {
+      const ratio = topic.perChapterWords / base.targetWords;
+      chapter = {
+        ...base, targetWords: topic.perChapterWords,
+        outline: (base.outline || []).map((o) => ({ ...o, words: Math.max(150, Math.round(o.words * ratio / 50) * 50) }))
+      };
+    }
     const prompt = buildChapterPrompt(chapter, engineResult, person, priorSummaries);
     const { text, usage } = await generateText(SYSTEM_PROMPT, prompt);
     usages.push(usage);

@@ -2,7 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 const ejs = require('ejs');
-const { renderMarkup } = require('./textMarkup');
+const { renderMarkup, renderBody } = require('./textMarkup');
 const { getReportCss } = require('./reportCss');
 const { safeName } = require('./personName');
 const { tier } = require('../llm/deepReading');
@@ -29,7 +29,7 @@ function renderDeepHtml(engine, person, reading) {
     {
       engine, person: { ...person, birthDisplay },
       topicTitle: reading.title, chapters: reading.chapters, timing: reading.timing,
-      reportCss, renderMarkup, safeName, tier
+      reportCss, renderMarkup, renderBody, safeName, tier
     },
     { filename: TEMPLATE_PATH }
   );

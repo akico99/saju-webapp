@@ -3,6 +3,8 @@
    interpretation.md의 어느 섹션을 참고하는지(interpretationRefs), 목표 분량을 정의한다.
    promptBuilder.js가 이 레지스트리를 읽어 프롬프트를 조립한다. */
 
+const { OUTLINES } = require('./chapterOutlines');
+
 const CHAPTERS = [
   {
     id: 1, title: '총평',
@@ -125,5 +127,10 @@ const CHAPTERS = [
     targetWords: 3200
   }
 ];
+
+// 골격(outline)을 붙인다 — 소주제·분량은 chapterOutlines.js에서 관리한다.
+for (const ch of CHAPTERS) {
+  if (OUTLINES[ch.id]) ch.outline = OUTLINES[ch.id];
+}
 
 module.exports = { CHAPTERS };

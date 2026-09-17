@@ -19,14 +19,26 @@ function showReading(report, topic) {
   // 심층 리딩은 "## 소제목" 줄로 섹션이 나뉜다. 첫 소제목 다음 문단을 리드로 쓰고,
   // 나머지는 소제목/불릿/문단으로 그린다. 옛 리딩(소제목 없음)도 같은 코드로 읽힌다.
   const bodyBlocks = blocks[0].startsWith('## ') ? blocks.slice(1) : blocks;
-  readingLead.textContent = (bodyBlocks[0] || '').replace(/\*\*/g, '');
+  // 골격이 있는 본문은 "### 소주제"로 바로 시작한다 — 그때는 리드 칸을 비우고 전부 본문으로 그린다.
+  const hasLead = bodyBlocks.length && !bodyBlocks[0].startsWith('### ');
+  readingLead.textContent = hasLead ? bodyBlocks[0].replace(/\*\*/g, '') : '';
+  readingLead.closest('section')?.classList.toggle('hidden', !hasLead);
   readingParagraphs.replaceChildren();
-  for (const block of bodyBlocks.slice(1)) {
+  for (const block of (hasLead ? bodyBlocks.slice(1) : bodyBlocks)) {
     if (block.startsWith('## ')) {
       const h = document.createElement('h4');
       h.className = 'web-reading-sub';
       h.textContent = block.replace(/^##\s*/, '');
       readingParagraphs.appendChild(h);
+    } else if (block.startsWith('### ')) {
+      // 챕터 골격의 소주제. 같은 블록에 본문이 붙어 있을 수 있다.
+      const [first, ...rest] = block.split('\n');
+      const h = document.createElement('h5');
+      h.className = 'web-reading-sub2';
+      h.textContent = first.replace(/^###\s*/, '');
+      readingParagraphs.appendChild(h);
+      const body = rest.join('\n').trim();
+      if (body) { const p = document.createElement('p'); p.textContent = body.replace(/\*\*/g, ''); readingParagraphs.appendChild(p); }
     } else if (/^- /m.test(block)) {
       const ul = document.createElement('ul');
       ul.className = 'web-reading-list';
