@@ -27,7 +27,7 @@ function kindOf(error) {
 const COPY = {
   credit: {
     subject: '[사주보는 수달] ⚠ Anthropic 크레딧 소진 — 유료 상품 생성 중단',
-    what: 'Anthropic API 선불 크레딧이 떨어졌습니다. 지금부터 빠른 리딩·주제별 리포트·평생사주 등 LLM을 쓰는 모든 상품이 실패합니다.',
+    what: 'Anthropic API 선불 크레딧이 떨어졌습니다. 지금부터 심층 리딩·택일 리포트·궁합·평생사주 등 LLM을 쓰는 모든 상품이 실패합니다.',
     todo: 'console.anthropic.com → Plans & Billing에서 크레딧을 충전해주세요. 충전 즉시 복구되며 서버 재시작은 필요 없습니다. 같은 화면의 Auto-reload(자동 충전)를 켜두면 재발하지 않습니다.'
   },
   auth: {

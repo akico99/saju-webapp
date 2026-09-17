@@ -1,17 +1,17 @@
 'use strict';
 /* 2단계 입력 — 출생정보를 넣고 나면 바로 결과로 가지 않고 "지금 가장 궁금한 건?"을
    한 번 묻는다. 고른 고민은 두 군데 쓰인다:
-   1) 결과 하단에서 권하는 990원 상품 — 추측으로 고르지 않고 본인이 고른 걸 잇는다.
+   1) 결과 하단에서 권하는 상품 — 추측으로 고르지 않고 본인이 고른 걸 잇는다.
    2) 결과의 첫 문장 — 고른 고민을 먼저 언급한다.
 
    폼에 data-concern-step만 붙이면 된다. 제출 버튼을 가로채서 1단계 검증 → 고민 패널 →
    실제 제출 순서로 돌린다. 고른 값은 hidden input[name=concern]으로 폼에 들어간다. */
 (function () {
   const CONCERNS = [
-    { key: 'wealth', label: '돈과 재물', sub: '열심히 버는데 왜 안 남을까', product: { name: '재물운', price: '990원', href: '/life-topics.html?topic=wealth' } },
-    { key: 'career', label: '직업과 이직', sub: '지금 버틸까, 움직일까', product: { name: '직업·적성운', price: '990원', href: '/quick.html?topic=career' } },
-    { key: 'love', label: '연애와 인연', sub: '왜 같은 지점에서 자꾸 엇갈릴까', product: { name: '애정운', price: '990원', href: '/quick.html?topic=love' } },
-    { key: 'relationship', label: '사람 관계', sub: '사람 때문에 자꾸 지칠 때', product: { name: '인간관계', price: '990원', href: '/quick.html?topic=relationship' } },
+    { key: 'wealth', label: '돈과 재물', sub: '열심히 버는데 왜 안 남을까', product: { name: '재물운', price: '3,900원', href: '/quick.html?topic=wealth' } },
+    { key: 'career', label: '직업과 이직', sub: '지금 버틸까, 움직일까', product: { name: '직업·적성운', price: '3,900원', href: '/quick.html?topic=career' } },
+    { key: 'love', label: '연애와 인연', sub: '왜 같은 지점에서 자꾸 엇갈릴까', product: { name: '애정·결혼운', price: '3,900원', href: '/quick.html?topic=love' } },
+    { key: 'relationship', label: '사람 관계', sub: '사람 때문에 자꾸 지칠 때', product: { name: '대인관계·인복', price: '3,900원', href: '/quick.html?topic=relationship' } },
     { key: 'life', label: '전체 인생 흐름', sub: '지금이 내 인생 어디쯤인지', product: { name: '평생사주 100p', price: '14,900원', href: '/lifetime-report.html' } }
   ];
   const BY_KEY = Object.fromEntries(CONCERNS.map((c) => [c.key, c]));

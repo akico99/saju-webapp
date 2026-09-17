@@ -13,7 +13,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" type="image/png" href="/favicon.png">
-<title>사주보는 수달 — 빠른 리딩</title>
+<title>사주보는 수달 — 주제별 심층 리딩</title>
 <link rel="stylesheet" href="/theme.css">
 <link rel="stylesheet" href="/reading-ui.css">
 <link rel="stylesheet" href="/paid-flow.css">
@@ -22,13 +22,13 @@
 <div class="app no-nav">
   <header>
     <a class="back" href="/">←</a>
-    <div class="ttl">빠른 리딩</div>
+    <div class="ttl">주제별 심층 리딩</div>
       <a class="home-link" href="/" aria-label="홈으로"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M4 11.5L12 4l8 7.5"/><path d="M6 10v9.5h12V10"/></svg></a>
   </header>
   <main>
   <div class="brand-tag">사주보는 수달 · 길잡이 여울</div>
   <h1>지금 가장 궁금한 한 가지,<br>수달과 함께 살펴봐요</h1>
-  <p class="lead">관심 주제 하나를 골라 출생 정보를 입력하면, 결과를 웹에서 바로 읽고 PDF로도 저장할 수 있어요.</p>
+  <p class="lead">주제 하나를 깊게 봅니다. 내 사주 한 장 요약 → 타고난 구조(평생사주와 같은 분량) → 지금 대운과 앞으로 3년 → 지금 할 것·피할 것. 웹에서 바로 읽고 PDF로도 저장할 수 있어요.</p>
   <div class="paid-steps" aria-label="진행 순서"><span class="active">01 · 주제 선택</span><span>02 · 출생 정보</span><span>03 · 결과 읽기</span></div>
 
   <div class="point-notice" id="pointNotice">가격 확인 중...</div>
@@ -39,11 +39,12 @@
     <div class="field">
       <label>주제</label>
       <select name="topic" id="topicSelect">
-        <option value="total">오늘의 나 — 총평</option>
         <option value="wealth">재물운</option>
-        <option value="career">직업·적성운</option>
-        <option value="love">애정운</option>
-        <option value="relationship">인간관계</option>
+        <option value="career">직업·적성운 (5년 이직 타임라인 포함)</option>
+        <option value="love">애정·결혼운</option>
+        <option value="relationship">대인관계·인복</option>
+        <option value="health">건강운</option>
+        <option value="intro">내 사주 첫 풀이 (성격·기질 + 오행 균형 + 총평)</option>
       </select>
     </div>
 
@@ -93,18 +94,18 @@
     </div>
 
     <div class="paid-submit-note">입력 내용을 확인한 뒤 리딩을 시작해 주세요. 포인트 이용 안내는 위에서 확인할 수 있어요.</div>
-    <button type="submit" id="submitBtn">빠른 리딩 확인하기 <span aria-hidden="true">→</span></button>
+    <button type="submit" id="submitBtn">심층 리딩 받기 <span aria-hidden="true">→</span></button>
   </form>
 
   <div id="result" class="result hidden">
     <div id="progressBlock">
-      <h3>빠른 리딩 생성 중...</h3>
-      <p id="progressText">잠시만 기다려주세요 (1분 내외)</p>
+      <h3>심층 리딩 생성 중...</h3>
+      <p id="progressText">챕터 본문과 3년 흐름을 따로 계산해요 (2~3분 내외)</p>
     </div>
 
     <div id="downloadBlock" class="hidden">
       <div class="paid-result-heading"><span>리딩이 준비됐어요</span><h2 id="readingTitle">궁금했던 답을 읽어보세요</h2><p>먼저 핵심을 읽고, 자세한 풀이는 아래에서 이어집니다.</p></div>
-      <article id="webReading" class="web-reading hidden" aria-label="빠른 리딩 결과">
+      <article id="webReading" class="web-reading hidden" aria-label="심층 리딩 결과">
         <section class="web-reading-lead" aria-labelledby="readingLeadTitle">
           <span class="web-reading-kicker">먼저 읽어보세요</span>
           <h3 id="readingLeadTitle">지금의 흐름</h3>
@@ -123,7 +124,7 @@
       </div>
 
       <div class="topic-panel" style="margin-top:20px;">
-        <div class="ttl">이 김에 다른 주제도 990원에 보기</div>
+        <div class="ttl">다른 주제도 같은 깊이로 보기 · 3,900원</div>
         <div class="chip-row" id="crossSellChips"></div>
       </div>
     </div>
@@ -134,7 +135,7 @@
   </main>
 </div>
 
-<script>window.POINT_NOTICE_PRICE = 990; window.POINT_NOTICE_LABEL = '빠른 리딩';</script>
+<script>window.POINT_NOTICE_PRICE = 3900; window.POINT_NOTICE_LABEL = '심층 리딩';</script>
 <script src="/point-notice.js"></script>
 <script src="/profile-picker.js"></script>
 <script src="/quick-app.js"></script>

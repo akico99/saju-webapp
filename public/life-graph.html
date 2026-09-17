@@ -425,9 +425,9 @@
   /* 다음 걸음 추천 — 이 시기에 무엇이 궁금해질지에 맞춘다.
      올라가는 구간에선 "어디에 쓸지"(일), 내려가는 구간에선 "무엇을 지킬지"(돈)가 먼저다. */
   const NEXT_STEP = {
-    up: { lead: '지금 올라오는 흐름을 어디에 쓰면 좋을지, 일과 적성 쪽으로 더 자세히 볼 수 있어요.', name: '직업·적성운 보기', price: '990원', href: '/quick.html?topic=career' },
+    up: { lead: '지금 올라오는 흐름을 어디에 쓰면 좋을지, 일과 적성 쪽으로 더 자세히 볼 수 있어요.', name: '직업·적성운 보기', price: '3,900원', href: '/quick.html?topic=career' },
     flat: { lead: '이 시기의 흐름이 내 인생 전체에서 어디쯤인지, 앞뒤 구간까지 이어서 볼 수 있어요.', name: '평생사주 100p 보기', price: '14,900원', href: '/lifetime-report.html' },
-    down: { lead: '흐름이 꺾이는 구간에서는 돈이 나가는 자리부터 보는 게 안전해요. 재물 흐름을 더 자세히 볼 수 있어요.', name: '재물운 보기', price: '990원', href: '/life-topics.html?topic=wealth' }
+    down: { lead: '흐름이 꺾이는 구간에서는 돈이 나가는 자리부터 보는 게 안전해요. 재물 흐름을 더 자세히 볼 수 있어요.', name: '재물운 보기', price: '3,900원', href: '/quick.html?topic=wealth' }
   };
 
   function renderInterpretation(score, delta) {
@@ -897,7 +897,7 @@
 
     ctx.fillStyle = '#8A93A0';
     ctx.font = '600 12px "Malgun Gothic", sans-serif';
-    ctx.fillText('사주보는 수달 · 990원부터 보는 오늘의 사주', CARD_PAD, cursorY);
+    ctx.fillText('사주보는 수달 · 무료로 시작하는 오늘의 사주', CARD_PAD, cursorY);
 
     return new Promise((resolve, reject) => {
       canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('이미지 변환 실패'))));

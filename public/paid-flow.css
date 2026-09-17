@@ -84,3 +84,8 @@
   .paid-flow .web-reading-lead p { font-size: 15px; }
 }
 @media (prefers-reduced-motion: reduce) { .paid-flow #progressBlock::before { animation: none; } }
+
+/* 심층 리딩 웹 본문 — "## 소제목"과 할 것/피할 것 불릿 */
+.paid-flow .web-reading-sub { margin: 26px 0 10px; padding-top: 18px; border-top: 1px solid #ece8df; font-size: 17px; font-weight: 800; color: #24344b; }
+.paid-flow .web-reading-list { margin: 0 0 12px; padding-left: 20px; line-height: 1.85; color: #29394b; }
+.paid-flow .web-reading-list li { margin-bottom: 6px; }

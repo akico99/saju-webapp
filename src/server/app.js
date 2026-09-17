@@ -17,10 +17,8 @@ const fortuneRouter = require('./routes/fortune');
 const ordersRouter = require('./routes/orders');
 const bannersRouter = require('./routes/banners');
 const lifeGraphRouter = require('./routes/lifeGraph');
-const newTopicsRouter = require('./routes/newTopics');
 const profilesRouter = require('./routes/profiles');
 const dateSelectRouter = require('./routes/dateSelect');
-const lifeTopicsRouter = require('./routes/lifeTopics');
 const tossTestRouter = require('./routes/tossTest');
 
 const app = express();
@@ -62,10 +60,8 @@ app.use('/api', fortuneRouter);
 app.use('/api', ordersRouter);
 app.use('/api', bannersRouter);
 app.use('/api', lifeGraphRouter);
-app.use('/api', newTopicsRouter);
 app.use('/api', profilesRouter);
 app.use('/api', dateSelectRouter);
-app.use('/api', lifeTopicsRouter);
 app.use('/api', tossTestRouter);
 
 module.exports = app;

@@ -110,10 +110,10 @@ function questOf(yongshinMain, questAction) {
    상품이 어긋나면 추천이 아니라 광고로 읽힌다(2026-09).
    topic은 오늘 십성 그룹에서 나온 계산값이라, 날짜가 바뀌면 추천도 같이 바뀐다. */
 const TOPIC_UPSELL = {
-  relationship: { label: '사람 사이가 신경 쓰인다면', name: '인간관계', href: '/quick.html?topic=relationship', price: '990원' },
-  career: { label: '일의 방향이 궁금하다면', name: '직업·적성운', href: '/quick.html?topic=career', price: '990원' },
-  wealth: { label: '돈 흐름이 궁금하다면', name: '재물운', href: '/life-topics.html?topic=wealth', price: '990원' },
-  total: { label: '오늘 하루를 더 깊이 보고 싶다면', name: '오늘의 나 — 총평', href: '/quick.html?topic=total', price: '990원' }
+  relationship: { label: '사람 사이가 신경 쓰인다면', name: '대인관계·인복', href: '/quick.html?topic=relationship', price: '3,900원' },
+  career: { label: '일의 방향이 궁금하다면', name: '직업·적성운', href: '/quick.html?topic=career', price: '3,900원' },
+  wealth: { label: '돈 흐름이 궁금하다면', name: '재물운', href: '/quick.html?topic=wealth', price: '3,900원' },
+  total: { label: '내 사주가 처음이라면', name: '내 사주 첫 풀이', href: '/quick.html?topic=intro', price: '3,900원' }
 };
 const FALLBACK_UPSELL = { label: '내 인생 전체가 궁금하다면', name: '평생사주 100p', href: '/lifetime-report.html', price: '14,900원' };
 

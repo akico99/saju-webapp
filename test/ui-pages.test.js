@@ -7,10 +7,26 @@ const vm = require('node:vm');
 const publicDir = path.join(__dirname, '..', 'public');
 const pages = [
   'life-graph', 'today-preview', 'today-fortune', 'quick', 'compat',
-  'lifetime-report', 'life-topics', 'career-timing', 'birth-timing',
-  'date-select', 'reunion-check', 'login', 'signup', 'forgot-password',
+  'lifetime-report', 'date-select', 'login', 'signup', 'forgot-password',
   'reset-password', 'profiles', 'charge', 'mypage', 'services'
 ];
+
+// 2026-09 판매 종료된 상품 페이지 — 새 상품으로 바로 보낸다. 링크·북마크로 들어온
+// 사람이 죽은 폼을 만나지 않게, 리다이렉트 목적지가 살아있는 페이지인지만 확인한다.
+const retiredRedirects = {
+  'life-topics': '/services.html',
+  'career-timing': '/quick.html?topic=career',
+  'birth-timing': '/date-select.html?occasion=birth',
+  'reunion-check': '/compat.html'
+};
+for (const [name, target] of Object.entries(retiredRedirects)) {
+  test(`${name} redirects to a live product page`, () => {
+    const html = fs.readFileSync(path.join(publicDir, `${name}.html`), 'utf8');
+    assert.match(html, /location\.replace\(/);
+    assert.ok(html.includes(target.split('?')[0]), `${name}: expected redirect toward ${target}`);
+    assert.ok(fs.existsSync(path.join(publicDir, target.split('?')[0].slice(1))), `${name}: target missing`);
+  });
+}
 
 for (const name of pages) {
   test(`${name} uses the reading UI without changing its script syntax`, () => {
@@ -26,9 +42,7 @@ for (const name of pages) {
 test('paid forms preserve integration hooks and load the shared paid UI', () => {
   for (const [name, formId, resultId] of [
     ['quick', 'quickForm', 'result'], ['compat', 'compatForm', 'result'],
-    ['lifetime-report', 'sajuForm', 'result'], ['life-topics', 'dsForm', 'dsResult'],
-    ['date-select', 'dsForm', 'dsResult'], ['career-timing', 'ctForm', 'ctResult'],
-    ['birth-timing', 'btForm', 'btResult'], ['reunion-check', 'rcForm', 'rcResult']
+    ['lifetime-report', 'sajuForm', 'result'], ['date-select', 'dsForm', 'dsResult']
   ]) {
     const html = fs.readFileSync(path.join(publicDir, `${name}.html`), 'utf8');
     assert.match(html, /<link rel="stylesheet" href="\/paid-flow\.css">/);

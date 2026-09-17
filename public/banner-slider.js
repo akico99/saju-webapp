@@ -20,14 +20,14 @@
   }
 
   var FALLBACK_BANNERS = [
-    { image: '/banners/1.png', imagePosition: '50% 50%', href: '/quick.html?topic=total', textAlign: 'left', textVAlign: 'bottom',
-      blocks: blocks([{ type: 'label', text: "TODAY'S PICK" }, { type: 'title', text: '깊게 볼 필요 없을 땐, 990원' }, { type: 'body', text: '오늘의 나 — 총평 빠른 리딩' }, { type: 'button', text: '지금 보기 →' }]) },
+    { image: '/banners/1.png', imagePosition: '50% 50%', href: '/quick.html?topic=intro', textAlign: 'left', textVAlign: 'bottom',
+      blocks: blocks([{ type: 'label', text: "TODAY'S PICK" }, { type: 'title', text: '내 사주, 처음이라면 여기부터' }, { type: 'body', text: '내 사주 첫 풀이 · 3,900원' }, { type: 'button', text: '지금 보기 →' }]) },
     { image: '/banners/2.png', imagePosition: '50% 50%', href: '/quick.html?topic=love', textAlign: 'left', textVAlign: 'bottom',
-      blocks: blocks([{ type: 'label', text: 'HOT' }, { type: 'title', text: '지금 인연의 흐름이 궁금할 때' }, { type: 'body', text: '애정운 빠른 리딩 · 990원' }, { type: 'button', text: '지금 보기 →' }]) },
+      blocks: blocks([{ type: 'label', text: 'HOT' }, { type: 'title', text: '지금 인연의 흐름이 궁금할 때' }, { type: 'body', text: '애정·결혼운 심층 리딩 · 3,900원' }, { type: 'button', text: '지금 보기 →' }]) },
     { image: '/banners/3.png', imagePosition: '50% 50%', href: '/compat.html', textAlign: 'left', textVAlign: 'bottom',
-      blocks: blocks([{ type: 'label', text: 'COMPATIBILITY' }, { type: 'title', text: '둘이 보는 진짜 궁합' }, { type: 'body', text: '궁합 리포트 · 4,900원' }, { type: 'button', text: '지금 보기 →' }]) },
+      blocks: blocks([{ type: 'label', text: 'COMPATIBILITY' }, { type: 'title', text: '둘이 보는 진짜 궁합' }, { type: 'body', text: '궁합 리포트 · 4,900원 · 재회 관점 포함' }, { type: 'button', text: '지금 보기 →' }]) },
     { image: '/banners/4.png', imagePosition: '50% 50%', href: '/quick.html?topic=wealth', textAlign: 'left', textVAlign: 'bottom',
-      blocks: blocks([{ type: 'label', text: 'MONEY' }, { type: 'title', text: '돈이 들어오고 나가는 흐름' }, { type: 'body', text: '재물운 빠른 리딩 · 990원' }, { type: 'button', text: '지금 보기 →' }]) },
+      blocks: blocks([{ type: 'label', text: 'MONEY' }, { type: 'title', text: '돈이 들어오고 나가는 흐름' }, { type: 'body', text: '재물운 심층 리딩 · 3,900원' }, { type: 'button', text: '지금 보기 →' }]) },
     { image: '/banners/5.png', imagePosition: '50% 50%', href: '/life-graph.html', textAlign: 'left', textVAlign: 'bottom',
       blocks: blocks([{ type: 'label', text: 'FREE' }, { type: 'title', text: '내 인생, 흐름으로 한눈에 보기' }, { type: 'body', text: '인생 그래프 · 무료 체험' }, { type: 'button', text: '무료로 보기 →' }]) },
     { image: '/banners/6.png', imagePosition: '50% 50%', href: '/lifetime-report.html', textAlign: 'left', textVAlign: 'bottom',

@@ -6,10 +6,14 @@
   if (!el) return;
   const price = window.POINT_NOTICE_PRICE || 0;
   const label = window.POINT_NOTICE_LABEL || '이 리포트';
+  // 받침 유무로 은/는을 고른다 — '심층 리딩는' 같은 어색한 조사를 막는다.
+  const last = label.charCodeAt(label.length - 1);
+  const hasBatchim = last >= 0xAC00 && last <= 0xD7A3 && (last - 0xAC00) % 28 !== 0;
+  const topic = label + (hasBatchim ? '은' : '는');
 
   fetch('/api/auth/me').then((r) => r.json()).then((data) => {
     if (!data.user) {
-      el.innerHTML = `${label}는 <b>${price.toLocaleString('ko-KR')}P</b>가 필요해요. <a href="/login.html?redirect=${encodeURIComponent(location.pathname + location.search)}">로그인하고 계속하기 →</a>`;
+      el.innerHTML = `${topic} <b>${price.toLocaleString('ko-KR')}P</b>가 필요해요. <a href="/login.html?redirect=${encodeURIComponent(location.pathname + location.search)}">로그인하고 계속하기 →</a>`;
       return;
     }
     if (data.user.pointBalance < price) {

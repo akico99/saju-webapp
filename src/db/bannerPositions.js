@@ -33,10 +33,10 @@ const LEGACY_FIELD_TO_BLOCK = [
 ];
 
 const LEGACY_DEFAULTS = {
-  1: { image: '/banners/1.png', imagePosition: '50% 50%', eyebrow: "TODAY'S PICK", headline: '깊게 볼 필요 없을 땐, 990원', price: '오늘의 나 — 총평 빠른 리딩', href: 'quick.html?topic=total', cta: '지금 보기 →', textAlign: 'left', textVAlign: 'bottom', textScale: 1 },
-  2: { image: '/banners/2.png', imagePosition: '50% 50%', eyebrow: 'HOT', headline: '지금 인연의 흐름이 궁금할 때', price: '애정운 빠른 리딩 · 990원', href: 'quick.html?topic=love', cta: '지금 보기 →', textAlign: 'left', textVAlign: 'bottom', textScale: 1 },
+  1: { image: '/banners/1.png', imagePosition: '50% 50%', eyebrow: "TODAY'S PICK", headline: '내 사주, 처음이라면 여기부터', price: '내 사주 첫 풀이 · 3,900원', href: 'quick.html?topic=intro', cta: '지금 보기 →', textAlign: 'left', textVAlign: 'bottom', textScale: 1 },
+  2: { image: '/banners/2.png', imagePosition: '50% 50%', eyebrow: 'HOT', headline: '지금 인연의 흐름이 궁금할 때', price: '애정·결혼운 심층 리딩 · 3,900원', href: 'quick.html?topic=love', cta: '지금 보기 →', textAlign: 'left', textVAlign: 'bottom', textScale: 1 },
   3: { image: '/banners/3.png', imagePosition: '50% 50%', eyebrow: 'COMPATIBILITY', headline: '둘이 보는 진짜 궁합', price: '궁합 리포트 · 4,900원', href: 'compat.html', cta: '지금 보기 →', textAlign: 'left', textVAlign: 'bottom', textScale: 1 },
-  4: { image: '/banners/4.png', imagePosition: '50% 50%', eyebrow: 'MONEY', headline: '돈이 들어오고 나가는 흐름', price: '재물운 빠른 리딩 · 990원', href: 'quick.html?topic=wealth', cta: '지금 보기 →', textAlign: 'left', textVAlign: 'bottom', textScale: 1 },
+  4: { image: '/banners/4.png', imagePosition: '50% 50%', eyebrow: 'MONEY', headline: '돈이 들어오고 나가는 흐름', price: '재물운 심층 리딩 · 3,900원', href: 'quick.html?topic=wealth', cta: '지금 보기 →', textAlign: 'left', textVAlign: 'bottom', textScale: 1 },
   5: { image: '/banners/5.png', imagePosition: '50% 50%', eyebrow: 'FREE', headline: '내 인생, 흐름으로 한눈에 보기', price: '인생 그래프 · 무료 체험', href: 'life-graph.html', cta: '무료로 보기 →', textAlign: 'left', textVAlign: 'bottom', textScale: 1 },
   6: { image: '/banners/6.png', imagePosition: '50% 50%', eyebrow: 'FULL REPORT', headline: '인생 전체를 18장으로', price: '평생사주 100p 정식 리포트 · 14,900원', href: 'lifetime-report.html', cta: '지금 보기 →', textAlign: 'left', textVAlign: 'bottom', textScale: 1 }
 };

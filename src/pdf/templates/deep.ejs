@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title><%= safeName(person.name) %> 님의 <%= topicTitle %> 심층 리딩</title>
+<style><%- reportCss %></style>
+<style>
+  /* 웹의 유료 리딩과 같은 남색·크림색 계열. quick.ejs를 잇는 톤이지만 네 부분 구조라 별도 템플릿. */
+  html, body.deep-report { background: #faf8f4; }
+  body.deep-report { color: #29394b; font-size: 11pt; line-height: 1.78; }
+  .deep-report .chapter { padding: 16mm 23mm 16mm; }
+  .deep-report .dr-header { padding: 11mm 12mm 10mm; margin: 0 0 9mm; border-radius: 5mm; background: #24344b; color: #fff; break-inside: avoid; }
+  .deep-report .dr-brand { display: flex; justify-content: space-between; align-items: center; padding-bottom: 7mm; border-bottom: 1px solid rgba(255,255,255,.17); font-size: 8.5pt; font-weight: 700; letter-spacing: .07em; }
+  .deep-report .dr-brand .edition { color: #dfca95; font-weight: 400; }
+  .deep-report .dr-header .eyebrow { margin: 8mm 0 2mm; color: #e4cb92; font-size: 9pt; font-weight: 700; letter-spacing: .12em; }
+  .deep-report .dr-header h1 { margin: 0 0 7mm; color: #fff; font-family: 'ReportMyeongjo','Batang','바탕',serif; font-size: 24pt; line-height: 1.32; }
+  .deep-report .dr-header .meta { padding-top: 6mm; border-top: 1px solid rgba(255,255,255,.17); color: #cbd5df; font-size: 9pt; line-height: 1.5; }
+  .deep-report .dr-header .meta b { color: #fff; font-weight: 700; }
+  .deep-report .dr-toc { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3mm; margin: 0 0 9mm; }
+  .deep-report .dr-toc div { padding: 3.5mm 4mm; border: 1px solid #e3e1d9; border-radius: 3mm; background: #fff; font-size: 8.5pt; color: #6d7887; line-height: 1.4; }
+  .deep-report .dr-toc b { display: block; color: #24344b; font-size: 10pt; margin-bottom: 1mm; }
+
+  .deep-report .dr-sec { margin-top: 9mm; }
+  .deep-report .dr-sec .label { margin: 0 0 3mm; color: #6d846f; font-size: 8.5pt; font-weight: 800; letter-spacing: .08em; }
+  .deep-report .dr-sec h2 { margin: 0 0 5mm; color: #24344b; font-family: 'ReportMyeongjo','Batang','바탕',serif; font-size: 17pt; line-height: 1.35; }
+  .deep-report .dr-sec p { margin: 0 0 5mm; color: #354457; text-align: left; line-height: 1.78; overflow-wrap: break-word; }
+  .deep-report .dr-lead p { padding: 5mm 6mm; border-left: 3px solid #84977f; border-radius: 0 3mm 3mm 0; background: #eef2ec; color: #26384b; font-size: 12pt; font-weight: 700; line-height: 1.65; break-inside: avoid; }
+
+  /* 01 명식 한 장 */
+  .deep-report .ms-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 5mm; break-inside: avoid; }
+  .deep-report .ms-box { padding: 5mm 6mm; border: 1px solid #e3e1d9; border-radius: 3mm; background: #fff; }
+  .deep-report .ms-box .ttl { font-size: 8.5pt; color: #6d7887; font-weight: 800; letter-spacing: .06em; margin-bottom: 3mm; }
+  .deep-report .ms-pillars { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2mm; text-align: center; }
+  .deep-report .ms-pillars div { padding: 2.5mm 0; border-radius: 2mm; background: #f3f1eb; }
+  .deep-report .ms-pillars small { display: block; font-size: 7.5pt; color: #6d7887; margin-bottom: 1mm; }
+  .deep-report .ms-pillars b { font-size: 14pt; color: #24344b; font-family: 'ReportMyeongjo','Batang','바탕',serif; }
+  .deep-report .ms-oh { list-style: none; margin: 0; padding: 0; }
+  .deep-report .ms-oh li { display: grid; grid-template-columns: 14mm 1fr 8mm; align-items: center; gap: 2mm; margin-bottom: 1.8mm; font-size: 9pt; }
+  .deep-report .ms-oh .bar { height: 3.2mm; border-radius: 1.6mm; background: #ece8df; overflow: hidden; }
+  .deep-report .ms-oh .bar i { display: block; height: 100%; background: #24344b; }
+  .deep-report .ms-oh .n { text-align: right; color: #354457; font-weight: 700; }
+  .deep-report .ms-facts { margin-top: 4mm; font-size: 9pt; color: #354457; line-height: 1.7; }
+  .deep-report .ms-facts b { color: #24344b; }
+
+  /* 03 타이밍 표 */
+  .deep-report .tm-table { width: 100%; border-collapse: collapse; margin: 0 0 6mm; font-size: 9.5pt; break-inside: avoid; }
+  .deep-report .tm-table th, .deep-report .tm-table td { padding: 2.8mm 3mm; border-bottom: 1px solid #e3e1d9; text-align: left; }
+  .deep-report .tm-table th { background: #f3f1eb; color: #6d7887; font-size: 8.5pt; letter-spacing: .04em; }
+  .deep-report .tm-table td.sc { font-weight: 800; color: #24344b; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .deep-report .tm-table td.sc small { color: #6d7887; font-weight: 600; margin-left: 1.5mm; }
+  .deep-report .tm-table tr.cur td { background: #eef2ec; }
+  .deep-report .tm-note { font-size: 8.5pt; color: #78838e; margin: -3mm 0 6mm; }
+
+  /* 04 할 것 / 피할 것 */
+  .deep-report .dd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; break-inside: avoid; }
+  .deep-report .dd-box { padding: 5mm 6mm; border-radius: 3mm; background: #fff; border: 1px solid #e3e1d9; }
+  .deep-report .dd-box.do { border-top: 3px solid #438779; }
+  .deep-report .dd-box.dont { border-top: 3px solid #c9674b; }
+  .deep-report .dd-box .ttl { font-size: 10pt; font-weight: 800; margin-bottom: 3mm; }
+  .deep-report .dd-box.do .ttl { color: #2f6a5e; }
+  .deep-report .dd-box.dont .ttl { color: #a3513a; }
+  .deep-report .dd-box ol { margin: 0; padding-left: 5mm; font-size: 9.5pt; line-height: 1.7; color: #354457; }
+  .deep-report .dd-box li { margin-bottom: 1.5mm; }
+
+  .deep-report mark { background: #e9e2cb; color: #26384b; }
+  .deep-report .gloss { color: #697586; }
+  .deep-report .disclaimer { margin-top: 9mm; border-top-color: #e3e1d9; color: #78838e; font-size: 8pt; line-height: 1.6; }
+  .deep-report .imprint { color: #7a663c; font-size: 8.5pt; }
+</style>
+</head>
+<body class="deep-report">
+<%
+  var OH = ['木','火','土','金','水'];
+  var OH_KO = { '木':'목 · 성장', '火':'화 · 표현', '土':'토 · 안정', '金':'금 · 결단', '水':'수 · 지혜' };
+  var counts = engine.counts.ohaeng || {};
+  var maxCount = Math.max.apply(null, OH.map(function(o){ return counts[o] || 0; }).concat([1]));
+  var t = timing.data;
+  function paras(s) { return String(s || '').split(/\n\n+/).map(function(p){ return p.trim(); }).filter(Boolean); }
+%>
+
+<section class="chapter">
+  <div class="dr-header">
+    <div class="dr-brand"><span>사주보는 수달</span><span class="edition">DEEP READING</span></div>
+    <div class="eyebrow">길잡이 여울 · 주제별 심층 리딩</div>
+    <h1><%= safeName(person.name) %> 님의 <%= topicTitle %></h1>
+    <div class="meta">출생 정보 <b><%= person.birthDisplay %></b> · 현재 <b><%= t.currentAge %>세</b></div>
+  </div>
+
+  <div class="dr-toc">
+    <div><b>01</b>명식 한 장</div>
+    <div><b>02</b>타고난 구조</div>
+    <div><b>03</b>지금 대운, 앞으로 3년</div>
+    <div><b>04</b>할 것 · 피할 것</div>
+  </div>
+
+  <!-- 01 명식 한 장 — 엔진 값만으로 그린다 -->
+  <div class="dr-sec">
+    <div class="label">01 · 명식 한 장</div>
+    <h2>이 리딩의 바탕이 되는 내 사주</h2>
+    <div class="ms-grid">
+      <div class="ms-box">
+        <div class="ttl">사주 네 기둥</div>
+        <div class="ms-pillars">
+          <div><small>시주</small><b><%= engine.palja.hourPillar.stem || '·' %><%= engine.palja.hourPillar.branch || '·' %></b></div>
+          <div><small>일주</small><b><%= engine.palja.dayPillar.stem %><%= engine.palja.dayPillar.branch %></b></div>
+          <div><small>월주</small><b><%= engine.palja.monthPillar.stem %><%= engine.palja.monthPillar.branch %></b></div>
+          <div><small>연주</small><b><%= engine.palja.yearPillar.stem %><%= engine.palja.yearPillar.branch %></b></div>
+        </div>
+        <div class="ms-facts">
+          일간 <b><%= engine.ilgan.char %>(<%= engine.ilgan.ko %>) · <%= engine.ilgan.ohaeng %> <%= engine.ilgan.yinyang %></b><br>
+          격국 <b><%= engine.kyukguk.name %></b> · 신강약 <b><%= engine.strength.verdict %></b><br>
+          용신 <b><%= engine.yongshin.final.main %></b><% if (engine.yongshin.final.note) { %> <span class="gloss">— <%= engine.yongshin.final.note %></span><% } %>
+        </div>
+      </div>
+      <div class="ms-box">
+        <div class="ttl">오행 균형</div>
+        <ul class="ms-oh">
+          <% OH.forEach(function(o){ var n = counts[o] || 0; %>
+          <li><span><%= OH_KO[o] %></span><span class="bar"><i style="width:<%= Math.round(n / maxCount * 100) %>%"></i></span><span class="n"><%= n %></span></li>
+          <% }); %>
+        </ul>
+        <div class="ms-facts">막대가 비어 있는 기운이 이 사주에서 <b>채워야 할 자리</b>이고, 가장 긴 기운이 <b>타고난 강점</b>입니다.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 02 타고난 구조 — 챕터 풀 분량 -->
+  <% chapters.forEach(function(ch, ci){ var ps = paras(ch.text); %>
+  <div class="dr-sec">
+    <div class="label">02<%= chapters.length > 1 ? '-' + (ci + 1) : '' %> · 타고난 구조</div>
+    <h2><%= ch.title %></h2>
+    <% if (ps.length) { %><div class="dr-lead"><p><%- renderMarkup(ps[0]) %></p></div><% } %>
+    <% ps.slice(1).forEach(function(p){ %><p><%- renderMarkup(p) %></p><% }); %>
+  </div>
+  <% }); %>
+
+  <!-- 03 지금 대운, 앞으로 3년 -->
+  <div class="dr-sec">
+    <div class="label">03 · 지금 대운, 앞으로 3년</div>
+    <h2>언제 풀리고, 언제 조심할지</h2>
+    <table class="tm-table">
+      <thead><tr><th>시기</th><th>간지</th><th>흐름 점수</th><th>비고</th></tr></thead>
+      <tbody>
+        <% if (t.current) { %>
+        <tr class="cur"><td>현재 대운 (<%= t.current.age %>세~)</td><td><%= t.current.ganZhiKo %> <span class="gloss"><%= t.current.ganZhi %></span></td><td class="sc"><%= t.current.score %><small><%= tier(t.current.score) %></small></td><td>10년 단위 바탕</td></tr>
+        <% } %>
+        <% t.years.forEach(function(y){ %>
+        <tr><td><%= y.year %>년 (<%= y.age %>세)</td><td><%= y.ganZhiKo %> <span class="gloss"><%= y.ganZhi %></span></td><td class="sc"><%= y.score %><small><%= tier(y.score) %></small></td><td><%= y.stemShipsin || '-' %> · <%= y.unseong || '-' %></td></tr>
+        <% }); %>
+        <% if (t.next) { %>
+        <tr><td>다음 대운 (<%= t.next.age %>세~)</td><td><%= t.next.ganZhiKo %> <span class="gloss"><%= t.next.ganZhi %></span></td><td class="sc"><%= t.next.score %><small><%= tier(t.next.score) %></small></td><td>다음 10년</td></tr>
+        <% } %>
+      </tbody>
+    </table>
+    <p class="tm-note">점수는 그 시기 간지의 오행이 내 용신(<%= t.yongshinMain %>)을 얼마나 도와주는지로 계산한 값입니다. 무료 인생 그래프와 같은 기준이에요.</p>
+    <% if (t.careerTimeline && t.careerTimeline.length) { %>
+    <table class="tm-table">
+      <thead><tr><th>연도</th><th>간지</th><th>커리어 점수</th><th>그 해의 기운</th></tr></thead>
+      <tbody>
+        <% t.careerTimeline.forEach(function(r){ %>
+        <tr><td><%= r.year %>년 (<%= r.age %>세)</td><td><%= r.ganZhiKo %></td><td class="sc"><%= r.score %></td><td><%= r.group %> · <%= r.desc %></td></tr>
+        <% }); %>
+      </tbody>
+    </table>
+    <p class="tm-note">이직·승진 관점으로 본 5년 흐름입니다. 위 표와 함께 읽으세요.</p>
+    <% } %>
+    <% paras(timing.flow).forEach(function(p){ %><p><%- renderMarkup(p) %></p><% }); %>
+  </div>
+
+  <!-- 04 할 것 / 피할 것 -->
+  <% if (timing.dos.length || timing.donts.length) { %>
+  <div class="dr-sec">
+    <div class="label">04 · 지금 할 것, 피할 것</div>
+    <h2>이 시기에 실제로 움직일 방향</h2>
+    <div class="dd-grid">
+      <div class="dd-box do"><div class="ttl">지금 할 것</div><ol><% timing.dos.forEach(function(d){ %><li><%- renderMarkup(d) %></li><% }); %></ol></div>
+      <div class="dd-box dont"><div class="ttl">피할 것</div><ol><% timing.donts.forEach(function(d){ %><li><%- renderMarkup(d) %></li><% }); %></ol></div>
+    </div>
+  </div>
+  <% } %>
+
+  <p class="disclaimer">
+    이 리포트는 명리학적 통계 경향에 근거한 참고 자료이며, 의학적·법적·재정적 조언을 대체하지 않습니다.
+    다른 주제와 인생 전체 흐름까지 한 번에 보고 싶다면 100페이지 평생사주 리포트를 확인해보세요.
+  </p>
+  <div class="imprint" style="margin-top:6mm; text-align:center;">길잡이 여울</div>
+</section>
+
+<script>window.__chartsReady = true;</script>
+</body>
+</html>

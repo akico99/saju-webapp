@@ -11,17 +11,36 @@ const readingFallback = document.getElementById('readingFallback');
 const readingTitle = document.getElementById('readingTitle');
 
 function showReading(report, topic) {
-  const paragraphs = typeof report === 'string' ? report.split(/\n\s*\n/).map((part) => part.trim()).filter(Boolean) : [];
-  webReading.classList.toggle('hidden', paragraphs.length === 0);
-  readingFallback.classList.toggle('hidden', paragraphs.length !== 0);
-  if (!paragraphs.length) return;
-  readingTitle.textContent = `${TOPIC_LABELS[topic] || '빠른 리딩'} 결과`;
-  readingLead.textContent = paragraphs[0].replace(/\*\*/g, '');
+  const blocks = typeof report === 'string' ? report.split(/\n\s*\n/).map((part) => part.trim()).filter(Boolean) : [];
+  webReading.classList.toggle('hidden', blocks.length === 0);
+  readingFallback.classList.toggle('hidden', blocks.length !== 0);
+  if (!blocks.length) return;
+  readingTitle.textContent = `${TOPIC_LABELS[topic] || '심층 리딩'} 결과`;
+  // 심층 리딩은 "## 소제목" 줄로 섹션이 나뉜다. 첫 소제목 다음 문단을 리드로 쓰고,
+  // 나머지는 소제목/불릿/문단으로 그린다. 옛 리딩(소제목 없음)도 같은 코드로 읽힌다.
+  const bodyBlocks = blocks[0].startsWith('## ') ? blocks.slice(1) : blocks;
+  readingLead.textContent = (bodyBlocks[0] || '').replace(/\*\*/g, '');
   readingParagraphs.replaceChildren();
-  for (const paragraph of paragraphs.slice(1)) {
-    const p = document.createElement('p');
-    p.textContent = paragraph.replace(/\*\*/g, '');
-    readingParagraphs.appendChild(p);
+  for (const block of bodyBlocks.slice(1)) {
+    if (block.startsWith('## ')) {
+      const h = document.createElement('h4');
+      h.className = 'web-reading-sub';
+      h.textContent = block.replace(/^##\s*/, '');
+      readingParagraphs.appendChild(h);
+    } else if (/^- /m.test(block)) {
+      const ul = document.createElement('ul');
+      ul.className = 'web-reading-list';
+      block.split('\n').forEach((line) => {
+        const li = document.createElement('li');
+        li.textContent = line.replace(/^\s*-\s*/, '').replace(/\*\*/g, '');
+        if (li.textContent) ul.appendChild(li);
+      });
+      readingParagraphs.appendChild(ul);
+    } else {
+      const p = document.createElement('p');
+      p.textContent = block.replace(/\*\*/g, '');
+      readingParagraphs.appendChild(p);
+    }
   }
 }
 const progressBlock = document.getElementById('progressBlock');
@@ -32,8 +51,8 @@ const shareBtn = document.getElementById('shareBtn');
 const crossSellChips = document.getElementById('crossSellChips');
 
 const TOPIC_LABELS = {
-  total: '오늘의 나 — 총평', wealth: '재물운', career: '직업·적성운',
-  love: '애정운', relationship: '인간관계'
+  wealth: '재물운', career: '직업·적성운', love: '애정·결혼운',
+  relationship: '대인관계·인복', health: '건강운', intro: '내 사주 첫 풀이'
 };
 
 function showToast(msg) {
@@ -83,8 +102,8 @@ async function shareOrCopy(shareData) {
 }
 
 shareBtn.addEventListener('click', () => shareOrCopy({
-  title: '사주보는 수달 — 빠른 리딩',
-  text: '990원으로 본 내 사주, 궁금하면 너도 한번 봐봐',
+  title: '사주보는 수달 — 주제별 심층 리딩',
+  text: '내 사주 한 주제를 깊게 읽어봤어, 궁금하면 너도 한번 봐봐',
   url: location.origin + '/'
 }));
 
