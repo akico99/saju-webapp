@@ -177,7 +177,7 @@
       <button type="button" id="lgUnfoldBtn">출생정보 변경</button>
     </div>
 
-    <form id="lgForm" data-concern-step data-concern-submit="내 인생 그래프 보기">
+    <form id="lgForm">
       <div class="profile-picker hidden" id="profilePicker"></div>
       <div class="field-row">
         <div class="field">
@@ -312,9 +312,16 @@
       </div>
       </details>
 
-      <div class="card lg-premium-card">
+      <div class="lg-concern-picker" aria-labelledby="lgConcernTitle">
         <span class="lg-next-label">NEXT QUESTION</span>
-        <h2>그래서, 내 삶의 어디에서 나타날까요?</h2>
+        <h2 id="lgConcernTitle">이 흐름을 어떤 주제로 더 살펴볼까요?</h2>
+        <p>무료 그래프를 먼저 살펴보세요. 주제를 골라도 그래프 점수는 바뀌지 않습니다.</p>
+        <div class="lg-concern-options" id="lgConcernOptions" role="group" aria-label="더 살펴볼 주제"></div>
+      </div>
+
+      <div class="card lg-premium-card hidden" id="lgPremiumCard">
+        <span class="lg-next-label">DEEPER READING</span>
+        <h2>선택한 주제를 더 깊이 읽어보세요</h2>
         <p class="lg-cta-lead" id="lgCtaLead"></p>
         <a class="lg-cta" id="lgCta" href="/lifetime-report.html">
           <span class="name" id="lgCtaName"></span>
@@ -422,13 +429,40 @@
     }
   };
 
-  /* 다음 걸음 추천 — 이 시기에 무엇이 궁금해질지에 맞춘다.
-     올라가는 구간에선 "어디에 쓸지"(일), 내려가는 구간에선 "무엇을 지킬지"(돈)가 먼저다. */
-  const NEXT_STEP = {
-    up: { lead: '지금 올라오는 흐름을 어디에 쓰면 좋을지, 일과 적성 쪽으로 더 자세히 볼 수 있어요.', name: '직업·적성운 보기', price: '3,900원', href: '/quick.html?topic=career' },
-    flat: { lead: '이 시기의 흐름이 내 인생 전체에서 어디쯤인지, 앞뒤 구간까지 이어서 볼 수 있어요.', name: '평생사주 100p 보기', price: '14,900원', href: '/lifetime-report.html' },
-    down: { lead: '흐름이 꺾이는 구간에서는 돈이 나가는 자리부터 보는 게 안전해요. 재물 흐름을 더 자세히 볼 수 있어요.', name: '재물운 보기', price: '3,900원', href: '/quick.html?topic=wealth' }
-  };
+  function updateConcernChoice() {
+    document.querySelectorAll('#lgConcernOptions button').forEach((button) => {
+      button.setAttribute('aria-pressed', String(button.dataset.concern === currentConcern));
+    });
+    const picked = window.ConcernStep && currentConcern ? ConcernStep.product(currentConcern) : null;
+    document.getElementById('lgPremiumCard').classList.toggle('hidden', !picked);
+    if (!picked) return;
+    document.getElementById('lgCtaLead').textContent = `선택하신 "${ConcernStep.label(currentConcern)}"을 더 깊이 살펴볼 수 있어요.`;
+    document.getElementById('lgCtaName').textContent = picked.name + ' 보기';
+    document.getElementById('lgCtaPrice').textContent = picked.price;
+    document.getElementById('lgCta').href = picked.href;
+  }
+
+  function chooseConcern(key) {
+    if (!window.ConcernStep || !ConcernStep.byKey(key)) return;
+    currentConcern = key;
+    updateConcernChoice();
+    const params = new URLSearchParams(location.search);
+    params.set('concern', key);
+    history.replaceState(null, '', location.pathname + '?' + params.toString());
+  }
+
+  if (window.ConcernStep) {
+    const options = document.getElementById('lgConcernOptions');
+    ConcernStep.CONCERNS.forEach((concern) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.dataset.concern = concern.key;
+      button.textContent = concern.label;
+      button.setAttribute('aria-pressed', 'false');
+      button.addEventListener('click', () => chooseConcern(concern.key));
+      options.appendChild(button);
+    });
+  }
 
   function renderInterpretation(score, delta) {
     const band = bandOf(score);
@@ -442,20 +476,7 @@
     document.getElementById('lgDos').innerHTML = advice.dos.map((s) => `<li>${s}</li>`).join('');
     document.getElementById('lgDonts').innerHTML = advice.donts.map((s) => `<li>${s}</li>`).join('');
 
-    // 권하는 상품은 본인이 고른 고민을 따른다. 고민이 없을 때(옛 공유 링크)만 추세 기반.
-    const picked = window.ConcernStep && currentConcern ? ConcernStep.product(currentConcern) : null;
-    if (picked) {
-      document.getElementById('lgCtaLead').textContent = `고르신 고민 "${ConcernStep.label(currentConcern)}"을 지금 이 시기 기준으로 자세히 볼 수 있어요.`;
-      document.getElementById('lgCtaName').textContent = picked.name + ' 보기';
-      document.getElementById('lgCtaPrice').textContent = picked.price;
-      document.getElementById('lgCta').href = picked.href;
-    } else {
-      const step = NEXT_STEP[trend];
-      document.getElementById('lgCtaLead').textContent = step.lead;
-      document.getElementById('lgCtaName').textContent = step.name;
-      document.getElementById('lgCtaPrice').textContent = step.price;
-      document.getElementById('lgCta').href = step.href;
-    }
+    updateConcernChoice();
   }
 
   function xOf(i) { return (i / (points.length - 1)) * CHART_W; }
@@ -954,13 +975,13 @@
     const cal = body.calendar === '음력' ? '음력' : '양력';
     const time = (body.hourUnknown === 'true' || body.hourUnknown === true || body.hour === '' || body.hour == null)
       ? '시각 모름' : `${body.hour}시 ${body.minute || 0}분`;
-    const concernLabel = window.ConcernStep && body.concern ? ConcernStep.label(body.concern) : '';
-    document.getElementById('lgFoldedText').textContent = [`${cal} ${body.year}.${body.month}.${body.day}`, time, body.gender || '', concernLabel].filter(Boolean).join(' · ');
+    document.getElementById('lgFoldedText').textContent = [`${cal} ${body.year}.${body.month}.${body.day}`, time, body.gender || ''].filter(Boolean).join(' · ');
     document.getElementById('lgForm').classList.add('hidden');
     document.querySelector('.lg-intro').classList.add('hidden');
     document.getElementById('lgFolded').classList.remove('hidden');
   }
   document.getElementById('lgUnfoldBtn').addEventListener('click', () => {
+    document.querySelector('#lgForm input[name="concern"]')?.remove();
     document.getElementById('lgFolded').classList.add('hidden');
     document.querySelector('.lg-intro').classList.remove('hidden');
     document.getElementById('lgForm').classList.remove('hidden');
@@ -986,7 +1007,7 @@
 
       rawData = data;
       currentAge = data.currentAge;
-      currentConcern = body.concern || '';
+      currentConcern = window.ConcernStep && ConcernStep.byKey(body.concern) ? body.concern : '';
       foldForm(body);
       document.getElementById('lgResult').style.display = 'block';
       setMode('decade');
@@ -1018,7 +1039,7 @@
     if (params.get('gender')) form.gender.value = params.get('gender');
     if (params.get('calendar')) form.calendar.value = params.get('calendar');
     if (params.get('hourUnknown')) form.hourUnknown.checked = true;
-    if (params.get('concern')) {
+    if (window.ConcernStep && ConcernStep.byKey(params.get('concern'))) {
       const c = document.createElement('input'); c.type = 'hidden'; c.name = 'concern'; c.value = params.get('concern');
       form.appendChild(c);
     }

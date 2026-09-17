@@ -63,3 +63,13 @@ test('life graph retains IDs used by result rendering and control events', () =>
   assert.ok(fs.existsSync(path.join(publicDir, 'hero', 'otter-hero-mobile.jpg')));
   assert.ok(fs.existsSync(path.join(publicDir, 'reading-ui.css')));
 });
+
+test('life graph shows results before asking for a topic', () => {
+  const html = fs.readFileSync(path.join(publicDir, 'life-graph.html'), 'utf8');
+  assert.match(html, /<form id="lgForm">/);
+  assert.doesNotMatch(html, /<form id="lgForm"[^>]*data-concern-step/);
+  assert.match(html, /id="lgConcernOptions"/);
+  assert.match(html, /class="card lg-premium-card hidden" id="lgPremiumCard"/);
+  assert.ok(html.indexOf('id="lgChartWrap"') < html.indexOf('id="lgConcernOptions"'));
+  assert.match(html, /ConcernStep\.byKey\(params\.get\('concern'\)\)/);
+});

@@ -88,11 +88,19 @@
 .life-graph-page .lg-advice-note { margin: 9px 2px 0; }
 .life-graph-page .lg-basis { display: block; margin: 20px 0 0; padding: 13px 17px; }
 .life-graph-page .lg-basis summary { cursor: pointer; font-size: 12px; font-weight: 800; color: var(--ink); }
+.life-graph-page .lg-concern-picker { margin-top: 32px; padding: 24px; border: 1px solid var(--line); border-radius: 19px; background: #fff; }
+.life-graph-page .lg-concern-picker .lg-next-label { color: #8a663b; }
+.life-graph-page .lg-concern-picker h2 { margin: 7px 0 8px; font-family: var(--font-serif); font-size: 22px; line-height: 1.45; }
+.life-graph-page .lg-concern-picker p { margin: 0 0 17px; color: #626c79; font-size: 13px; line-height: 1.7; }
+.life-graph-page .lg-concern-options { display: flex; flex-wrap: wrap; gap: 8px; }
+.life-graph-page .lg-concern-options button { padding: 11px 15px; border: 1px solid #dce2dc; border-radius: 12px; background: #f7f9f6; color: var(--ink); font: inherit; font-size: 13px; font-weight: 750; cursor: pointer; }
+.life-graph-page .lg-concern-options button[aria-pressed="true"] { border-color: #557660; background: #e9f1e9; color: #294b35; }
 .life-graph-page .lg-extra { margin-top: 24px; border: 1px solid var(--line); border-radius: 17px; background: #fff; }
 .life-graph-page .lg-extra > summary { cursor: pointer; padding: 18px 20px; color: var(--ink); font-size: 14px; font-weight: 800; }
 .life-graph-page .lg-extra > summary::marker { color: var(--success); }
 .life-graph-page .lg-extra .race-wrap { margin: 0; padding: 0 20px 20px; }
 .life-graph-page .lg-premium-card { background: var(--ink); color: #fff; padding: 28px; margin-top: 44px; }
+.life-graph-page .lg-concern-picker + .lg-premium-card { margin-top: 12px; }
 .life-graph-page .lg-next-label { color: #e8c886; font-size: 10px; font-weight: 800; letter-spacing: .12em; }
 .life-graph-page .lg-premium-card h2 { font-family: var(--font-serif); font-size: 21px; margin: 7px 0 9px; }
 .life-graph-page .lg-premium-card .lg-cta-lead { color: #d7dce6; }
@@ -121,4 +129,6 @@
   .life-graph-page .lg-chart-panel { padding: 10px 13px 18px; }
   .life-graph-page .lg-advice-grid { grid-template-columns: 1fr; gap: 10px; }
   .life-graph-page .lg-premium-card { padding: 21px; }
+  .life-graph-page .lg-concern-picker { padding: 20px; }
+  .life-graph-page .lg-concern-options button { flex: 1 1 calc(50% - 8px); }
 }
