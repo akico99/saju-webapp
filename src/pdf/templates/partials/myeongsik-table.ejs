@@ -1,78 +1,83 @@
+<% const pillars = ['year', 'month', 'day', 'hour']; %>
+<% const elements = [
+  { key: '木', ko: '목', theme: 'wood' }, { key: '火', ko: '화', theme: 'fire' },
+  { key: '土', ko: '토', theme: 'earth' }, { key: '金', ko: '금', theme: 'metal' },
+  { key: '水', ko: '수', theme: 'water' }
+]; %>
+<% const elementTotal = elements.reduce((sum, item) => sum + (engine.counts.ohaeng[item.key] || 0), 0); %>
+<% const maxElement = Math.max(...elements.map(item => engine.counts.ohaeng[item.key] || 0)); %>
+<% const leaders = elements.filter(item => (engine.counts.ohaeng[item.key] || 0) === maxElement).map(item => item.ko).join('·'); %>
+<% const leadingElements = elements.filter(item => (engine.counts.ohaeng[item.key] || 0) === maxElement).map(item => `${item.ko} ${engine.counts.ohaeng[item.key]}개`).join(', '); %>
+<% const absentElements = elements.filter(item => !engine.counts.ohaeng[item.key]).map(item => item.ko).join('·'); %>
+<% const roles = [
+  { key: '비겁', note: '자립·경쟁' }, { key: '식상', note: '표현·활동' },
+  { key: '재성', note: '재물·성과' }, { key: '관성', note: '책임·조직' },
+  { key: '인성', note: '학습·보호' }
+].sort((a, b) => (engine.counts.shipsinGroup[b.key] || 0) - (engine.counts.shipsinGroup[a.key] || 0)); %>
+<% const roleTotal = roles.reduce((sum, item) => sum + (engine.counts.shipsinGroup[item.key] || 0), 0); %>
+<% const topRoleCount = engine.counts.shipsinGroup[roles[0].key] || 0; %>
+<% const leadingRoles = roles.filter(item => (engine.counts.shipsinGroup[item.key] || 0) === topRoleCount).map(item => `${item.key} ${topRoleCount}개`).join(', '); %>
+
 <section class="myeongsik page-break" id="myeongsik">
-  <div class="eyebrow">命 式</div>
-  <h2>명식 원국표</h2>
-  <table class="myeongsik-table">
-    <thead>
-      <tr><th></th><th>연주(年)</th><th>월주(月)</th><th>일주(日)</th><th>시주(時)</th></tr>
-    </thead>
+  <div class="eyebrow">YOUR SAJU · 01</div>
+  <h2>내 사주의 네 기둥</h2>
+  <p class="myeongsik-lead">일주(日柱)는 나를 읽는 기준점입니다. 먼저 네 기둥의 글자를 보고, 아래의 상세 항목은 풀이의 근거로 확인해 보세요.</p>
+
+  <div class="myeongsik-focus avoid-break">
+    <span class="focus-label">나를 나타내는 일간</span>
+    <strong><%= engine.ilgan.char %> · <%= engine.ilgan.ko %></strong>
+    <span>신강신약 <b><%= engine.strength.verdict %></b> · 격국 <b><%= engine.kyukguk.name %></b> · 용신 <b><%= engine.yongshin.final.main %></b></span>
+  </div>
+
+  <table class="myeongsik-table myeongsik-core">
+    <thead><tr><th scope="col">구분</th><th scope="col">연주<br><small>태어난 해</small></th><th scope="col">월주<br><small>태어난 달</small></th><th scope="col" class="ilgan-col">일주<br><small>나의 기준</small></th><th scope="col">시주<br><small>태어난 시각</small></th></tr></thead>
     <tbody>
-      <tr>
-        <th>천간</th>
-        <% ['year','month','day','hour'].forEach(function(k) { %>
-        <td class="<%= k === 'day' ? 'ilgan-col' : '' %>"><span class="ganji"><%= engine.manse[k].stemKo %></span><br><%= engine.manse[k].stem %></td>
-        <% }) %>
-      </tr>
-      <tr>
-        <th>지지</th>
-        <% ['year','month','day','hour'].forEach(function(k) { %>
-        <td class="<%= k === 'day' ? 'ilgan-col' : '' %>"><span class="ganji"><%= engine.manse[k].branchKo %></span><br><%= engine.manse[k].branch %></td>
-        <% }) %>
-      </tr>
-      <tr>
-        <th>천간 십신</th>
-        <% ['year','month','day','hour'].forEach(function(k) { %>
-        <td><%= engine.manse[k].stemShipsinKo || (k === 'day' ? '일간(나)' : '-') %></td>
-        <% }) %>
-      </tr>
-      <tr>
-        <th>지지 십신</th>
-        <% ['year','month','day','hour'].forEach(function(k) { %>
-        <td><%= engine.manse[k].branchShipsinKo || '-' %></td>
-        <% }) %>
-      </tr>
-      <tr>
-        <th>12운성</th>
-        <% ['year','month','day','hour'].forEach(function(k) { %>
-        <td><%= engine.manse[k].unseong %></td>
-        <% }) %>
-      </tr>
-      <tr>
-        <th>신살</th>
-        <% ['year','month','day','hour'].forEach(function(k) { %>
-        <td>
-          <% (engine.manse[k].shinsals || []).forEach(function(s) { %><span class="tag"><%= s %></span><% }) %>
-          <% if (!engine.manse[k].shinsals || !engine.manse[k].shinsals.length) { %>-<% } %>
-        </td>
-        <% }) %>
-      </tr>
+      <tr><th scope="row">천간</th><% pillars.forEach(function(k) { %><td class="<%= k === 'day' ? 'ilgan-col' : '' %>"><span class="ganji"><%= engine.manse[k].stemKo %></span><span class="hanja"><%= engine.manse[k].stem %></span></td><% }) %></tr>
+      <tr><th scope="row">지지</th><% pillars.forEach(function(k) { %><td class="<%= k === 'day' ? 'ilgan-col' : '' %>"><span class="ganji"><%= engine.manse[k].branchKo %></span><span class="hanja"><%= engine.manse[k].branch %></span></td><% }) %></tr>
     </tbody>
   </table>
+  <p class="myeongsik-key">천간은 위쪽 글자, 지지는 아래쪽 글자입니다. 색으로 표시된 일주에서 나를 뜻하는 일간을 찾을 수 있어요.</p>
 
-  <div class="myeongsik-summary">
-    일간(나) <b><%= engine.ilgan.char %>(<%= engine.ilgan.ko %>)</b> ·
-    신강신약 <b><%= engine.strength.verdict %></b> ·
-    격국 <b><%= engine.kyukguk.name %></b> ·
-    용신 <b><%= engine.yongshin.final.main %></b>
+  <h3 class="myeongsik-subtitle">계산에 사용한 상세 정보</h3>
+  <table class="myeongsik-table myeongsik-detail">
+    <thead><tr><th scope="col">구분</th><th scope="col">연주</th><th scope="col">월주</th><th scope="col" class="ilgan-col">일주</th><th scope="col">시주</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">천간 십신</th><% pillars.forEach(function(k) { %><td class="<%= k === 'day' ? 'ilgan-col' : '' %>"><%= engine.manse[k].stemShipsinKo || (k === 'day' ? '일간(나)' : '-') %></td><% }) %></tr>
+      <tr><th scope="row">지지 십신</th><% pillars.forEach(function(k) { %><td class="<%= k === 'day' ? 'ilgan-col' : '' %>"><%= engine.manse[k].branchShipsinKo || '-' %></td><% }) %></tr>
+      <tr><th scope="row">12운성</th><% pillars.forEach(function(k) { %><td class="<%= k === 'day' ? 'ilgan-col' : '' %>"><%= engine.manse[k].unseong %></td><% }) %></tr>
+      <tr><th scope="row">신살</th><% pillars.forEach(function(k) { %><td class="<%= k === 'day' ? 'ilgan-col' : '' %>"><% (engine.manse[k].shinsals || []).forEach(function(s) { %><span class="tag"><%= s %></span><% }) %><% if (!engine.manse[k].shinsals || !engine.manse[k].shinsals.length) { %>-<% } %></td><% }) %></tr>
+    </tbody>
+  </table>
+  <p class="myeongsik-footnote">이 표는 풀이에 사용한 원국 데이터입니다. 한 항목만으로 성격이나 미래를 단정하지 않습니다.</p>
+</section>
+
+<section class="myeongsik-data page-break" id="myeongsik-data">
+  <div class="myeongsik-data-inner">
+  <div class="eyebrow">YOUR SAJU · 02</div>
+  <h2>숫자로 보는 기운의 분포</h2>
+  <p class="myeongsik-lead">색은 항목을 구별하는 표식입니다. 막대 길이보다 옆의 개수와 해설을 함께 봐 주세요.</p>
+
+  <div class="myeongsik-data-card avoid-break">
+    <div class="data-heading"><span>01 · 오행</span><h3>가장 많이 나타난 기운은 <%= leaders %></h3><p>천간과 지지에서 센 <%= elementTotal %>개 글자의 분포</p></div>
+    <div class="data-bars">
+      <% elements.forEach(function(item) { const n = engine.counts.ohaeng[item.key] || 0; %>
+      <div class="data-row"><div class="data-label"><span class="data-dot <%= item.theme %>"></span><strong><%= item.key %> <%= item.ko %></strong></div><div class="data-track"><span class="data-fill <%= item.theme %>" style="width:<%= elementTotal ? (n / elementTotal * 100).toFixed(1) : 0 %>%"></span></div><span class="data-value"><%= n %>개</span></div>
+      <% }) %>
+    </div>
+    <p class="data-reading"><b>이 명식에서는</b> <%= leadingElements %>가 가장 많이 집계됐습니다.<% if (absentElements) { %> <%= absentElements %>은 0개로 표시됩니다.<% } %></p>
+    <p class="data-note">이 수치는 글자의 <b>개수</b>입니다. 0개가 곧 나쁜 운을 뜻하거나, 다섯 개가 고를수록 반드시 좋다는 의미는 아닙니다.</p>
   </div>
 
-  <div class="chart-container avoid-break">
-    <canvas id="ohaengChart" width="500" height="280"></canvas>
-    <p class="chart-caption">
-      <b>오행이란</b> — 木(목)=성장·기획·유연한 추진력, 火(화)=표현력·열정·명예욕,
-      土(토)=안정·신뢰·중재, 金(금)=결단력·원칙·재물, 水(수)=지혜·유연성·휴식을
-      상징하는 다섯 기운입니다.<br>
-      <b>읽는 법</b> — 오각형이 원 모양에 가깝고 고르게 클수록 오행이 골고루 갖춰진 사주,
-      한쪽 꼭짓점이 유난히 뾰족하게 튀어나오거나 점이 한가운데(0개)에 붙어 있으면
-      그 기운이 과하거나 아예 없는 사주라는 뜻입니다.
-    </p>
+  <div class="myeongsik-data-card avoid-break">
+    <div class="data-heading"><span>02 · 십신 그룹</span><h3>나를 기준으로 본 역할의 분포</h3><p>집계된 <%= roleTotal %>개 항목을 많은 순서로 표시</p></div>
+    <div class="data-bars role-bars">
+      <% roles.forEach(function(item) { const n = engine.counts.shipsinGroup[item.key] || 0; %>
+      <div class="data-row"><div class="data-label"><strong><%= item.key %></strong><small><%= item.note %></small></div><div class="data-track"><span class="data-fill role" style="width:<%= roleTotal ? (n / roleTotal * 100).toFixed(1) : 0 %>%"></span></div><span class="data-value"><%= n %>개</span></div>
+      <% }) %>
+    </div>
+    <p class="data-reading"><b>이 명식에서는</b> <%= leadingRoles %>가 가장 많이 집계됐습니다. 이 분포가 뜻하는 바는 다른 명식 요소와 함께 읽어야 합니다.</p>
+    <p class="data-note">십신은 일간을 기준으로 글자의 관계를 묶은 이름입니다. 큰 막대는 이 표에서 많이 집계됐다는 뜻이며, 중요도나 좋고 나쁨의 순위는 아닙니다.</p>
   </div>
-  <div class="chart-container avoid-break">
-    <canvas id="shipsinChart" width="420" height="320"></canvas>
-    <p class="chart-caption">
-      <b>읽는 법</b> — 십신은 나(일간)를 기준으로 나머지 글자들이 하는 역할을 다섯 그룹으로
-      나눈 것입니다. 비겁=자립·경쟁, 식상=표현·활동력, 재성=재물·성과, 관성=책임·조직력,
-      인성=학문·보호를 뜻합니다. 도넛에서 큰 조각을 차지하는 그룹일수록 삶에서 두드러지게
-      작동하는 영역입니다.
-    </p>
+  <p class="myeongsik-next">더 자세한 해석은 3장 ‘오행 밸런스’와 4장 ‘십신 구조’에서 이어집니다.</p>
   </div>
 </section>

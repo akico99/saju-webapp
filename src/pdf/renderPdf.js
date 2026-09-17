@@ -91,7 +91,9 @@ async function stampPageNumbers(pdfBytes, footerName) {
   const pdfDoc = await PDFDocument.load(pdfBytes);
   pdfDoc.registerFontkit(fontkit);
   const fontBytes = fs.readFileSync(KOREAN_FONT_PATH);
-  const font = await pdfDoc.embedFont(fontBytes, { subset: true });
+  // fontkit의 부분 임베딩은 일부 한글 푸터 글리프를 누락시켰다.
+  // 전체 폰트를 포함하면 파일이 다소 커지지만 이름과 페이지 번호가 안정적으로 보인다.
+  const font = await pdfDoc.embedFont(fontBytes, { subset: false });
   const pages = pdfDoc.getPages();
   const total = pages.length;
 

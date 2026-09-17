@@ -5,31 +5,56 @@
 <title><%= safeName(person.name) %> 님의 <%= topicTitle %></title>
 <style><%- reportCss %></style>
 <style>
-  /* 마이크로 리딩 전용 — 표지 한 장을 통째로 쓰기엔 아까운 짧은 분량이라,
-     상단에 압축된 헤더 블록만 두고 바로 본문으로 들어간다. */
-  .quick-header { text-align: center; padding-bottom: 10mm; border-bottom: 1px solid var(--line); margin-bottom: 10mm; }
-  .quick-header .eyebrow { font-size: 10pt; letter-spacing: 0.24em; color: var(--gold); margin-bottom: 6mm; }
-  .quick-header h1 { font-family: 'ReportMyeongjo','Batang','바탕',serif; font-size: 22pt; color: var(--star); margin: 0 0 4mm; }
-  .quick-header .meta { font-size: 10pt; color: var(--muted); }
-  .quick-header .meta b { color: var(--gold); }
+  /* 웹의 유료 리딩과 같은 남색·크림색 계열. 다른 PDF 템플릿에는 적용하지 않는다. */
+  html, body.quick-report { background: #faf8f4; }
+  body.quick-report { color: #29394b; font-size: 11pt; line-height: 1.78; }
+  .quick-report .chapter { padding: 16mm 23mm 16mm; }
+  .quick-report .quick-header { padding: 11mm 12mm 10mm; margin: 0 0 9mm; border-radius: 5mm; background: #24344b; color: #fff; break-inside: avoid; }
+  .quick-report .quick-brand { display: flex; justify-content: space-between; align-items: center; padding-bottom: 7mm; border-bottom: 1px solid rgba(255,255,255,.17); font-size: 8.5pt; font-weight: 700; letter-spacing: .07em; }
+  .quick-report .quick-brand .edition { color: #dfca95; font-weight: 400; }
+  .quick-report .quick-header .eyebrow { margin: 8mm 0 2mm; color: #e4cb92; font-size: 9pt; font-weight: 700; letter-spacing: .12em; }
+  .quick-report .quick-header h1 { margin: 0 0 7mm; color: #fff; font-family: 'ReportMyeongjo','Batang','바탕',serif; font-size: 24pt; line-height: 1.32; }
+  .quick-report .quick-header .meta { display: grid; grid-template-columns: 1fr 1fr; gap: 2mm 6mm; padding-top: 6mm; border-top: 1px solid rgba(255,255,255,.17); color: #cbd5df; font-size: 9pt; line-height: 1.5; }
+  .quick-report .quick-header .meta span:first-child { grid-column: 1 / -1; }
+  .quick-report .quick-header .meta b { color: #fff; font-weight: 700; }
+  .quick-report .quick-intro { margin-bottom: 7mm; }
+  .quick-report .quick-intro .label, .quick-report .quick-body .label { margin: 0 0 2mm; color: #6d846f; font-size: 8.5pt; font-weight: 800; letter-spacing: .08em; }
+  .quick-report .quick-intro p { margin: 0; padding: 5mm 6mm; border-left: 3px solid #84977f; border-radius: 0 3mm 3mm 0; background: #eef2ec; color: #26384b; font-size: 12pt; font-weight: 700; line-height: 1.65; text-align: left; break-inside: avoid; }
+  .quick-report .quick-body { border-top: 1px solid #e3e1d9; padding-top: 6mm; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+  .quick-report .quick-body p { margin: 0 0 5mm; color: #354457; text-align: left; line-height: 1.78; overflow-wrap: break-word; }
+  .quick-report mark { background: #e9e2cb; color: #26384b; }
+  .quick-report .gloss { color: #697586; }
+  .quick-report .disclaimer { margin-top: 8mm; border-top-color: #e3e1d9; color: #78838e; font-size: 8pt; line-height: 1.6; }
+  .quick-report .imprint { color: #7a663c; font-size: 8.5pt; }
 </style>
 </head>
-<body>
+<body class="quick-report">
 
 <section class="chapter">
   <div class="quick-header">
-    <div class="eyebrow">命 式 關 係 圖 · 빠른 리딩</div>
+    <div class="quick-brand"><span>사주보는 수달</span><span class="edition">QUICK READING</span></div>
+    <div class="eyebrow">길잡이 여울 · 빠른 리딩</div>
     <h1><%= safeName(person.name) %> 님의 <%= topicTitle %></h1>
     <div class="meta">
-      생년월일 <b><%= person.birthDisplay %></b> ·
-      일간 <b><%= engine.ilgan.char %>(<%= engine.ilgan.ko %>)</b> ·
-      격국 <b><%= engine.kyukguk.name %></b> · 용신 <b><%= engine.yongshin.final.main %></b>
+      <span>출생 정보 <b><%= person.birthDisplay %></b></span>
+      <span>일간 <b><%= engine.ilgan.char %>(<%= engine.ilgan.ko %>)</b></span>
+      <span>격국 <b><%= engine.kyukguk.name %></b> · 용신 <b><%= engine.yongshin.final.main %></b></span>
     </div>
   </div>
 
-  <% text.split(/\n\n+/).forEach(function(para) { if (para.trim()) { %>
-  <p><%- renderMarkup(para.trim()) %></p>
-  <% } }) %>
+  <% var paragraphs = text.split(/\n\n+/).map(function(para) { return para.trim(); }).filter(Boolean); %>
+  <% if (paragraphs.length) { %>
+  <div class="quick-intro">
+    <div class="label">01 · 먼저 읽어보세요</div>
+    <p><%- renderMarkup(paragraphs[0]) %></p>
+  </div>
+  <% } %>
+  <% if (paragraphs.length > 1) { %>
+  <div class="quick-body">
+    <div class="label">02 · 조금 더 자세히</div>
+    <% paragraphs.slice(1).forEach(function(para) { %><p><%- renderMarkup(para) %></p><% }) %>
+  </div>
+  <% } %>
 
   <p class="disclaimer">
     이 리포트는 명리학적 통계 경향에 근거한 참고 자료이며, 의학적·법적·재정적 조언을 대체하지 않습니다.

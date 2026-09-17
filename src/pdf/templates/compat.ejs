@@ -5,7 +5,7 @@
 <title><%= safeName(personA.name, '본인') %> · <%= safeName(personB.name, '상대방') %> 궁합 리포트</title>
 <style><%- reportCss %></style>
 </head>
-<body>
+<body class="compat-report">
 
 <section class="compat-cover">
   <div class="eyebrow">緣 分 宮 合</div>
@@ -28,8 +28,11 @@
     </div>
   </div>
 
-  <div class="compat-score-num"><%= compat.score %></div>
-  <div class="compat-score-label">종합 궁합 점수 (100점 만점 · 참고용)</div>
+  <div class="compat-key-fact">첫 단서 · 일지 관계
+    <strong><%= compat.dayRelation ? (compat.dayRelation.type === 'chung' ? '충' : compat.dayRelation.type === 'samhap' ? '삼합' : '육합') : '특별한 합충 없음' %></strong>
+  </div>
+  <div class="compat-score-line">관계 데이터 참고 점수 <b><%= compat.score %> / 100</b></div>
+  <div class="compat-score-label">합·삼합·충 관계를 환산한 값이며 관계의 미래를 예측하는 확률이 아닙니다</div>
 
   <div class="disclaimer-mini">
     이 리포트는 명리학적 통계 경향에 근거한 참고 자료이며, 관계의 좋고 나쁨을 단정하지 않습니다.
@@ -39,14 +42,20 @@
 </section>
 
 <section class="compat-section page-break">
-  <h2>궁합 풀이</h2>
-  <% text.split(/\n\n+/).forEach(function(para) { if (para.trim()) { %>
-  <p><%- renderMarkup(para.trim()) %></p>
-  <% } }) %>
+  <h2>둘 사이를 읽는 첫 단서</h2>
+  <% var compatParagraphs = text.split(/\n\n+/).map(function(para) { return para.trim(); }).filter(Boolean); %>
+  <% if (compatParagraphs.length) { %>
+  <div class="compat-reading"><div class="label">먼저 읽어보세요</div><p><%- renderMarkup(compatParagraphs[0]) %></p></div>
+  <% } %>
+  <% if (compatParagraphs.length > 1) { %>
+  <h3 class="compat-subtitle">관계의 흐름, 조금 더 자세히</h3>
+  <% compatParagraphs.slice(1).forEach(function(para) { %><p><%- renderMarkup(para) %></p><% }) %>
+  <% } %>
 </section>
 
 <section class="compat-section" style="padding-top:8mm;">
   <h2>근거가 된 관계 데이터</h2>
+  <p class="compat-data-intro">아래 값은 두 명식의 관계를 계산한 단서입니다. 한 항목만으로 두 사람의 관계를 판단하지 않습니다.</p>
   <ul class="compat-rel-list">
     <li>일지-일지(배우자궁) 관계: <b><%= compat.dayRelation ? (compat.dayRelation.type === 'chung' ? '충' : compat.dayRelation.type === 'samhap' ? '삼합' : '육합') : '특별한 합충 없음' %></b></li>
     <li><%= safeName(personB.name, '상대방') %>님의 일간은 <%= safeName(personA.name, '본인') %>님에게 <b><%= compat.shipsinAtoBKo %>(<%= compat.shipsinAtoB %>)</b>, <%= safeName(personA.name, '본인') %>님의 일간은 <%= safeName(personB.name, '상대방') %>님에게 <b><%= compat.shipsinBtoAKo %>(<%= compat.shipsinBtoA %>)</b>에 해당</li>

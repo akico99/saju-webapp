@@ -5,7 +5,7 @@
 <title><%= safeName(person.name) %> 님의 평생사주</title>
 <style><%- reportCss %></style>
 </head>
-<body>
+<body class="lifetime-report">
 
 <%- include('partials/cover', { person, generatedDate, engine, coverSummary, safeName }) %>
 <%- include('partials/benefits') %>
@@ -13,90 +13,9 @@
 <%- include('partials/myeongsik-table', { engine }) %>
 
 <% chapters.forEach(function(chapter) { %>
-<%- include('partials/chapter', { chapter, engine, getChapterKeywords, buildOhaengQuest }) %>
+<%- include('partials/chapter', { chapter, engine, daewoonRows, getChapterKeywords, buildOhaengQuest }) %>
 <% }) %>
 
-<script><%- chartJsSource %></script>
-<script>
-(function () {
-  var configs = <%- JSON.stringify({ ohaeng: ohaengConfig, shipsin: shipsinConfig, daewoon: daewoonConfig }) %>;
-  var pending = 0;
-  function onDone() {
-    pending--;
-    if (pending <= 0) window.__chartsReady = true;
-  }
-  // 서버(charts.js)에서 만든 config는 JSON.stringify를 거쳐 여기로 오기 때문에
-  // 함수(플러그인)는 다 사라진다 — config.calloutData 같은 순수 데이터만 살아남고,
-  // 실제로 캔버스에 그리는 코드는 여기 클라이언트 쪽에 둔다.
-  function drawRoundRect(ctx, x, y, w, h, r) {
-    ctx.beginPath();
-    ctx.moveTo(x + r, y);
-    ctx.arcTo(x + w, y, x + w, y + h, r);
-    ctx.arcTo(x + w, y + h, x, y + h, r);
-    ctx.arcTo(x, y + h, x, y, r);
-    ctx.arcTo(x, y, x + w, y, r);
-    ctx.closePath();
-  }
-  function calloutPlugin(callouts) {
-    return {
-      id: 'callouts',
-      afterDraw: function (chart) {
-        var meta = chart.getDatasetMeta(0);
-        var ctx = chart.ctx;
-        callouts.forEach(function (c) {
-          var point = meta.data[c.index];
-          if (!point) return;
-          var label = c.age + '세 · ' + c.phrase;
-          ctx.save();
-          ctx.font = "700 13px 'ReportGothic','Malgun Gothic',sans-serif";
-          var textWidth = ctx.measureText(label).width;
-          var boxW = textWidth + 18, boxH = 26;
-          var boxX = Math.min(Math.max(point.x - boxW / 2, 4), chart.width - boxW - 4);
-          var boxY = Math.max(point.y - boxH - 14, 4);
-          ctx.fillStyle = 'rgba(15,20,32,0.94)';
-          ctx.strokeStyle = '#c7a13a';
-          ctx.lineWidth = 1.2;
-          drawRoundRect(ctx, boxX, boxY, boxW, boxH, 7);
-          ctx.fill();
-          ctx.stroke();
-          ctx.fillStyle = '#ece2c4';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(label, boxX + boxW / 2, boxY + boxH / 2);
-          ctx.restore();
-        });
-      }
-    };
-  }
-  function mount(canvasId, config) {
-    var el = document.getElementById(canvasId);
-    if (!el) return;
-    pending++;
-    config.options = config.options || {};
-    config.options.animation = false;
-    config.plugins = [{
-      id: 'doneSignal-' + canvasId,
-      afterRender: function () { onDone(); }
-    }];
-    if (config.calloutData && config.calloutData.length) {
-      config.plugins.push(calloutPlugin(config.calloutData));
-    }
-    new Chart(el.getContext('2d'), config);
-  }
-  window.__chartsReady = false;
-  // Chart.js는 <canvas>에 텍스트를 한 번 그리면 그걸로 끝 — 이후 커스텀 폰트가 로드돼도
-  // 알아서 다시 그려주지 않는다. document.fonts.ready 전에 그리면(특히 ReportHanja처럼
-  // unicode-range 폴백으로만 붙는 폰트는 canvas의 fillText가 DOM 텍스트와 달리 로딩을
-  // 스스로 트리거하지 않아 더 늦게 뜨거나 아예 안 뜬다) 한자가 빈칸으로 박제된 채
-  // 캔버스 이미지로 고정되어 버린다 — 폰트 로딩이 끝난 뒤에만 그린다.
-  document.fonts.ready.then(function () {
-    mount('ohaengChart', configs.ohaeng);
-    mount('shipsinChart', configs.shipsin);
-    mount('daewoonChart', configs.daewoon);
-  });
-  // 캔버스가 하나도 없거나 폰트 로딩이 비정상적으로 오래 걸리는 극단적 상황 대비 안전장치
-  setTimeout(function () { window.__chartsReady = true; }, 5000);
-})();
-</script>
+<script>window.__chartsReady = true;</script>
 </body>
 </html>
