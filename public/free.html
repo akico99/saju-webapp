@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-THWHBPH5WR"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-THWHBPH5WR');
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="/favicon.png">
+<title>사주보는 수달 — 무료 미니 리딩</title>
+<link rel="stylesheet" href="/theme.css">
+<link rel="stylesheet" href="/reading-ui.css">
+<script src="/analysis-loader.js"></script>
+<style>
+  /* 무료 미니 리딩 3종(귀인·오행·매력)이 이 한 페이지를 쓴다. kind별 차이는 JS 설정표에 있다. */
+  .preview-teaser { margin: 0 0 20px; padding-left: 18px; font-size: 13.5px; line-height: 2; color: var(--ink); }
+  .preview-teaser li::marker { color: var(--accent); }
+
+  .fr-hero { background: var(--ink); color: #fff; border: none; }
+  .fr-hero .eyebrow { font-size: 11px; opacity: .65; margin-bottom: 6px; }
+  .fr-hero h2 { font-family: var(--font-serif); font-size: 21px; line-height: 1.4; margin: 0 0 10px; letter-spacing: -.01em; word-break: keep-all; }
+  .fr-hero p { margin: 0; font-size: 13.5px; line-height: 1.8; opacity: .9; word-break: keep-all; }
+
+  .fr-item { display: flex; gap: 12px; align-items: flex-start; padding: 14px 0; border-top: 1px solid var(--line); }
+  .fr-item:first-of-type { border-top: none; padding-top: 0; }
+  .fr-item .tag { flex-shrink: 0; min-width: 44px; padding: 5px 8px; border-radius: 8px; background: var(--surface-2); font-size: 11.5px; font-weight: 800; color: var(--ink); text-align: center; line-height: 1.3; }
+  .fr-item .tag small { display: block; font-weight: 600; color: var(--muted); font-size: 10.5px; }
+  .fr-item h4 { margin: 0 0 4px; font-size: 14.5px; font-weight: 800; }
+  .fr-item p { margin: 0 0 6px; font-size: 13px; line-height: 1.75; color: var(--ink); word-break: keep-all; }
+  .fr-item p.where { color: var(--muted); font-size: 12.5px; }
+  .fr-item p.tip { padding: 8px 10px; border-radius: 8px; background: var(--accent-soft); font-size: 12.5px; }
+  .fr-item p.shadow { color: #8a4a34; font-size: 12.5px; }
+
+  .fr-bars { display: flex; flex-direction: column; gap: 9px; }
+  .fr-bar { display: grid; grid-template-columns: 62px 1fr 34px; align-items: center; gap: 10px; font-size: 13px; }
+  .fr-bar .lbl b { display: block; font-size: 13.5px; }
+  .fr-bar .lbl small { color: var(--muted); font-size: 11px; }
+  .fr-bar .track { height: 12px; border-radius: 6px; background: var(--surface-2); overflow: hidden; }
+  .fr-bar .track i { display: block; height: 100%; border-radius: 6px; transition: width .5s; }
+  .fr-bar .n { text-align: right; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .fr-bar.lack .lbl b { color: #8a4a34; }
+  .fr-grade { display: inline-block; margin-left: 4px; font-size: 10.5px; color: var(--muted); font-weight: 600; }
+
+  .fr-two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+  .fr-two > div { padding: 12px; border-radius: 12px; background: var(--surface-2); font-size: 12.5px; line-height: 1.7; word-break: keep-all; }
+  .fr-two b { display: block; margin-bottom: 4px; font-size: 12px; }
+  .fr-two .light b { color: var(--success); }
+  .fr-two .shadow b { color: var(--danger); }
+
+  .fr-note { font-size: 11.5px; color: var(--muted-2); margin: 10px 0 0; }
+  .fr-empty { padding: 14px; border-radius: 12px; background: var(--surface-2); font-size: 13px; line-height: 1.75; color: var(--ink); word-break: keep-all; }
+
+  .tf-upsell { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; box-sizing: border-box; padding: 14px 18px; margin-top: 14px; background: var(--accent-grad); border-radius: var(--radius-btn); box-shadow: var(--accent-glow); text-decoration: none; color: var(--accent); }
+  .tf-upsell .name { font-size: 14.5px; font-weight: 800; word-break: keep-all; }
+  .tf-upsell .price { font-size: 14px; font-weight: 800; flex-shrink: 0; }
+  .tf-topic-lead { font-size: 13px; line-height: 1.7; color: var(--muted); margin: 0 0 10px; word-break: keep-all; }
+
+  .lg-folded { padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); font-size: 12.5px; color: var(--muted); }
+  .lg-folded button { flex: 0 0 auto; width: auto; margin: 0; padding: 7px 12px; font-size: 12px; font-weight: 700; background: var(--paper); color: var(--ink); border: 1px solid var(--line); border-radius: var(--radius-btn); box-shadow: none; cursor: pointer; font-family: inherit; min-height: 0; }
+  .fr-others { display: flex; gap: 8px; flex-wrap: wrap; }
+  .fr-others a { font-size: 12.5px; font-weight: 700; padding: 9px 13px; border-radius: 999px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); text-decoration: none; }
+</style>
+</head>
+<body class="reading-page">
+<div class="app">
+  <header>
+    <a class="back" href="/">←</a>
+    <div class="ttl" id="pageTitle">무료 미니 리딩</div>
+      <a class="home-link" href="/" aria-label="홈으로"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M4 11.5L12 4l8 7.5"/><path d="M6 10v9.5h12V10"/></svg></a>
+  </header>
+  <main>
+    <div id="introBox">
+      <h1 id="introTitle"></h1>
+      <p class="lead" id="introLead" style="margin-bottom:14px;"></p>
+      <ul class="preview-teaser" id="introTeaser"></ul>
+    </div>
+
+    <form id="frForm">
+      <div class="field-row">
+        <div class="field">
+          <label>성별</label>
+          <select name="gender">
+            <option value="남">남자</option>
+            <option value="여">여자</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>양력/음력</label>
+          <select name="calendar">
+            <option value="양력">양력</option>
+            <option value="음력">음력</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>생년월일</label>
+        <div class="date-inputs">
+          <input type="number" name="year" placeholder="년" min="1900" max="2100" required>
+          <input type="number" name="month" placeholder="월" min="1" max="12" required>
+          <input type="number" name="day" placeholder="일" min="1" max="31" required>
+        </div>
+      </div>
+      <div class="field">
+        <label>태어난 시각 <span style="font-weight:400;color:var(--muted)">(알면 더 정확해요)</span></label>
+        <div class="date-inputs">
+          <input type="number" name="hour" placeholder="시(0-23)" min="0" max="23">
+          <input type="number" name="minute" placeholder="분" min="0" max="59">
+        </div>
+        <label class="checkbox-field" style="margin-top:8px;"><input type="checkbox" name="hourUnknown"> 시각 모름</label>
+      </div>
+      <button type="submit" id="submitBtn">무료로 보기</button>
+    </form>
+
+    <div id="errorBox" class="error-box hidden"></div>
+
+    <div class="lg-folded hidden" id="folded" style="margin:0 0 16px;">
+      <span id="foldedText"></span>
+      <button type="button" id="unfoldBtn">다시 입력</button>
+    </div>
+
+    <div id="result" class="hidden">
+      <div class="card fr-hero">
+        <div class="eyebrow" id="rEyebrow"></div>
+        <h2 id="rHeadline"></h2>
+        <p id="rLead"></p>
+      </div>
+
+      <div class="card" id="rBody"></div>
+
+      <div class="card">
+        <p class="tf-topic-lead" id="upLead"></p>
+        <a class="tf-upsell" id="upLink" href="#">
+          <span class="name" id="upName"></span>
+          <span class="price" id="upPrice"></span>
+        </a>
+      </div>
+
+      <div class="card">
+        <h3>다른 무료 리딩도 보기</h3>
+        <div class="fr-others" id="others"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  // kind별 소개 문구 — 결과는 서버(freeReadings.js)가 만든다. 여기는 폼 위 예고와 그리기만.
+  const KINDS = {
+    noble: {
+      title: '사주 속 귀인', intro: '내게 찾아올 귀인은 어디에 있을까?',
+      lead: '태어난 네 기둥 안에 이름 붙은 귀인이 있는지, 있다면 어느 관계·어느 시기의 인연인지 알려드려요.',
+      teaser: ['천을귀인·문창귀인 같은 길신이 내 사주에 있는지', '어느 자리(조상·부모·배우자·자녀)에 놓였는지', '그 인연을 살리는 한 가지 행동'],
+      eyebrow: '사주 속 귀인', steps: ['네 기둥 세우기', '길신·신살 대조', '궁위 읽기']
+    },
+    balance: {
+      title: '내 오행 밸런스', intro: '내 기운은 어디로 기울어 있을까?',
+      lead: '여덟 글자를 다섯 기운(목·화·토·금·수)으로 나눠 무엇이 많고 무엇이 비었는지 막대로 보여드려요.',
+      teaser: ['다섯 기운의 개수와 강약', '가장 센 기운의 강점과 그림자', '비어 있는 기운이 삶에서 남기는 자리'],
+      eyebrow: '내 오행 밸런스', steps: ['여덟 글자 뽑기', '오행 세기', '균형 판정']
+    },
+    charm: {
+      title: '타고난 매력', intro: '나는 어떤 사람으로 보일까?',
+      lead: '일간이 정하는 기본 인상에, 도화·장성·반안 같은 신살이 어떤 색을 더하는지 알려드려요.',
+      teaser: ['일간 10종 중 내 바탕이 주는 인상', '매력으로 읽는 신살이 있는지, 어느 자리인지', '그 매력의 그림자와 쓰는 법'],
+      eyebrow: '타고난 매력', steps: ['일간 확인', '신살 대조', '매력 유형 정리']
+    }
+  };
+  const kind = new URLSearchParams(location.search).get('kind');
+  const cfg = KINDS[kind];
+  if (!cfg) location.replace('/free.html?kind=balance');
+
+  document.title = `사주보는 수달 — ${cfg.title} (무료)`;
+  document.getElementById('pageTitle').textContent = cfg.title + ' · 무료';
+  document.getElementById('introTitle').textContent = cfg.intro;
+  document.getElementById('introLead').textContent = cfg.lead;
+  document.getElementById('introTeaser').innerHTML = cfg.teaser.map((t) => `<li>${t}</li>`).join('');
+  document.getElementById('others').innerHTML = Object.entries(KINDS).filter(([k]) => k !== kind)
+    .map(([k, c]) => `<a href="/free.html?kind=${k}">${c.title}</a>`).join('') +
+    `<a href="/today-preview.html">오늘의 운세</a><a href="/life-graph.html">인생 그래프</a>`;
+
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+
+  function renderNoble(r, body) {
+    if (!r.found.length) {
+      body.appendChild(el('div', 'fr-empty', '이름 붙은 귀인은 없지만, 이 사주가 사람을 어떻게 만나고 어디서 도움을 받는지는 십신 구조로 따로 볼 수 있어요. 귀인은 대운·세운으로 들어오는 해가 있어서, 어느 해에 오는지는 흐름에서 보입니다.'));
+    }
+    r.found.forEach((f) => {
+      const item = el('div', 'fr-item');
+      const tag = el('div', 'tag'); tag.append(f.pillarKo, el('small', null, f.ganzi)); item.appendChild(tag);
+      const box = el('div');
+      box.appendChild(el('h4', null, f.title));
+      box.appendChild(el('p', 'where', `${f.palace.who} · ${f.palace.when} — ${f.palace.how}`));
+      box.appendChild(el('p', null, f.core));
+      box.appendChild(el('p', 'tip', f.tip));
+      item.appendChild(box); body.appendChild(item);
+    });
+    if (r.note) body.appendChild(el('p', 'fr-note', r.note));
+  }
+
+  function renderBalance(r, body) {
+    body.appendChild(el('h3', null, '다섯 기운의 분포'));
+    const bars = el('div', 'fr-bars');
+    r.bars.forEach((b) => {
+      const row = el('div', 'fr-bar' + (b.count === 0 ? ' lack' : ''));
+      const lbl = el('div', 'lbl'); const bb = el('b', null, b.ko); const g = el('span', 'fr-grade', b.grade); bb.appendChild(g); lbl.append(bb, el('small', null, b.word)); row.appendChild(lbl);
+      const track = el('div', 'track'); const fill = el('i'); fill.style.width = Math.max(b.pct, b.count ? 6 : 0) + '%'; fill.style.background = b.color; track.appendChild(fill); row.appendChild(track);
+      row.appendChild(el('div', 'n', String(b.count)));
+      bars.appendChild(row);
+    });
+    body.appendChild(bars);
+    const two = el('div', 'fr-two');
+    const l = el('div', 'light'); l.appendChild(el('b', null, `${r.strongest.ko}(${r.strongest.word})이 세면`)); l.append(r.strongest.light); two.appendChild(l);
+    const s = el('div', 'shadow'); s.appendChild(el('b', null, '지나칠 때')); s.append(r.strongest.shadow); two.appendChild(s);
+    body.appendChild(two);
+    if (r.lacking.length) {
+      body.appendChild(el('h3', null, '비어 있는 기운')).style.marginTop = '18px';
+      r.lacking.forEach((k) => {
+        const item = el('div', 'fr-item');
+        const tag = el('div', 'tag'); tag.append(k.ko, el('small', null, '0개')); item.appendChild(tag);
+        const box = el('div'); box.appendChild(el('h4', null, k.word)); box.appendChild(el('p', null, k.text)); item.appendChild(box);
+        body.appendChild(item);
+      });
+    }
+    if (r.weakest) body.appendChild(el('p', 'fr-note', r.weakest.text));
+  }
+
+  function renderCharm(r, body) {
+    const base = el('div', 'fr-item');
+    const tag = el('div', 'tag'); tag.append('일간', el('small', null, r.base.ilgan)); base.appendChild(tag);
+    const bbox = el('div'); bbox.appendChild(el('h4', null, '바탕이 주는 인상')); bbox.appendChild(el('p', null, r.base.text)); base.appendChild(bbox);
+    body.appendChild(base);
+    r.found.forEach((f) => {
+      const item = el('div', 'fr-item');
+      const t = el('div', 'tag'); t.append(f.pillarKo, el('small', null, f.ganzi)); item.appendChild(t);
+      const box = el('div');
+      box.appendChild(el('h4', null, f.title));
+      box.appendChild(el('p', 'where', `${f.palace.how} 쪽에서 특히 드러나요`));
+      box.appendChild(el('p', null, f.core));
+      box.appendChild(el('p', 'shadow', '그림자 · ' + f.shadow));
+      item.appendChild(box); body.appendChild(item);
+    });
+    if (r.note) body.appendChild(el('p', 'fr-note', r.note));
+  }
+
+  const RENDER = { noble: renderNoble, balance: renderBalance, charm: renderCharm };
+
+  function render(r) {
+    document.getElementById('rEyebrow').textContent = cfg.eyebrow;
+    document.getElementById('rHeadline').textContent = r.headline;
+    document.getElementById('rLead').textContent = r.lead;
+    const body = document.getElementById('rBody'); body.replaceChildren();
+    RENDER[kind](r, body);
+    document.getElementById('upLead').textContent = r.upsell.lead;
+    document.getElementById('upName').textContent = r.upsell.name + ' 보기';
+    document.getElementById('upPrice').textContent = r.upsell.price;
+    document.getElementById('upLink').href = r.upsell.href;
+    document.getElementById('result').classList.remove('hidden');
+  }
+
+  document.getElementById('unfoldBtn').addEventListener('click', () => {
+    document.getElementById('folded').classList.add('hidden');
+    document.getElementById('introBox').classList.remove('hidden');
+    document.getElementById('frForm').classList.remove('hidden');
+    document.getElementById('frForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  document.getElementById('frForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errorBox = document.getElementById('errorBox');
+    errorBox.classList.add('hidden');
+    const fd = new FormData(e.target);
+    const body = Object.fromEntries(fd.entries());
+    body.hourUnknown = fd.get('hourUnknown') === 'on';
+    try {
+      const request = fetch('/api/free/' + kind, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+        .then(async (res) => ({ res, data: await res.json() }));
+      const { res, data } = await AnalysisLoader.run(cfg.steps, request);
+      if (!res.ok) { errorBox.textContent = data.error || '계산 실패'; errorBox.classList.remove('hidden'); return; }
+      render(data.reading);
+      document.getElementById('introBox').classList.add('hidden');
+      // 결과가 나오면 폼은 접는다 — 한 줄 요약과 "다시 입력"만 남긴다.
+      const cal = body.calendar === '음력' ? '음력' : '양력';
+      const time = body.hourUnknown || body.hour === '' ? '시각 모름' : `${body.hour}시 ${body.minute || 0}분`;
+      document.getElementById('foldedText').textContent = [`${cal} ${body.year}.${body.month}.${body.day}`, time, body.gender].filter(Boolean).join(' · ');
+      e.target.classList.add('hidden');
+      document.getElementById('folded').classList.remove('hidden');
+      document.getElementById('result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (err) {
+      errorBox.textContent = '요청 실패: ' + err.message;
+      errorBox.classList.remove('hidden');
+    }
+  });
+</script>
+<script src="/form-enhance.js"></script>
+</body>
+</html>
