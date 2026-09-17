@@ -4,6 +4,26 @@ const form = document.getElementById('quickForm');
 const topicSelect = document.getElementById('topicSelect');
 const submitBtn = document.getElementById('submitBtn');
 const result = document.getElementById('result');
+const webReading = document.getElementById('webReading');
+const readingLead = document.getElementById('readingLead');
+const readingParagraphs = document.getElementById('readingParagraphs');
+const readingFallback = document.getElementById('readingFallback');
+const readingTitle = document.getElementById('readingTitle');
+
+function showReading(report, topic) {
+  const paragraphs = typeof report === 'string' ? report.split(/\n\s*\n/).map((part) => part.trim()).filter(Boolean) : [];
+  webReading.classList.toggle('hidden', paragraphs.length === 0);
+  readingFallback.classList.toggle('hidden', paragraphs.length !== 0);
+  if (!paragraphs.length) return;
+  readingTitle.textContent = `${TOPIC_LABELS[topic] || '빠른 리딩'} 결과`;
+  readingLead.textContent = paragraphs[0].replace(/\*\*/g, '');
+  readingParagraphs.replaceChildren();
+  for (const paragraph of paragraphs.slice(1)) {
+    const p = document.createElement('p');
+    p.textContent = paragraph.replace(/\*\*/g, '');
+    readingParagraphs.appendChild(p);
+  }
+}
 const progressBlock = document.getElementById('progressBlock');
 const downloadBlock = document.getElementById('downloadBlock');
 const downloadLink = document.getElementById('downloadLink');
@@ -93,8 +113,10 @@ async function poll(jobId, topic) {
       progressBlock.classList.add('hidden');
       downloadBlock.classList.remove('hidden');
       downloadLink.href = `/api/download/${jobId}`;
+      showReading(data.report, topic);
       renderCrossSell(topic);
       setFormBusy(false);
+      result.scrollIntoView({ behavior: 'smooth', block: 'start' });
       return;
     }
     if (data.status === 'error') {

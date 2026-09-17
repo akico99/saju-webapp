@@ -28,8 +28,8 @@
   <main>
   <div class="brand-tag">사주보는 수달 · 길잡이 여울</div>
   <h1>지금 가장 궁금한 한 가지,<br>수달과 함께 살펴봐요</h1>
-  <p class="lead">관심 주제 하나를 골라 출생 정보를 입력하면, 명식을 바탕으로 짧고 선명한 PDF 리딩을 받아볼 수 있어요.</p>
-  <div class="paid-steps" aria-label="진행 순서"><span class="active">01 · 주제 선택</span><span>02 · 출생 정보</span><span>03 · PDF 확인</span></div>
+  <p class="lead">관심 주제 하나를 골라 출생 정보를 입력하면, 결과를 웹에서 바로 읽고 PDF로도 저장할 수 있어요.</p>
+  <div class="paid-steps" aria-label="진행 순서"><span class="active">01 · 주제 선택</span><span>02 · 출생 정보</span><span>03 · 결과 읽기</span></div>
 
   <div class="point-notice" id="pointNotice">가격 확인 중...</div>
 
@@ -103,9 +103,24 @@
     </div>
 
     <div id="downloadBlock" class="hidden">
-      <div class="paid-result-heading"><span>리딩이 준비됐어요</span><h2>궁금했던 답을 천천히 읽어보세요</h2><p>PDF로 저장해 필요할 때 다시 꺼내볼 수 있어요.</p></div>
-      <a id="downloadLink" href="#" class="download-btn">PDF 다운로드</a>
-      <button type="button" id="shareBtn" class="download-btn card-btn">공유하기</button>
+      <div class="paid-result-heading"><span>리딩이 준비됐어요</span><h2 id="readingTitle">궁금했던 답을 읽어보세요</h2><p>먼저 핵심을 읽고, 자세한 풀이는 아래에서 이어집니다.</p></div>
+      <article id="webReading" class="web-reading hidden" aria-label="빠른 리딩 결과">
+        <section class="web-reading-lead" aria-labelledby="readingLeadTitle">
+          <span class="web-reading-kicker">먼저 읽어보세요</span>
+          <h3 id="readingLeadTitle">지금의 흐름</h3>
+          <p id="readingLead"></p>
+        </section>
+        <section class="web-reading-body" aria-labelledby="readingBodyTitle">
+          <h3 id="readingBodyTitle">이렇게 읽을 수 있어요</h3>
+          <div id="readingParagraphs"></div>
+        </section>
+        <p class="web-reading-note">사주 해석은 선택을 돕는 참고 자료이며, 미래를 확정하지 않습니다.</p>
+      </article>
+      <p id="readingFallback" class="hint hidden">이전에 만든 리딩은 웹 본문이 저장되지 않았어요. 아래 PDF에서 전체 결과를 확인할 수 있습니다.</p>
+      <div class="web-reading-actions">
+        <a id="downloadLink" href="#" class="download-btn">PDF로 저장하기</a>
+        <button type="button" id="shareBtn" class="download-btn card-btn">공유하기</button>
+      </div>
 
       <div class="topic-panel" style="margin-top:20px;">
         <div class="ttl">이 김에 다른 주제도 990원에 보기</div>

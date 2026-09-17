@@ -50,6 +50,11 @@
   .tf-upsell .txt .label { font-size: 11.5px; color: var(--muted); margin-bottom: 4px; }
   .tf-upsell .txt .name { font-size: 15px; font-weight: 800; }
   .tf-upsell .price { font-size: 13px; font-weight: 800; color: var(--accent); flex-shrink: 0; }
+  .tf-details { margin: 12px 0 20px; border: 1px solid var(--line); border-radius: 16px; background: #fff; }
+  .tf-details > summary { cursor: pointer; padding: 17px 20px; color: var(--ink); font-size: 14px; font-weight: 800; }
+  .tf-details > summary::marker { color: var(--success); }
+  .tf-details > .card { margin: 0 14px 14px; box-shadow: none; }
+  .tf-details > .card:first-of-type { margin-top: 4px; }
 </style>
 </head>
 <body class="reading-page">
@@ -67,25 +72,14 @@
       <div class="card fortune-card">
         <div class="row-top">
           <div class="eyebrow" id="tfDate"></div>
-          <span class="fortune-score" id="tfScore"></span>
+          <span class="fortune-score" id="tfScore" aria-label="참고 점수"></span>
         </div>
         <h2 id="tfTitle"></h2>
         <ul class="tf-summary-list" id="tfSummary"></ul>
       </div>
 
       <div class="card">
-        <h3>오늘의 운세 날씨</h3>
-        <div class="tf-weather">
-          <div class="icon" id="tfWeatherIcon"></div>
-          <div>
-            <div class="label" id="tfWeatherLabel"></div>
-            <div class="note" id="tfWeatherNote"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <h3>오늘의 DO & DON'T</h3>
+        <h3>그래서 오늘은 이렇게 해보세요</h3>
         <div class="tf-dodont">
           <div class="do">
             <div class="col-ttl">DO</div>
@@ -98,6 +92,18 @@
         </div>
       </div>
 
+      <details class="tf-details">
+        <summary>운세 날씨·이번 주 흐름 더 보기</summary>
+      <div class="card">
+        <h3>오늘의 운세 날씨</h3>
+        <div class="tf-weather">
+          <div class="icon" id="tfWeatherIcon"></div>
+          <div>
+            <div class="label" id="tfWeatherLabel"></div>
+            <div class="note" id="tfWeatherNote"></div>
+          </div>
+        </div>
+      </div>
       <div class="card">
         <h3>오늘 나의 하루 액땜 퀘스트</h3>
         <p class="hint" style="margin-top:-6px;">오늘 필요한 기운을 채워주는 작은 행동들이에요. 체크해보세요.</p>
@@ -109,6 +115,7 @@
         <div class="tf-week" id="tfWeek"></div>
         <p class="tf-week-best" id="tfWeekBest"></p>
       </div>
+      </details>
 
       <a class="card tf-upsell" id="tfUpsell" href="#">
         <div class="txt">

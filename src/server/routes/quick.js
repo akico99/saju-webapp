@@ -94,7 +94,8 @@ router.post('/quick', requireAuth, async (req, res) => {
       const pdfPath = path.join(jobDir, 'quick-report.pdf');
       await renderPdf(html, pdfPath, { name: person.name, label: title });
       if (!fs.existsSync(pdfPath)) throw new Error('PDF 파일 생성 확인 실패');
-      orders.markDone(jobId, { resultPath: pdfPath, llmCostUsd: costUsd(usage) });
+      // PDF와 동일한 풀이를 주문에 보관해 웹에서도 읽을 수 있게 한다. 추가 LLM 호출은 없다.
+      orders.markDone(jobId, { resultPath: pdfPath, llmCostUsd: costUsd(usage), resultText: text });
     })
     .catch((e) => {
       orders.markError(jobId, e.message);
