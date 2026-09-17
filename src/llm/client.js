@@ -26,6 +26,12 @@ function sumUsage(usages) {
 }
 
 let client = null;
+function isPermanentProviderError(error) {
+  const status = Number(error && error.status);
+  return (status >= 400 && status < 500 && status !== 429) ||
+    /credit balance|insufficient credits|purchase credits/i.test((error && error.message) || '');
+}
+
 function getClient() {
   if (!client) {
     if (!process.env.ANTHROPIC_API_KEY) {
@@ -68,6 +74,9 @@ async function generateText(systemPrompt, userMessage, opts = {}) {
       };
     } catch (e) {
       lastErr = e;
+      // 잔액 부족·인증·잘못된 요청은 재시도해도 해결되지 않는다.
+      // 특히 잔액 부족 오류를 3회 반복 호출하지 않도록 즉시 상위 작업에 전달한다.
+      if (isPermanentProviderError(e)) break;
       if (attempt < maxRetries) {
         await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
         continue;
@@ -77,4 +86,4 @@ async function generateText(systemPrompt, userMessage, opts = {}) {
   throw lastErr;
 }
 
-module.exports = { generateText, MODEL, costUsd, sumUsage };
+module.exports = { generateText, MODEL, costUsd, sumUsage, isPermanentProviderError };

@@ -2,6 +2,7 @@
 const express = require('express');
 const orders = require('../../db/orders');
 const { requireAuth } = require('../middleware/auth');
+const { publicJobError } = require('../publicJobError');
 
 const router = express.Router();
 
@@ -19,7 +20,7 @@ router.get('/status/:jobId', requireAuth, (req, res) => {
   res.json({
     status: order.status,
     progress: { current: order.progress_current, total: order.progress_total },
-    error: order.error,
+    error: order.status === 'error' ? publicJobError(order.error, order.product_key) : null,
     report: order.result_text
   });
 });
