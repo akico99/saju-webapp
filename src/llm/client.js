@@ -3,6 +3,7 @@
    (2026-08 기준 최신 Opus, claude-api 스킬 기준 명시적 지정 없으면 이걸 씀). */
 
 require('dotenv').config({ path: require('path').join(__dirname, '..', '..', '.env') });
+const { notifyProviderOutage } = require('../email/providerAlert');
 const Anthropic = require('@anthropic-ai/sdk');
 
 const MODEL = process.env.SAJU_MODEL || 'claude-sonnet-5';
@@ -76,7 +77,11 @@ async function generateText(systemPrompt, userMessage, opts = {}) {
       lastErr = e;
       // 잔액 부족·인증·잘못된 요청은 재시도해도 해결되지 않는다.
       // 특히 잔액 부족 오류를 3회 반복 호출하지 않도록 즉시 상위 작업에 전달한다.
-      if (isPermanentProviderError(e)) break;
+      if (isPermanentProviderError(e)) {
+        // 운영자에게 바로 알린다 — 고객이 먼저 겪고 운영자가 나중에 아는 상황을 막는다.
+        notifyProviderOutage(e);
+        break;
+      }
       if (attempt < maxRetries) {
         await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
         continue;
