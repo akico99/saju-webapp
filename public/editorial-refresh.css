@@ -1,0 +1,229 @@
+/* Editorial direction: atmospheric cover, clear input, readable report.
+   Presentation only; calculation, pricing, and result data stay unchanged. */
+:root {
+  --editorial-night: #111d31;
+  --editorial-night-2: #233a59;
+  --editorial-gold: #d8b772;
+  --editorial-paper: #fffdfa;
+  --editorial-ink: #1d2d45;
+  --editorial-rule: #e8dfd1;
+}
+
+/* Home: fewer miniature tiles; a clear first experience and larger product art. */
+.editorial-home .app { background: #faf7f0; }
+.editorial-home .app > section { padding-top: 16px; padding-bottom: 21px; }
+.editorial-home .section-head { margin-bottom: 15px; }
+.editorial-home .section-head h2 {
+  font-family: var(--font-serif);
+  font-size: clamp(20px, 3vw, 25px);
+  line-height: 1.42;
+  letter-spacing: -.045em;
+  word-break: keep-all;
+}
+.editorial-home .row-scroll { gap: 12px; padding-bottom: 14px; }
+.editorial-home .row-scroll .tile {
+  flex-basis: 194px;
+  gap: 8px;
+  padding: 10px 10px 15px;
+  border-color: var(--editorial-rule);
+  border-radius: 17px;
+  box-shadow: 0 8px 22px rgba(26, 35, 50, .045);
+}
+.editorial-home .row-scroll .tile-featured-free { flex-basis: 222px; }
+.editorial-home .row-scroll .tile .tile-img,
+.editorial-home .row-scroll .tile .glyph {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 11px;
+}
+.editorial-home .row-scroll .tile .tile-img { object-fit: cover; }
+.editorial-home .row-scroll .tile-featured-free .tile-img { object-position: center 43%; }
+.editorial-home .row-scroll .tile .glyph {
+  height: auto;
+  background: radial-gradient(circle at 70% 22%, #efe0b9, transparent 44%), linear-gradient(155deg, #293d58, #111d31);
+  color: #ead6a5;
+}
+.editorial-home .row-scroll .tile .glyph svg { width: 40px; height: 40px; }
+.editorial-home .row-scroll .tile .name { padding: 3px 5px 0; font-size: 16px; }
+.editorial-home .row-scroll .tile .desc { padding: 0 5px; font-size: 12.5px; line-height: 1.5; }
+.editorial-home .row-scroll .tile .price { padding: 0 5px; font-size: 14px; }
+.editorial-home .row-scroll .tile .badge { top: 18px; right: 18px; }
+
+/* The conversation is the short entry, not a long webtoon. */
+.otter-stage .stage-art img { filter: brightness(.72) saturate(.83); }
+.otter-stage .stage-art::after {
+  background: linear-gradient(180deg, rgba(13, 25, 43, .38), rgba(13, 25, 43, .05) 30%, rgba(13, 25, 43, .64) 69%, #0d192b 100%);
+}
+.otter-stage .stage-kicker {
+  margin: 0 0 14px;
+  color: #f2d79a;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .16em;
+  text-align: center;
+}
+.otter-stage .bubble { font-size: clamp(23px, 3vw, 29px); font-weight: 700; }
+.otter-stage .bubble small { font-size: 13px; line-height: 1.65; }
+.otter-stage .stage-body { padding-bottom: max(28px, env(safe-area-inset-bottom)); }
+.otter-stage .stage-dots i.on { background: var(--editorial-gold); }
+
+/* Free results: cover first, one continuous reading surface afterwards. */
+.editorial-result-page .result-wrap { max-width: 760px; margin-inline: auto; }
+.editorial-result-page #result .fortune-card,
+.editorial-result-page #result .fr-hero {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  padding: clamp(27px, 5vw, 42px);
+  border: 1px solid rgba(227, 195, 133, .25);
+  border-radius: 22px;
+  background: radial-gradient(circle at 88% 8%, rgba(218, 187, 125, .19), transparent 33%), linear-gradient(155deg, var(--editorial-night-2), var(--editorial-night) 72%);
+  box-shadow: 0 20px 44px rgba(17, 29, 49, .15);
+  color: #fff;
+}
+.editorial-result-page #result .fortune-card::after,
+.editorial-result-page #result .fr-hero::after,
+.paid-flow .paid-result-heading::after {
+  content: '';
+  position: absolute;
+  width: 174px;
+  height: 174px;
+  right: -73px;
+  top: -94px;
+  border: 1px solid rgba(232, 202, 149, .30);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.editorial-result-page #result .fortune-card .eyebrow,
+.editorial-result-page #result .fr-hero .eyebrow { color: #f2d79a; opacity: 1; letter-spacing: .12em; }
+.editorial-result-page #result .fortune-card h2,
+.editorial-result-page #result .fr-hero h2 {
+  max-width: 19ch;
+  margin: 19px 0 21px;
+  color: #fff;
+  font-family: var(--font-serif);
+  font-size: clamp(27px, 4.3vw, 37px);
+  line-height: 1.36;
+  letter-spacing: -.05em;
+  word-break: keep-all;
+}
+.editorial-result-page #result .fr-hero p { max-width: 55ch; color: #f0eee8; font-size: 15px; }
+.editorial-result-page #result .fortune-card .fortune-score { color: #f2d79a; }
+.otter-stage.done .result-wrap { padding: 18px 20px 45px; }
+.otter-stage.done #result { margin-top: 0; }
+.otter-stage.done #result > .card:not(.fortune-card),
+.reading-page.editorial-result-page #result > .card:not(.fr-hero):not(.fortune-card) {
+  margin: 0;
+  padding: 27px 5px;
+  border: 0;
+  border-bottom: 1px solid var(--editorial-rule);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.otter-stage.done #result > .card h3,
+.reading-page.editorial-result-page #result > .card h3 {
+  margin: 0 0 16px;
+  color: var(--editorial-ink);
+  font-family: var(--font-serif);
+  font-size: 20px;
+  line-height: 1.4;
+}
+.otter-stage.done #result .tf-weather .icon { font-size: 46px; }
+.otter-stage.done #result .tf-weather .label { font-size: 19px; color: var(--editorial-ink); }
+.otter-stage.done #result .tf-weather .note { font-size: 14px; }
+.editorial-result-page #result .tf-topic-lead { font-size: 15px; color: var(--editorial-ink); }
+.editorial-result-page #result .tf-upsell {
+  min-height: 64px;
+  padding: 17px 20px;
+  background: #e9d7aa;
+  box-shadow: none;
+  color: var(--editorial-night);
+}
+.editorial-result-page #result .tf-upsell .name { font-size: 15px; }
+
+/* Graph: the verdict reads like a cover; charts and advice like a report. */
+.life-graph-page .lg-hero {
+  gap: 22px;
+  min-height: 310px;
+  padding: clamp(21px, 4vw, 32px);
+  border-radius: 23px;
+  background: radial-gradient(circle at 78% 13%, rgba(218, 187, 125, .17), transparent 29%), linear-gradient(140deg, var(--editorial-night-2), var(--editorial-night) 75%);
+  color: #fff;
+}
+.life-graph-page .lg-hero-copy { padding: 10px 0; }
+.life-graph-page .lg-headline .range { color: #f2d79a; }
+.life-graph-page .lg-verdict { color: #fff; }
+.life-graph-page .lg-headline .desc { color: #e1e8ef; font-size: 14px; line-height: 1.75; }
+.life-graph-page .lg-hero-art { min-height: 245px; box-shadow: none; }
+.life-graph-page .lg-otter { background: rgba(255, 255, 255, .10); border: 1px solid rgba(255, 255, 255, .14); }
+.life-graph-page .lg-otter p { color: #f4f1e9; font-size: 13px; }
+.life-graph-page .lg-summary-band { box-shadow: none; border-color: var(--editorial-rule); }
+.life-graph-page .lg-summary-band strong { color: var(--editorial-ink); }
+.life-graph-page .lg-section-heading h2 { font-size: 24px; }
+.life-graph-page .lg-chart-panel { border-color: var(--editorial-rule); background: var(--editorial-paper); box-shadow: none; }
+.life-graph-page .lg-advice-grid .card { border-color: var(--editorial-rule); box-shadow: none; }
+.life-graph-page .lg-concern-picker { background: #f6f0e5; border-color: var(--editorial-rule); }
+.life-graph-page .lg-premium-card { background: var(--editorial-night-2); }
+
+/* Paid result: a striking cover followed by unboxed, book-like content. */
+.paid-flow .app { background: #faf7f0; }
+.paid-flow main > .brand-tag { color: #8a642e; }
+.paid-flow main > h1 { max-width: 18ch; font-family: var(--font-serif); letter-spacing: -.05em; }
+.paid-flow .paid-steps .active { background: var(--editorial-night); border-color: var(--editorial-night); }
+.paid-flow main > form { border-color: var(--editorial-rule); box-shadow: 0 12px 40px rgba(17, 29, 49, .045); }
+.paid-flow .paid-section-head > span { background: var(--editorial-night); color: #f2d79a; }
+.paid-flow .field input:not([type="checkbox"]):not([type="radio"]):focus,
+.paid-flow .field select:focus { border-color: #9a7545; box-shadow: 0 0 0 3px rgba(216, 183, 114, .20); }
+.paid-flow input[type="checkbox"] { accent-color: var(--editorial-night); }
+.paid-flow form button[type="submit"]:not(:disabled) { background: var(--editorial-night); }
+.paid-flow .paid-result-heading {
+  position: relative;
+  overflow: hidden;
+  min-height: 190px;
+  padding: clamp(26px, 5vw, 40px);
+  border: 1px solid rgba(227, 195, 133, .25);
+  border-radius: 22px;
+  background: radial-gradient(circle at 88% 5%, rgba(218, 187, 125, .20), transparent 34%), linear-gradient(150deg, var(--editorial-night-2), var(--editorial-night) 78%);
+  box-shadow: 0 20px 44px rgba(17, 29, 49, .13);
+}
+.paid-flow .paid-result-heading span { color: #f2d79a; font-size: 12px; }
+.paid-flow .paid-result-heading h2 { max-width: 21ch; margin: 18px 0 14px; font-size: clamp(27px, 4vw, 37px); line-height: 1.38; }
+.paid-flow .paid-result-heading p { max-width: 52ch; color: #e5e8e9; font-size: 14px; }
+.paid-flow .web-reading { max-width: 70ch; }
+.paid-flow .web-reading-lead {
+  padding: 27px 0 29px;
+  border: 0;
+  border-bottom: 1px solid var(--editorial-rule);
+  border-radius: 0;
+  background: transparent;
+}
+.paid-flow .web-reading-kicker { color: #805e2d; font-size: 12px; }
+.paid-flow .web-reading-lead h3 { font-size: 23px; }
+.paid-flow .web-reading-lead p { color: var(--editorial-ink); }
+.paid-flow .web-reading-body {
+  margin-top: 0;
+  padding: 30px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.paid-flow .web-reading-body h3 { padding-bottom: 17px; font-size: 22px; }
+.paid-flow .web-reading-body p { color: #34445b; font-size: 16px; line-height: 2; }
+.paid-flow .web-reading-sub { margin-top: 34px; font-family: var(--font-serif); font-size: 19px; }
+.paid-flow .web-reading-sub2 { font-size: 16px; }
+.paid-flow .web-reading-actions { padding-top: 18px; border-top: 1px solid var(--editorial-rule); }
+.paid-flow #downloadBlock .download-btn { background: var(--editorial-night); }
+
+@media (max-width: 700px) {
+  .life-graph-page .lg-hero { display: flex; flex-direction: column-reverse; gap: 7px; }
+  .life-graph-page .lg-hero-art { min-height: 200px; }
+  .life-graph-page .lg-hero-copy { padding: 10px 0 0; }
+  .life-graph-page .lg-verdict { font-size: 28px; }
+  .otter-stage.done #result > .card:not(.fortune-card),
+  .reading-page.editorial-result-page #result > .card:not(.fr-hero):not(.fortune-card) { padding-block: 24px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .editorial-home .row-scroll { scroll-behavior: auto; }
+}

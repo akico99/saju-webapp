@@ -32,7 +32,7 @@ for (const name of pages) {
   test(`${name} uses the reading UI without changing its script syntax`, () => {
     const html = fs.readFileSync(path.join(publicDir, `${name}.html`), 'utf8');
     // today-preview는 대화형 입력 무대 시범(otter-stage) — 결과 카드는 reading-ui를 그대로 쓴다.
-    assert.match(html, /<body class="(?:reading-page(?: life-graph-page| paid-flow)?|otter-stage)">/);
+    assert.match(html, /<body class="(?:reading-page(?: life-graph-page| paid-flow)?|otter-stage)(?: editorial-result-page)?">/);
     assert.match(html, /<link rel="stylesheet" href="\/reading-ui\.css">/);
     for (const match of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)) {
       new vm.Script(match[1], { filename: `${name}.html` });

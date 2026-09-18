@@ -34,6 +34,8 @@
 
 <link rel="stylesheet" href="/reading-ui.css">
 
+<link rel="stylesheet" href="/editorial-refresh.css">
+
 <script src="/analysis-loader.js"></script>
 
 <style>
@@ -257,7 +259,7 @@
 
 </head>
 
-<body class="otter-stage">
+<body class="otter-stage editorial-result-page">
 
 <div class="app">
 
@@ -727,6 +729,8 @@
     body.replaceChildren();
 
     const wrap = el('div', 'stage-step');
+
+    if (i === 0) wrap.appendChild(el('p', 'stage-kicker', '오늘의 운세 · 무료 체험'));
 
     const bubble = el('p', 'bubble'); bubble.appendChild(el('span', 'q', STEPS[i].ask));
 
