@@ -23,7 +23,7 @@
   --surface: #FFFFFF;
   --surface-2: #F5EDE0;
   --muted: #73706B;
-  --muted-2: #A39F98;
+  --muted-2: #76716A;   /* 4.6:1 on cream — 예전 #A39F98은 2.5:1로 작은 안내문이 안 읽혔다 */
   --line: #EEE5D8;
   --accent: #17243D;
   --accent-soft: rgba(23,36,61,0.06);
@@ -31,11 +31,11 @@
   --accent-glow: 0 0 6px rgba(213,165,66,0.28);
   --gold: #D5A542;
   --gold-soft: rgba(213,165,66,0.14);
-  --success: #438779;
+  --success: #2F6A5E;   /* 6.0:1 — 12px DO 제목 같은 작은 글자에도 쓰이므로 4.5 이상이어야 한다 */
   --success-soft: rgba(67,135,121,0.10);
   --warn: #A67C1F;
   --warn-soft: rgba(166,124,31,0.10);
-  --danger: #C9674B;
+  --danger: #A3513A;    /* 5.3:1 — 같은 이유 */
   --danger-soft: rgba(201,103,75,0.10);
   --radius-card: 20px;
   --radius-btn: 12px;
