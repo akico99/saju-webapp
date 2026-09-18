@@ -73,7 +73,7 @@
 .paid-flow #downloadBlock .download-btn.card-btn { margin-left: 7px; border: 1px solid #dadfdd; background: #fff; color: #24344b; }
 .paid-flow .ds-report { padding: 0; border: 0; }
 .paid-flow .ds-summary, .paid-flow .ct-best, .paid-flow .rc-score-card { border-radius: 19px; padding: 26px; background: #24344b; box-shadow: 0 17px 38px rgba(36, 52, 75, .13); }
-.paid-flow .ds-report .body { margin-top: 16px; padding: clamp(22px, 4vw, 34px); border: 1px solid #e7e3d9; border-radius: 19px; background: #fff; color: #314052; line-height: 1.95; box-shadow: 0 12px 34px rgba(28, 40, 54, .045); }
+/* .ds-report .body — 택일 본문은 fortune-result.css(.fr-prose)가 그린다. */
 .paid-flow .ds-download, .paid-flow .rc-block, .paid-flow .bt-card { border: 1px solid #e7e3d9; border-radius: 17px; background: #fff; box-shadow: 0 10px 28px rgba(28, 40, 54, .045); }
 .paid-flow .ds-download { padding: 20px; }
 .paid-flow .bt-card.top { border-color: #c6ad7f; background: #fffcf6; }

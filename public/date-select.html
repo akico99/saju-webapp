@@ -17,22 +17,16 @@
 <link rel="stylesheet" href="/theme.css">
 <link rel="stylesheet" href="/reading-ui.css">
 <link rel="stylesheet" href="/paid-flow.css">
+<link rel="stylesheet" href="/fortune-result.css">
 <style>
   .ds-icon-badge { width: 52px; height: 52px; border-radius: 16px; background: var(--accent-soft);
     display: flex; align-items: center; justify-content: center; margin-bottom: 8px; }
   .ds-icon-badge svg { width: 28px; height: 28px; color: var(--accent); }
 
-  .ds-summary {
-    background: var(--ink); color: #fff; border-radius: var(--radius-card);
-    padding: 20px 20px; margin-bottom: 16px;
-  }
-  .ds-summary .label { font-size: 11.5px; opacity: .75; margin-bottom: 4px; }
-  .ds-summary .date { font-size: 19px; font-weight: 800; }
-  .ds-summary .sub { font-size: 12.5px; opacity: .8; margin-top: 4px; }
-
-  .ds-report { padding: 28px 20px 24px; margin-top: 8px; border-top: 1px solid var(--line); display: none; }
-  .ds-report .body { font-size: 14.5px; color: var(--ink); line-height: 1.9; white-space: pre-wrap; }
-  .ds-report .body strong { color: var(--accent); }
+  .ds-report { margin-top: 8px; display: none; }
+  .ds-report .fr-cover .fr-date-big { margin: 14px 0 0; font-family: var(--font-serif); font-weight: 700; font-size: clamp(28px, 7.6vw, 36px); line-height: 1.25; letter-spacing: -.04em; color: #fff; }
+  .ds-report .fr-cover .fr-date-big small { display: block; margin-top: 8px; font-family: inherit; font-size: 14px; font-weight: 600; letter-spacing: 0; color: rgba(255,255,255,.7); }
+  .ds-report .body.fr-prose { padding-top: 26px; }
 
   .ds-download {
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
@@ -242,13 +236,12 @@
 
     <div id="errorBox" class="error-box hidden"></div>
 
-    <section class="ds-report" id="dsResult">
-      <div class="ds-summary hidden" id="dsSummary">
-        <div class="label" id="dsSummaryLabel"></div>
-        <div class="date" id="dsSummaryDate"></div>
-        <div class="sub" id="dsSummarySub"></div>
-      </div>
-      <div class="body" id="dsReportBody"></div>
+    <section class="ds-report fortune-result" id="dsResult">
+      <section class="fr-cover hidden" id="dsSummary">
+        <p class="fr-eyebrow" id="dsSummaryLabel"></p>
+        <h2 class="fr-date-big"><span id="dsSummaryDate"></span><small id="dsSummarySub"></small></h2>
+      </section>
+      <div class="body fr-section fr-prose" id="dsReportBody"></div>
       <div class="ds-download hidden" id="dsDownload">
         <div class="txt">PDF로 저장해서 두고두고 볼 수 있어요. 마이페이지에서도 언제든 다시 받을 수 있어요.</div>
         <a class="btn-download" id="dsDownloadLink" href="#" target="_blank" rel="noopener">PDF 다운로드</a>
@@ -368,15 +361,29 @@
     } else {
       summaryBox.classList.add('hidden');
     }
-    document.getElementById('dsReportBody').innerHTML = '리포트를 쓰는 중이에요...';
+    document.getElementById('dsReportBody').textContent = '리포트를 쓰는 중이에요...';
     document.getElementById('dsDownload').classList.add('hidden');
     document.getElementById('dsResult').style.display = 'block';
   }
 
+  function renderBody(report) {
+    const box = document.getElementById('dsReportBody');
+    box.replaceChildren();
+    const blocks = report.split(/\n\s*\n/).map((b) => b.trim()).filter(Boolean);
+    for (const block of blocks) {
+      const lines = block.split('\n');
+      const m = /^\*\*(.+?)\*\*\s*$/.exec(lines[0]);
+      if (m) {
+        const h = document.createElement('h4'); h.className = 'fr-sub'; h.textContent = m[1]; box.appendChild(h);
+        lines.shift();
+      }
+      const body = lines.join('\n').trim();
+      if (body) { const p = document.createElement('p'); p.innerHTML = boldify(body); box.appendChild(p); }
+    }
+  }
   function renderReport(report, jobId) {
-    document.getElementById('dsReportBody').innerHTML = report
-      ? boldify(report)
-      : '리포트를 만드는 데 문제가 생겼어요. 포인트는 환불되었습니다. 잠시 후 다시 시도해주세요.';
+    if (report) renderBody(report);
+    else document.getElementById('dsReportBody').textContent = '리포트를 만드는 데 문제가 생겼어요. 포인트는 환불되었습니다. 잠시 후 다시 시도해주세요.';
 
     const downloadBox = document.getElementById('dsDownload');
     if (report && jobId) {
