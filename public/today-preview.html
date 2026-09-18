@@ -79,6 +79,9 @@
 
   .go { height: 58px; width: 100%; border-radius: 16px; border: none; background: #fff; color: var(--ink); font-size: 16.5px; font-weight: 800; cursor: pointer; font-family: inherit; margin: 6px 0 0; box-shadow: 0 10px 30px rgba(0,0,0,.35); transition: transform .12s; padding: 0; }
   .go:active { transform: scale(.98); }
+  .saved-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px; }
+  .saved-label { width: 100%; font-size: 12px; font-weight: 800; letter-spacing: .06em; color: rgba(255,255,255,.62); }
+  .saved-chip { width: auto; margin: 0; padding: 9px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,.35); background: rgba(255,255,255,.1); color: #fff; font-size: 13.5px; font-weight: 700; font-family: inherit; cursor: pointer; box-shadow: none; }
   .skip { background: none; border: none; color: rgba(255,255,255,.72); font-size: 13.5px; text-decoration: underline; text-underline-offset: 4px; cursor: pointer; font-family: inherit; padding: 10px; margin: 0; box-shadow: none; width: auto; align-self: center; }
 
   /* 결과 화면 — 무대가 걷히고 크림 배경으로 돌아온다 */
@@ -194,6 +197,23 @@
           Object.assign(state, { year: y.value, month: m.value, day: d.value }); next();
         });
         box.appendChild(go);
+        // 로그인해 저장해둔 인물이 있으면 한 번에 결과로 — 세 단계를 다시 답할 이유가 없다.
+        savedProfiles().then((profiles) => {
+          if (!profiles.length || step !== 0) return;
+          const row = el('div', 'saved-row');
+          row.appendChild(el('span', 'saved-label', '저장된 인물로 바로 보기'));
+          profiles.forEach((pf) => {
+            const b = el('button', 'saved-chip', pf.label + (pf.name ? ' · ' + pf.name : '')); b.type = 'button';
+            b.addEventListener('click', () => {
+              Object.assign(state, { calendar: pf.isLunar ? '음력' : '양력', year: String(pf.birthYear), month: String(pf.birthMonth), day: String(pf.birthDay),
+                hourUnknown: pf.birthHour == null, hour: pf.birthHour == null ? '' : String(pf.birthHour), minute: pf.birthHour == null ? '' : String(pf.birthMinute || 0),
+                gender: pf.gender || '남' });
+              finish();
+            });
+            row.appendChild(b);
+          });
+          box.appendChild(row);
+        });
         setTimeout(() => y.focus(), 420);
       }
     },
@@ -231,6 +251,12 @@
       }
     }
   ];
+
+  let savedPromise = null;
+  function savedProfiles() {
+    if (!savedPromise) savedPromise = fetch('/api/profiles').then((r) => (r.ok ? r.json() : { profiles: [] })).then((d) => d.profiles || []).catch(() => []);
+    return savedPromise;
+  }
 
   let step = 0;
   const body = document.getElementById('stageBody');

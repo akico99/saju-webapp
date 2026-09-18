@@ -74,6 +74,7 @@
     </div>
 
     <form id="frForm">
+      <div class="profile-picker hidden" id="profilePicker"></div>
       <div class="field-row">
         <div class="field">
           <label>성별</label>
@@ -314,6 +315,11 @@
       errorBox.classList.remove('hidden');
     }
   });
+</script>
+<script src="/profile-picker.js"></script>
+<script>
+  // 로그인해 저장해둔 인물이 있으면 폼 위에 선택 상자가 붙는다(없으면 조용히 생략).
+  if (window.ProfilePicker) window.ProfilePicker.mount(document.getElementById('profilePicker'), document.getElementById('frForm'));
 </script>
 <script src="/form-enhance.js"></script>
 </body>
