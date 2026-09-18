@@ -17,45 +17,11 @@
 <link rel="stylesheet" href="/theme.css">
 <link rel="stylesheet" href="/reading-ui.css">
 <link rel="stylesheet" href="/editorial-refresh.css">
+<link rel="stylesheet" href="/fortune-result.css">
+<script src="/fortune-result.js"></script>
 <style>
-  .tf-summary-list { margin: 0; padding-left: 18px; font-size: 13.5px; line-height: 1.9; color: #fff; opacity: .92; }
-  .tf-weather { display: flex; align-items: center; gap: 14px; }
-  .tf-weather .icon { font-size: 40px; line-height: 1; }
-  .tf-weather .label { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
-  .tf-weather .note { font-size: 12.5px; color: var(--muted); line-height: 1.6; }
-  .tf-dodont { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .tf-dodont .col-ttl { font-size: 12px; font-weight: 800; margin-bottom: 8px; }
-  .tf-dodont .do .col-ttl { color: var(--success); }
-  .tf-dodont .dont .col-ttl { color: var(--danger); }
-  .tf-dodont ul { margin: 0; padding-left: 16px; font-size: 12px; line-height: 1.7; color: var(--ink); }
-  .tf-quest-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
-  .tf-quest-item:last-child { border-bottom: none; }
-  .tf-quest-item input[type="checkbox"] { width: 18px; height: 18px; flex-shrink: 0; }
-  .tf-quest-item.done span { text-decoration: line-through; color: var(--muted); }
-  /* 7일 흐름 — 막대 7개와 이번 주 최고일. 점수만 보여주고 날짜별 해설은 그날 들어와서
-     보게 둔다(재방문 이유). 최고일 막대는 accent, 오늘은 굵은 라벨. */
-  .tf-week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; align-items: end; height: 92px; margin-top: 6px; }
-  .tf-week .day { display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
-  .tf-week .bar { width: 100%; max-width: 26px; border-radius: 6px 6px 3px 3px; background: var(--surface-2); min-height: 6px; transition: height .3s; }
-  .tf-week .day.best .bar { background: var(--gold); }
-  .tf-week .day.today .bar { background: var(--ink); }
-  .tf-week .day.best.today .bar { background: var(--gold); }
-  .tf-week .num { font-size: 11px; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
-  .tf-week .day.best .num, .tf-week .day.today .num { color: var(--ink); }
-  .tf-week .wd { font-size: 11px; color: var(--muted); }
-  .tf-week .day.today .wd { color: var(--ink); font-weight: 800; }
-  .tf-week-best { font-size: 12.5px; color: var(--muted); margin: 10px 0 0; }
-  .tf-week-best b { color: #8A6412; }
-
-  .tf-upsell { display: flex; align-items: center; justify-content: space-between; gap: 12px; text-decoration: none; color: var(--ink); }
-  .tf-upsell .txt .label { font-size: 11.5px; color: var(--muted); margin-bottom: 4px; }
-  .tf-upsell .txt .name { font-size: 15px; font-weight: 800; }
-  .tf-upsell .price { font-size: 13px; font-weight: 800; color: var(--accent); flex-shrink: 0; }
-  .tf-details { margin: 12px 0 20px; border: 1px solid var(--line); border-radius: 16px; background: #fff; }
-  .tf-details > summary { cursor: pointer; padding: 17px 20px; color: var(--ink); font-size: 14px; font-weight: 800; }
-  .tf-details > summary::marker { color: var(--success); }
-  .tf-details > .card { margin: 0 14px 14px; box-shadow: none; }
-  .tf-details > .card:first-of-type { margin-top: 4px; }
+  /* 결과 스타일은 fortune-result.css — 무료 체험(today-preview.html)과 같은 파일을 쓴다. */
+  .reading-page main { padding-top: 18px; }
 </style>
 </head>
 <body class="reading-page editorial-result-page">
@@ -69,61 +35,48 @@
     <div id="loadingBox" class="hint">불러오는 중...</div>
     <div id="errorBox" class="error-box hidden"></div>
 
-    <div id="content" class="hidden">
-      <div class="card fortune-card">
-        <div class="row-top">
-          <div class="eyebrow" id="tfDate"></div>
-          <span class="fortune-score" id="tfScore" aria-label="참고 점수"></span>
+    <div id="content" class="fortune-result hidden">
+      <section class="fr-cover">
+        <p class="fr-date" id="tfDate"></p>
+        <h2 class="fr-verdict" id="tfTitle"></h2>
+        <div class="fr-score">
+          <div class="fr-score-num"><b id="tfScore"></b><span>/ 100</span></div>
+          <div class="fr-weather"><b id="tfWeatherLabel"></b><span id="tfWeatherNote"></span></div>
         </div>
-        <h2 id="tfTitle"></h2>
-        <ul class="tf-summary-list" id="tfSummary"></ul>
-      </div>
+        <div class="fr-meter" aria-hidden="true"><i id="tfMeter"></i></div>
+        <ul class="fr-summary" id="tfSummary"></ul>
+      </section>
 
-      <div class="card">
-        <h3>그래서 오늘은 이렇게 해보세요</h3>
-        <div class="tf-dodont">
-          <div class="do">
-            <div class="col-ttl">DO</div>
-            <ul id="tfDos"></ul>
-          </div>
-          <div class="dont">
-            <div class="col-ttl">DON'T</div>
-            <ul id="tfDonts"></ul>
-          </div>
+      <section class="fr-section">
+        <h3 class="fr-h">오늘 이렇게 해보세요</h3>
+        <p class="fr-lead" id="tfDesc"></p>
+        <div class="fr-actions">
+          <div class="do"><h4>하면 좋은 것</h4><ul id="tfDos"></ul></div>
+          <div class="dont"><h4>피할 것</h4><ul id="tfDonts"></ul></div>
         </div>
-      </div>
+      </section>
 
-      <details class="tf-details">
-        <summary>운세 날씨·이번 주 흐름 더 보기</summary>
-      <div class="card">
-        <h3>오늘의 운세 날씨</h3>
-        <div class="tf-weather">
-          <div class="icon" id="tfWeatherIcon"></div>
-          <div>
-            <div class="label" id="tfWeatherLabel"></div>
-            <div class="note" id="tfWeatherNote"></div>
-          </div>
+      <section class="fr-section">
+        <div class="fr-h-row">
+          <h3 class="fr-h">앞으로 7일</h3>
+          <p class="fr-h-sub" id="tfWeekBest"></p>
         </div>
-      </div>
-      <div class="card">
-        <h3>오늘 나의 하루 액땜 퀘스트</h3>
-        <p class="hint" style="margin-top:-6px;">오늘 필요한 기운을 채워주는 작은 행동들이에요. 체크해보세요.</p>
-        <div id="tfQuest"></div>
-      </div>
+        <div class="fr-week" id="tfWeek"></div>
+      </section>
 
-      <div class="card">
-        <h3>이번 주 흐름</h3>
-        <div class="tf-week" id="tfWeek"></div>
-        <p class="tf-week-best" id="tfWeekBest"></p>
-      </div>
-      </details>
-
-      <a class="card tf-upsell" id="tfUpsell" href="#">
-        <div class="txt">
-          <div class="label" id="tfUpsellLabel"></div>
-          <div class="name" id="tfUpsellName"></div>
+      <section class="fr-section">
+        <div class="fr-h-row">
+          <h3 class="fr-h">오늘의 액땜 퀘스트</h3>
+          <p class="fr-h-sub">오늘 필요한 기운을 채우는 작은 행동</p>
         </div>
-        <div class="price" id="tfUpsellPrice"></div>
+        <div class="fr-quest" id="tfQuest"></div>
+      </section>
+
+      <a class="fr-next" id="tfUpsell" href="#">
+        <span class="fr-next-kicker">다음 장</span>
+        <span class="fr-next-lead" id="tfTopicLead"></span>
+        <span class="fr-next-desc">오늘 하루가 아니라 이 흐름 자체를 — 지금 대운과 앞으로 3년, 할 것과 피할 것까지 읽어드려요.</span>
+        <span class="fr-next-btn"><span id="tfUpsellName"></span><span class="price" id="tfUpsellPrice"></span></span>
       </a>
     </div>
   </main>
@@ -166,7 +119,7 @@
     box.innerHTML = '';
     quest.forEach((item, i) => {
       const row = document.createElement('label');
-      row.className = 'tf-quest-item' + (saved[i] ? ' done' : '');
+      row.className = saved[i] ? 'done' : '';
       row.innerHTML = `<input type="checkbox" ${saved[i] ? 'checked' : ''}><span>${item.text}</span>`;
       row.querySelector('input').addEventListener('change', (e) => {
         row.classList.toggle('done', e.target.checked);
@@ -179,56 +132,9 @@
     });
   }
 
-  function renderWeek(week, prefix) {
-    const box = document.getElementById(prefix + 'Week');
-    box.innerHTML = '';
-    week.days.forEach((d) => {
-      const el = document.createElement('div');
-      el.className = 'day' + (d.offset === 0 ? ' today' : '') + (d.offset === week.bestOffset ? ' best' : '');
-      el.title = d.date + ' · ' + d.title;
-      const bar = document.createElement('div');
-      bar.className = 'bar';
-      bar.style.height = Math.max(6, Math.round(d.score * 0.6)) + 'px';
-      const num = document.createElement('span'); num.className = 'num'; num.textContent = d.score;
-      const wd = document.createElement('span'); wd.className = 'wd'; wd.textContent = d.offset === 0 ? '오늘' : d.weekday;
-      el.append(num, bar, wd);
-      box.appendChild(el);
-    });
-    const best = week.days[week.bestOffset];
-    const bestEl = document.getElementById(prefix + 'WeekBest');
-    bestEl.innerHTML = '';
-    if (best.offset === 0) {
-      bestEl.append('이번 주에는 ');
-      const b = document.createElement('b'); b.textContent = '오늘'; bestEl.append(b);
-      bestEl.append('이 가장 좋은 날이에요. 미뤄둔 게 있다면 오늘 움직여보세요.');
-    } else {
-      bestEl.append('이번 주에는 ');
-      const b = document.createElement('b'); b.textContent = `${best.weekday}요일(${best.score}점)`; bestEl.append(b);
-      bestEl.append('이 가장 좋아요. 중요한 일정이 있다면 그날로 잡아보세요.');
-    }
-  }
-
   function render(fortune, week) {
-    document.getElementById('tfDate').textContent = `${fortune.date} · ${fortune.gapja}`;
-    document.getElementById('tfScore').textContent = fortune.score + '점';
-    document.getElementById('tfTitle').textContent = fortune.title;
-    document.getElementById('tfSummary').innerHTML = fortune.summary3.map((s) => `<li>${s}</li>`).join('');
-
-    document.getElementById('tfWeatherIcon').textContent = fortune.weather.icon;
-    document.getElementById('tfWeatherLabel').textContent = fortune.weather.label;
-    document.getElementById('tfWeatherNote').textContent = fortune.weather.note;
-
-    document.getElementById('tfDos').innerHTML = fortune.dos.map((s) => `<li>${s}</li>`).join('');
-    document.getElementById('tfDonts').innerHTML = fortune.donts.map((s) => `<li>${s}</li>`).join('');
-
+    FortuneResult.render(fortune, week, 'tf');
     renderQuest(fortune.quest, fortune.date);
-
-    document.getElementById('tfUpsellLabel').textContent = fortune.upsell.label;
-    document.getElementById('tfUpsellName').textContent = fortune.upsell.name;
-    document.getElementById('tfUpsellPrice').textContent = fortune.upsell.price;
-    document.getElementById('tfUpsell').href = fortune.upsell.href;
-
-    if (week) renderWeek(week, 'tf');
     document.getElementById('loadingBox').classList.add('hidden');
     document.getElementById('content').classList.remove('hidden');
   }

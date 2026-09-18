@@ -1,822 +1,295 @@
 <!DOCTYPE html>
-
 <html lang="ko">
-
 <head>
-
 <!-- Google tag (gtag.js) -->
-
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-THWHBPH5WR"></script>
-
 <script>
-
   window.dataLayer = window.dataLayer || [];
-
   function gtag(){dataLayer.push(arguments);}
-
   gtag('js', new Date());
-
   gtag('config', 'G-THWHBPH5WR');
-
 </script>
 
-
-
 <meta charset="UTF-8">
-
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-
 <link rel="icon" type="image/png" href="/favicon.png">
-
 <title>사주보는 수달 — 오늘의 운세 무료 체험</title>
-
 <link rel="stylesheet" href="/theme.css">
-
 <link rel="stylesheet" href="/reading-ui.css">
-
 <link rel="stylesheet" href="/editorial-refresh.css">
-
+<link rel="stylesheet" href="/fortune-result.css">
 <script src="/analysis-loader.js"></script>
-
+<script src="/fortune-result.js"></script>
 <style>
-
-  /* 결과 영역은 로그인판(today-fortune.html)과 같은 모양이어야 한다 — 무료로 본 화면과
-
-     로그인 후 화면이 달라 보이면 "무료는 대충 준 거였나" 싶어진다. 같은 클래스를 쓴다. */
-
-  .tf-summary-list { margin: 0; padding-left: 18px; font-size: 13.5px; line-height: 1.9; color: #fff; opacity: .92; }
-
-  .tf-weather { display: flex; align-items: center; gap: 14px; }
-
-  .tf-weather .icon { font-size: 40px; line-height: 1; }
-
-  .tf-weather .label { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
-
-  .tf-weather .note { font-size: 12.5px; color: var(--muted); line-height: 1.6; }
-
-  .tf-dodont { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-
-  .tf-dodont .col-ttl { font-size: 12px; font-weight: 800; margin-bottom: 8px; }
-
-  .tf-dodont .do .col-ttl { color: var(--success); }
-
-  .tf-dodont .dont .col-ttl { color: var(--danger); }
-
-  .tf-dodont ul { margin: 0; padding-left: 16px; font-size: 12px; line-height: 1.7; color: var(--ink); }
-
-  /* 업셀은 누를 수 있는 물건처럼 보여야 한다 — 글자와 가격만 나란히 두면 그냥 설명문으로
-
-     읽히고 아무도 누르지 않는다. 페이지의 다른 버튼(.download-btn)과 같은 언어를 쓴다. */
-
-  .tf-upsell {
-
-    display: flex; align-items: center; justify-content: space-between; gap: 12px;
-
-    width: 100%; box-sizing: border-box; padding: 14px 18px; margin-top: 14px;
-
-    background: var(--accent-grad); border-radius: var(--radius-btn);
-
-    box-shadow: var(--accent-glow); text-decoration: none; color: var(--accent);
-
-  }
-
-  /* 상품 이름이 길어도 단어 중간에서 끊기지 않게 한다 — "직업·적성운 보기"가
-
-     "직업·적성운 / 보기"로 갈라지면 버튼이 아니라 사고처럼 보인다. */
-
-  .tf-upsell .name { font-size: 14.5px; font-weight: 800; word-break: keep-all; }
-
-  .tf-upsell .price { font-size: 14px; font-weight: 800; flex-shrink: 0; }
-
-
-
-  /* 폼 위 "뭘 알려주는지" 예고 — 생년월일부터 요구하면 뭘 받는지 모르는 채로 개인정보를
-
-     넣어야 해서 그 자리에서 나간다. 받게 될 것을 먼저 보여준다. */
-
-  /* 7일 흐름 — 막대 7개와 앞으로 7일 중 최고일. 점수만 보여주고 날짜별 해설은 그날 들어와서
-
-     보게 둔다(재방문 이유). 최고일 막대는 accent, 오늘은 굵은 라벨. */
-
-  .tf-week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; align-items: end; height: 92px; margin-top: 6px; }
-
-  .tf-week .day { display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
-
-  .tf-week .bar { width: 100%; max-width: 26px; border-radius: 6px 6px 3px 3px; background: var(--surface-2); min-height: 6px; transition: height .3s; }
-
-  .tf-week .day.best .bar { background: var(--gold); }
-
-  .tf-week .day.today .bar { background: var(--ink); }
-
-  .tf-week .day.best.today .bar { background: var(--gold); }
-
-  .tf-week .num { font-size: 11px; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
-
-  .tf-week .day.best .num, .tf-week .day.today .num { color: var(--ink); }
-
-  .tf-week .wd { font-size: 11px; color: var(--muted); }
-
-  .tf-week .day.today .wd { color: var(--ink); font-weight: 800; }
-
-  .tf-week-best { font-size: 12.5px; color: var(--muted); margin: 10px 0 0; }
-
-  .tf-week-best b { color: #8A6412; }
-
-
-
-  .tf-topic-lead { font-size: 13px; line-height: 1.7; color: var(--muted); margin: 0 0 10px; }
-
-  .tf-topic-lead b { color: var(--ink); }
-
-
+  /* 결과 영역의 스타일은 fortune-result.css — 회원판(today-fortune.html)과 같은 파일을 쓴다. */
 
   /* ---------- 대화형 입력 무대 ----------
-
      입력을 "폼"이 아니라 "대화"로 바꾼 시범(2026-09). 청월당의 상품 진입 화면을 실측한 결과,
-
      거기엔 라벨·힌트·단계표시가 없다 — 캐릭터 전신 일러스트 위에 말풍선 한 줄과 답 하나뿐이다.
-
      한 화면에 질문 하나. 수달의 말이 곧 라벨이므로 라벨을 따로 두지 않는다.
-
-     결과 화면은 예전 그대로다(위 .card 규칙들). */
-
+     결과 화면은 fortune-result.css의 표지·섹션 구조를 쓴다. */
   html, body { height: 100%; }
-
   body.otter-stage { background: #0f1a2b; }
-
   body.otter-stage .app { background: transparent; padding-bottom: 0; min-height: 100svh; box-shadow: none; }
-
   body.otter-stage main { padding: 0; }
-
-
 
   /* theme.css의 section 기본 패딩(26px 20px)을 걷어낸다 — 무대는 가장자리까지 꽉 차야 한다 */
   .stage { position: relative; min-height: 100svh; display: flex; flex-direction: column; overflow: hidden; background: #0f1a2b; padding: 0; }
-
   .stage-art { position: absolute; inset: 0; }
-
   .stage-art img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 18%; display: block; transition: transform 6s ease; }
-
   .stage.settled .stage-art img { transform: scale(1.04); }
-
   .stage-art::after { content: ''; position: absolute; inset: 0;
-
     background: linear-gradient(180deg, rgba(15,26,43,0.18) 0%, rgba(15,26,43,0) 28%, rgba(15,26,43,0.25) 60%, rgba(15,26,43,0.6) 100%); }
 
-
-
   .stage-top { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; padding: max(14px, env(safe-area-inset-top)) 16px 0; }
-
   .stage-top button, .stage-top a { width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.28); background: rgba(15,26,43,0.35); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; backdrop-filter: blur(6px); text-decoration: none; padding: 0; margin: 0; font-family: inherit; }
-
   .stage-top button[disabled] { opacity: 0; pointer-events: none; }
-
   .stage-dots { display: flex; gap: 6px; }
-
   .stage-dots i { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.35); transition: all .25s; }
-
   .stage-dots i.on { background: #fff; width: 18px; border-radius: 3px; }
-
-
 
   /* 답이 길어져 말풍선이 위로 올라가도 글자 뒤는 늘 어둡도록, 어둠을 화면이 아니라 이 상자에 붙인다 */
   .stage-body { position: relative; z-index: 2; margin-top: auto; padding: 96px 20px max(22px, env(safe-area-inset-bottom));
     background: linear-gradient(180deg, rgba(15,26,43,0) 0%, rgba(15,26,43,0.72) 72px, rgba(15,26,43,0.94) 130px, #0f1a2b 100%); }
-
   .stage-step { animation: stepIn .38s cubic-bezier(.2,.7,.2,1) both; }
-
   @keyframes stepIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
-
   @media (prefers-reduced-motion: reduce) { .stage-step { animation: none; } .stage-art img { transition: none; } }
 
-
-
   .bubble { color: #fff; text-align: center; font-family: var(--font-serif); font-size: 21px; line-height: 1.55; letter-spacing: -.01em; word-break: keep-all; margin: 0 0 18px; text-shadow: 0 2px 14px rgba(0,0,0,.45); }
-
   .bubble .q::before { content: '“ '; opacity: .7; } .bubble .q::after { content: ' ”'; opacity: .7; }
-
   .bubble small { display: block; font-family: 'Pretendard', sans-serif; font-size: 13px; opacity: .75; margin-top: 8px; letter-spacing: 0; }
-
   .bubble.err .q { color: #ffd9c4; }
 
-
-
   .answer { display: flex; flex-direction: column; gap: 8px; }
-
   .answer .row { display: flex; gap: 8px; }
-
   .answer input[type="number"], .answer input[type="text"] {
-
     width: 100%; min-width: 0; height: 58px; padding: 0 12px; border-radius: 16px; border: 1.5px solid rgba(255,255,255,0.18);
-
     background: rgba(255,255,255,0.96); color: var(--ink); font-size: 22px; font-weight: 700; text-align: center; font-family: inherit;
-
     font-variant-numeric: tabular-nums; outline: none; transition: border-color .15s, box-shadow .15s; -moz-appearance: textfield;
-
   }
-
   .answer input::-webkit-outer-spin-button, .answer input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-
   .answer input::placeholder { color: #b9b2a6; font-weight: 500; font-size: 16px; }
-
   .answer input:focus { border-color: #fff; box-shadow: 0 0 0 4px rgba(255,255,255,0.22); }
 
-
-
   .seg { display: flex; gap: 8px; }
-
   .seg button, .choice { flex: 1; height: 56px; border-radius: 16px; border: 1.5px solid rgba(255,255,255,0.28); background: rgba(255,255,255,0.10); color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; font-family: inherit; backdrop-filter: blur(6px); transition: all .15s; margin: 0; padding: 0; box-shadow: none; }
-
   .seg button.on, .choice.on { background: #fff; color: var(--ink); border-color: #fff; }
-
   .choice { min-height: 54px; height: auto; padding: 10px 16px; text-align: left; display: flex; flex-direction: column; gap: 2px; width: 100%; align-items: flex-start; }
-
   .choice small { font-size: 12.5px; font-weight: 500; opacity: .78; }
 
-
-
   .go { height: 58px; width: 100%; border-radius: 16px; border: none; background: #fff; color: var(--ink); font-size: 16.5px; font-weight: 800; cursor: pointer; font-family: inherit; margin: 6px 0 0; box-shadow: 0 10px 30px rgba(0,0,0,.35); transition: transform .12s; padding: 0; }
-
   .go:active { transform: scale(.98); }
-
   .skip { background: none; border: none; color: rgba(255,255,255,.72); font-size: 13.5px; text-decoration: underline; text-underline-offset: 4px; cursor: pointer; font-family: inherit; padding: 10px; margin: 0; box-shadow: none; width: auto; align-self: center; }
 
-
-
   /* 결과 화면 — 무대가 걷히고 크림 배경으로 돌아온다 */
-
   body.otter-stage.done { background: var(--bg-outer); }
-
   body.otter-stage.done .app { background: var(--bg); padding-bottom: 40px; }
-
   .result-wrap { padding: 20px; }
-
   .lg-folded { padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); font-size: 12.5px; color: var(--muted); margin-bottom: 16px; }
-
   .lg-folded button { flex: 0 0 auto; width: auto; margin: 0; padding: 7px 12px; font-size: 12px; font-weight: 700; background: var(--paper); color: var(--ink); border: 1px solid var(--line); border-radius: var(--radius-btn); box-shadow: none; cursor: pointer; font-family: inherit; min-height: 0; }
-
 </style>
-
 </head>
-
 <body class="otter-stage editorial-result-page">
-
 <div class="app">
 
-
-
   <section class="stage" id="stage">
-
     <picture class="stage-art">
-
       <source media="(min-width:640px)" srcset="/hero/otter-hero-desktop.jpg">
-
       <img src="/hero/otter-hero-mobile.jpg" alt="">
-
     </picture>
-
     <div class="stage-top">
-
       <button type="button" id="backBtn" aria-label="이전" disabled>‹</button>
-
       <div class="stage-dots" id="dots"></div>
-
       <a href="/" aria-label="홈으로">×</a>
-
     </div>
-
     <div class="stage-body" id="stageBody"></div>
-
   </section>
 
-
-
   <div class="result-wrap hidden" id="resultWrap">
-
     <div class="lg-folded">
-
       <span id="foldedText"></span>
-
       <button type="button" id="redoBtn">다시 입력</button>
-
     </div>
-
-    <div id="result" class="hidden">
-
-      <div class="card fortune-card">
-
-        <div class="row-top">
-
-          <div class="eyebrow" id="tpDate"></div>
-
-          <span class="fortune-score" id="tpScore"></span>
-
+    <div id="result" class="fortune-result hidden">
+      <section class="fr-cover">
+        <p class="fr-date" id="tpDate"></p>
+        <h2 class="fr-verdict" id="tpTitle"></h2>
+        <div class="fr-score">
+          <div class="fr-score-num"><b id="tpScore"></b><span>/ 100</span></div>
+          <div class="fr-weather"><b id="tpWeatherLabel"></b><span id="tpWeatherNote"></span></div>
         </div>
+        <div class="fr-meter" aria-hidden="true"><i id="tpMeter"></i></div>
+        <ul class="fr-summary" id="tpSummary"></ul>
+      </section>
 
-        <h2 id="tpTitle"></h2>
-
-        <ul class="tf-summary-list" id="tpSummary"></ul>
-
-      </div>
-
-
-
-      <div class="card">
-
-        <h3>오늘의 운세 날씨</h3>
-
-        <div class="tf-weather">
-
-          <div class="icon" id="tpWeatherIcon"></div>
-
-          <div>
-
-            <div class="label" id="tpWeatherLabel"></div>
-
-            <div class="note" id="tpWeatherNote"></div>
-
-          </div>
-
+      <section class="fr-section">
+        <h3 class="fr-h">오늘 이렇게 해보세요</h3>
+        <p class="fr-lead" id="tpDesc"></p>
+        <div class="fr-actions">
+          <div class="do"><h4>하면 좋은 것</h4><ul id="tpDos"></ul></div>
+          <div class="dont"><h4>피할 것</h4><ul id="tpDonts"></ul></div>
         </div>
+      </section>
 
-      </div>
-
-
-
-      <div class="card">
-
-        <h3>오늘 하루는 이렇게</h3>
-
-        <p id="tpDesc" style="font-size:13px;line-height:1.8;color:var(--muted);margin:0 0 16px;"></p>
-
-        <div class="tf-dodont">
-
-          <div class="do">
-
-            <div class="col-ttl">DO</div>
-
-            <ul id="tpDos"></ul>
-
-          </div>
-
-          <div class="dont">
-
-            <div class="col-ttl">DON'T</div>
-
-            <ul id="tpDonts"></ul>
-
-          </div>
-
+      <section class="fr-section">
+        <div class="fr-h-row">
+          <h3 class="fr-h">앞으로 7일</h3>
+          <p class="fr-h-sub" id="tpWeekBest"></p>
         </div>
+        <div class="fr-week" id="tpWeek"></div>
+      </section>
 
-      </div>
+      <a class="fr-next" id="tpUpsell" href="#">
+        <span class="fr-next-kicker">다음 장</span>
+        <span class="fr-next-lead" id="tpTopicLead"></span>
+        <span class="fr-next-desc">오늘 하루가 아니라 이 흐름 자체를 — 지금 대운과 앞으로 3년, 할 것과 피할 것까지 읽어드려요.</span>
+        <span class="fr-next-btn"><span id="tpUpsellName"></span><span class="price" id="tpUpsellPrice"></span></span>
+      </a>
 
-
-
-      <div class="card">
-
-        <h3>앞으로 7일 흐름</h3>
-
-        <div class="tf-week" id="tpWeek"></div>
-
-        <p class="tf-week-best" id="tpWeekBest"></p>
-
-      </div>
-
-
-
-      <div class="card">
-
-        <p class="tf-topic-lead" id="tpTopicLead"></p>
-
-        <a class="tf-upsell" id="tpUpsell" href="#">
-
-          <span class="name" id="tpUpsellName"></span>
-
-          <span class="price" id="tpUpsellPrice"></span>
-
-        </a>
-
-      </div>
-
-
-
-      <div class="card">
-
+      <div class="fr-keep">
         <h3>내일도, 모레도 이어서 보고 싶다면</h3>
-
-        <p class="lead" style="margin-bottom:14px;">
-
-          운세는 매일 바뀌어요. 회원가입하고 생년월일을 한 번만 저장해두면, 다음부터는
-
-          입력 없이 바로 그날의 운세를 볼 수 있어요.
-
-        </p>
-
-        <a href="/signup.html" class="download-btn">회원가입하고 저장하기</a>
-
+        <p>운세는 매일 바뀌어요. 회원가입하고 생년월일을 한 번만 저장해두면, 다음부터는 입력 없이 바로 그날의 운세를 볼 수 있어요.</p>
+        <a href="/signup.html">회원가입하고 저장하기</a>
       </div>
-
     </div>
-
   </div>
-
 </div>
 
-
-
 <script>
-
-
-
-
-  function renderWeek(week, prefix) {
-
-    const box = document.getElementById(prefix + 'Week');
-
-    box.innerHTML = '';
-
-    week.days.forEach((d) => {
-
-      const el = document.createElement('div');
-
-      el.className = 'day' + (d.offset === 0 ? ' today' : '') + (d.offset === week.bestOffset ? ' best' : '');
-
-      el.title = d.date + ' · ' + d.title;
-
-      const bar = document.createElement('div');
-
-      bar.className = 'bar';
-
-      bar.style.height = Math.max(6, Math.round(d.score * 0.6)) + 'px';
-
-      const num = document.createElement('span'); num.className = 'num'; num.textContent = d.score;
-
-      const wd = document.createElement('span'); wd.className = 'wd'; wd.textContent = d.offset === 0 ? '오늘' : d.weekday;
-
-      el.append(num, bar, wd);
-
-      box.appendChild(el);
-
-    });
-
-    const best = week.days[week.bestOffset];
-
-    const bestEl = document.getElementById(prefix + 'WeekBest');
-
-    bestEl.innerHTML = '';
-
-    if (best.offset === 0) {
-
-      bestEl.append('앞으로 7일 중에는 ');
-
-      const b = document.createElement('b'); b.textContent = '오늘'; bestEl.append(b);
-
-      bestEl.append('이 가장 좋은 날이에요. 미뤄둔 게 있다면 오늘 움직여보세요.');
-
-    } else {
-
-      bestEl.append('앞으로 7일 중에는 ');
-
-      const b = document.createElement('b'); b.textContent = `${best.date.replace(/^\d+년 0?/, '').replace(/ 0?(\d+)일$/, ' $1일')} ${best.weekday}요일(${best.score}점)`; bestEl.append(b);
-
-      bestEl.append('이 가장 좋아요. 중요한 일정이 있다면 그날로 잡아보세요.');
-
-    }
-
-  }
-
-
-
   function render(fortune, week) {
-
-    document.getElementById('tpDate').textContent = `${fortune.date} · ${fortune.gapja}`;
-
-    document.getElementById('tpScore').textContent = fortune.score + '점';
-
-    document.getElementById('tpTitle').textContent = fortune.title;
-
-    document.getElementById('tpSummary').innerHTML = fortune.summary3.map((s) => `<li>${s}</li>`).join('');
-
-
-
-    document.getElementById('tpWeatherIcon').textContent = fortune.weather.icon;
-
-    document.getElementById('tpWeatherLabel').textContent = fortune.weather.label;
-
-    document.getElementById('tpWeatherNote').textContent = fortune.weather.note;
-
-
-
-    document.getElementById('tpDesc').textContent = fortune.desc;
-
-    document.getElementById('tpDos').innerHTML = fortune.dos.map((s) => `<li>${s}</li>`).join('');
-
-    document.getElementById('tpDonts').innerHTML = fortune.donts.map((s) => `<li>${s}</li>`).join('');
-
-
-
-    // 오늘 나온 주제를 먼저 말해주고, 그 주제에 맞는 상품을 잇는다 — 읽은 내용과
-
-    // 권하는 상품이 같은 흐름이라야 추천으로 읽힌다.
-
-    const lead = document.getElementById('tpTopicLead');
-
-    lead.innerHTML = '';
-
-    lead.append('오늘은 ');
-
-    const b = document.createElement('b');
-
-    b.textContent = fortune.topicLabel;
-
-    lead.append(b, ' 쪽으로 기운이 기울어 있어요. 오늘 하루가 아니라 이 흐름 자체를 보고 싶다면요.');
-
-
-
-    const up = fortune.upsell;
-
-    // 버튼 안에는 "무엇을 보는지"만 넣는다 — 위 문장이 이미 권유를 했으므로
-
-    // 버튼에서 "~궁금하다면"을 한 번 더 말하면 같은 말이 두 번 나온다.
-
-    document.getElementById('tpUpsellName').textContent = up.name + ' 보기';
-
-    document.getElementById('tpUpsellPrice').textContent = up.price;
-
-    document.getElementById('tpUpsell').href = up.href;
-
-
-
-    if (week) renderWeek(week, 'tp');
-
+    FortuneResult.render(fortune, week, 'tp');
     document.getElementById('result').classList.remove('hidden');
-
   }
-
-
-
-
 
   /* ---------- 대화 흐름 ---------- */
-
   const state = { calendar: '양력', year: '', month: '', day: '', hourUnknown: false, hour: '', minute: '', gender: '' };
 
-
   const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
-
   const digits = (inp) => { const v = inp.value.replace(/[^0-9]/g, ''); if (v !== inp.value) inp.value = v; return v; };
 
-
-
   const STEPS = [
-
     { // 0 생년월일
-
       ask: '태어난 날부터 알려주실래요?',
-
       sub: '양력이면 주민등록상 생일 그대로 넣으시면 돼요.',
-
       render(box, next) {
-
         const seg = el('div', 'seg');
-
         ['양력', '음력'].forEach((c) => { const b = el('button', null, c); b.type = 'button'; b.classList.toggle('on', state.calendar === c);
-
           b.addEventListener('click', () => { state.calendar = c; seg.querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b)); }); seg.appendChild(b); });
-
         box.appendChild(seg);
-
         const row = el('div', 'row');
-
         const mk = (name, ph) => { const i = el('input'); i.type = 'number'; i.name = name; i.placeholder = ph; i.value = state[name]; i.setAttribute('inputmode', 'numeric'); return i; };
-
         const y = mk('year', '년'), m = mk('month', '월'), d = mk('day', '일');
-
         row.append(y, m, d); box.appendChild(row);
-
         // 자동 넘김 — 연 4자리, 월/일은 두 자리 또는 한 자리로 확정되면
-
         const chain = [y, m, d];
-
         chain.forEach((inp, i) => inp.addEventListener('input', () => {
-
           const v = digits(inp);
-
           const full = (inp.name === 'year' && v.length >= 4) || (inp.name === 'month' && (v.length >= 2 || Number(v) >= 2)) || (inp.name === 'day' && (v.length >= 2 || Number(v) >= 4));
-
           if (full && chain[i + 1] && !chain[i + 1].value) chain[i + 1].focus();
-
         }));
-
         const go = el('button', 'go', '좋아요, 다음으로'); go.type = 'button';
-
         go.addEventListener('click', () => {
-
           const yy = Number(y.value), mm = Number(m.value), dd = Number(d.value);
-
           if (!(yy >= 1900 && yy <= 2100) || !(mm >= 1 && mm <= 12) || !(dd >= 1 && dd <= 31)) return shake('생년월일을 다시 봐주세요 — 예: 1990, 5, 15');
-
           Object.assign(state, { year: y.value, month: m.value, day: d.value }); next();
-
         });
-
         box.appendChild(go);
-
         setTimeout(() => y.focus(), 420);
-
       }
-
     },
-
     { // 1 시각
-
       ask: '몇 시쯤 태어나셨는지 아세요?',
-
       sub: '몰라도 괜찮아요. 그럴 땐 정오를 기준으로 봐드릴게요.',
-
       render(box, next) {
-
         const row = el('div', 'row');
-
         const h = el('input'); h.type = 'number'; h.placeholder = '시 (0~23)'; h.setAttribute('inputmode', 'numeric'); h.value = state.hour;
-
         const mi = el('input'); mi.type = 'number'; mi.placeholder = '분'; mi.setAttribute('inputmode', 'numeric'); mi.value = state.minute;
-
         h.addEventListener('input', () => { const v = digits(h); if (v.length >= 2 || Number(v) >= 3) mi.focus(); });
-
         mi.addEventListener('input', () => digits(mi));
-
         row.append(h, mi); box.appendChild(row);
-
         const go = el('button', 'go', '이 시각으로 볼게요'); go.type = 'button';
-
         go.addEventListener('click', () => {
-
           const hh = Number(h.value);
-
           if (h.value === '' || !(hh >= 0 && hh <= 23)) return shake('시는 0부터 23 사이로 넣어주세요. 모르시면 아래를 눌러주세요');
-
           Object.assign(state, { hourUnknown: false, hour: h.value, minute: mi.value || '0' }); next();
-
         });
-
         box.appendChild(go);
-
         const skip = el('button', 'skip', '시각을 모르겠어요 → 정오로 볼게요'); skip.type = 'button';
-
         skip.addEventListener('click', () => { Object.assign(state, { hourUnknown: true, hour: '', minute: '' }); next(); });
-
         box.appendChild(skip);
-
         setTimeout(() => h.focus(), 420);
-
       }
-
     },
-
     { // 2 성별
-
       ask: '어느 쪽으로 봐드릴까요?',
-
       sub: '대운의 순행·역행이 성별에 따라 갈려서 여쭤봐요.',
-
       render(box, next) {
-
         const seg = el('div', 'seg');
-
         [['여', '여성'], ['남', '남성']].forEach(([v, label]) => { const b = el('button', null, label); b.type = 'button'; b.classList.toggle('on', state.gender === v);
-
           b.addEventListener('click', () => { state.gender = v; seg.querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b)); setTimeout(next, 160); }); seg.appendChild(b); });
-
         box.appendChild(seg);
-
       }
-
     }
   ];
 
-
-
   let step = 0;
-
   const body = document.getElementById('stageBody');
-
   const dots = document.getElementById('dots');
-
   const backBtn = document.getElementById('backBtn');
-
   STEPS.forEach(() => dots.appendChild(el('i')));
 
-
-
   function shake(msg) {
-
     const b = body.querySelector('.bubble'); const q = b.querySelector('.q');
-
     b.classList.add('err'); q.textContent = msg;
-
     setTimeout(() => { b.classList.remove('err'); q.textContent = STEPS[step].ask; }, 2400);
-
   }
-
-
 
   function show(i) {
-
     step = i;
-
     body.replaceChildren();
-
     const wrap = el('div', 'stage-step');
-
     if (i === 0) wrap.appendChild(el('p', 'stage-kicker', '오늘의 운세 · 무료 체험'));
-
     const bubble = el('p', 'bubble'); bubble.appendChild(el('span', 'q', STEPS[i].ask));
-
     if (STEPS[i].sub) bubble.appendChild(el('small', null, STEPS[i].sub));
-
     wrap.appendChild(bubble);
-
     const answer = el('div', 'answer');
-
     STEPS[i].render(answer, () => (i + 1 < STEPS.length ? show(i + 1) : finish()));
-
     wrap.appendChild(answer);
-
     body.appendChild(wrap);
-
     dots.querySelectorAll('i').forEach((d, k) => d.classList.toggle('on', k === i));
-
     backBtn.disabled = i === 0;
-
     document.getElementById('stage').classList.add('settled');
-
   }
-
   backBtn.addEventListener('click', () => { if (step > 0) show(step - 1); });
 
-
-
   async function finish() {
-
     const payload = { year: state.year, month: state.month, day: state.day, calendar: state.calendar, gender: state.gender,
-
       hourUnknown: state.hourUnknown, hour: state.hour, minute: state.minute };
-
     try {
-
       const request = fetch('/api/today-fortune-preview', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
-
         .then(async (res) => ({ res, data: await res.json() }));
-
       const { res, data } = await AnalysisLoader.run(['타고난 오행 확인', '오늘 일진과 대조', '앞으로 7일 흐름 계산'], request);
-
       if (!res.ok) return shake(data.error || '계산에 실패했어요. 생년월일을 다시 봐주세요');
-
       render(data.fortune, data.week);
-
       const time = state.hourUnknown ? '시각 모름' : `${state.hour}시 ${state.minute || 0}분`;
-
       document.getElementById('foldedText').textContent = [`${state.calendar} ${state.year}.${state.month}.${state.day}`, time, state.gender === '여' ? '여' : '남'].filter(Boolean).join(' · ');
-
       document.getElementById('stage').classList.add('hidden');
-
       document.getElementById('resultWrap').classList.remove('hidden');
-
       document.body.classList.add('done');
-
       window.scrollTo(0, 0);
-
     } catch (err) {
-
       shake('요청에 실패했어요: ' + err.message);
-
     }
-
   }
 
-
-
   document.getElementById('redoBtn').addEventListener('click', () => {
-
     document.getElementById('resultWrap').classList.add('hidden');
-
     document.getElementById('stage').classList.remove('hidden');
-
     document.body.classList.remove('done');
-
     show(0);
-
   });
 
-
-
   show(0);
-
 </script>
-
 </body>
-
 </html>
-

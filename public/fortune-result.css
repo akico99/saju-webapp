@@ -1,0 +1,103 @@
+/* 오늘의 운세 결과 — 무료 체험(today-preview)과 회원판(today-fortune)이 같은 파일을 쓴다.
+   원칙: 결론 한 줄이 가장 크고, 점수는 숫자 하나로 크게, 강조색(금색)은 한 화면에 한 곳.
+   섹션은 카드로 감싸지 않고 하나의 지면 위에 가로줄로만 나눈다. 계산·데이터는 건드리지 않는다. */
+
+.fortune-result { --fr-night: #111d31; --fr-night-2: #223650; --fr-gold: #e2c27a; --fr-gold-ink: #8a6412; --fr-rule: #e6dccb; --fr-ink-2: #4a5568; }
+
+/* ---------- 표지 ---------- */
+.fr-cover {
+  position: relative; overflow: hidden; isolation: isolate;
+  padding: 30px 26px 26px; border-radius: 24px; color: #fff;
+  background: radial-gradient(circle at 92% 0%, rgba(226,194,122,.22), transparent 36%), linear-gradient(160deg, var(--fr-night-2), var(--fr-night) 70%);
+  box-shadow: 0 24px 50px rgba(17,29,49,.18);
+}
+.fr-cover::after { content: ''; position: absolute; right: -80px; top: -110px; width: 220px; height: 220px; border: 1px solid rgba(226,194,122,.28); border-radius: 50%; pointer-events: none; }
+.fr-date { margin: 0; color: var(--fr-gold); font-size: 12.5px; font-weight: 700; letter-spacing: .06em; }
+.fr-verdict { margin: 14px 0 0; max-width: 12ch; font-family: var(--font-serif); font-weight: 700; font-size: clamp(30px, 8.4vw, 38px); line-height: 1.28; letter-spacing: -.045em; word-break: keep-all; color: #fff; }
+
+.fr-score { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; margin-top: 26px; }
+.fr-score-num { display: flex; align-items: baseline; gap: 4px; line-height: 1; }
+.fr-score-num b { font-size: 58px; font-weight: 800; letter-spacing: -.05em; font-variant-numeric: tabular-nums; color: #fff; }
+.fr-score-num span { font-size: 14px; font-weight: 600; color: rgba(255,255,255,.55); }
+.fr-weather { text-align: right; max-width: 55%; }
+.fr-weather b { display: flex; align-items: center; justify-content: flex-end; gap: 6px; font-size: 16px; font-weight: 800; color: #fff; }
+.fr-weather b svg { width: 20px; height: 20px; color: var(--fr-gold); flex: 0 0 auto; }
+.fr-weather span { display: block; margin-top: 4px; font-size: 12.5px; line-height: 1.55; color: rgba(255,255,255,.72); word-break: keep-all; }
+.fr-meter { position: relative; height: 5px; margin-top: 14px; border-radius: 3px; background: rgba(255,255,255,.14); overflow: hidden; }
+.fr-meter i { position: absolute; inset: 0 auto 0 0; width: 0; border-radius: 3px; background: var(--fr-gold); transition: width .6s cubic-bezier(.2,.7,.2,1); }
+.fr-meter::after { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: rgba(255,255,255,.3); }
+
+.fr-summary { list-style: none; margin: 22px 0 0; padding: 18px 0 0; border-top: 1px solid rgba(255,255,255,.14); }
+.fr-summary li { position: relative; padding-left: 20px; font-size: 15px; line-height: 1.6; color: rgba(255,255,255,.92); word-break: keep-all; }
+.fr-summary li + li { margin-top: 9px; }
+.fr-summary li::before { content: ''; position: absolute; left: 0; top: .78em; width: 10px; height: 1px; background: var(--fr-gold); }
+
+/* ---------- 본문 섹션 ---------- */
+.fr-section { padding: 30px 4px 28px; border-bottom: 1px solid var(--fr-rule); }
+.fr-section:last-of-type { border-bottom: 0; }
+.fr-h-row { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+.fr-h { margin: 0; font-family: var(--font-serif); font-weight: 700; font-size: 22px; line-height: 1.35; letter-spacing: -.04em; color: var(--ink); }
+.fr-h-sub { margin: 0; font-size: 13px; color: var(--fr-ink-2); }
+.fr-h-sub b { color: var(--fr-gold-ink); font-weight: 800; }
+.fr-lead { margin: 12px 0 0; font-size: 15px; line-height: 1.8; color: var(--fr-ink-2); word-break: keep-all; }
+
+/* 행동 — 이 페이지에서 유일하게 "하라/말라"를 말하는 곳이니 본문보다 커야 한다. */
+.fr-actions { display: grid; gap: 22px; margin-top: 22px; }
+.fr-actions h4 { margin: 0 0 4px; font-size: 11.5px; font-weight: 800; letter-spacing: .1em; }
+.fr-actions .do h4 { color: var(--success); }
+.fr-actions .dont h4 { color: var(--danger); }
+.fr-actions ul { list-style: none; margin: 0; padding: 0; }
+.fr-actions li { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--fr-rule); font-size: 15.5px; font-weight: 600; line-height: 1.55; color: var(--ink); word-break: keep-all; }
+.fr-actions li:last-child { border-bottom: 0; }
+.fr-actions li::before { content: ''; flex: 0 0 auto; width: 22px; height: 22px; margin-top: 2px; border-radius: 50%; background-position: center; background-repeat: no-repeat; background-size: 12px; }
+.fr-actions .do li::before { background-color: var(--ink); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12l5 5L20 7'/%3E%3C/svg%3E"); }
+.fr-actions .dont li::before { box-shadow: inset 0 0 0 1.5px var(--danger); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23A3513A' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E"); }
+
+/* 7일 흐름 — 막대 7개. 오늘은 남색, 가장 좋은 날은 금색. 나머지는 종이색 트랙. */
+.fr-week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; align-items: end; height: 132px; margin-top: 22px; }
+.fr-week .day { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 6px; height: 100%; }
+.fr-week .bar { width: 100%; max-width: 34px; min-height: 8px; border-radius: 8px 8px 4px 4px; background: #efe6d6; transition: height .5s cubic-bezier(.2,.7,.2,1); }
+.fr-week .day.today .bar { background: var(--ink); }
+.fr-week .day.best .bar { background: var(--fr-gold); }
+.fr-week .num { font-size: 12px; font-weight: 700; color: #a29b8f; font-variant-numeric: tabular-nums; }
+.fr-week .day.today .num, .fr-week .day.best .num { color: var(--ink); font-weight: 800; }
+.fr-week .day.best .num::before { content: '가장 좋은 날'; position: absolute; top: -20px; left: 50%; transform: translateX(-50%); white-space: nowrap; padding: 2px 7px; border-radius: 999px; background: var(--fr-gold); color: var(--fr-night); font-size: 10px; font-weight: 800; letter-spacing: .02em; }
+.fr-week .day.best.today .num::before { display: none; }
+.fr-week .wd { font-size: 12px; color: #8b857b; }
+.fr-week .day.today .wd { color: var(--ink); font-weight: 800; }
+
+/* 액땜 퀘스트(회원판) — 체크하면 줄이 그어진다. */
+.fr-quest { margin-top: 18px; }
+.fr-quest label { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--fr-rule); font-size: 15px; color: var(--ink); cursor: pointer; }
+.fr-quest label:last-child { border-bottom: 0; }
+.fr-quest input { width: 20px; height: 20px; margin: 0; accent-color: var(--ink); flex: 0 0 auto; }
+.fr-quest label.done span { text-decoration: line-through; color: #a29b8f; }
+
+/* ---------- 다음 장 (업셀) ---------- */
+.fr-next { display: block; margin-top: 30px; padding: 26px 24px 22px; border-radius: 22px; color: #fff; text-decoration: none; background: linear-gradient(160deg, var(--fr-night-2), var(--fr-night) 80%); box-shadow: 0 18px 40px rgba(17,29,49,.14); }
+.fr-next-kicker { display: block; color: var(--fr-gold); font-size: 11px; font-weight: 800; letter-spacing: .14em; }
+.fr-next-lead { display: block; margin: 10px 0 0; font-family: var(--font-serif); font-size: 21px; line-height: 1.4; letter-spacing: -.035em; word-break: keep-all; }
+.fr-next-lead b { color: var(--fr-gold); font-weight: 700; }
+.fr-next-desc { display: block; margin: 8px 0 0; font-size: 13.5px; line-height: 1.65; color: rgba(255,255,255,.7); word-break: keep-all; }
+.fr-next-btn { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 20px; padding: 15px 18px; border-radius: 14px; background: var(--fr-gold); color: var(--fr-night); font-size: 15px; font-weight: 800; word-break: keep-all; }
+.fr-next-btn .price { flex: 0 0 auto; font-variant-numeric: tabular-nums; }
+.fr-next:hover .fr-next-btn { filter: brightness(1.05); }
+
+/* 회원가입 권유(무료판) — 다음 장보다 한 단계 조용하게. */
+.fr-keep { margin-top: 16px; padding: 22px 22px 20px; border: 1px solid var(--fr-rule); border-radius: 20px; background: #fff; }
+.fr-keep h3 { margin: 0; font-family: var(--font-serif); font-size: 18px; letter-spacing: -.03em; }
+.fr-keep p { margin: 8px 0 16px; font-size: 13.5px; line-height: 1.7; color: var(--fr-ink-2); word-break: keep-all; }
+.fr-keep a { display: block; padding: 14px; border-radius: 12px; border: 1.5px solid var(--ink); text-align: center; color: var(--ink); font-size: 14.5px; font-weight: 800; text-decoration: none; }
+
+@media (min-width: 700px) {
+  .fr-cover { padding: 40px 40px 34px; }
+  .fr-verdict { max-width: 16ch; }
+  .fr-score-num b { font-size: 68px; }
+  .fr-section { padding: 36px 6px 32px; }
+  .fr-actions { grid-template-columns: 1fr 1fr; gap: 28px; }
+  .fr-week { height: 160px; }
+  .fr-next { padding: 32px 32px 26px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fr-meter i, .fr-week .bar { transition: none; }
+}
