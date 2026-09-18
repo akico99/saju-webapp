@@ -6,7 +6,7 @@ const vm = require('node:vm');
 
 const publicDir = path.join(__dirname, '..', 'public');
 const pages = [
-  'life-graph', 'today-preview', 'today-fortune', 'quick', 'compat',
+  'free', 'life-graph', 'today-preview', 'today-fortune', 'quick', 'compat',
   'lifetime-report', 'date-select', 'login', 'signup', 'forgot-password',
   'reset-password', 'profiles', 'charge', 'mypage', 'services'
 ];
@@ -73,4 +73,14 @@ test('life graph shows results before asking for a topic', () => {
   assert.match(html, /class="card lg-premium-card hidden" id="lgPremiumCard"/);
   assert.ok(html.indexOf('id="lgChartWrap"') < html.indexOf('id="lgConcernOptions"'));
   assert.match(html, /ConcernStep\.byKey\(params\.get\('concern'\)\)/);
+});
+
+test('balance free reading has its own cover, chart, and paid preview without changing other kinds', () => {
+  const html = fs.readFileSync(path.join(publicDir, 'free.html'), 'utf8');
+  assert.match(html, /href="\/balance-experience\.css"/);
+  assert.match(html, /kind === 'balance'\) document\.body\.classList\.add\('balance-experience'\)/);
+  assert.match(html, /id="balanceCoverFacts"/);
+  assert.match(html, /balance-spectrum/);
+  assert.match(html, /class="balance-paid-preview"/);
+  assert.ok(fs.existsSync(path.join(publicDir, 'balance-experience.css')));
 });

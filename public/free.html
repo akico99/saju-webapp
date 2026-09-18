@@ -17,6 +17,7 @@
 <link rel="stylesheet" href="/theme.css">
 <link rel="stylesheet" href="/reading-ui.css">
 <link rel="stylesheet" href="/editorial-refresh.css">
+<link rel="stylesheet" href="/balance-experience.css">
 <script src="/analysis-loader.js"></script>
 <style>
   /* 무료 미니 리딩 3종(귀인·오행·매력)이 이 한 페이지를 쓴다. kind별 차이는 JS 설정표에 있다. */
@@ -130,11 +131,21 @@
         <div class="eyebrow" id="rEyebrow"></div>
         <h2 id="rHeadline"></h2>
         <p id="rLead"></p>
+        <div class="balance-cover-facts" id="balanceCoverFacts" aria-label="오행 분석 핵심"></div>
       </div>
 
       <div class="card" id="rBody"></div>
 
       <div class="card">
+        <div class="balance-paid-preview">
+          <span class="balance-section-no">다음 장 / 내 사주 첫 풀이</span>
+          <h3>다섯 기운을 알았다면,<br>이제 나를 읽을 차례</h3>
+          <ul>
+            <li>이 기운이 성격과 기질에 드러나는 방식</li>
+            <li>내 사주의 큰 구조와 한 줄 총평</li>
+            <li>지금 대운과 앞으로 3년의 흐름</li>
+          </ul>
+        </div>
         <p class="tf-topic-lead" id="upLead"></p>
         <a class="tf-upsell" id="upLink" href="#">
           <span class="name" id="upName"></span>
@@ -175,6 +186,7 @@
   const kind = new URLSearchParams(location.search).get('kind');
   const cfg = KINDS[kind];
   if (!cfg) location.replace('/free.html?kind=balance');
+  if (kind === 'balance') document.body.classList.add('balance-experience');
 
   document.title = `사주보는 수달 — ${cfg.title} (무료)`;
   document.getElementById('pageTitle').textContent = cfg.title + ' · 무료';
@@ -205,22 +217,49 @@
   }
 
   function renderBalance(r, body) {
-    body.appendChild(el('h3', null, '다섯 기운의 분포'));
+    const total = r.bars.reduce((sum, b) => sum + b.count, 0);
+    const facts = document.getElementById('balanceCoverFacts');
+    facts.replaceChildren();
+    const strongestFact = el('div', 'balance-cover-fact');
+    strongestFact.append(el('span', null, '가장 많은 기운'), el('strong', null, `${r.strongest.ko} · ${r.strongest.word}`));
+    facts.appendChild(strongestFact);
+    const lackingFact = el('div', 'balance-cover-fact');
+    lackingFact.append(el('span', null, '비어 있는 기운'), el('strong', null, r.lacking.length ? r.lacking.map((k) => k.ko).join(' · ') : '없음'));
+    facts.appendChild(lackingFact);
+
+    const intro = el('div', 'balance-section-intro');
+    intro.append(el('span', 'balance-section-no', '01 / 다섯 기운'), el('h3', null, '내 사주의 기운 지도'));
+    intro.appendChild(el('p', null, `태어난 시각${total < 8 ? '을 제외하고 확인한' : '을 포함해 확인한'} ${total}글자를 목·화·토·금·수로 나눴어요. 막대가 길수록 해당 기운이 많다는 뜻입니다.`));
+    body.appendChild(intro);
+    const spectrum = el('div', 'balance-spectrum');
+    spectrum.setAttribute('role', 'img');
+    spectrum.setAttribute('aria-label', r.bars.map((b) => `${b.ko} ${b.count}개`).join(', '));
+    r.bars.filter((b) => b.count).forEach((b) => {
+      const segment = el('span'); segment.style.flex = String(b.count); segment.style.background = b.color; spectrum.appendChild(segment);
+    });
+    body.appendChild(spectrum);
     const bars = el('div', 'fr-bars');
     r.bars.forEach((b) => {
       const row = el('div', 'fr-bar' + (b.count === 0 ? ' lack' : ''));
       const lbl = el('div', 'lbl'); const bb = el('b', null, b.ko); const g = el('span', 'fr-grade', b.grade); bb.appendChild(g); lbl.append(bb, el('small', null, b.word)); row.appendChild(lbl);
       const track = el('div', 'track'); const fill = el('i'); fill.style.width = Math.max(b.pct, b.count ? 6 : 0) + '%'; fill.style.background = b.color; track.appendChild(fill); row.appendChild(track);
-      row.appendChild(el('div', 'n', String(b.count)));
+      row.appendChild(el('div', 'n', `${b.count}개`));
       bars.appendChild(row);
     });
     body.appendChild(bars);
+    const insight = el('div', 'balance-section-intro');
+    insight.append(el('span', 'balance-section-no', '02 / 해석'), el('h3', null, `가장 두드러진 ${r.strongest.ko}의 두 얼굴`));
+    insight.appendChild(el('p', null, '많은 기운은 장점이면서, 지나칠 때는 살펴야 할 신호가 될 수 있어요.'));
+    body.appendChild(insight);
     const two = el('div', 'fr-two');
-    const l = el('div', 'light'); l.appendChild(el('b', null, `${r.strongest.ko}(${r.strongest.word})이 세면`)); l.append(r.strongest.light); two.appendChild(l);
+    const l = el('div', 'light'); l.appendChild(el('b', null, '잘 쓰일 때')); l.append(r.strongest.light); two.appendChild(l);
     const s = el('div', 'shadow'); s.appendChild(el('b', null, '지나칠 때')); s.append(r.strongest.shadow); two.appendChild(s);
     body.appendChild(two);
     if (r.lacking.length) {
-      body.appendChild(el('h3', null, '비어 있는 기운')).style.marginTop = '18px';
+      const missing = el('div', 'balance-section-intro');
+      missing.append(el('span', 'balance-section-no', '03 / 빈자리'), el('h3', null, '비어 있는 기운도 살펴봐요'));
+      missing.appendChild(el('p', null, '원국에서 보이지 않는 기운을 확인한 결과입니다. 삶의 가능성이 없다는 뜻은 아니에요.'));
+      body.appendChild(missing);
       r.lacking.forEach((k) => {
         const item = el('div', 'fr-item');
         const tag = el('div', 'tag'); tag.append(k.ko, el('small', null, '0개')); item.appendChild(tag);
@@ -229,6 +268,7 @@
       });
     }
     if (r.weakest) body.appendChild(el('p', 'fr-note', r.weakest.text));
+    body.appendChild(el('p', 'balance-reading-note', '이 분포는 원국 글자의 개수입니다. 기운의 좋고 나쁨이나 삶 전체의 균형을 숫자만으로 단정하지 않습니다.'));
   }
 
   function renderCharm(r, body) {
@@ -257,7 +297,11 @@
     document.getElementById('rLead').textContent = r.lead;
     const body = document.getElementById('rBody'); body.replaceChildren();
     RENDER[kind](r, body);
-    document.getElementById('upLead').textContent = r.upsell.lead;
+    if (kind === 'balance') {
+      document.getElementById('upLead').textContent = '여기까지 무료로 확인했어요. 숫자 너머에서, 이 기운이 성격과 지금의 흐름에 어떻게 이어지는지 궁금하다면?';
+    } else {
+      document.getElementById('upLead').textContent = r.upsell.lead;
+    }
     document.getElementById('upName').textContent = r.upsell.name + ' 보기';
     document.getElementById('upPrice').textContent = r.upsell.price;
     document.getElementById('upLink').href = r.upsell.href;

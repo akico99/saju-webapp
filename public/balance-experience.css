@@ -1,0 +1,137 @@
+/* One complete free-result prototype. Scoped to the balance reading only. */
+.balance-paid-preview { display: none; }
+
+.balance-experience { background: #f5f0e8; }
+.balance-experience .app { background: #f8f5ee; }
+.balance-experience main { padding-inline: clamp(18px, 4vw, 40px); }
+.balance-experience #introBox,
+.balance-experience #frForm,
+.balance-experience #folded,
+.balance-experience #result { max-width: 720px; margin-inline: auto; }
+.balance-experience #introBox h1 { max-width: 17ch; font-size: clamp(30px, 5vw, 45px); line-height: 1.23; }
+.balance-experience #introBox .lead { max-width: 54ch; }
+.balance-experience .preview-teaser { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.balance-experience .preview-teaser li { background: #fffdfa; border-color: #e9e0d1; }
+.balance-experience #frForm { border-color: #e9e0d1; box-shadow: 0 14px 38px rgba(23, 36, 61, .045); }
+
+/* Result cover: the existing otter art is a scene, not an icon in a small card. */
+.balance-experience #result .fr-hero {
+  min-height: 365px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: clamp(28px, 5vw, 44px);
+  border: 1px solid #927950;
+  border-radius: 24px;
+  background-image: linear-gradient(90deg, #111c2f 2%, rgba(17, 28, 47, .98) 36%, rgba(17, 28, 47, .58) 67%, rgba(17, 28, 47, .2)), url('/hero/otter-hero-mobile.jpg');
+  background-position: center, right 44%;
+  background-size: cover, auto 115%;
+  background-repeat: no-repeat;
+  box-shadow: 0 22px 48px rgba(17, 29, 49, .18);
+}
+.balance-experience #result .fr-hero::after { display: none; }
+.balance-experience #result .fr-hero .eyebrow {
+  width: fit-content;
+  padding: 7px 11px;
+  border: 1px solid rgba(236, 205, 144, .55);
+  border-radius: 99px;
+  background: rgba(17, 28, 47, .5);
+  color: #f5d99b;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+.balance-experience #result .fr-hero h2 {
+  max-width: 15ch;
+  margin: 20px 0 11px;
+  font-size: clamp(30px, 4.5vw, 42px);
+  line-height: 1.25;
+  text-wrap: balance;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, .3);
+}
+.balance-experience #result .fr-hero p {
+  max-width: 40ch;
+  color: #f5f0e8;
+  font-size: 14px;
+  line-height: 1.75;
+  opacity: 1;
+}
+.balance-cover-facts { display: none; }
+.balance-experience .balance-cover-facts {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  max-width: 515px;
+  margin-top: 27px;
+  padding-top: 19px;
+  border-top: 1px solid rgba(255, 255, 255, .3);
+}
+.balance-cover-fact { min-width: 145px; padding-right: 18px; }
+.balance-cover-fact + .balance-cover-fact { border-left: 1px solid rgba(255, 255, 255, .24); padding-left: 18px; }
+.balance-cover-fact span { display: block; margin-bottom: 5px; color: #d3d7dd; font-size: 11px; }
+.balance-cover-fact strong { display: block; color: #f6d88f; font-size: 15px; }
+
+/* Editorial body: the data has its own page rhythm and an accessible text legend. */
+.balance-experience #result > .card:not(.fr-hero) { border: 0; box-shadow: none; }
+.balance-experience #rBody { padding: 30px 8px 4px; }
+.balance-section-intro { margin: 26px 0 19px; }
+.balance-section-intro:first-child { margin-top: 3px; }
+.balance-section-no { display: block; margin-bottom: 10px; color: #997642; font-size: 11px; font-weight: 800; letter-spacing: .1em; }
+.balance-experience #rBody .balance-section-intro h3 { margin: 0 0 7px; color: #17243d; font-family: var(--font-serif); font-size: clamp(22px, 3vw, 27px); line-height: 1.4; }
+.balance-section-intro p { max-width: 60ch; margin: 0; color: #586272; font-size: 13px; line-height: 1.75; word-break: keep-all; }
+.balance-spectrum { display: flex; gap: 3px; height: 27px; overflow: hidden; border-radius: 10px; background: #e9e3d8; }
+.balance-spectrum span { min-width: 1px; }
+.balance-experience .fr-bars { gap: 0; margin-top: 20px; border-top: 1px solid #e7decf; }
+.balance-experience .fr-bar { grid-template-columns: 106px 1fr 39px; gap: 12px; min-height: 65px; border-bottom: 1px solid #e7decf; }
+.balance-experience .fr-bar .lbl b { display: flex; align-items: baseline; gap: 5px; color: #1c2b42; font-size: 15px; }
+.balance-experience .fr-bar .lbl small { font-size: 11px; }
+.balance-experience .fr-bar .track { height: 8px; background: #e8e5df; }
+.balance-experience .fr-bar .n { color: #213047; font-size: 13px; }
+.balance-experience .fr-bar.lack .n { color: #925d47; }
+.balance-experience .fr-grade { font-size: 10px; font-weight: 500; }
+.balance-experience .fr-two { gap: 12px; margin: 0 0 28px; }
+.balance-experience .fr-two > div { min-height: 120px; padding: 20px; background: #f1ece2; color: #354357; font-size: 14px; line-height: 1.75; }
+.balance-experience .fr-two .shadow { background: #f7eee8; }
+.balance-experience .fr-two b { color: #17243d; font-size: 13px; }
+.balance-experience #rBody .fr-item { border-top-color: #e8dfd1; }
+.balance-experience #rBody .fr-item .tag { background: #e9e0d1; color: #17243d; }
+.balance-experience #rBody .fr-note { color: #667080; font-size: 12.5px; line-height: 1.75; }
+.balance-reading-note { margin: 25px 0 4px; padding: 15px 17px; border-left: 3px solid #a99264; background: #f3eee5; color: #68717d; font-size: 12px; line-height: 1.7; }
+
+/* A truthful paid preview: visible topics, no blurred or withheld free result. */
+.balance-experience #result > .card:has(#upLink) {
+  margin: 30px 0 24px;
+  padding: clamp(23px, 4vw, 32px);
+  border: 1px solid #d5c39e;
+  border-radius: 20px;
+  background: #f2e9d6;
+}
+.balance-experience .balance-paid-preview { display: block; }
+.balance-paid-preview h3 { margin: 0 0 17px; color: #17243d; font-family: var(--font-serif); font-size: clamp(21px, 3vw, 26px); line-height: 1.4; }
+.balance-paid-preview ul { display: grid; gap: 9px; margin: 0 0 20px; padding: 0; list-style: none; }
+.balance-paid-preview li { display: flex; gap: 10px; align-items: flex-start; color: #35445b; font-size: 13px; line-height: 1.5; }
+.balance-paid-preview li::before { content: '✓'; display: grid; place-items: center; width: 17px; height: 17px; flex: 0 0 17px; border-radius: 50%; background: #a99264; color: white; font-size: 11px; }
+.balance-experience #result .tf-topic-lead { color: #5d6772; font-size: 12.5px; line-height: 1.7; }
+.balance-experience #result .tf-upsell { margin-top: 16px; background: #17243d; color: #fff; }
+.balance-experience #result .tf-upsell .price { color: #f4d58e; }
+
+@media (max-width: 620px) {
+  .balance-experience .preview-teaser { grid-template-columns: 1fr; }
+  .balance-experience #result .fr-hero {
+    min-height: 525px;
+    padding: 235px 25px 27px;
+    background-image: linear-gradient(180deg, rgba(17, 28, 47, .02) 0%, rgba(17, 28, 47, .10) 28%, #111c2f 49%, #111c2f 100%), url('/hero/otter-hero-mobile.jpg');
+    background-position: center, center 36%;
+    background-size: cover, 100% auto;
+  }
+  .balance-experience #result .fr-hero h2 { font-size: clamp(28px, 8vw, 35px); }
+  .balance-experience #result .fr-hero p { font-size: 13px; }
+  .balance-experience .balance-cover-facts { gap: 7px; margin-top: 18px; padding-top: 14px; }
+  .balance-cover-fact { min-width: 0; flex: 1; padding-right: 7px; }
+  .balance-cover-fact + .balance-cover-fact { padding-left: 14px; }
+  .balance-cover-fact strong { font-size: 13px; }
+  .balance-experience .fr-two { grid-template-columns: 1fr; }
+  .balance-experience .fr-two > div { min-height: 0; }
+  .balance-experience .fr-bar { grid-template-columns: 91px 1fr 34px; gap: 7px; }
+  .balance-experience .fr-grade { font-size: 9px; }
+}
