@@ -227,3 +227,13 @@
 @media (prefers-reduced-motion: reduce) {
   .editorial-home .row-scroll { scroll-behavior: auto; }
 }
+
+/* 홈 타일 — 상품 그림(public/tiles/*.png)은 위 1/3에 제목 글자가 그려져 있다. 그 글자가
+   타일 이름과 겹쳐 두 번 읽히고 일부는 깨진 글자라 가장 먼저 눈에 걸린다. 그림을 3:2로
+   잘라 아래쪽(수달·소품)만 보이게 하고, 제목은 타일 이름 한 곳에서만 말한다. */
+.editorial-home .row-scroll .tile .tile-img[src^="/tiles/"] { aspect-ratio: 3 / 2; object-position: center 92%; }
+.editorial-home .row-scroll .tile .name { font-family: var(--font-serif); font-size: 17px; letter-spacing: -.03em; }
+.editorial-home .row-scroll .tile .desc { min-height: 0; color: #626c79; }
+.editorial-home .row-scroll .tile .price { font-variant-numeric: tabular-nums; color: var(--editorial-ink); }
+.editorial-home .row-scroll .tile .price.free { color: var(--success); }
+.editorial-home .section-head h2 { font-size: clamp(21px, 3vw, 26px); }
