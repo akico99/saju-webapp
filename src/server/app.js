@@ -20,7 +20,7 @@ const bannersRouter = require('./routes/banners');
 const lifeGraphRouter = require('./routes/lifeGraph');
 const profilesRouter = require('./routes/profiles');
 const dateSelectRouter = require('./routes/dateSelect');
-const tossTestRouter = require('./routes/tossTest');
+const payRouter = require('./routes/pay');
 
 const app = express();
 
@@ -64,6 +64,6 @@ app.use('/api', bannersRouter);
 app.use('/api', lifeGraphRouter);
 app.use('/api', profilesRouter);
 app.use('/api', dateSelectRouter);
-app.use('/api', tossTestRouter);
+app.use('/api', payRouter);
 
 module.exports = app;

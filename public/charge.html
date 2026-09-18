@@ -33,14 +33,33 @@
       </div>
     </div>
 
-    <div class="card">
-      <h3>포인트 충전 신청</h3>
-      <div class="deposit-note" id="depositNote">불러오는 중...</div>
-      <div class="chip-row">
+    <div class="card" id="cardChargeBox">
+      <h3>카드로 충전하기</h3>
+      <p class="hint" style="margin:-4px 0 12px;">신용·체크카드로 결제하면 포인트가 바로 충전돼요. 1P = 1원, 결제 즉시 반영.</p>
+      <div class="chip-row" id="cardChips">
+        <button type="button" class="chip" data-amount="5000">5,000원</button>
         <button type="button" class="chip" data-amount="10000">10,000원</button>
+        <button type="button" class="chip" data-amount="15000">15,000원</button>
         <button type="button" class="chip" data-amount="30000">30,000원</button>
-        <button type="button" class="chip" data-amount="50000">50,000원</button>
-        <button type="button" class="chip" data-amount="100000">100,000원</button>
+      </div>
+      <form id="cardForm">
+        <div class="field">
+          <label>충전 금액(원)</label>
+          <input type="number" name="amountKrw" id="cardAmount" min="1000" max="500000" step="100" required placeholder="예: 14900">
+        </div>
+        <button type="submit" class="primary" id="cardPayBtn">카드로 결제하기</button>
+        <p class="hint" id="cardTestNote" style="display:none;margin-top:10px;"></p>
+      </form>
+    </div>
+
+    <details class="card" id="bankChargeBox">
+      <summary style="cursor:pointer;font-weight:800;font-size:14px;">계좌이체로 충전하기 (운영자 확인 후 지급)</summary>
+      <div class="deposit-note" id="depositNote" style="margin-top:12px;">불러오는 중...</div>
+      <div class="chip-row">
+        <button type="button" class="chip bank-chip" data-amount="10000">10,000원</button>
+        <button type="button" class="chip bank-chip" data-amount="30000">30,000원</button>
+        <button type="button" class="chip bank-chip" data-amount="50000">50,000원</button>
+        <button type="button" class="chip bank-chip" data-amount="100000">100,000원</button>
       </div>
       <form id="chargeForm">
         <div class="field">
@@ -53,13 +72,13 @@
         </div>
         <button type="submit" class="primary">충전 신청하기</button>
       </form>
-    </div>
+    </details>
 
     <div class="card">
-      <h3>충전 신청 내역</h3>
+      <h3>충전 내역</h3>
       <div class="table-scroll">
         <table id="requestTable">
-          <thead><tr><th>일시</th><th>금액</th><th>상태</th></tr></thead>
+          <thead><tr><th>일시</th><th>방법</th><th>금액</th><th>상태</th></tr></thead>
           <tbody id="requestBody"></tbody>
         </table>
       </div>
@@ -103,31 +122,72 @@
     const data = await res.json();
     document.getElementById('balanceValue').textContent = data.balance.toLocaleString('ko-KR');
 
+    // 계좌이체 신청과 카드 결제를 한 표에 시간순으로 섞는다.
+    const cards = await fetch('/api/pay/mine').then((r) => (r.ok ? r.json() : { payments: [] })).then((d) => d.payments || []).catch(() => []);
+    const rows = [
+      ...data.requests.map((r) => ({ at: r.created_at, how: '계좌이체', amount: r.amount_krw, status: r.status, label: STATUS_LABEL[r.status] || r.status })),
+      ...cards.filter((p) => p.status !== 'ready').map((p) => ({
+        at: p.createdAt, how: p.testMode ? '카드(테스트)' : '카드', amount: p.amountKrw,
+        status: p.status === 'paid' ? 'approved' : 'rejected',
+        label: p.status === 'paid' ? (p.testMode ? '테스트 승인' : '충전 완료') : '실패'
+      }))
+    ].sort((a, b) => (a.at < b.at ? 1 : -1));
     const body = document.getElementById('requestBody');
     const empty = document.getElementById('requestEmpty');
     body.innerHTML = '';
-    if (!data.requests.length) {
+    if (!rows.length) {
       empty.classList.remove('hidden');
     } else {
       empty.classList.add('hidden');
-      data.requests.forEach((r) => {
+      rows.forEach((r) => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td>${r.created_at.slice(0, 16).replace('T', ' ')}</td>
-          <td>${Number(r.amount_krw).toLocaleString('ko-KR')}원</td>
-          <td><span class="status ${r.status}">${STATUS_LABEL[r.status] || r.status}</span></td>
+          <td>${String(r.at).slice(0, 16).replace('T', ' ')}</td>
+          <td>${r.how}</td>
+          <td>${Number(r.amount).toLocaleString('ko-KR')}원</td>
+          <td><span class="status ${r.status}">${r.label}</span></td>
         `;
         body.appendChild(tr);
       });
     }
   }
 
-  document.querySelectorAll('.chip').forEach((chip) => {
-    chip.addEventListener('click', () => {
-      document.querySelectorAll('.chip').forEach((c) => c.classList.remove('active'));
-      chip.classList.add('active');
-      document.getElementById('amountInput').value = chip.dataset.amount;
+  function bindChips(selector, input) {
+    document.querySelectorAll(selector).forEach((chip) => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll(selector).forEach((c) => c.classList.remove('active'));
+        chip.classList.add('active');
+        document.getElementById(input).value = chip.dataset.amount;
+      });
     });
+  }
+  bindChips('#cardChips .chip', 'cardAmount');
+  bindChips('.bank-chip', 'amountInput');
+
+  // 카드 충전 — 주문을 먼저 만들고(서버가 금액 확정) 결제 페이지로 넘긴다.
+  fetch('/api/pay/config').then((r) => r.json()).then((cfg) => {
+    if (cfg.testMode) {
+      const note = document.getElementById('cardTestNote');
+      note.style.display = 'block';
+      note.textContent = '현재 카드결제는 PG 심사 중인 테스트 모드예요. 결제창은 열리지만 실제 청구되지 않고 포인트도 지급되지 않습니다. 정식 오픈 전까지는 아래 계좌이체를 이용해주세요.';
+    }
+  }).catch(() => {});
+  document.getElementById('cardForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('cardPayBtn');
+    btn.disabled = true;
+    try {
+      const res = await fetch('/api/pay/prepare', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amountKrw: Number(document.getElementById('cardAmount').value) })
+      });
+      const data = await res.json();
+      if (!res.ok) { showToast(data.error || '결제 준비 실패'); btn.disabled = false; return; }
+      location.href = '/pay.html?orderId=' + encodeURIComponent(data.orderId);
+    } catch (err) {
+      showToast('결제 준비 실패: ' + err.message);
+      btn.disabled = false;
+    }
   });
 
   document.getElementById('chargeForm').addEventListener('submit', async (e) => {
@@ -142,7 +202,7 @@
       if (!res.ok) { showToast(data.error || '신청 실패'); return; }
       showToast('충전 신청 완료 — 입금 확인 후 포인트가 지급됩니다.');
       e.target.reset();
-      document.querySelectorAll('.chip').forEach((c) => c.classList.remove('active'));
+      document.querySelectorAll('.bank-chip').forEach((c) => c.classList.remove('active'));
       loadMine();
     } catch (err) {
       showToast('요청 실패: ' + err.message);

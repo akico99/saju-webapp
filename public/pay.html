@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-THWHBPH5WR"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-THWHBPH5WR');
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="/favicon.png">
+<title>사주보는 수달 — 카드 결제</title>
+<link rel="stylesheet" href="/theme.css">
+<link rel="stylesheet" href="/reading-ui.css">
+<style>
+  /* 주문서 — 무엇을 얼마에 사는지 한 줄, 그 아래 토스 결제위젯. */
+  .order-sheet { padding: 20px 22px; border-radius: 20px; background: var(--ink); color: #fff; }
+  .order-sheet .kicker { font-size: 11.5px; font-weight: 800; letter-spacing: .12em; color: #e2c27a; }
+  .order-sheet .name { margin: 8px 0 0; font-family: var(--font-serif); font-size: 22px; letter-spacing: -.03em; }
+  .order-sheet .row { display: flex; justify-content: space-between; align-items: baseline; margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.14); font-size: 13px; color: rgba(255,255,255,.7); }
+  .order-sheet .row b { font-size: 24px; font-weight: 800; color: #fff; font-variant-numeric: tabular-nums; }
+  .test-badge { display: inline-block; margin: 14px 0 0; padding: 5px 11px; border-radius: 999px; background: var(--warn-soft); color: var(--warn); font-size: 11.5px; font-weight: 800; }
+  #payment-method, #agreement { margin-top: 8px; }
+  .pay-btn { width: 100%; min-height: 56px; margin-top: 8px; border: 0; border-radius: 14px; background: var(--ink); color: #fff; font-size: 16px; font-weight: 800; font-family: inherit; cursor: pointer; }
+  .pay-btn:disabled { background: #d9d5cc; color: #8b857b; cursor: default; }
+  .terms-line { margin: 12px 2px 0; font-size: 11.5px; line-height: 1.7; color: var(--muted); }
+  .terms-line a { color: inherit; }
+</style>
+</head>
+<body class="reading-page">
+<div class="app no-nav">
+  <header>
+    <a class="back" href="/charge.html">←</a>
+    <div class="ttl">카드 결제</div>
+    <a class="home-link" href="/" aria-label="홈으로"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M4 11.5L12 4l8 7.5"/><path d="M6 10v9.5h12V10"/></svg></a>
+  </header>
+  <main>
+    <section class="order-sheet">
+      <div class="kicker">주문서</div>
+      <div class="name" id="orderName">불러오는 중...</div>
+      <div class="row"><span>결제 금액</span><b id="orderAmount">-</b></div>
+      <span class="test-badge hidden" id="testBadge">테스트 모드 · 실제 청구 없음</span>
+    </section>
+
+    <div class="card" style="margin-top:16px;">
+      <div id="payment-method"></div>
+      <div id="agreement"></div>
+      <button type="button" class="pay-btn" id="payBtn" disabled>결제 준비 중...</button>
+      <p class="terms-line">결제 즉시 포인트가 충전되며(1P = 1원), 사용하지 않은 포인트는 <a href="/terms.html">이용약관 제7조</a>에 따라 전액 환불됩니다. 리포트는 포인트 차감 후 자동 생성되어 최대 10분 내 제공됩니다.</p>
+    </div>
+    <div class="error-box hidden" id="errorBox" style="margin-top:12px;"></div>
+  </main>
+</div>
+
+<script src="https://js.tosspayments.com/v2/standard"></script>
+<script>
+  async function init() {
+    const errorBox = document.getElementById('errorBox');
+    const payBtn = document.getElementById('payBtn');
+    const orderId = new URLSearchParams(location.search).get('orderId');
+    try {
+      const me = await fetch('/api/auth/me').then((r) => r.json());
+      if (!me.user) { location.href = '/login.html?redirect=' + encodeURIComponent(location.pathname + location.search); return; }
+      if (!orderId) throw new Error('주문 정보가 없어요. 충전 페이지에서 다시 시작해주세요.');
+
+      // 주문은 charge.html에서 /api/pay/prepare로 이미 만들어졌다 — 여기서는 내 주문인지와 금액만 다시 읽는다.
+      const mine = await fetch('/api/pay/mine').then((r) => r.json());
+      const order = (mine.payments || []).find((p) => p.orderId === orderId);
+      if (!order) throw new Error('주문을 찾을 수 없어요. 충전 페이지에서 다시 시작해주세요.');
+      if (order.status === 'paid') { location.replace('/pay-success.html?done=1&orderId=' + encodeURIComponent(orderId)); return; }
+
+      const cfg = await fetch('/api/pay/config').then((r) => r.json());
+      document.getElementById('orderName').textContent = order.orderName;
+      document.getElementById('orderAmount').textContent = order.amountKrw.toLocaleString('ko-KR') + '원';
+      if (cfg.testMode) document.getElementById('testBadge').classList.remove('hidden');
+
+      const tossPayments = TossPayments(cfg.clientKey);
+      // customerKey는 회원 식별용 — 이메일을 그대로 쓰지 않고 서버 id 기반 문자열을 쓴다.
+      const widgets = tossPayments.widgets({ customerKey: 'user_' + me.user.id });
+      await widgets.setAmount({ currency: 'KRW', value: order.amountKrw });
+      await Promise.all([
+        widgets.renderPaymentMethods({ selector: '#payment-method', variantKey: 'DEFAULT' }),
+        widgets.renderAgreement({ selector: '#agreement', variantKey: 'AGREEMENT' })
+      ]);
+
+      payBtn.disabled = false;
+      payBtn.textContent = order.amountKrw.toLocaleString('ko-KR') + '원 결제하기';
+      payBtn.addEventListener('click', async () => {
+        payBtn.disabled = true;
+        payBtn.textContent = '결제창 여는 중...';
+        try {
+          await widgets.requestPayment({
+            orderId: order.orderId,
+            orderName: order.orderName,
+            successUrl: location.origin + '/pay-success.html',
+            failUrl: location.origin + '/pay-fail.html',
+            customerEmail: me.user.email,
+            customerName: me.user.name || '고객'
+          });
+        } catch (e) {
+          payBtn.disabled = false;
+          payBtn.textContent = order.amountKrw.toLocaleString('ko-KR') + '원 결제하기';
+          if (e.code !== 'USER_CANCEL') {
+            errorBox.textContent = e.message || '결제 요청 중 오류가 발생했어요.';
+            errorBox.classList.remove('hidden');
+          }
+        }
+      });
+    } catch (e) {
+      document.getElementById('orderName').textContent = '결제를 준비할 수 없어요';
+      errorBox.textContent = e.message;
+      errorBox.classList.remove('hidden');
+    }
+  }
+  init();
+</script>
+</body>
+</html>

@@ -11,6 +11,13 @@
   const hasBatchim = last >= 0xAC00 && last <= 0xD7A3 && (last - 0xAC00) % 28 !== 0;
   const topic = label + (hasBatchim ? '은' : '는');
 
+  // PG 심사·전자상거래법 요구사항 — 구매자가 결제 전에 제공 방식과 기간을 알 수 있어야 한다.
+  // 모든 유료 상품은 결제(포인트 차감) 즉시 자동 생성되는 디지털 콘텐츠이고 정기결제가 없다.
+  const delivery = document.createElement('p');
+  delivery.className = 'delivery-note';
+  delivery.textContent = (window.POINT_NOTICE_DELIVERY || '결제 후 자동 생성되어 최대 10분 내 웹·PDF로 제공됩니다') + ' · 단건 결제(정기결제 없음) · 마이페이지에서 언제든 다시 받을 수 있어요.';
+  el.insertAdjacentElement('afterend', delivery);
+
   fetch('/api/auth/me').then((r) => r.json()).then((data) => {
     if (!data.user) {
       el.innerHTML = `${topic} <b>${price.toLocaleString('ko-KR')}P</b>가 필요해요. <a href="/login.html?redirect=${encodeURIComponent(location.pathname + location.search)}">로그인하고 계속하기 →</a>`;
@@ -18,7 +25,7 @@
     }
     if (data.user.pointBalance < price) {
       el.classList.add('warn');
-      el.innerHTML = `${label} 가격은 <b>${price.toLocaleString('ko-KR')}P</b>인데, 보유 포인트가 <b>${data.user.pointBalance.toLocaleString('ko-KR')}P</b>로 부족해요. <a href="/mypage.html">충전하러 가기 →</a>`;
+      el.innerHTML = `${label} 가격은 <b>${price.toLocaleString('ko-KR')}P</b>인데, 보유 포인트가 <b>${data.user.pointBalance.toLocaleString('ko-KR')}P</b>로 부족해요. <a href="/charge.html">충전하러 가기 →</a>`;
       return;
     }
     el.innerHTML = `${label} 가격 <b>${price.toLocaleString('ko-KR')}P</b> — 제출하면 보유 포인트(${data.user.pointBalance.toLocaleString('ko-KR')}P)에서 바로 차감됩니다.`;

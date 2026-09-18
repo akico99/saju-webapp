@@ -6,6 +6,7 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const points = require('../../db/points');
+const cardPayments = require('../../db/cardPayments');
 const users = require('../../db/users');
 const orders = require('../../db/orders');
 const { requireAdmin } = require('../middleware/auth');
@@ -203,6 +204,11 @@ router.delete('/admin/orders/:jobId/file', requireAdmin, (req, res) => {
 /* 상품별 원가 요약 — 건수/평균/합계. 판매가(PRICES)를 같이 내려줘서 마진율 계산은
    프론트에서 한다. /admin/orders/:jobId보다 먼저 등록해야 "cost-summary"가 jobId로
    잘못 매칭되지 않는다. */
+// 카드 결제 원장(토스페이먼츠) — 테스트 모드 결제는 test_mode=1로 표시되고 포인트가 지급되지 않는다.
+router.get('/admin/card-payments', requireAdmin, (req, res) => {
+  res.json({ payments: cardPayments.listAll() });
+});
+
 router.get('/admin/orders/cost-summary', requireAdmin, (req, res) => {
   const rows = orders.costSummaryByProduct().map((r) => ({
     productKey: r.product_key, count: r.count,

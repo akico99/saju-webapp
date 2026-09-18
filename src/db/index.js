@@ -190,4 +190,24 @@ try {
   console.warn('[DB] 진행 중 주문 고유 인덱스 생성 실패 — 중복된 활성 주문이 있는지 확인 필요:', e.message);
 }
 
+/* 카드 결제(토스페이먼츠) — 포인트 충전을 카드로 하는 경로의 주문 원장. 계좌이체 수동 승인
+   (point_requests)과 별도로 둔다. status: ready(결제창 열림) → paid(승인 완료) / failed.
+   test_mode=1이면 테스트 키로 승인된 결제(실제 청구 없음)라 포인트를 지급하지 않는다. */
+db.exec(`
+  CREATE TABLE IF NOT EXISTS card_payments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    order_id TEXT NOT NULL UNIQUE,
+    order_name TEXT NOT NULL,
+    amount_krw INTEGER NOT NULL,
+    status TEXT NOT NULL DEFAULT 'ready',
+    payment_key TEXT,
+    method TEXT,
+    test_mode INTEGER NOT NULL DEFAULT 0,
+    error TEXT,
+    approved_at TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+`);
+
 module.exports = db;

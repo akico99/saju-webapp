@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="/favicon.png">
+<title>사주보는 수달 — 결제 실패</title>
+<link rel="stylesheet" href="/theme.css">
+<link rel="stylesheet" href="/reading-ui.css">
+<style>
+  .fail-cover { padding: 30px 26px; border-radius: 24px; background: #fff; border: 1px solid var(--line); }
+  .fail-cover .kicker { font-size: 12px; font-weight: 800; letter-spacing: .12em; color: var(--danger); }
+  .fail-cover h1 { margin: 12px 0 0; font-family: var(--font-serif); font-size: 28px; line-height: 1.3; letter-spacing: -.04em; }
+  .fail-cover p { margin: 12px 0 0; font-size: 14px; line-height: 1.7; color: var(--muted); }
+  .fail-cover code { display: block; margin-top: 14px; padding: 10px 12px; border-radius: 10px; background: var(--surface-2); font-size: 12px; color: var(--ink); word-break: break-all; }
+  .actions { display: grid; gap: 8px; margin-top: 18px; }
+  .actions a { display: block; padding: 15px; border-radius: 14px; text-align: center; font-size: 15px; font-weight: 800; text-decoration: none; }
+  .actions a.primary { background: var(--ink); color: #fff; }
+  .actions a.ghost { border: 1.5px solid var(--ink); color: var(--ink); background: #fff; }
+</style>
+</head>
+<body class="reading-page">
+<div class="app no-nav">
+  <header>
+    <a class="back" href="/charge.html">←</a>
+    <div class="ttl">결제 실패</div>
+    <a class="home-link" href="/" aria-label="홈으로"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M4 11.5L12 4l8 7.5"/><path d="M6 10v9.5h12V10"/></svg></a>
+  </header>
+  <main>
+    <section class="fail-cover">
+      <div class="kicker">카드 결제</div>
+      <h1>결제가 완료되지 않았어요</h1>
+      <p id="msg">카드에 청구되지 않았습니다. 잠시 후 다시 시도하거나 다른 결제수단을 이용해주세요.</p>
+      <code id="code" class="hidden"></code>
+    </section>
+    <div class="actions">
+      <a class="primary" href="/charge.html">다시 시도하기</a>
+      <a class="ghost" href="/mypage.html">마이페이지</a>
+    </div>
+  </main>
+</div>
+<script>
+  const p = new URLSearchParams(location.search);
+  if (p.get('message')) document.getElementById('msg').textContent = p.get('message') + ' — 카드에 청구되지 않았습니다.';
+  if (p.get('code')) { const c = document.getElementById('code'); c.textContent = '오류 코드: ' + p.get('code'); c.classList.remove('hidden'); }
+</script>
+</body>
+</html>

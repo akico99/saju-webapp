@@ -556,6 +556,7 @@ button[type="submit"]:hover:not(:disabled), .btn-primary:hover, button.primary:h
 .point-notice b { color: var(--ink); }
 .point-notice a { color: var(--ink); font-weight: 700; text-decoration: underline; }
 .point-notice.warn { background: var(--warn-soft); color: var(--warn); border-color: transparent; }
+.delivery-note { margin: -10px 2px 18px; font-size: 12px; line-height: 1.65; color: var(--muted-2); }
 
 .status { display: inline-block; padding: 3px 10px; border-radius: var(--radius-pill); font-size: 10.5px; font-weight: 700; white-space: nowrap; }
 .status.pending { background: var(--warn-soft); color: var(--warn); }
