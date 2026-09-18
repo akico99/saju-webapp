@@ -33,6 +33,13 @@ function pillarsOf(r) {
   return r.meta.hourGiven === false || r.meta.input.hour == null ? ['year', 'month', 'day'] : ['year', 'month', 'day', 'hour'];
 }
 function stripBasis(name) { return name.replace(/\(.*?\)/g, ''); }
+// 표지에 네 기둥을 한 줄로 보여주기 위한 목록 — 시각을 모르면 시주는 빠진다(pillarsOf와 같은 기준).
+function pillarStrip(r) {
+  return pillarsOf(r).map((key) => {
+    const p = r.manse[key];
+    return { key, ko: PILLAR_KO[key], hanja: p.stem + p.branch, ganzi: ganziKo(p) };
+  });
+}
 
 /* ---------- A. 사주 속 귀인 ---------- */
 const NOBLE = {
@@ -92,7 +99,7 @@ function readNoble(r) {
   }
 
   return {
-    kind: 'noble', title: '사주 속 귀인', headline, lead, found, hourUnknown,
+    kind: 'noble', title: '사주 속 귀인', headline, lead, found, hourUnknown, pillars: pillarStrip(r),
     note: hourUnknown ? '태어난 시각이 없어 시주(자녀·말년·아랫사람 자리)는 보지 못했습니다.' : null,
     upsell: { lead: '귀인이 어느 자리에 있는지는 알았어요. 그 인연을 실제로 어떻게 만나고 지키는지, 사람 관계 전체의 구조를 보려면요.', name: '대인관계·인복 심층 리딩', price: '3,900원', href: '/quick.html?topic=relationship' }
   };
@@ -204,7 +211,7 @@ function readCharm(r) {
     : '눈에 띄는 매력 신살은 없지만, 일간 자체가 주는 인상이 이 사주의 매력입니다. 꾸미지 않을 때 가장 잘 보이는 유형입니다.';
 
   return {
-    kind: 'charm', title: '타고난 매력', headline, lead,
+    kind: 'charm', title: '타고난 매력', headline, lead, pillars: pillarStrip(r),
     base: { ilgan: `${ilgan.char}(${ilgan.ko})`, ohaeng: ilgan.ohaeng, text: base },
     found,
     note: pillarsOf(r).length === 3 ? '태어난 시각이 없어 시주는 보지 못했습니다.' : null,

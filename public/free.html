@@ -19,6 +19,7 @@
 <link rel="stylesheet" href="/editorial-refresh.css">
 <link rel="stylesheet" href="/balance-experience.css">
 <link rel="stylesheet" href="/balance-book.css">
+<link rel="stylesheet" href="/fortune-result.css">
 <script src="/analysis-loader.js"></script>
 <script src="/balance-book.js" defer></script>
 <style>
@@ -26,20 +27,12 @@
   .preview-teaser { margin: 0 0 20px; padding-left: 18px; font-size: 13.5px; line-height: 2; color: var(--ink); }
   .preview-teaser li::marker { color: var(--accent); }
 
+  /* #result(.fr-hero/.card)는 오행 밸런스 책이 쓴다(balance-experience.css). 귀인·매력은
+     #frResult에 fortune-result.css의 표지·항목 구조로 그린다. */
   .fr-hero { background: var(--ink); color: #fff; border: none; }
   .fr-hero .eyebrow { font-size: 11px; opacity: .65; margin-bottom: 6px; }
   .fr-hero h2 { font-family: var(--font-serif); font-size: 21px; line-height: 1.4; margin: 0 0 10px; letter-spacing: -.01em; word-break: keep-all; }
   .fr-hero p { margin: 0; font-size: 13.5px; line-height: 1.8; opacity: .9; word-break: keep-all; }
-
-  .fr-item { display: flex; gap: 12px; align-items: flex-start; padding: 14px 0; border-top: 1px solid var(--line); }
-  .fr-item:first-of-type { border-top: none; padding-top: 0; }
-  .fr-item .tag { flex-shrink: 0; min-width: 44px; padding: 5px 8px; border-radius: 8px; background: var(--surface-2); font-size: 11.5px; font-weight: 800; color: var(--ink); text-align: center; line-height: 1.3; }
-  .fr-item .tag small { display: block; font-weight: 600; color: var(--muted); font-size: 10.5px; }
-  .fr-item h4 { margin: 0 0 4px; font-size: 14.5px; font-weight: 800; }
-  .fr-item p { margin: 0 0 6px; font-size: 13px; line-height: 1.75; color: var(--ink); word-break: keep-all; }
-  .fr-item p.where { color: var(--muted); font-size: 12.5px; }
-  .fr-item p.tip { padding: 8px 10px; border-radius: 8px; background: var(--accent-soft); font-size: 12.5px; }
-  .fr-item p.shadow { color: #8a4a34; font-size: 12.5px; }
 
   .fr-bars { display: flex; flex-direction: column; gap: 9px; }
   .fr-bar { display: grid; grid-template-columns: 62px 1fr 34px; align-items: center; gap: 10px; font-size: 13px; }
@@ -57,9 +50,6 @@
   .fr-two .light b { color: var(--success); }
   .fr-two .shadow b { color: var(--danger); }
 
-  .fr-note { font-size: 11.5px; color: var(--muted-2); margin: 10px 0 0; }
-  .fr-empty { padding: 14px; border-radius: 12px; background: var(--surface-2); font-size: 13px; line-height: 1.75; color: var(--ink); word-break: keep-all; }
-
   .tf-upsell { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; box-sizing: border-box; padding: 14px 18px; margin-top: 14px; background: var(--accent-grad); border-radius: var(--radius-btn); box-shadow: var(--accent-glow); text-decoration: none; color: var(--accent); }
   .tf-upsell .name { font-size: 14.5px; font-weight: 800; word-break: keep-all; }
   .tf-upsell .price { font-size: 14px; font-weight: 800; flex-shrink: 0; }
@@ -67,8 +57,6 @@
 
   .lg-folded { padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); font-size: 12.5px; color: var(--muted); }
   .lg-folded button { flex: 0 0 auto; width: auto; margin: 0; padding: 7px 12px; font-size: 12px; font-weight: 700; background: var(--paper); color: var(--ink); border: 1px solid var(--line); border-radius: var(--radius-btn); box-shadow: none; cursor: pointer; font-family: inherit; min-height: 0; }
-  .fr-others { display: flex; gap: 8px; flex-wrap: wrap; }
-  .fr-others a { font-size: 12.5px; font-weight: 700; padding: 9px 13px; border-radius: 999px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); text-decoration: none; }
 </style>
 </head>
 <body class="reading-page editorial-result-page">
@@ -126,6 +114,22 @@
     <div class="lg-folded hidden" id="folded" style="margin:0 0 16px;">
       <span id="foldedText"></span>
       <button type="button" id="unfoldBtn">다시 입력</button>
+    </div>
+
+    <div id="frResult" class="fortune-result hidden">
+      <section class="fr-cover">
+        <p class="fr-eyebrow" id="frEyebrow"></p>
+        <h2 class="fr-verdict" id="frHeadline"></h2>
+        <p class="fr-lead-inv" id="frLead"></p>
+        <div class="fr-pillars" id="frPillars"></div>
+      </section>
+      <div id="frBody"></div>
+      <a class="fr-next" id="frUpLink" href="#">
+        <span class="fr-next-kicker">다음 장</span>
+        <span class="fr-next-lead" id="frUpLead"></span>
+        <span class="fr-next-btn"><span id="frUpName"></span><span class="price" id="frUpPrice"></span></span>
+      </a>
+      <div class="fr-others"><p>다른 무료 리딩</p><div id="frOthers"></div></div>
     </div>
 
     <div id="result" class="hidden">
@@ -196,70 +200,87 @@
   document.getElementById('introTitle').textContent = cfg.intro;
   document.getElementById('introLead').textContent = cfg.lead;
   document.getElementById('introTeaser').innerHTML = cfg.teaser.map((t) => `<li>${t}</li>`).join('');
-  document.getElementById('others').innerHTML = Object.entries(KINDS).filter(([k]) => k !== kind)
+  const othersHtml = Object.entries(KINDS).filter(([k]) => k !== kind)
     .map(([k, c]) => `<a href="/free.html?kind=${k}">${c.title}</a>`).join('') +
     `<a href="/today-preview.html">오늘의 운세</a><a href="/life-graph.html">인생 그래프</a>`;
-
+  document.getElementById('others').innerHTML = othersHtml;
+  document.getElementById('frOthers').innerHTML = othersHtml;
   const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 
+  // 항목 하나 — 기둥 태그, 제목, 어디서·언제, 본문, 실천 또는 그림자
+  function entry({ tag, tagSub, soft, title, where, core, tip, shadow }) {
+    const item = el('article', 'fr-entry');
+    const t = el('span', 'fr-where-tag' + (soft ? ' soft' : ''), tag);
+    if (tagSub) t.append(' ', el('small', null, tagSub));
+    item.append(t, el('h4', null, title));
+    if (where) item.appendChild(el('p', 'where', where));
+    item.appendChild(el('p', 'core', core));
+    if (tip) item.appendChild(el('p', 'tip', tip));
+    if (shadow) item.appendChild(el('p', 'shadow', shadow));
+    return item;
+  }
+  function renderPillars(r, onKeys) {
+    const box = document.getElementById('frPillars');
+    box.replaceChildren();
+    const list = r.pillars || [];
+    box.classList.toggle('three', list.length === 3);
+    list.forEach((p) => {
+      const d = el('div', onKeys.has(p.key) ? 'on' : '');
+      d.append(el('small', null, p.ko), el('b', null, p.hanja), el('span', null, p.ganzi));
+      box.appendChild(d);
+    });
+  }
   function renderNoble(r, body) {
+    renderPillars(r, new Set(r.found.map((f) => f.pillar)));
     if (!r.found.length) {
       body.appendChild(el('div', 'fr-empty', '이름 붙은 귀인은 없지만, 이 사주가 사람을 어떻게 만나고 어디서 도움을 받는지는 십신 구조로 따로 볼 수 있어요. 귀인은 대운·세운으로 들어오는 해가 있어서, 어느 해에 오는지는 흐름에서 보입니다.'));
     }
-    r.found.forEach((f) => {
-      const item = el('div', 'fr-item');
-      const tag = el('div', 'tag'); tag.append(f.pillarKo, el('small', null, f.ganzi)); item.appendChild(tag);
-      const box = el('div');
-      box.appendChild(el('h4', null, f.title));
-      box.appendChild(el('p', 'where', `${f.palace.who} · ${f.palace.when} — ${f.palace.how}`));
-      box.appendChild(el('p', null, f.core));
-      box.appendChild(el('p', 'tip', f.tip));
-      item.appendChild(box); body.appendChild(item);
-    });
+    r.found.forEach((f) => body.appendChild(entry({
+      tag: f.pillarKo, tagSub: f.ganzi, title: f.title,
+      where: `${f.palace.who} · ${f.palace.when} — ${f.palace.how}`, core: f.core, tip: f.tip
+    })));
     if (r.note) body.appendChild(el('p', 'fr-note', r.note));
   }
-
   function renderBalance(r, body) {
     window.BalanceBook.render(r, document.getElementById('balanceBook'));
   }
 
   function renderCharm(r, body) {
-    const base = el('div', 'fr-item');
-    const tag = el('div', 'tag'); tag.append('일간', el('small', null, r.base.ilgan)); base.appendChild(tag);
-    const bbox = el('div'); bbox.appendChild(el('h4', null, '바탕이 주는 인상')); bbox.appendChild(el('p', null, r.base.text)); base.appendChild(bbox);
-    body.appendChild(base);
-    r.found.forEach((f) => {
-      const item = el('div', 'fr-item');
-      const t = el('div', 'tag'); t.append(f.pillarKo, el('small', null, f.ganzi)); item.appendChild(t);
-      const box = el('div');
-      box.appendChild(el('h4', null, f.title));
-      box.appendChild(el('p', 'where', `${f.palace.how} 쪽에서 특히 드러나요`));
-      box.appendChild(el('p', null, f.core));
-      box.appendChild(el('p', 'shadow', '그림자 · ' + f.shadow));
-      item.appendChild(box); body.appendChild(item);
-    });
+    renderPillars(r, new Set(r.found.map((f) => f.pillar)));
+    body.appendChild(entry({ tag: '일간', tagSub: r.base.ilgan, soft: true, title: '바탕이 주는 인상', core: r.base.text }));
+    r.found.forEach((f) => body.appendChild(entry({
+      tag: f.pillarKo, tagSub: f.ganzi, title: f.title,
+      where: `${f.palace.how} 쪽에서 특히 드러나요`, core: f.core, shadow: f.shadow
+    })));
     if (r.note) body.appendChild(el('p', 'fr-note', r.note));
   }
-
   const RENDER = { noble: renderNoble, balance: renderBalance, charm: renderCharm };
 
   function render(r) {
+    if (kind !== 'balance') {
+      document.getElementById('frEyebrow').textContent = cfg.eyebrow + ' · 무료';
+      document.getElementById('frHeadline').textContent = r.headline;
+      document.getElementById('frLead').textContent = r.lead;
+      const body = document.getElementById('frBody'); body.replaceChildren();
+      RENDER[kind](r, body);
+      document.getElementById('frUpLead').textContent = r.upsell.lead;
+      document.getElementById('frUpName').textContent = r.upsell.name + ' 보기';
+      document.getElementById('frUpPrice').textContent = r.upsell.price;
+      document.getElementById('frUpLink').href = r.upsell.href;
+      document.getElementById('frResult').classList.remove('hidden');
+      return;
+    }
     document.getElementById('rEyebrow').textContent = cfg.eyebrow;
     document.getElementById('rHeadline').textContent = r.headline;
     document.getElementById('rLead').textContent = r.lead;
     const body = document.getElementById('rBody'); body.replaceChildren();
     RENDER[kind](r, body);
-    if (kind === 'balance') {
-      document.getElementById('upLead').textContent = '여기까지 무료로 확인했어요. 숫자 너머에서, 이 기운이 성격과 지금의 흐름에 어떻게 이어지는지 궁금하다면?';
-    } else {
-      document.getElementById('upLead').textContent = r.upsell.lead;
-    }
+    document.getElementById('upLead').textContent = '여기까지 무료로 확인했어요. 숫자 너머에서, 이 기운이 성격과 지금의 흐름에 어떻게 이어지는지 궁금하다면?';
     document.getElementById('upName').textContent = r.upsell.name + ' 보기';
     document.getElementById('upPrice').textContent = r.upsell.price;
     document.getElementById('upLink').href = r.upsell.href;
     document.getElementById('result').classList.remove('hidden');
   }
-
   document.getElementById('unfoldBtn').addEventListener('click', () => {
     document.getElementById('folded').classList.add('hidden');
     document.getElementById('introBox').classList.remove('hidden');
@@ -287,7 +308,7 @@
       document.getElementById('foldedText').textContent = [`${cal} ${body.year}.${body.month}.${body.day}`, time, body.gender].filter(Boolean).join(' · ');
       e.target.classList.add('hidden');
       document.getElementById('folded').classList.remove('hidden');
-      document.getElementById('result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document.getElementById(kind === 'balance' ? 'result' : 'frResult').scrollIntoView({ behavior: 'smooth', block: 'start' });
     } catch (err) {
       errorBox.textContent = '요청 실패: ' + err.message;
       errorBox.classList.remove('hidden');
