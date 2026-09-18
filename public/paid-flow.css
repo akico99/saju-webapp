@@ -35,6 +35,14 @@
 .paid-flow .paid-help { margin: 9px 0 14px; padding: 12px 14px; border-radius: 12px; background: #f7f6f2; color: #66727e; font-size: 12px; line-height: 1.7; }
 .paid-flow .paid-help summary { cursor: pointer; color: #314153; font-weight: 750; }
 .paid-flow .paid-help p { margin: 9px 0 0; }
+/* 관계 유형 선택(궁합) — 라디오를 감추고 알약 버튼으로. 2열 그리드라 폰에서도 한 줄에 둘씩. */
+.paid-flow .relation-seg { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.paid-flow .relation-seg label { position: relative; margin: 0; cursor: pointer; }
+.paid-flow .relation-seg input { position: absolute; opacity: 0; width: 0; height: 0; }
+.paid-flow .relation-seg span { display: block; padding: 12px 10px; border: 1px solid #dedfdf; border-radius: 12px; background: #fcfcfb; text-align: center; font-size: 14px; font-weight: 600; color: #4b535c; transition: background .15s, border-color .15s, color .15s, box-shadow .15s; }
+.paid-flow .relation-seg input:checked + span { background: #17243D; border-color: #17243D; color: #fff; }
+.paid-flow .relation-seg input:focus-visible + span { box-shadow: 0 0 0 3px rgba(127, 152, 126, .17); }
+@media (min-width: 560px) { .paid-flow .relation-seg { grid-template-columns: repeat(4, 1fr); } }
 .paid-flow .paid-submit-note { padding: 15px 0 8px; border-top: 1px solid #edeae3; color: #77828c; font-size: 12px; line-height: 1.6; }
 .paid-flow form button[type="submit"] { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 58px; margin-top: 8px; border-radius: 14px; background: #24344b; color: #fff; font-size: 15px; box-shadow: 0 10px 24px rgba(36, 52, 75, .17); }
 .paid-flow form button[type="submit"]:disabled { background: #e5e6e5; color: #9299a0; box-shadow: none; }

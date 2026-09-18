@@ -8,6 +8,7 @@ const crypto = require('crypto');
 const { computeSaju } = require('../../engine/index');
 const { analyzeCompatibility } = require('../../engine/compatibility');
 const { generateCompatReport } = require('../../llm/generateCompatReport');
+const { RELATIONS, normalizeRelation } = require('../../llm/compatOutlines');
 const { costUsd } = require('../../llm/client');
 const { renderCompatHtml } = require('../../pdf/renderCompatHtml');
 const { renderPdf } = require('../../pdf/renderPdf');
@@ -61,8 +62,10 @@ router.post('/compat', requireAuth, async (req, res) => {
   const personA = { name: personAInput.name };
   const personB = { name: personBInput.name };
   const compat = analyzeCompatibility(engineA, engineB);
+  // 관계 유형에 따라 볼 자리가 다르다(연애=끌림·다툼, 부부=살림, 재회=어긋난 구조). 골격이 여기서 갈린다.
+  const relation = normalizeRelation(req.body.relation);
   const jobId = crypto.randomUUID();
-  const label = `궁합 리포트 — ${personA.name || '본인'} · ${personB.name || '상대방'}`;
+  const label = `궁합 리포트(${RELATIONS[relation].label}) — ${personA.name || '본인'} · ${personB.name || '상대방'}`;
 
   let price;
   try {
@@ -87,10 +90,10 @@ router.post('/compat', requireAuth, async (req, res) => {
   res.json({ jobId, compatSummary: { score: compat.score } });
 
   orders.updateStatus(jobId, 'generating');
-  generateCompatReport(engineA, engineB, personA, personB, compat)
+  generateCompatReport(engineA, engineB, personA, personB, compat, relation)
     .then(async ({ text, usage }) => {
       orders.updateStatus(jobId, 'rendering');
-      const html = renderCompatHtml(engineA, engineB, personA, personB, compat, text);
+      const html = renderCompatHtml(engineA, engineB, personA, personB, compat, text, relation);
       const pdfPath = path.join(jobDir, 'compat-report.pdf');
       await renderPdf(html, pdfPath, { name: `${safeName(personA.name, '본인')} · ${safeName(personB.name, '상대방')}` });
       if (!fs.existsSync(pdfPath)) throw new Error('PDF 파일 생성 확인 실패');

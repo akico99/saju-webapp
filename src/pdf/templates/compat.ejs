@@ -10,7 +10,7 @@
 <section class="compat-cover">
   <div class="eyebrow">緣 分 宮 合</div>
   <h1><%= safeName(personA.name, '본인') %> · <%= safeName(personB.name, '상대방') %> 님의<br>궁합 리포트</h1>
-  <div class="subtitle">두 사람의 팔자를 겹쳐, 합·충으로 흐름을 읽습니다</div>
+  <div class="subtitle"><%= relationLabel %> · 두 사람의 팔자를 겹쳐, 합·충으로 흐름을 읽습니다</div>
 
   <div class="compat-pair">
     <div class="compat-person">
@@ -42,15 +42,10 @@
 </section>
 
 <section class="compat-section page-break">
-  <h2>둘 사이를 읽는 첫 단서</h2>
-  <% var compatParagraphs = text.split(/\n\n+/).map(function(para) { return para.trim(); }).filter(Boolean); %>
-  <% if (compatParagraphs.length) { %>
-  <div class="compat-reading"><div class="label">먼저 읽어보세요</div><p><%- renderMarkup(compatParagraphs[0]) %></p></div>
-  <% } %>
-  <% if (compatParagraphs.length > 1) { %>
-  <h3 class="compat-subtitle">관계의 흐름, 조금 더 자세히</h3>
-  <% compatParagraphs.slice(1).forEach(function(para) { %><p><%- renderMarkup(para) %></p><% }) %>
-  <% } %>
+  <h2>둘 사이를 읽는 단서</h2>
+  <%# 골격(compatOutlines)이 "### 소제목"으로 소주제를 나누므로 renderBody가 h3.sub로 그린다.
+      옛 첫 문단 강조 상자는 소제목 줄을 먹어버려서 뺐다. %>
+  <div class="compat-body"><%- renderBody(text) %></div>
 </section>
 
 <section class="compat-section" style="padding-top:8mm;">

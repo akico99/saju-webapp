@@ -34,6 +34,17 @@
   <div class="point-notice" id="pointNotice">가격 확인 중...</div>
 
   <form id="compatForm">
+    <div class="field">
+      <label>두 사람의 관계</label>
+      <div class="relation-seg" role="radiogroup" aria-label="두 사람의 관계">
+        <label><input type="radio" name="relation" value="dating" checked><span>연애 중</span></label>
+        <label><input type="radio" name="relation" value="married"><span>결혼·부부</span></label>
+        <label><input type="radio" name="relation" value="crush"><span>썸·시작 전</span></label>
+        <label><input type="radio" name="relation" value="ex"><span>헤어짐·재회</span></label>
+      </div>
+      <p class="hint">관계에 따라 보는 자리가 달라요. 연애는 끌림과 다툼을, 부부는 살림과 역할을, 재회는 어긋났던 구조를 봅니다.</p>
+    </div>
+
     <h2 class="section-title">01 · 나의 정보 <small>첫 번째 사람</small></h2>
     <div class="profile-picker hidden" id="profilePickerA"></div>
     <div class="field">

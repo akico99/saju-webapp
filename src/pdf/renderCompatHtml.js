@@ -5,7 +5,8 @@
 const fs = require('fs');
 const path = require('path');
 const ejs = require('ejs');
-const { renderMarkup } = require('./textMarkup');
+const { renderMarkup, renderBody } = require('./textMarkup');
+const { RELATIONS, normalizeRelation } = require('../llm/compatOutlines');
 const { getReportCss } = require('./reportCss');
 const { safeName } = require('./personName');
 
@@ -18,12 +19,14 @@ const TEMPLATE_PATH = path.join(__dirname, 'templates', 'compat.ejs');
  * @param {{name?:string}} personB
  * @param {Object} compat analyzeCompatibility() 결과
  * @param {string} text LLM이 생성한 궁합 서술 본문
+ * @param {string} [relation] compatOutlines.RELATIONS 키
  */
-function renderCompatHtml(engineA, engineB, personA, personB, compat, text) {
+function renderCompatHtml(engineA, engineB, personA, personB, compat, text, relation) {
   const reportCss = getReportCss();
+  const relationLabel = RELATIONS[normalizeRelation(relation)].label;
   return ejs.render(
     fs.readFileSync(TEMPLATE_PATH, 'utf8'),
-    { engineA, engineB, personA, personB, compat, text, reportCss, renderMarkup, safeName },
+    { engineA, engineB, personA, personB, compat, text, relationLabel, reportCss, renderMarkup, renderBody, safeName },
     { filename: TEMPLATE_PATH }
   );
 }
