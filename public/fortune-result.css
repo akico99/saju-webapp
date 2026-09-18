@@ -150,3 +150,7 @@
 #frHeadline { max-width: 16ch; font-size: clamp(26px, 7vw, 34px); }
 .fr-next-lead { font-size: 19px; }
 @media (min-width: 700px) { .fr-next-lead { font-size: 22px; } }
+
+/* 인생 그래프 — 차트 패널 아래 행동 조언만 이 구조를 쓴다. 표지·차트는 life-graph 고유. */
+.lg-advice-block .fr-section { margin-top: 10px; padding-bottom: 8px; border-bottom: 0; }
+.lg-advice-block .fr-h { font-size: 20px; }

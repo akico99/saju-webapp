@@ -17,6 +17,7 @@
 <link rel="stylesheet" href="/theme.css">
 <link rel="stylesheet" href="/reading-ui.css">
 <link rel="stylesheet" href="/editorial-refresh.css">
+<link rel="stylesheet" href="/fortune-result.css">
 <script src="/analysis-loader.js"></script>
 <script src="/concern-step.js"></script>
 <style>
@@ -67,9 +68,6 @@
   .lg-otter .face { font-size: 24px; line-height: 1.2; flex-shrink: 0; }
   .lg-otter p { margin: 0; font-size: 13.5px; line-height: 1.75; color: var(--ink); word-break: keep-all; }
 
-  .lg-advice ul { margin: 0; padding-left: 20px; font-size: 13.5px; line-height: 1.9; }
-  .lg-advice .lg-do li::marker { color: var(--success); }
-  .lg-advice .lg-dont li::marker { color: var(--danger); }
   .lg-advice-note { font-size: 11.5px; color: var(--muted-2); line-height: 1.6; margin: 14px 0 0; }
 
   .lg-cta-lead { font-size: 13px; line-height: 1.7; color: var(--muted); margin: 0; word-break: keep-all; }
@@ -276,13 +274,20 @@
 
       </div>
 
-      <div class="lg-advice-grid">
-        <div class="card lg-advice lg-do-card"><h3 id="lgAdviceTitle">이 시기에 하면 좋은 것</h3><ul class="lg-do" id="lgDos"></ul></div>
-        <div class="card lg-advice lg-dont-card"><h3>서두르지 않아도 되는 것</h3><ul class="lg-dont" id="lgDonts"></ul></div>
+      <!-- 행동 조언 — 오늘의 운세와 같은 체크/✕ 행 목록(fortune-result.css). 시기를 바꾸면 내용이 바뀐다. -->
+      <div class="fortune-result lg-advice-block">
+        <section class="fr-section">
+          <div class="fr-h-row">
+            <h3 class="fr-h" id="lgAdviceTitle">이 시기에는 이렇게</h3>
+            <p class="fr-h-sub">고른 시기가 바뀌면 함께 바뀌어요</p>
+          </div>
+          <div class="fr-actions">
+            <div class="do"><h4>하면 좋은 것</h4><ul id="lgDos"></ul></div>
+            <div class="dont"><h4>서두르지 않아도 되는 것</h4><ul id="lgDonts"></ul></div>
+          </div>
+          <p class="fr-note lg-advice-note">참고 자료이지 정해진 결과는 아닙니다.</p>
+        </section>
       </div>
-        <p class="lg-advice-note">
-          고른 시기가 바뀌면 이 내용도 함께 바뀌어요. 참고 자료이지 정해진 결과는 아닙니다.
-        </p>
 
       <details class="lg-basis">
         <summary>점수는 어떻게 계산하나요?</summary> 태어날 때 정해진 내 사주를 도와주는 오행을 "용신"이라고
