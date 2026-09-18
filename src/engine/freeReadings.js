@@ -8,6 +8,7 @@
    balance 내 오행 밸런스     → 내 사주 첫 풀이
    charm   타고난 매력       → 애정·결혼운 심층 리딩 */
 const { computeSaju } = require('./index');
+const { grade } = require('./counts');
 
 const PILLAR_KO = { year: '연주', month: '월주', day: '일주', hour: '시주' };
 // 궁위(§0) — 각 기둥이 삶의 어느 영역·시기·관계를 뜻하는지
@@ -113,36 +114,44 @@ const OH_STRONG = {
   '水': { light: '흐르고 스며드는 힘이 셉니다. 상황을 읽고 돌아가는 길을 찾는 데 능합니다.', shadow: '고이면 탁해집니다. 생각만 깊어지고 움직이지 않는 시기를 경계하세요.' }
 };
 const OH_LACK = {
-  '木': '시작하는 힘이 약합니다. 하고 싶은 게 있어도 첫발이 늦고, 남이 판을 깔아줄 때 움직이기 쉽습니다.',
-  '火': '드러내는 힘이 약합니다. 속은 있는데 밖으로 안 나와서 몰라주는 일이 생깁니다.',
-  '土': '버티는 힘이 약합니다. 흔들릴 때 붙잡을 기반이 얇아 결정을 자주 바꾸게 됩니다.',
-  '金': '끊는 힘이 약합니다. 정리할 것을 정리하지 못하고 끌고 가다 소모됩니다.',
-  '水': '유연하게 돌아가는 힘이 약합니다. 막히면 우회하지 못하고 정면으로만 부딪힙니다.'
+  '木': '원국 글자에 목이 보이지 않습니다. 새 일을 시작하거나 키우는 방식은 다른 기운과 흐름까지 함께 살펴야 합니다.',
+  '火': '원국 글자에 화가 보이지 않습니다. 표현하는 방식이 없다는 뜻은 아니며, 다른 기운과 흐름에서 드러날 수 있습니다.',
+  '土': '원국 글자에 토가 보이지 않습니다. 안정감을 만드는 방식은 다른 기운과 흐름까지 함께 살펴야 합니다.',
+  '金': '원국 글자에 금이 보이지 않습니다. 결단력이 없다는 뜻은 아니며, 정리하는 방식은 다른 기운에서도 읽힙니다.',
+  '水': '원국 글자에 수가 보이지 않습니다. 유연성이 없다는 뜻은 아니며, 다른 기운과 흐름까지 함께 살펴야 합니다.'
 };
 
 function readBalance(r) {
-  const counts = r.counts.ohaeng;
-  const grade = r.counts.ohaengGrade;
-  const total = Object.values(counts).reduce((a, b) => a + b, 0) || 1;
+  // 시각 미상 시 엔진의 정오 가정 시주는 무료 결과의 근거에서 제외한다.
+  const pillars = pillarsOf(r);
+  const counts = { 木: 0, 火: 0, 土: 0, 金: 0, 水: 0 };
+  for (const key of pillars) {
+    const pillar = r.manse[key];
+    if (pillar.stemOhaeng) counts[pillar.stemOhaeng]++;
+    if (pillar.branchOhaeng) counts[pillar.branchOhaeng]++;
+  }
+  const total = Object.values(counts).reduce((a, b) => a + b, 0);
   const bars = ['木', '火', '土', '金', '水'].map((o) => ({
     el: o, ko: OH_META[o].ko, word: OH_META[o].word, color: OH_META[o].color,
-    count: counts[o] || 0, pct: Math.round((counts[o] || 0) / total * 100), grade: grade[o] || ''
+    count: counts[o], pct: Math.round(counts[o] / total * 100), grade: grade(counts[o])
   }));
   const strongest = bars.reduce((a, b) => (b.count > a.count ? b : a), bars[0]);
-  const lacking = (r.counts.lacking || []).map((o) => ({ el: o, ko: OH_META[o].ko, word: OH_META[o].word, text: OH_LACK[o] }));
+  const strongestAll = bars.filter((b) => b.count === strongest.count).map((b) => ({ ...b, ...OH_STRONG[b.el] }));
+  const lacking = bars.filter((b) => b.count === 0).map((b) => ({ el: b.el, ko: b.ko, word: b.word, text: OH_LACK[b.el] }));
   const weakest = bars.filter((b) => b.count > 0).sort((a, b) => a.count - b.count)[0];
 
   const spread = strongest.count - (bars.reduce((a, b) => (b.count < a.count ? b : a), bars[0]).count);
   let headline;
-  if (lacking.length >= 2) headline = `${iga(strongest.ko)} 세고, ${iga(lacking.map((l) => l.ko).join('·'))} 비어 있어요`;
-  else if (lacking.length === 1) headline = `${iga(strongest.ko)} 세고, ${iga(lacking[0].ko)} 비어 있어요`;
+  const strongestNames = strongestAll.map((b) => b.ko).join('·');
+  if (lacking.length >= 2) headline = `${iga(strongestNames)} 두드러지고, ${eunneun(lacking.map((l) => l.ko).join('·'))} 보이지 않아요`;
+  else if (lacking.length === 1) headline = `${iga(strongestNames)} 두드러지고, ${eunneun(lacking[0].ko)} 보이지 않아요`;
   else if (spread <= 2) headline = '다섯 기운이 고르게 퍼져 있어요';
-  else headline = `${strongest.ko}(${strongest.word.split('·')[0]}) 쪽으로 기울어 있어요`;
+  else headline = `${strongestNames} 쪽으로 기울어 있어요`;
 
   return {
     kind: 'balance', title: '내 오행 밸런스', headline,
-    lead: `여덟 글자 중 ${iga(strongest.ko)} ${strongest.count}개로 가장 많고${lacking.length ? `, ${eunneun(lacking.map((l) => l.ko).join('·'))} 하나도 없습니다` : ', 빠진 기운은 없습니다'}. 많은 기운이 타고난 강점이고, 빈 기운이 채워야 할 자리입니다.`,
-    bars, strongest: { ...strongest, ...OH_STRONG[strongest.el] }, lacking,
+    lead: `${total}글자 중 ${iga(strongestNames)} ${strongestAll.length > 1 ? '각각 ' : ''}${strongest.count}개로 가장 많고${lacking.length ? `, ${eunneun(lacking.map((l) => l.ko).join('·'))} 0개입니다` : ', 빠진 기운은 없습니다'}. 글자 수만으로 기운의 좋고 나쁨을 단정하지 않습니다.`,
+    bars, total, hourUnknown: pillars.length === 3, strongest: strongestAll[0], strongestAll, lacking,
     weakest: weakest && weakest.el !== strongest.el ? { ...weakest, text: `${eunneun(weakest.ko)} 있긴 하지만 ${weakest.count}개로 얇습니다. 없는 건 아니라 의식하면 쓸 수 있는 자리입니다.` } : null,
     upsell: { lead: '기운의 많고 적음은 봤어요. 이 균형이 성격과 기질로 어떻게 나타나고, 전체를 한 줄로 뭐라고 하는지까지 보려면요.', name: '내 사주 첫 풀이', price: '3,900원', href: '/quick.html?topic=intro' }
   };

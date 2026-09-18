@@ -41,6 +41,17 @@ test('오행 밸런스는 다섯 막대 합이 글자 수와 같고 조사가 �
   assert.ok(total >= 6 && total <= 8, '여덟 글자(시각 있음) 범위');
   assert.doesNotMatch(r.headline, /[가-힣]이 세고, [가-힣·]+이 비어/); // "목·수이" 같은 조사 오류
   assert.ok(r.strongest.light && r.strongest.shadow);
+  assert.equal(total, 8);
+  assert.deepEqual(r.strongestAll.map((b) => b.ko), ['화', '토']);
+  assert.match(r.headline, /화·토/);
+});
+
+test('시각을 모를 때 오행 결과에서 가정한 시주를 제외한다', () => {
+  const r = readFree('balance', bNoHour);
+  assert.equal(r.hourUnknown, true);
+  assert.equal(r.total, 6);
+  assert.equal(r.bars.reduce((sum, b) => sum + b.count, 0), 6);
+  assert.match(r.lead, /6글자/);
 });
 
 test('모르는 종류는 거부한다', () => {

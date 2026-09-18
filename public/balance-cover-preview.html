@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>오행 결과 첫 장 · 디자인 미리보기</title>
+  <link rel="stylesheet" href="./balance-cover-preview.css">
+</head>
+<body>
+  <main class="sheet" aria-label="내 오행 결과 첫 장">
+    <header class="sheet-head">
+      <div class="brand-wrap"><span class="brand">사주보는 수달</span><span class="seal" aria-hidden="true">水獺</span></div>
+      <span class="folio">오행 결과 · 첫 장</span>
+    </header>
+
+    <section class="opening" aria-labelledby="coverTitle">
+      <h1 id="coverTitle"><span><em class="fire-text">화</em>와 <em class="earth-text">토</em>가</span><span>두드러지고,</span><span><em class="metal-text">금</em>은 비어 있어요</span></h1>
+    </section>
+
+    <section class="distribution" aria-labelledby="mapTitle">
+      <div class="section-line"><h2 id="mapTitle">여덟 글자의 기운 지도</h2><span aria-hidden="true" class="section-rule"></span></div>
+      <div class="elements" id="elements" aria-label="목 1개, 화 3개, 토 3개, 금 0개, 수 1개"></div>
+      <p class="basis-note" id="basisNote">원국 여덟 글자 가운데 보이는 오행의 개수</p>
+    </section>
+
+    <section class="reading" aria-labelledby="readingHeadline">
+      <h2 id="readingHeadline">화·토 각 3개, 금 0개</h2>
+      <div class="illustrated-note">
+        <p class="hand-note">지금의 기운에서,<br>어떤 이야기가 이어질지<br>함께 알아봐요.</p>
+        <img class="otter" src="./illustrations/otter-field-guide.png" alt="나침반을 든 수달" width="220" height="290">
+      </div>
+      <p class="reading-caution">숫자는 사주 글자의 개수입니다. 많고 적음만으로 좋고 나쁨을 판단하지 않습니다.</p>
+    </section>
+
+    <footer class="next-chapter">
+      <div class="next-copy"><h2>다음에 읽을 이야기</h2><p>이 오행 분포가 어떤 의미인지<br>다음 장에서 살펴봅니다.</p></div>
+      <button type="button" id="nextButton">다음 장 읽기 <span aria-hidden="true">›</span></button>
+    </footer>
+    <section class="placeholder-page" id="placeholderPage" aria-labelledby="placeholderTitle" hidden>
+      <div class="placeholder-head"><span class="brand">사주보는 수달</span><span class="folio">오행 결과 · 둘째 장</span></div>
+      <p class="page-number">二 · 해석</p>
+      <h1 id="placeholderTitle" tabindex="-1">이 기운은<br>어떻게 읽을까요?</h1>
+      <p class="placeholder-copy">두 번째 장의 내용은 아직 제작하지 않았습니다.<br>페이지 이동과 디자인 흐름을 확인하는 미리보기입니다.</p>
+      <button type="button" id="backButton">‹ 첫 장으로 돌아가기</button>
+    </section>
+  </main>
+
+  <script>
+    // 기존 무료 결과 API의 bars 형식에 맞춘 시안용 데이터. 실제 서비스에는 연결하지 않는다.
+    const sample = { bars: [
+      { ko: '목', count: 1 }, { ko: '화', count: 3 }, { ko: '토', count: 3 },
+      { ko: '금', count: 0 }, { ko: '수', count: 1 }
+    ] };
+    const names = ['목', '화', '토', '금', '수'];
+    const classes = { 목: 'wood', 화: 'fire', 토: 'earth', 금: 'metal', 수: 'water' };
+    const symbols = {
+      목: '<path d="M18 26c-8-3-8-12-7-16 5 1 9 4 9 10m-2 6c7-2 12-8 12-17-8 0-14 5-14 14m2 3v8"/>',
+      화: '<path d="M17 32c-6-5-6-11 0-17 0 4 2 5 3 6 4-6 4-10 2-14 10 7 12 19 6 25-3 3-8 4-11 0z"/><path d="M21 32c-2-3-1-6 2-9 2 4 4 6 2 9"/>',
+      토: '<path d="M5 30 17 11l8 11 5-7 9 15H5z"/><path d="m17 11 3 7 3-3"/>',
+      금: '<path d="M8 17h27M8 24h27M8 31h27"/>',
+      수: '<path d="M5 16c5-5 9-5 14 0s9 5 14 0M5 25c5-5 9-5 14 0s9 5 14 0"/>'
+    };
+    function particle(word, final, open) {
+      const last = word.codePointAt(word.length - 1);
+      return last >= 0xAC00 && last <= 0xD7A3 && (last - 0xAC00) % 28 !== 0 ? final : open;
+    }
+    function glyph(name) {
+      const node = document.createElement('em'); node.className = classes[name] + '-text'; node.textContent = name; return node;
+    }
+    function line(...parts) {
+      const node = document.createElement('span'); node.append(...parts); return node;
+    }
+    function stamp(name, missing) {
+      const node = document.createElement('span'); node.className = missing ? 'stamp empty' : 'stamp';
+      if (!missing) node.innerHTML = '<svg viewBox="0 0 44 44" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">' + symbols[name] + '</g></svg>';
+      return node;
+    }
+    function renderCover(reading) {
+      const bars = reading?.bars;
+      if (!Array.isArray(bars) || bars.length !== 5 || names.some((name, i) => bars[i].ko !== name || !Number.isInteger(bars[i].count) || bars[i].count < 0)) return;
+      const total = bars.reduce((sum, bar) => sum + bar.count, 0);
+      if (total !== 6 && total !== 8) return;
+      const topCount = Math.max(...bars.map(bar => bar.count));
+      const top = bars.filter(bar => bar.count === topCount);
+      const absent = bars.filter(bar => bar.count === 0);
+      const title = document.getElementById('coverTitle'); title.replaceChildren();
+      if (top.length >= 4) {
+        title.append(line('네 기운이'), line('고르게 보이고,'));
+        if (absent.length === 1) title.append(line(glyph(absent[0].ko), particle(absent[0].ko, '은', '는'), ' 비어 있어요'));
+        else title.append(line('빠진 기운은 없어요'));
+      }
+      else {
+        const leaders = top.map(bar => bar.ko);
+        const first = [];
+        leaders.forEach((name, i) => {
+          first.push(glyph(name));
+          if (i < leaders.length - 1) first.push(i === leaders.length - 2 ? particle(name, '과 ', '와 ') : '·');
+        });
+        first.push(particle(leaders.at(-1), '이', '가'));
+        title.append(line(...first), line('두드러지고,'));
+        if (absent.length === 1) title.append(line(glyph(absent[0].ko), particle(absent[0].ko, '은', '는'), ' 비어 있어요'));
+        else if (absent.length > 1) title.append(line('비어 있는'), line('기운도 있어요'));
+        else title.append(line('빠진 기운은 없어요'));
+      }
+      document.getElementById('mapTitle').textContent = (total === 8 ? '여덟' : '여섯') + ' 글자의 기운 지도';
+      document.getElementById('basisNote').textContent = '원국 ' + (total === 8 ? '여덟' : '여섯') + ' 글자 가운데 보이는 오행의 개수';
+      const elements = document.getElementById('elements'); elements.replaceChildren();
+      for (const bar of bars) {
+        const item = document.createElement('div'); item.className = 'element ' + classes[bar.ko] + (bar.count >= 4 ? ' dense' : '');
+        const marks = document.createElement('div'); marks.className = 'stamps';
+        if (bar.count === 0) marks.append(stamp(bar.ko, true));
+        else for (let i = 0; i < bar.count; i++) marks.append(stamp(bar.ko, false));
+        const label = document.createElement('span'); label.className = 'element-label'; label.textContent = bar.ko;
+        const count = document.createElement('strong'); count.textContent = String(bar.count);
+        item.append(marks, label, count); elements.append(item);
+      }
+      elements.setAttribute('aria-label', bars.map(bar => bar.ko + ' ' + bar.count + '개').join(', '));
+      document.getElementById('readingHeadline').textContent = top.map(bar => bar.ko).join('·') + ' ' + (top.length > 1 ? '각 ' : '') + topCount + '개' + (absent.length ? ', ' + absent.map(bar => bar.ko).join('·') + ' 0개' : '');
+    }
+    renderCover(sample);
+    const sheet = document.querySelector('.sheet');
+    const placeholderPage = document.getElementById('placeholderPage');
+    document.getElementById('nextButton').addEventListener('click', () => {
+      placeholderPage.hidden = false;
+      sheet.classList.add('is-next');
+      sheet.setAttribute('aria-label', '내 오행 결과 둘째 장');
+      window.scrollTo(0, 0);
+      document.getElementById('placeholderTitle').focus({ preventScroll: true });
+    });
+    document.getElementById('backButton').addEventListener('click', () => {
+      sheet.classList.remove('is-next');
+      placeholderPage.hidden = true;
+      sheet.setAttribute('aria-label', '내 오행 결과 첫 장');
+      window.scrollTo(0, 0);
+      document.getElementById('nextButton').focus({ preventScroll: true });
+    });
+  </script>
+</body>
+</html>

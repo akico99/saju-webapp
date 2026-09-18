@@ -75,12 +75,15 @@ test('life graph shows results before asking for a topic', () => {
   assert.match(html, /ConcernStep\.byKey\(params\.get\('concern'\)\)/);
 });
 
-test('balance free reading has its own cover, chart, and paid preview without changing other kinds', () => {
+test('balance free reading uses the three-page result book without changing other kinds', () => {
   const html = fs.readFileSync(path.join(publicDir, 'free.html'), 'utf8');
   assert.match(html, /href="\/balance-experience\.css"/);
   assert.match(html, /kind === 'balance'\) document\.body\.classList\.add\('balance-experience'\)/);
   assert.match(html, /id="balanceCoverFacts"/);
-  assert.match(html, /balance-spectrum/);
-  assert.match(html, /class="balance-paid-preview"/);
+  assert.match(html, /id="balanceBook"/);
+  assert.match(html, /href="\/balance-book\.css"/);
+  assert.match(html, /src="\/balance-book\.js"/);
   assert.ok(fs.existsSync(path.join(publicDir, 'balance-experience.css')));
+  assert.ok(fs.existsSync(path.join(publicDir, 'balance-book.css')));
+  assert.ok(fs.existsSync(path.join(publicDir, 'balance-book.js')));
 });

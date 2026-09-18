@@ -1,0 +1,82 @@
+@font-face { font-family: 'Balance Song'; src: url('/fonts/SongMyung-Regular.ttf') format('truetype'); font-display: swap; }
+@font-face { font-family: 'Balance Brush'; src: url('/fonts/NanumBrushScript-Regular.ttf') format('truetype'); font-display: swap; }
+@font-face { font-family: 'Balance Myeongjo'; src: url('/fonts/NanumMyeongjo-ExtraBold.ttf') format('truetype'); font-display: swap; }
+.balance-experience #result > .card { display: none; }
+.balance-experience #result { width: calc(100% + 2 * clamp(18px, 4vw, 40px)); max-width: none; margin-left: calc(-1 * clamp(18px, 4vw, 40px)); scroll-margin-top: 65px; }
+.balance-experience #result .balance-book[hidden], .balance-experience #result .bb-page[hidden] { display: none; }
+.balance-book { color: #211d19; font-family: 'Balance Song', Georgia, serif; scroll-margin-top: 65px; }
+.bb-page { min-height: 760px; padding: 22px 24px 28px; background: #faf5ed url('/illustrations/balance-paper-ink-v2.png') center top / 100% 100% no-repeat; }
+.bb-head { display: flex; align-items: center; gap: 8px; padding-bottom: 7px; border-bottom: 1px solid #7c7062; }
+.bb-brand { font: 17px 'Balance Myeongjo', serif; letter-spacing: -.09em; white-space: nowrap; }
+.bb-seal { display: grid; place-items: center; width: 24px; height: 24px; border: 2px solid #934839; color: #934839; font: 9px 'Balance Song', serif; writing-mode: vertical-rl; }
+.bb-folio { margin-left: auto; color: #786b5f; font-size: 10px; white-space: nowrap; }
+.balance-experience #result .bb-title { margin: 26px 0 22px; font: 800 clamp(36px, 9.4vw, 49px)/1.22 'Balance Myeongjo', serif; letter-spacing: -.1em; }
+.bb-title > span { display: block; white-space: nowrap; }
+.bb-title em { font-style: normal; }
+.bb-wood { color: #385542; }.bb-fire { color: #963b2d; }.bb-earth { color: #9a6a25; }.bb-metal { color: #77736e; }.bb-water { color: #2f435d; }
+.bb-section-line { display: flex; align-items: center; gap: 12px; }
+.balance-experience #result .bb-section-line h3 { margin: 0; font: 18px 'Balance Myeongjo', serif; letter-spacing: -.09em; white-space: nowrap; }
+.bb-section-line > span { height: 1px; width: 100%; background: #776b5c; }
+.bb-elements { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); margin-top: 17px; }
+.bb-element { --tone: #555; display: flex; flex-direction: column; align-items: center; min-width: 0; min-height: 157px; padding: 1px 2px 3px; border-right: 1px solid #9a8e7e7f; color: var(--tone); }
+.bb-element:last-child { border: 0; }
+.bb-element.bb-wood { --tone: #3f5d45; }.bb-element.bb-fire { --tone: #a64838; }.bb-element.bb-earth { --tone: #a37937; }.bb-element.bb-metal { --tone: #777571; }.bb-element.bb-water { --tone: #314760; }
+.bb-stamps { display: flex; justify-content: center; align-content: center; align-items: center; flex-wrap: wrap; gap: 2px; width: 100%; height: 102px; }
+.bb-stamp { display: grid; place-items: center; width: 35px; height: 35px; flex: 0 0 35px; border-radius: 50%; background: var(--tone); color: #fdf7eb; box-shadow: inset 2px -2px 4px #21150e32; }
+.bb-stamp svg { width: 26px; height: 26px; }
+.bb-stamp.bb-empty { width: 48px; height: 48px; flex-basis: 48px; border: 2px dashed var(--tone); background: transparent; box-shadow: none; }
+.bb-dense .bb-stamp { width: 23px; height: 23px; flex-basis: 23px; }
+.bb-dense .bb-stamp svg { width: 17px; height: 17px; }
+.bb-element-name { font: 18px 'Balance Myeongjo', serif; line-height: 1.1; }
+.bb-element strong { font: 27px/1.16 'Balance Song', serif; }
+.bb-basis { margin: 0 0 14px; color: #786f64; text-align: right; font-size: 10px; }
+.bb-cover-reading { border-top: 1px solid #7c7062; }
+.balance-experience #result .bb-summary { margin: 13px 0 0; font: 23px 'Balance Myeongjo', serif; letter-spacing: -.09em; }
+.bb-figure { position: relative; height: 200px; }
+.bb-handnote { position: absolute; z-index: 1; top: 28px; left: 18px; margin: 0; transform: rotate(-8deg); font: 24px/1.03 'Balance Brush', cursive; }
+.bb-figure img { position: absolute; right: 10px; bottom: 0; width: 155px; max-height: 187px; object-fit: contain; object-position: bottom; }
+.bb-note { margin: 0 0 15px; color: #766b5f; font-size: 11px; line-height: 1.55; }
+.bb-pagefoot { display: flex; align-items: center; justify-content: space-between; gap: 8px; border-top: 1px solid #7c7062; padding-top: 14px; }
+.bb-pagefoot > span { font: 19px 'Balance Myeongjo', serif; letter-spacing: -.08em; }
+.balance-experience #result .bb-pagefoot button { width: auto; min-height: 0; margin: 0; border: 0; border-radius: 2px; padding: 12px 15px; background: #9b3e32; box-shadow: none; color: #fff7e8; font: 15px 'Balance Song', serif; white-space: nowrap; cursor: pointer; }
+.bb-pagefoot button b { margin-left: 6px; font-size: 20px; font-weight: 400; vertical-align: -1px; }
+.balance-experience #result .bb-pagefoot .bb-back { padding-left: 0; background: transparent; color: #5d4f44; }
+.bb-chapter { margin: 54px 0 11px; color: #9b3e32; font-size: 19px; }
+.balance-experience #result .bb-detail h2, .balance-experience #result .bb-ending h2 { margin: 0; font: 35px/1.3 'Balance Myeongjo', serif; letter-spacing: -.09em; }
+.bb-detail > .bb-lead { margin: 22px 0 38px; border-top: 1px solid #7c7062; padding-top: 15px; font-size: 15px; line-height: 1.7; }
+.bb-insight { margin-bottom: 32px; padding-top: 15px; border-top: 1px solid #a89b89; }
+.balance-experience #result .bb-insight h3 { margin: 0 0 15px; font: 24px 'Balance Myeongjo', serif; }
+.bb-insight-part { display: grid; grid-template-columns: 82px minmax(0, 1fr); gap: 13px; margin-bottom: 14px; }
+.balance-experience #result .bb-insight-part h4 { margin: 0; color: #904433; font: 16px 'Balance Myeongjo', serif; }
+.bb-insight-part p { margin: 0; font-size: 16px; line-height: 1.7; word-break: keep-all; }
+.bb-detail .bb-note { margin-top: 8px; padding-top: 12px; border-top: 1px solid #a89b89; }
+.bb-detail .bb-pagefoot { margin-top: 20px; }
+.bb-missing { margin: 38px 0 33px; }
+.bb-missing-item { padding: 16px 0; border-top: 1px solid #a89b89; }
+.balance-experience #result .bb-missing-item h3 { margin: 0 0 9px; color: #56514c; font: 20px 'Balance Myeongjo', serif; }
+.bb-missing-item p, .bb-missing-text { margin: 0; font-size: 15px; line-height: 1.75; word-break: keep-all; }
+.bb-hour-note { margin: 20px 0 0; font-size: 13px; line-height: 1.6; color: #775e4b; }
+.bb-offer { margin: 42px 0 30px; border-top: 2px solid #984939; border-bottom: 1px solid #a89b89; padding: 22px 0 26px; }
+.bb-offer-label { margin: 0 0 12px; color: #a04133; font-size: 12px; }
+.balance-experience #result .bb-offer h3 { margin: 0 0 15px; font: 23px/1.4 'Balance Myeongjo', serif; letter-spacing: -.07em; }
+.bb-offer > p:not(.bb-offer-label) { margin: 0 0 20px; font-size: 15px; line-height: 1.7; word-break: keep-all; }
+.bb-paid-link { display: flex; align-items: center; gap: 8px; padding: 15px 16px; background: #9b3e32; color: #fff7e8; text-decoration: none; font-size: 17px; }
+.bb-paid-price { margin-left: auto; white-space: nowrap; }
+.bb-other { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 30px; }
+.bb-other > span { flex-basis: 100%; font-size: 14px; }
+.bb-other a { border: 1px solid #ad9f8d; padding: 8px 10px; color: #3c342d; text-decoration: none; font-size: 13px; }
+.bb-pagefoot button:focus-visible, .bb-paid-link:focus-visible, .bb-other a:focus-visible { outline: 3px solid #243f5e; outline-offset: 3px; }
+.bb-page h2:focus { outline: none; }
+@media (max-width: 390px) {
+  .bb-page { padding-inline: 18px; }
+  .balance-experience #result .bb-title { font-size: clamp(31px, 9.3vw, 36px); }
+  .bb-element { min-height: 146px; }.bb-stamps { height: 92px; }
+  .bb-stamp { width: 31px; height: 31px; flex-basis: 31px; }.bb-stamp svg { width: 23px; height: 23px; }
+  .bb-element-name { font-size: 16px; }.bb-element strong { font-size: 25px; }
+}
+@media (max-width: 335px) {
+  .bb-page { padding-inline: 14px; }
+  .balance-experience #result .bb-title { font-size: 29px; }
+  .bb-stamp { width: 27px; height: 27px; flex-basis: 27px; }.bb-stamp svg { width: 20px; height: 20px; }
+  .bb-insight-part { grid-template-columns: 1fr; gap: 3px; }
+}
