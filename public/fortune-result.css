@@ -154,3 +154,15 @@
 /* 인생 그래프 — 차트 패널 아래 행동 조언만 이 구조를 쓴다. 표지·차트는 life-graph 고유. */
 .lg-advice-block .fr-section { margin-top: 10px; padding-bottom: 8px; border-bottom: 0; }
 .lg-advice-block .fr-h { font-size: 20px; }
+
+/* ---------- 유료 심층 리딩 웹 본문 ---------- */
+.fr-prose p { margin: 14px 0 0; font-size: 16px; line-height: 1.95; color: #2b3648; white-space: pre-line; overflow-wrap: anywhere; word-break: keep-all; }
+.fr-prose .fr-sub { margin: 28px 0 0; font-family: var(--font-serif); font-size: 18px; line-height: 1.4; letter-spacing: -.03em; color: var(--ink); }
+.fr-prose .fr-sub:first-of-type, .fr-prose .fr-h + .fr-sub { margin-top: 18px; }
+.fr-prose .fr-list { margin: 12px 0 0; padding-left: 20px; font-size: 15.5px; line-height: 1.85; color: #2b3648; }
+.fr-prose .fr-list li + li { margin-top: 6px; }
+.fr-prose .fr-list li::marker { color: var(--fr-gold-ink); }
+.web-reading.fortune-result { max-width: none; margin: 0 0 24px; }
+.web-reading.fortune-result .fr-cover .fr-lead-inv { max-width: none; }
+.paid-flow .web-reading.fortune-result .fr-section { padding-left: 2px; padding-right: 2px; }
+@media (min-width: 700px) { .fr-prose p { font-size: 16.5px; } .fr-prose .fr-sub { font-size: 20px; } }

@@ -17,6 +17,7 @@
 <link rel="stylesheet" href="/theme.css">
 <link rel="stylesheet" href="/reading-ui.css">
 <link rel="stylesheet" href="/paid-flow.css">
+<link rel="stylesheet" href="/fortune-result.css">
 <link rel="stylesheet" href="/editorial-refresh.css">
 </head>
 <body class="reading-page paid-flow editorial-result-page">
@@ -105,18 +106,29 @@
     </div>
 
     <div id="downloadBlock" class="hidden">
-      <div class="paid-result-heading"><span>리딩이 준비됐어요</span><h2 id="readingTitle">궁금했던 답을 읽어보세요</h2><p>먼저 핵심을 읽고, 자세한 풀이는 아래에서 이어집니다.</p></div>
-      <article id="webReading" class="web-reading hidden" aria-label="심층 리딩 결과">
-        <section class="web-reading-lead" aria-labelledby="readingLeadTitle">
-          <span class="web-reading-kicker">먼저 읽어보세요</span>
-          <h3 id="readingLeadTitle">지금의 흐름</h3>
-          <p id="readingLead"></p>
+      <!-- 결과: 표지(주제·핵심 요약) → 할 것/피할 것 → 앞으로 3년 → 챕터 본문. fortune-result.css 공용 구조. -->
+      <article id="webReading" class="fortune-result web-reading hidden" aria-label="심층 리딩 결과">
+        <section class="fr-cover">
+          <p class="fr-eyebrow" id="readingKicker">심층 리딩</p>
+          <h2 class="fr-verdict" id="readingTitle"></h2>
+          <p class="fr-lead-inv" id="readingLead"></p>
         </section>
-        <section class="web-reading-body" aria-labelledby="readingBodyTitle">
-          <h3 id="readingBodyTitle">이렇게 읽을 수 있어요</h3>
-          <div id="readingParagraphs"></div>
+        <section class="fr-section" id="readingActions" hidden>
+          <div class="fr-h-row">
+            <h3 class="fr-h">지금 할 것, 피할 것</h3>
+            <p class="fr-h-sub">지금 대운 기준</p>
+          </div>
+          <div class="fr-actions">
+            <div class="do"><h4>지금 할 것</h4><ul id="readingDos"></ul></div>
+            <div class="dont"><h4>피할 것</h4><ul id="readingDonts"></ul></div>
+          </div>
         </section>
-        <p class="web-reading-note">사주 해석은 선택을 돕는 참고 자료이며, 미래를 확정하지 않습니다.</p>
+        <section class="fr-section fr-prose" id="readingTiming" hidden>
+          <h3 class="fr-h">지금 대운, 앞으로 3년</h3>
+          <div id="readingTimingBody"></div>
+        </section>
+        <div id="readingParagraphs"></div>
+        <p class="fr-note">사주 해석은 선택을 돕는 참고 자료이며, 미래를 확정하지 않습니다.</p>
       </article>
       <p id="readingFallback" class="hint hidden">이전에 만든 리딩은 웹 본문이 저장되지 않았어요. 아래 PDF에서 전체 결과를 확인할 수 있습니다.</p>
       <div class="web-reading-actions">

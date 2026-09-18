@@ -10,50 +10,93 @@ const readingParagraphs = document.getElementById('readingParagraphs');
 const readingFallback = document.getElementById('readingFallback');
 const readingTitle = document.getElementById('readingTitle');
 
-function showReading(report, topic) {
-  const blocks = typeof report === 'string' ? report.split(/\n\s*\n/).map((part) => part.trim()).filter(Boolean) : [];
-  webReading.classList.toggle('hidden', blocks.length === 0);
-  readingFallback.classList.toggle('hidden', blocks.length !== 0);
-  if (!blocks.length) return;
-  readingTitle.textContent = `${TOPIC_LABELS[topic] || '심층 리딩'} 결과`;
-  // 심층 리딩은 "## 소제목" 줄로 섹션이 나뉜다. 첫 소제목 다음 문단을 리드로 쓰고,
-  // 나머지는 소제목/불릿/문단으로 그린다. 옛 리딩(소제목 없음)도 같은 코드로 읽힌다.
-  const bodyBlocks = blocks[0].startsWith('## ') ? blocks.slice(1) : blocks;
-  // 골격이 있는 본문은 "### 소주제"로 바로 시작한다 — 그때는 리드 칸을 비우고 전부 본문으로 그린다.
-  const hasLead = bodyBlocks.length && !bodyBlocks[0].startsWith('### ');
-  readingLead.textContent = hasLead ? bodyBlocks[0].replace(/\*\*/g, '') : '';
-  readingLead.closest('section')?.classList.toggle('hidden', !hasLead);
-  readingParagraphs.replaceChildren();
-  for (const block of (hasLead ? bodyBlocks.slice(1) : bodyBlocks)) {
-    if (block.startsWith('## ')) {
-      const h = document.createElement('h4');
-      h.className = 'web-reading-sub';
-      h.textContent = block.replace(/^##\s*/, '');
-      readingParagraphs.appendChild(h);
-    } else if (block.startsWith('### ')) {
-      // 챕터 골격의 소주제. 같은 블록에 본문이 붙어 있을 수 있다.
+/* 저장된 리딩 텍스트는 "## 섹션" / "### 소주제" / "- 불릿" / 문단으로 되어 있다(deepReading.toPlainText).
+   섹션 단위로 갈라서 표지·행동·3년 흐름·본문 순으로 배치한다. 옛 리딩(소제목 없음)도 본문으로 읽힌다. */
+function parseReading(report) {
+  const blocks = typeof report === 'string' ? report.split(/\n\s*\n/).map((s) => s.trim()).filter(Boolean) : [];
+  const sections = [];
+  let cur = { title: '', blocks: [] };
+  for (const b of blocks) {
+    if (b.startsWith('## ')) { if (cur.title || cur.blocks.length) sections.push(cur); cur = { title: b.replace(/^##\s*/, ''), blocks: [] }; }
+    else cur.blocks.push(b);
+  }
+  if (cur.title || cur.blocks.length) sections.push(cur);
+  return sections;
+}
+const clean = (s) => s.replace(/\*\*/g, '');
+const bulletsOf = (section) => section.blocks.flatMap((b) => b.split('\n')).map((l) => clean(l.replace(/^\s*-\s*/, '')).trim()).filter(Boolean);
+
+// 문단·소주제·불릿을 지면에 그린다. "### 소주제"는 섹션 안 소제목(h4)로.
+function renderProse(blocks, into) {
+  for (const block of blocks) {
+    if (block.startsWith('### ')) {
       const [first, ...rest] = block.split('\n');
-      const h = document.createElement('h5');
-      h.className = 'web-reading-sub2';
-      h.textContent = first.replace(/^###\s*/, '');
-      readingParagraphs.appendChild(h);
+      const h = document.createElement('h4'); h.className = 'fr-sub'; h.textContent = first.replace(/^###\s*/, '');
+      into.appendChild(h);
       const body = rest.join('\n').trim();
-      if (body) { const p = document.createElement('p'); p.textContent = body.replace(/\*\*/g, ''); readingParagraphs.appendChild(p); }
+      if (body) { const p = document.createElement('p'); p.textContent = clean(body); into.appendChild(p); }
     } else if (/^- /m.test(block)) {
-      const ul = document.createElement('ul');
-      ul.className = 'web-reading-list';
-      block.split('\n').forEach((line) => {
-        const li = document.createElement('li');
-        li.textContent = line.replace(/^\s*-\s*/, '').replace(/\*\*/g, '');
-        if (li.textContent) ul.appendChild(li);
-      });
-      readingParagraphs.appendChild(ul);
+      const ul = document.createElement('ul'); ul.className = 'fr-list';
+      block.split('\n').forEach((line) => { const li = document.createElement('li'); li.textContent = clean(line.replace(/^\s*-\s*/, '')); if (li.textContent) ul.appendChild(li); });
+      into.appendChild(ul);
     } else {
-      const p = document.createElement('p');
-      p.textContent = block.replace(/\*\*/g, '');
-      readingParagraphs.appendChild(p);
+      const p = document.createElement('p'); p.textContent = clean(block); into.appendChild(p);
     }
   }
+}
+
+function showReading(report, topic) {
+  const sections = parseReading(report);
+  webReading.classList.toggle('hidden', sections.length === 0);
+  readingFallback.classList.toggle('hidden', sections.length !== 0);
+  if (!sections.length) return;
+
+  const label = TOPIC_LABELS[topic] || '심층 리딩';
+  const isDos = (t) => /할 것/.test(t) && !/피할/.test(t);
+  const isDonts = (t) => /피할 것/.test(t);
+  const isTiming = (t) => /대운|앞으로 3년/.test(t);
+  const dos = sections.find((s) => isDos(s.title));
+  const donts = sections.find((s) => isDonts(s.title));
+  const timing = sections.find((s) => isTiming(s.title));
+  const chapters = sections.filter((s) => s !== dos && s !== donts && s !== timing);
+
+  // 표지 — 주제가 결론 자리에 오고, 그 아래 "핵심 요약" 소주제의 첫 문단이 리드가 된다.
+  document.getElementById('readingKicker').textContent = label + ' 심층 리딩';
+  readingTitle.textContent = label;
+  let lead = '';
+  for (const ch of chapters) {
+    const sum = ch.blocks.find((b) => /^###\s*핵심 요약/.test(b));
+    if (sum) { lead = clean(sum.split('\n').slice(1).join('\n').trim().split(/\n/)[0] || ''); break; }
+  }
+  if (!lead && chapters[0]) {
+    const first = chapters[0].blocks.find((b) => !b.startsWith('### ')) || '';
+    lead = clean(first);
+  }
+  readingLead.textContent = lead;
+  readingLead.hidden = !lead;
+
+  const dosEl = document.getElementById('readingDos'), dontsEl = document.getElementById('readingDonts');
+  dosEl.replaceChildren(); dontsEl.replaceChildren();
+  (dos ? bulletsOf(dos) : []).forEach((t) => { const li = document.createElement('li'); li.textContent = t; dosEl.appendChild(li); });
+  (donts ? bulletsOf(donts) : []).forEach((t) => { const li = document.createElement('li'); li.textContent = t; dontsEl.appendChild(li); });
+  dosEl.parentElement.hidden = !dosEl.children.length;
+  dontsEl.parentElement.hidden = !dontsEl.children.length;
+  document.getElementById('readingActions').hidden = !(dosEl.children.length || dontsEl.children.length);
+
+  const timingBody = document.getElementById('readingTimingBody');
+  timingBody.replaceChildren();
+  if (timing) renderProse(timing.blocks, timingBody);
+  document.getElementById('readingTiming').hidden = !timing;
+
+  readingParagraphs.replaceChildren();
+  chapters.forEach((ch) => {
+    const sec = document.createElement('section'); sec.className = 'fr-section fr-prose';
+    // 챕터 제목이 표지의 주제와 같으면(재물운/재물운) 되풀이하지 않고 '자세한 풀이'로 받는다.
+    const title = ch.title === label ? '자세한 풀이' : ch.title;
+    if (title) { const h = document.createElement('h3'); h.className = 'fr-h'; h.textContent = title; sec.appendChild(h); }
+    renderProse(ch.blocks, sec);
+    readingParagraphs.appendChild(sec);
+  });
 }
 const progressBlock = document.getElementById('progressBlock');
 const downloadBlock = document.getElementById('downloadBlock');
