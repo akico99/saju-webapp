@@ -228,12 +228,38 @@
   .editorial-home .row-scroll { scroll-behavior: auto; }
 }
 
-/* 홈 타일 — 상품 그림(public/tiles/*.png)은 위 1/3에 제목 글자가 그려져 있다. 그 글자가
-   타일 이름과 겹쳐 두 번 읽히고 일부는 깨진 글자라 가장 먼저 눈에 걸린다. 그림을 3:2로
-   잘라 아래쪽(수달·소품)만 보이게 하고, 제목은 타일 이름 한 곳에서만 말한다. */
-.editorial-home .row-scroll .tile .tile-img[src^="/tiles/"] { aspect-ratio: 3 / 2; object-position: center 92%; }
-.editorial-home .row-scroll .tile .name { font-family: var(--font-serif); font-size: 17px; letter-spacing: -.03em; }
-.editorial-home .row-scroll .tile .desc { min-height: 0; color: #626c79; }
-.editorial-home .row-scroll .tile .price { font-variant-numeric: tabular-nums; color: var(--editorial-ink); }
+/* 홈 타일 — 청월당식 포스터 줄. 흰 카드 테두리를 걷고, 그림(정사각 포스터)을 크게 두고
+   그 아래 이름·설명·가격만 적는다. 폰에서 한 화면에 1.6장쯤 보이게 해 옆으로 더 있다는
+   걸 알린다(배너 슬라이드보다는 작게). 이름은 세리프, 가격은 표 숫자. */
+.editorial-home .row-scroll { gap: 16px; padding-bottom: 8px; }
+.editorial-home .row-scroll .tile,
+.editorial-home .row-scroll .tile.tile-featured-free {
+  flex-basis: clamp(228px, 60vw, 270px);
+  gap: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.editorial-home .row-scroll .tile .tile-img,
+.editorial-home .row-scroll .tile .glyph {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 18px;
+  box-shadow: 0 14px 34px rgba(26, 35, 50, .12);
+}
+.editorial-home .row-scroll .tile .tile-img { object-fit: cover; object-position: center; }
+.editorial-home .row-scroll .tile .tile-img[src^="/tiles/"] { aspect-ratio: 1 / 1; object-position: center; }
+.editorial-home .row-scroll .tile-featured-free .tile-img { object-position: center 40%; }
+.editorial-home .row-scroll .tile .glyph svg { width: 52px; height: 52px; }
+.editorial-home .row-scroll .tile .badge { top: 12px; right: 12px; font-size: 11px; padding: 4px 11px; }
+.editorial-home .row-scroll .tile .name { margin-top: 14px; padding: 0 2px; font-family: var(--font-serif); font-size: 19px; line-height: 1.35; letter-spacing: -.03em; }
+.editorial-home .row-scroll .tile .desc { margin-top: 4px; padding: 0 2px; min-height: 0; font-size: 13.5px; line-height: 1.55; color: #626c79; word-break: keep-all; }
+.editorial-home .row-scroll .tile .price { margin-top: 8px; padding: 0 2px; font-size: 15px; font-variant-numeric: tabular-nums; color: var(--editorial-ink); }
 .editorial-home .row-scroll .tile .price.free { color: var(--success); }
 .editorial-home .section-head h2 { font-size: clamp(21px, 3vw, 26px); }
+@media (min-width: 900px) {
+  .editorial-home .row-scroll .tile,
+  .editorial-home .row-scroll .tile.tile-featured-free { flex-basis: 250px; }
+}
