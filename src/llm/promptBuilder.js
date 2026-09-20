@@ -56,9 +56,11 @@ function sliceEngineJson(engineResult, fieldPaths) {
  * @param {Object} chapter chapters.js의 항목 하나
  * @param {Object} engineResult computeSaju() 결과
  * @param {Object} person {name, gender}
- * @param {string[]} priorSummaries 이전 챕터 핵심 요지 요약(불릿, 중복 방지용)
+ * @param {string[]} priorSummaries 이전 챕터 핵심 요지 요약(불릿, 중복 방지용). 심층 리딩이 쓴다.
+ * @param {{chapterMap?: string}} opts chapterMap을 주면 다른 챕터가 맡은 소주제 목록을 함께 보여준다.
+ *   평생사주 리포트는 이쪽을 쓴다 — 요약보다 구체적이고 앞뒤 양방향으로 중복을 막는다.
  */
-function buildChapterPrompt(chapter, engineResult, person, priorSummaries) {
+function buildChapterPrompt(chapter, engineResult, person, priorSummaries = [], opts = {}) {
   const sections = loadInterpretationSections();
   const engineSlice = sliceEngineJson(engineResult, chapter.engineFieldPaths);
   const refText = chapter.interpretationRefs
@@ -71,6 +73,12 @@ function buildChapterPrompt(chapter, engineResult, person, priorSummaries) {
     : '';
 
   const angleBlock = chapter.angle ? `\n\n## 이 챕터만의 관점(다른 챕터와 겹치지 않게)\n${chapter.angle}` : '';
+
+  /* 리포트 전체의 지면 배분 — 다른 챕터가 어떤 소주제를 맡는지 그대로 보여준다. 이 블록이 있으면
+     각 챕터가 남의 몫을 미리 써버리지 않는다. chapterOutlines.js의 정적 데이터라 추가 호출이 없다. */
+  const mapBlock = opts.chapterMap
+    ? `\n\n## 리포트 전체 지면 배분 (아래는 다른 챕터가 맡은 내용입니다 — 이 챕터에서 미리 다루지 마세요)\n${opts.chapterMap}`
+    : '';
 
   /* 골격(outline) — 소주제와 분량을 정해준다. 예전에는 "5,500자로 쓰라"고만 해서 모델이 할 말이
      떨어지면 절반에서 멈췄다(직업·적성운 실측 2,817자). 무엇을 다뤄야 그 분량이 나오는지를 주면
@@ -97,7 +105,7 @@ ${JSON.stringify(engineSlice, null, 2)}
 
 ## 참고 해석 사전 (이 내용에 근거해 서술)
 ${refText || '(해당 챕터는 명식 데이터만으로 서술)'}
-${priorBlock}${angleBlock}${outlineBlock}
+${priorBlock}${mapBlock}${angleBlock}${outlineBlock}
 
 ## 이 사람 정보
 이름: ${person.name || '(익명)'} / 성별: ${person.gender || '(미상)'}
@@ -105,7 +113,7 @@ ${priorBlock}${angleBlock}${outlineBlock}
 ## 지시
 위 명식 데이터와 해석 사전만 근거로 "${chapter.title}" 챕터를 작성하세요. 분량은 한글 기준 ${ask(chapter.targetWords)}자에 최대한 가깝게(짧게 끝내지 말고 이 근처까지) 채워주세요.${outline.length ? ' 위 "이 챕터의 구성"의 소주제별 분량을 합치면 이 목표가 됩니다 — 소주제마다 정해진 분량을 채우는 것으로 목표에 도달하세요.' : ' 부족하면 근거 데이터를 다른 각도(궁위·육친·개운법 등)에서 더 풀어써서 채우되, 빈 말로 늘리지는 마세요.'}
 
-일간·격국·용신·오행 분포 같은 기초 사실은 "이전 챕터 핵심 요지"에서 이미 여러 번 나왔다면 그 사실을 처음부터 다시 설명하지 말고, 이미 안다는 전제로 바로 이 챕터의 주제(${chapter.title})에 적용한 해석으로 들어가세요.
+일간·격국·용신·오행 분포 같은 기초 사실은 리포트 앞쪽(1~3장)에서 이미 설명됩니다. 여기서 그 사실을 처음부터 다시 설명하지 말고, 독자가 이미 안다는 전제로 바로 이 챕터의 주제(${chapter.title})에 적용한 해석으로 들어가세요.
 
 ${outline.length ? '마지막 소주제는' : '챕터 마지막 문단은'} 반드시 이 챕터에서 실제로 다룬 내용을 압축한 "핵심 요약" 1~2문장과, 그 내용에 바로 이어지는 구체적인 실천 포인트 2개로 마무리하세요. "긍정적으로 생각하세요", "노력하세요" 같은 뻔한 조언이 아니라, 이 챕터에서 나온 근거(예: 특정 오행 부족, 특정 십신 강세 등)에 실제로 대응하는 행동이어야 합니다. 챕터 제목은 쓰지 말고 본문만 작성하세요.`;
 

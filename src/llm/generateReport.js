@@ -9,16 +9,38 @@ const { buildChapterPrompt } = require('./promptBuilder');
 const { SYSTEM_PROMPT } = require('./systemPrompt');
 const { generateText } = require('./client');
 
-// 예전엔 3개씩 동시 처리했는데, 같은 배치로 묶인 챕터끼리는 서로 아직 안 끝난 상태라
-// "이전 챕터 요약"을 못 보고 써서 그 3개끼리 내용이 겹치는 문제가 있었다. 순차 처리로
-// 바꿔 매 챕터가 그 앞의 모든 챕터를 확실히 참고하게 한다(생성 시간은 늘어나지만, 100p
-// 유료 리포트에서는 속도보다 챕터 간 중복 없는 품질이 우선).
-const CONCURRENCY = 1;
+/* 예전에는 순차로 돌렸다. 매 챕터가 앞선 챕터들의 요약을 보고 중복을 피하게 하려는 의도였는데,
+   그 요약이 실제로는 본문 5,500자에서 첫 두 문장 120자를 잘라낸 것이었다. 앞 챕터가 무엇을
+   다뤘는지가 아니라 어떻게 시작했는지만 전달된 셈이다. 그 얇은 신호 하나 때문에 18단 깊이의
+   의존 사슬이 생겨 생성이 10~20분 걸렸다.
 
-function summarize(text) {
-  // 다음 챕터 프롬프트에 넣을 짧은 핵심 요지(중복 서술 방지용) — 첫 문장 위주로 축약
-  const firstSentences = text.split(/(?<=[.!?다요])\s+/).slice(0, 2).join(' ');
-  return firstSentences.slice(0, 120);
+   지금은 각 챕터가 나머지 17개 챕터의 소주제 목록을 통째로 본다. 이 목록은 chapterOutlines.js에
+   이미 정의된 정적 데이터라 추가 호출도, 생성 지연도 없다. 요약보다 훨씬 구체적이고, 앞뒤
+   양방향으로 작동하며, 챕터 1이 아무 맥락 없이 쓰이던 불공평도 사라진다. 순서 의존이 없어져
+   병렬로 돌릴 수 있다.
+
+   동시성 기본값은 보수적으로 4다. 분당 출력 토큰 한도에 걸리면 SDK가 retry-after만큼 기다렸다
+   재시도한다(client.js). 실제 한도는 getLastRateLimit()으로 확인한 뒤 조정한다. */
+const CONCURRENCY = Math.max(1, Number(process.env.SAJU_CHAPTER_CONCURRENCY || 4));
+
+/** 이 챕터를 뺀 나머지 챕터가 무엇을 맡는지 — 소주제 제목까지 펼쳐 보여준다. */
+function buildChapterMap(currentId) {
+  return CHAPTERS
+    .filter((c) => c.id !== currentId)
+    .map((c) => {
+      const heads = (c.outline || []).map((o) => o.heading).join(' · ');
+      return `- 제${c.id}장 ${c.title}${heads ? ': ' + heads : ''}`;
+    })
+    .join('\n');
+}
+
+/** 동시 실행 수를 제한한 채 전부 처리한다. 하나라도 실패하면 상위로 던진다(주문 실패·환불 경로 유지). */
+async function runPool(count, limit, worker) {
+  let cursor = 0;
+  const lanes = Array.from({ length: Math.min(limit, count) }, async () => {
+    for (let i = cursor++; i < count; i = cursor++) await worker(i);
+  });
+  await Promise.all(lanes);
 }
 
 /**
@@ -43,30 +65,25 @@ async function generateReport(engineResult, person, outputDir, onProgress) {
     fs.writeFileSync(chaptersPath, JSON.stringify(results, null, 2));
   }
 
-  function priorSummaries(uptoIndex) {
-    return results.slice(0, uptoIndex).filter(Boolean).map(r => r.summary);
-  }
-
   let completed = results.filter(Boolean).length;
   const total = CHAPTERS.length;
   if (onProgress) onProgress({ current: completed, total });
 
-  // 순서 의존성(이전 챕터 요약 참조) 때문에 앞에서부터 CONCURRENCY개씩 배치 처리
-  for (let start = 0; start < CHAPTERS.length; start += CONCURRENCY) {
-    const batch = CHAPTERS.slice(start, start + CONCURRENCY);
-    await Promise.all(batch.map(async (chapter, offset) => {
-      const idx = start + offset;
-      if (results[idx]) return; // 이미 생성됨(재개 시)
-      const prompt = buildChapterPrompt(chapter, engineResult, person, priorSummaries(idx));
-      const { text, usage } = await generateText(SYSTEM_PROMPT, prompt);
-      results[idx] = { id: chapter.id, title: chapter.title, text, summary: summarize(text), usage };
-      completed++;
-      persist();
-      if (onProgress) onProgress({ current: completed, total });
-    }));
-  }
+  await runPool(CHAPTERS.length, CONCURRENCY, async (idx) => {
+    if (results[idx]) return; // 이미 생성됨(재개 시)
+    const chapter = CHAPTERS[idx];
+    const prompt = buildChapterPrompt(chapter, engineResult, person, [], {
+      chapterMap: buildChapterMap(chapter.id)
+    });
+    // 잘림 재시도는 챕터 하나를 통째로 다시 만드는 일이라 비싸다. 넉넉히 열어 애초에 덜 잘리게 한다.
+    const { text, usage } = await generateText(SYSTEM_PROMPT, prompt, { maxTokens: 16000 });
+    results[idx] = { id: chapter.id, title: chapter.title, text, usage };
+    completed++;
+    persist();
+    if (onProgress) onProgress({ current: completed, total });
+  });
 
   return results;
 }
 
-module.exports = { generateReport };
+module.exports = { generateReport, buildChapterMap };

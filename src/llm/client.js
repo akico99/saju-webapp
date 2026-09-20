@@ -123,11 +123,13 @@ function getClient() {
 /**
  * @param {string} systemPrompt
  * @param {string} userMessage
- * @param {{maxRetries?: number}} opts
+ * @param {{maxRetries?: number, maxTokens?: number}} opts
  * @returns {Promise<{text: string, usage: object}>}
  */
 async function generateText(systemPrompt, userMessage, opts = {}) {
   const maxRetries = opts.maxRetries ?? 2;
+  // 잘리면 그 응답을 통째로 버리고 다시 만든다. 긴 챕터는 호출부가 한도를 넉넉히 올려 잡는다.
+  const maxTokens = opts.maxTokens ?? 12000;
   const c = getClient();
   let lastErr;
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -135,7 +137,7 @@ async function generateText(systemPrompt, userMessage, opts = {}) {
       // withResponse()로 원본 HTTP 응답을 함께 받아 분당 한도 헤더를 읽는다.
       const { data: response, response: http } = await c.messages.create({
         model: MODEL,
-        max_tokens: 12000,
+        max_tokens: maxTokens,
         system: systemPrompt,
         messages: [{ role: 'user', content: userMessage }]
       }).withResponse();
