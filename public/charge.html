@@ -169,7 +169,12 @@
     if (cfg.testMode) {
       const note = document.getElementById('cardTestNote');
       note.style.display = 'block';
-      note.textContent = '현재 카드결제는 PG 심사 중인 테스트 모드예요. 결제창은 열리지만 실제 청구되지 않고 포인트도 지급되지 않습니다. 정식 오픈 전까지는 아래 계좌이체를 이용해주세요.';
+      note.textContent = '현재 카드결제는 PG 심사 중인 테스트 모드예요. 결제창은 열리지만 실제 청구되지 않고 포인트도 지급되지 않습니다. 정식 오픈 전까지는 위의 계좌이체를 이용해주세요.';
+      const cardBox = document.getElementById('cardChargeBox');
+      const bankBox = document.getElementById('bankChargeBox');
+      cardBox.parentNode.insertBefore(bankBox, cardBox);
+      bankBox.open = true;
+      bankBox.querySelector('summary').textContent = '계좌이체로 충전하기 (지금 이용 가능 · 운영자 확인 후 지급)';
     }
   }).catch(() => {});
   document.getElementById('cardForm').addEventListener('submit', async (e) => {
