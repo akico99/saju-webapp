@@ -11,6 +11,9 @@ const stmts = {
     VALUES (@userId, @productKey, @label, @jobId, 'pending')
   `),
   findByJobId: db.prepare('SELECT * FROM orders WHERE job_id = ?'),
+  // 요약 카드는 명식 계산만으로 만들어져 LLM을 기다릴 필요가 없다. 완료 전에 먼저 기록해
+  // 생성 중에도 내려받을 수 있게 한다.
+  setCardPath: db.prepare('UPDATE orders SET card_path=@cardPath WHERE job_id=@jobId'),
   markDone: db.prepare(`
     UPDATE orders SET status='done', result_path=@resultPath, card_path=@cardPath,
       llm_cost_usd=@llmCostUsd, result_text=@resultText, finished_at=datetime('now')
@@ -96,6 +99,10 @@ function updateStatus(jobId, status) {
   stmts.updateStatus.run({ jobId, status });
 }
 
+function setCardPath(jobId, cardPath) {
+  stmts.setCardPath.run({ jobId, cardPath });
+}
+
 function updateProgress(jobId, progress) {
   stmts.updateProgress.run({ jobId, current: progress.current, total: progress.total });
 }
@@ -110,5 +117,6 @@ function costSummaryByProduct() {
 
 module.exports = {
   createOrder, findByJobId, markDone, markError, listByUser, countDone, findPendingByUserAndProduct,
-  listAllPending, claimForRecovery, updateStatus, updateProgress, listRecentDone, costSummaryByProduct
+  listAllPending, claimForRecovery, updateStatus, updateProgress, listRecentDone, costSummaryByProduct,
+  setCardPath
 };

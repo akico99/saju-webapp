@@ -106,3 +106,13 @@
 .paid-flow .paid-result-heading h2 { margin: 14px 0 0; font-size: clamp(26px, 7vw, 34px); line-height: 1.3; letter-spacing: -.04em; }
 .paid-flow .paid-result-heading p { margin: 12px 0 0; color: rgba(255,255,255,.75); font-size: 14px; }
 .paid-flow #downloadBlock .download-btn { min-height: 54px; border-radius: 14px; font-size: 15px; font-weight: 800; }
+
+/* 기다리는 동안 보여주는 것들 — 요약 카드와 다 쓰인 챕터. 완본 PDF가 나오기 전에
+   진행률 막대만 남겨두면 결제 직후 몇 분이 통째로 빈 화면이 된다. */
+.paid-flow .early-block { margin-top: 20px; border-top: 1px solid var(--line); padding-top: 18px; }
+.paid-flow .early-block > p { margin: 0 0 12px; color: var(--muted); font-size: 14px; line-height: 1.65; }
+.paid-flow .early-block > p b { color: var(--ink); }
+.paid-flow .chapter-peek { border-bottom: 1px solid var(--line); }
+.paid-flow .chapter-peek > summary { cursor: pointer; padding: 13px 2px; font-family: var(--font-serif); font-size: 15px; color: var(--ink); }
+.paid-flow .chapter-peek > summary::marker { color: var(--gold); }
+.paid-flow .chapter-peek-body { padding: 4px 2px 18px; color: var(--ink); font-size: 14.5px; line-height: 1.9; white-space: pre-wrap; word-break: keep-all; }

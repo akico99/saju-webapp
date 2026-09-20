@@ -100,6 +100,14 @@ router.post('/generate', requireAuth, async (req, res) => {
 
   // 이후 LLM 생성 + PDF 렌더는 비동기로 진행 (응답은 이미 보냄)
   orders.updateStatus(jobId, 'generating');
+
+  /* 요약 카드는 명식 계산 결과만으로 그린다 — LLM도 본편 PDF도 기다릴 이유가 없다. 예전에는
+     맨 마지막에 만들어서, 결제하고 한참을 아무것도 못 보다가 전부 끝난 뒤에야 한꺼번에 받았다.
+     결제 직후에 만들어 두면 기다리는 동안 볼 것이 생긴다. 실패해도 본편 생성은 그대로 간다. */
+  const cardPath = path.join(jobDir, 'summary-card.png');
+  const earlyCard = renderCardImage(renderCardHtml(engineResult, person), cardPath)
+    .then(() => { orders.setCardPath(jobId, cardPath); return true; })
+    .catch(() => false);
   Promise.all([
     generateReport(engineResult, person, jobDir, (progress) => {
       orders.updateProgress(jobId, progress);
@@ -114,10 +122,11 @@ router.post('/generate', requireAuth, async (req, res) => {
       await renderPdf(html, pdfPath, person);
       if (!fs.existsSync(pdfPath)) throw new Error('PDF 파일 생성 확인 실패');
 
-      // 3초 요약 카드 — 본편 PDF를 보내기 전에 당근마켓/카톡으로 먼저 공유할 미리보기 이미지
-      const cardPath = path.join(jobDir, 'summary-card.png');
-      const cardHtml = renderCardHtml(engineResult, person);
-      await renderCardImage(cardHtml, cardPath);
+      // 주문 직후에 만들어 뒀다. 그때 실패했으면 여기서 한 번 더 시도한다.
+      if (!(await earlyCard)) {
+        await renderCardImage(renderCardHtml(engineResult, person), cardPath);
+        orders.setCardPath(jobId, cardPath);
+      }
       if (!fs.existsSync(cardPath)) throw new Error('요약 카드 생성 확인 실패');
 
       // 18챕터 + 표지요약 전체 usage를 합쳐 이 리포트 한 건의 실제 LLM 원가(달러)를 계산·저장.

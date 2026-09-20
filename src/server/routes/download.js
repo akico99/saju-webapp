@@ -42,7 +42,9 @@ router.get('/download-card/:jobId', (req, res) => {
   if (!req.session || !req.session.userId || req.session.userId !== order.user_id) {
     return res.status(401).json({ error: '로그인이 필요합니다.' });
   }
-  if (order.status !== 'done' || !order.card_path) {
+  // 카드는 본편보다 먼저 만들어진다. 완료를 기다리지 않고 내려받게 한다 — 기다리는 동안
+  // 볼 것을 주는 게 이 카드의 목적이다.
+  if (!order.card_path) {
     return res.status(409).json({ error: '아직 요약 카드가 준비되지 않았습니다.' });
   }
   if (!fs.existsSync(order.card_path)) {

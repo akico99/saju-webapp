@@ -103,6 +103,47 @@ function renderEngineSummary(s) {
   engineSummaryEl.innerHTML = html;
 }
 
+function showEarlyCard(jobId, hasCard) {
+  const block = document.getElementById('earlyCardBlock');
+  if (!block || !hasCard) return;
+  document.getElementById('earlyCardLink').href = `/api/download-card/${jobId}`;
+  block.classList.remove('hidden');
+}
+
+/* 폴링 응답에는 제목만 온다. 본문은 처음 펼칠 때 한 편씩 가져와 다시 그리지 않는다 —
+   2초마다 18챕터 본문을 통째로 내려받으면 폴링이 감당이 안 된다. */
+function showReadyChapters(jobId, ready) {
+  const block = document.getElementById('readyChapters');
+  const list = document.getElementById('chapterList');
+  if (!block || !list || !ready.length) return;
+  block.classList.remove('hidden');
+  for (const ch of ready) {
+    if (list.querySelector('[data-index="' + ch.index + '"]')) continue;
+    const item = document.createElement('details');
+    item.className = 'chapter-peek';
+    item.dataset.index = String(ch.index);
+    const head = document.createElement('summary');
+    head.textContent = '제' + ch.id + '장 ' + ch.title;
+    const body = document.createElement('div');
+    body.className = 'chapter-peek-body';
+    body.textContent = '불러오는 중...';
+    item.append(head, body);
+    item.addEventListener('toggle', async () => {
+      if (!item.open || item.dataset.loaded) return;
+      item.dataset.loaded = '1';
+      try {
+        const res = await fetch('/api/status/' + jobId + '/chapter/' + ch.index);
+        const data = await res.json();
+        body.textContent = data.text || '본문을 불러오지 못했어요.';
+      } catch (e) {
+        delete item.dataset.loaded; // 다시 펼치면 재시도
+        body.textContent = '불러오지 못했어요: ' + e.message;
+      }
+    });
+    list.appendChild(item);
+  }
+}
+
 async function poll(jobId) {
   try {
     const res = await fetch(`/api/status/${jobId}`);
@@ -119,6 +160,10 @@ async function poll(jobId) {
           : `${data.progress.current}번째 챕터까지 완성했어요`;
       }
     }
+
+    // 요약 카드와 다 쓰인 챕터는 완본을 기다리지 않고 바로 보여준다.
+    showEarlyCard(jobId, data.hasCard);
+    showReadyChapters(jobId, data.chaptersReady || []);
 
     if (data.status === 'done') {
       progressBlock.classList.add('hidden');
