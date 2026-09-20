@@ -37,6 +37,10 @@
   --warn-soft: rgba(166,124,31,0.10);
   --danger: #A3513A;    /* 5.3:1 — 같은 이유 */
   --danger-soft: rgba(201,103,75,0.10);
+  /* 깊이 — DESIGN.md 4장. 헤어라인이 기본이고 그림자는 잉크색 저알파로 거의 안 보이게.
+     검정 rgba(0,0,0,.18) 같은 그림자는 쓰지 않는다. 단계 2는 화면에 하나만(서랍·바텀시트). */
+  --shadow-1: 0 1px 2px rgba(60,40,20,0.04), 0 4px 18px rgba(60,40,20,0.05);
+  --shadow-2: 0 8px 24px rgba(23,36,61,0.10), 0 24px 56px rgba(23,36,61,0.08);
   --radius-card: 20px;
   --radius-btn: 12px;
   --radius-pill: 999px;
@@ -135,7 +139,7 @@ header .logout, button.logout {
   position: absolute; top: 42px; right: -8px; z-index: 5;
   background: var(--ink); color: #fff; font-size: 11px; font-weight: 700; line-height: 1;
   padding: 7px 11px; border-radius: 999px; white-space: nowrap;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.18);
+  box-shadow: var(--shadow-2);
   animation: menuHookBounce 2.2s ease-in-out infinite;
   pointer-events: none;
 }
@@ -162,7 +166,7 @@ header .logout, button.logout {
 .menu-drawer {
   position: fixed; top: 0; right: 0; bottom: 0; width: 82%; max-width: 340px; background: var(--paper);
   z-index: 51; transform: translateX(100%); transition: transform 0.25s ease; overflow-y: auto;
-  box-shadow: -8px 0 24px rgba(0,0,0,0.16);
+  box-shadow: var(--shadow-2);
 }
 .menu-drawer.open { transform: translateX(0); }
 
@@ -294,7 +298,7 @@ header .logout, button.logout {
   position: fixed; left: 50%; bottom: 74px; transform: translateX(-50%);
   z-index: 31; display: flex; align-items: center; gap: 6px; pointer-events: none;
   background: var(--ink); color: #fff; font-size: 12px; font-weight: 700; white-space: nowrap;
-  padding: 9px 14px; border-radius: var(--radius-pill); box-shadow: 0 6px 16px rgba(0,0,0,0.22);
+  padding: 9px 14px; border-radius: var(--radius-pill); box-shadow: var(--shadow-2);
   animation: scrollHintBounce 1.8s ease-in-out infinite; transition: opacity 0.25s;
 }
 .scroll-hint svg { width: 14px; height: 14px; flex-shrink: 0; }
@@ -307,7 +311,7 @@ header .logout, button.logout {
 /* ---------- 오늘의 운세 카드 ---------- */
 .today-fortune-card {
   margin: 0 20px 14px; background: var(--accent-soft); border: 1px solid rgba(4,51,109,0.22); border-radius: var(--radius-card);
-  padding: 16px 18px; box-shadow: 0 1px 2px rgba(17,17,17,0.04), 0 2px 8px rgba(17,17,17,0.05);
+  padding: 16px 18px; box-shadow: var(--shadow-1);
 }
 .today-fortune-card .row-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
 .today-fortune-card .free-badge {
@@ -356,7 +360,7 @@ h1 { font-size: 20px; font-weight: 800; margin: 0 0 4px; letter-spacing: -0.01em
 .lead { font-size: 13px; color: var(--muted); margin-bottom: 20px; line-height: 1.6; }
 
 /* ---------- 카드 ---------- */
-.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); padding: 18px; margin-bottom: 16px; box-shadow: 0 1px 2px rgba(60,40,20,0.03); }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); padding: 18px; margin-bottom: 16px; box-shadow: var(--shadow-1); }
 .card h3 { font-size: 14px; font-weight: 800; margin: 0 0 10px; }
 .fortune-card { background: var(--ink); color: #fff; border: none; }
 .fortune-card .row-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
@@ -386,13 +390,13 @@ h1 { font-size: 20px; font-weight: 800; margin: 0 0 4px; letter-spacing: -0.01em
 .tile {
   background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-card);
   padding: 16px; display: flex; flex-direction: column; gap: 8px; text-decoration: none; color: var(--ink);
-  position: relative; box-shadow: 0 1px 2px rgba(17,17,17,0.04), 0 2px 8px rgba(17,17,17,0.05);
+  position: relative; box-shadow: var(--shadow-1);
 }
 .tile .badge {
   position: absolute; top: 10px; right: 10px; z-index: 1;
   font-size: 10.5px; font-weight: 700; padding: 3px 10px; border-radius: var(--radius-pill);
   background: var(--paper); border: 1px solid var(--line); color: var(--ink);
-  box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+  box-shadow: 0 1px 4px rgba(23,36,61,0.14);
 }
 .badge.new, .badge.hot { background: var(--gold-soft); color: #8A6412; border-color: transparent; }
 .badge.free { background: var(--success-soft); color: var(--success); border-color: transparent; }
@@ -600,7 +604,7 @@ button[type="submit"]:hover:not(:disabled), .btn-primary:hover, button.primary:h
   position: fixed; left: 50%; bottom: 0; transform: translate(-50%, 100%);
   width: 100%; max-width: 420px; max-height: 88vh; overflow-y: auto;
   background: var(--paper); border-radius: 20px 20px 0 0; z-index: 61; padding: 18px 20px 24px;
-  box-shadow: 0 -8px 30px rgba(0,0,0,0.18); transition: transform 0.3s ease; box-sizing: border-box;
+  box-shadow: var(--shadow-2); transition: transform 0.3s ease; box-sizing: border-box;
   pointer-events: none;
 }
 .wizard-modal.open { transform: translate(-50%, 0); pointer-events: auto; }

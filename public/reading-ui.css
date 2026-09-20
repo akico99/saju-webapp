@@ -9,7 +9,7 @@
 .reading-page main > .lg-intro .lead,
 .reading-page main > .tp-intro .lead { color: #626c79; font-size: 14px; line-height: 1.8; word-break: keep-all; }
 .reading-page main > form,
-.reading-page main > .tp-intro + form { background: var(--paper); border: 1px solid var(--line); border-radius: 22px; padding: 22px; box-shadow: 0 16px 45px rgba(35,39,51,.055); }
+.reading-page main > .tp-intro + form { background: var(--paper); border: 1px solid var(--line); border-radius: 22px; padding: 22px; box-shadow: var(--shadow-1); }
 .reading-page .field { margin-bottom: 20px; }
 .reading-page .field label { font-size: 13px; margin-bottom: 8px; }
 .reading-page .field input:not([type="checkbox"]):not([type="radio"]),
@@ -25,7 +25,7 @@
 .reading-page a:focus-visible { outline: 3px solid var(--success); outline-offset: 2px; }
 .reading-page .date-inputs input { min-width: 0; }
 .reading-page .checkbox-field { min-height: 40px; }
-.reading-page .card { box-shadow: 0 14px 36px rgba(35,39,51,.045); }
+.reading-page .card { box-shadow: var(--shadow-1); }
 .reading-page main > .result,
 .reading-page main > section[id$="Result"],
 .reading-page main > .ds-report { margin-top: 34px; }
@@ -34,7 +34,7 @@
 .reading-page .ct-result h2,
 .reading-page .bt-result h2,
 .reading-page .rc-result h2 { font-family: var(--font-serif); line-height: 1.4; letter-spacing: -.04em; word-break: keep-all; }
-.reading-page button[type="submit"] { background: var(--ink); color: #fff; box-shadow: 0 7px 17px rgba(23,36,61,.13); }
+.reading-page button[type="submit"] { background: var(--ink); color: #fff; box-shadow: none; }
 .reading-page button[type="submit"]:hover:not(:disabled) { filter: brightness(1.16); }
 
 /* 무료 오늘 운세와 회원 운세는 한 가족의 결과처럼 읽히도록 정렬한다. */
@@ -45,7 +45,7 @@
 .reading-page .preview-teaser li { padding: 12px 13px; background: #fff; border: 1px solid var(--line); border-radius: 12px; font-size: 12px; line-height: 1.5; }
 .reading-page .preview-teaser li::before { content: '✓ '; color: var(--success); font-weight: 800; }
 .reading-page #result:not(.hidden), .reading-page #content:not(.hidden) { margin-top: 28px; }
-.reading-page #result .fortune-card, .reading-page #content .fortune-card { padding: 26px; border-radius: 22px; box-shadow: 0 18px 42px rgba(23,36,61,.16); }
+.reading-page #result .fortune-card, .reading-page #content .fortune-card { padding: 26px; border-radius: 22px; box-shadow: var(--shadow-1); }
 .reading-page .fortune-card .eyebrow { color: #f1d39c; opacity: 1; font-weight: 800; letter-spacing: .08em; }
 .reading-page .fortune-card .fortune-score { color: #f1d39c; font-size: 22px; }
 .reading-page .fortune-card h2 { font-size: clamp(22px,3vw,28px); line-height: 1.48; margin: 10px 0 16px; }
@@ -65,8 +65,8 @@
 .life-graph-page .lg-headline .desc { margin: 0; font-size: 13px; line-height: 1.7; color: #626c79; }
 .life-graph-page .lg-otter { margin-top: 24px; padding: 15px 17px; border-radius: 16px; background: #f5ecdc; }
 .life-graph-page .lg-otter p { font-size: 12.5px; line-height: 1.68; }
-.life-graph-page .lg-hero-art { min-height: 295px; border-radius: 23px; background: #f9ecde url('/hero/otter-hero-mobile.jpg') center 46%/cover no-repeat; box-shadow: 0 20px 48px rgba(35,39,51,.11); }
-.life-graph-page .lg-summary-band { display: grid; grid-template-columns: repeat(3,1fr); background: #fff; border: 1px solid var(--line); border-radius: 18px; margin: 25px 0 0; overflow: hidden; box-shadow: 0 14px 36px rgba(35,39,51,.05); }
+.life-graph-page .lg-hero-art { min-height: 295px; border-radius: 23px; background: #f9ecde url('/hero/otter-hero-mobile.jpg') center 46%/cover no-repeat; box-shadow: var(--shadow-1); }
+.life-graph-page .lg-summary-band { display: grid; grid-template-columns: repeat(3,1fr); background: #fff; border: 1px solid var(--line); border-radius: 18px; margin: 25px 0 0; overflow: hidden; box-shadow: none; }
 .life-graph-page .lg-summary-band > div { padding: 18px; min-width: 0; }
 .life-graph-page .lg-summary-band > div + div { border-left: 1px solid var(--line); }
 .life-graph-page .lg-summary-band small { display: block; font-size: 11.5px; color: #626c79; font-weight: 700; }
@@ -77,7 +77,7 @@
 .life-graph-page .lg-section-heading p { margin: 5px 0 0; font-size: 12px; color: #626c79; }
 .life-graph-page .lg-section-heading .lg-granularity { margin: 0; flex: 0 0 auto; background: #eeece7; border-radius: 12px; padding: 4px; gap: 3px; }
 .life-graph-page .lg-section-heading .lg-granularity button { border: 0; margin: 0; padding: 8px 10px; background: transparent; white-space: nowrap; font-size: 11px; }
-.life-graph-page .lg-section-heading .lg-granularity button.active { background: #fff; color: var(--ink); box-shadow: 0 2px 7px rgba(23,36,61,.1); }
+.life-graph-page .lg-section-heading .lg-granularity button.active { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(23,36,61,.10); }
 .life-graph-page .lg-chart-panel { padding: 14px 22px 22px; border: 1px solid var(--line); background: #fff; border-radius: 20px; }
 .life-graph-page .lg-chart-wrap { margin-top: 10px; }
 .life-graph-page .lg-advice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 16px; }
@@ -108,7 +108,7 @@
 
 @media (min-width: 900px) {
   .life-graph-page .app { max-width: 980px !important; }
-  .reading-page .app:not(:has(.banner-slider)) { box-shadow: 0 0 0 1px var(--line), 0 24px 60px rgba(35,39,51,.065); }
+  .reading-page .app:not(:has(.banner-slider)) { box-shadow: 0 0 0 1px var(--line), 0 24px 60px rgba(60,40,20,.08); }
 }
 @media (max-width: 700px) {
   .reading-page main > form { padding: 18px; }

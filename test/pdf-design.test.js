@@ -48,5 +48,6 @@ test('compatibility report describes scores as references, not predictions', () 
   assert.match(html, /<body class="compat-report">/);
   assert.match(html, /관계 데이터 참고 점수/);
   assert.match(html, /관계의 미래를 예측하는 확률이 아닙니다/);
-  assert.match(html, /먼저 읽어보세요/);
+  // 골격 도입 후 본문은 renderBody로 그린다 — 예전 "먼저 읽어보세요" 강조 상자는 없다.
+  assert.match(html, /<div class="compat-body"><p>서로의 소통을 살펴보세요\.<\/p>/);
 });

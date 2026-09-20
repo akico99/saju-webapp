@@ -144,7 +144,7 @@ body {
 .myeongsik .myeongsik-table th:first-child { width: 22%; text-align: left; padding-left: 4mm; }
 .myeongsik .myeongsik-table th:not(:first-child), .myeongsik .myeongsik-table td { width: 19.5%; text-align: center; }
 .myeongsik .myeongsik-table small { color: #7b8791; font-size: 8pt; font-weight: 400; }
-.myeongsik .myeongsik-table .ilgan-col { background: #eef2ec; color: #263e31; }
+.myeongsik .myeongsik-table .ilgan-col { background: #f6efdf; color: #5a4520; }
 .myeongsik .myeongsik-core td { padding-top: 4mm; padding-bottom: 4mm; }
 .myeongsik .myeongsik-core .ganji { display: block; color: #24344b; font-size: 17pt; font-weight: 700; line-height: 1.4; }
 .myeongsik .myeongsik-core .hanja { display: block; color: #768391; font-size: 10pt; }
@@ -198,11 +198,11 @@ body {
 .daewoon-row .period strong { display: block; color: #24344b; font-size: 10pt; }
 .daewoon-row .period span { color: #7e8b95; font-size: 8pt; }
 .daewoon-row .track { height: 5mm; border-radius: 3mm; background: #edeee9; overflow: hidden; }
-.daewoon-row .track span { display: block; height: 100%; border-radius: 3mm; background: #758c7c; }
+.daewoon-row .track span { display: block; height: 100%; border-radius: 3mm; background: #24344b; }
 .daewoon-row .track span.top { background: #9e7d41; }
 .daewoon-row .score { color: #24344b; font-size: 10pt; text-align: right; }
-.daewoon-guide { margin-top: 7mm; padding: 5mm 6mm; border-left: 3px solid #7a947f; background: #f0f3ee; border-radius: 0 3mm 3mm 0; }
-.daewoon-guide strong { color: #2b4839; font-size: 10pt; }
+.daewoon-guide { margin-top: 7mm; padding: 5mm 6mm; border-left: 3px solid #c7a13a; background: #f5f1e8; border-radius: 0; }
+.daewoon-guide strong { color: #24344b; font-size: 10pt; }
 .daewoon-guide p { margin: 2mm 0 0; color: #566978; font-size: 9pt; line-height: 1.7; text-align: left; }
 
 /* ── 챕터 ── */
@@ -214,6 +214,15 @@ body {
   padding: 18mm 26mm 16mm;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
+  position: relative;
+}
+/* 챕터 오프너 — 번호를 종이 위 종이색 고스트 워터마크로 깔고 그 위에 아이브로우·제목.
+   장식이 아니라 "여기서 장이 바뀐다"는 리듬을 만든다(DESIGN.md 6장). 첫 페이지에만 보이도록
+   position absolute — clone된 연속 페이지에는 반복되지 않는다. */
+.chapter .chapter-ghost {
+  position: absolute; top: 10mm; right: 22mm;
+  font-family: 'ReportMyeongjo','Batang','바탕',serif; font-size: 64pt; line-height: 1; font-weight: 700;
+  color: rgba(255,255,255,0.06); letter-spacing: -0.02em; pointer-events: none; user-select: none;
 }
 .chapter .chapter-num {
   font-size: 9.5pt; letter-spacing: 0.22em; color: var(--gold); margin-bottom: 3mm;
@@ -225,10 +234,11 @@ body {
   font-size: 17pt; color: var(--star);
   border-bottom: 1px solid var(--line);
   padding-bottom: 5mm; margin: 0 0 8mm;
+  position: relative;
 }
 .chapter p { margin: 0 0 5mm 0; text-align: justify; color: var(--text); }
 /* 골격(outline) 소제목 — 챕터를 5~7개 소주제로 나눈다. 챕터 제목(h2)보다 한 단계 작게. */
-.chapter h3.sub { font-family: 'ReportMyeongjo','Batang','바탕',serif; font-size: 12.5pt; color: var(--star); margin: 8mm 0 3mm; padding-left: 3mm; border-left: 2.5px solid var(--star); break-after: avoid; }
+.chapter h3.sub { font-family: 'ReportMyeongjo','Batang','바탕',serif; font-size: 12.5pt; color: var(--star); margin: 8mm 0 3mm; padding-bottom: 1.5mm; border-bottom: 1px solid var(--line); break-after: avoid; }
 .chapter h3.sub:first-of-type { margin-top: 2mm; }
 .chapter ul.sub-list { margin: 0 0 5mm; padding-left: 6mm; color: var(--text); }
 .chapter ul.sub-list li { margin-bottom: 1.5mm; }
@@ -363,30 +373,32 @@ body.lifetime-report, body.compat-report { color: #29394b; font-size: 11.3pt; li
 .lifetime-report .toc li { border-color: #dedfd9; }
 .lifetime-report .toc li .num { color: #947442; }
 .lifetime-report .chapter { padding: 18mm 23mm 16mm; font-size: 11.3pt; line-height: 1.78; }
+.lifetime-report .chapter .chapter-ghost { color: #f1ede4; }
+.lifetime-report .chapter h3.sub, .compat-report .compat-body h3.sub { border-bottom-color: #dedfd9; }
 .lifetime-report .chapter p, .compat-report .compat-section p {
   color: #354457; line-height: 1.78; text-align: left; overflow-wrap: break-word;
 }
 .lifetime-report .chapter .chapter-keywords { margin-bottom: 8mm; }
 .lifetime-report .chapter-keywords .kw-chip {
-  border-color: #d8e3d8; background: #edf2ec; color: #3d644e; font-size: 8.8pt;
+  border-color: #e6d9bd; background: #f6efdf; color: #7a5f2c; font-size: 8.8pt;
 }
 .lifetime-report mark, .compat-report mark { background: #eee4ca; color: #24344b; }
 .lifetime-report .gloss, .compat-report .gloss { color: #667486; }
-.lifetime-report .quest-card { border-color: #dfe3db; border-left-color: #77937c; background: #f1f4ef; }
+.lifetime-report .quest-card { border-color: #e6e2d8; border-left-color: #c7a13a; background: #f5f1e8; }
 .lifetime-report .quest-card-ttl { color: #24344b; }
-.lifetime-report .quest-list li { color: #354457; border-color: #dfe3db; }
-.lifetime-report .quest-box { border-color: #708d77; }
+.lifetime-report .quest-list li { color: #354457; border-color: #e6e2d8; }
+.lifetime-report .quest-box { border-color: #937440; }
 .lifetime-report .quest-hint, .lifetime-report .disclaimer,
 .compat-report .disclaimer { color: #718092; border-color: #dedfd9; }
 .compat-report .compat-section { padding: 18mm 23mm 16mm; font-size: 11.3pt; line-height: 1.78; }
 .compat-report .compat-section h2 { font-size: 19pt; }
 .compat-report .compat-rel-list li { color: #5c6a79; border-color: #dedfd9; }
 .compat-report .compat-rel-list li b { color: #24344b; }
-.compat-reading { margin: 0 0 8mm; padding: 6mm 7mm; border-left: 3px solid #7a947f; border-radius: 0 3mm 3mm 0; background: #edf2ec; }
-.compat-reading .label { margin-bottom: 2mm; color: #4f735c; font-size: 8.5pt; font-weight: 800; }
+.compat-reading { margin: 0 0 8mm; padding: 6mm 7mm; border-left: 3px solid #c7a13a; border-radius: 0; background: #f5f1e8; }
+.compat-reading .label { margin-bottom: 2mm; color: #937440; font-size: 8.5pt; font-weight: 800; }
 .compat-report .compat-reading p { margin: 0; color: #263b4b; font-size: 12pt; line-height: 1.65; }
 .compat-report .compat-subtitle { margin: 8mm 0 4mm; color: #24344b; font-size: 12pt; }
-.compat-report .compat-body h3.sub { font-family: 'ReportMyeongjo','Batang','바탕',serif; font-size: 12.5pt; color: #24344b; margin: 8mm 0 3mm; padding-left: 3mm; border-left: 2.5px solid #7a947f; break-after: avoid; }
+.compat-report .compat-body h3.sub { font-family: 'ReportMyeongjo','Batang','바탕',serif; font-size: 12.5pt; color: #24344b; margin: 8mm 0 3mm; padding-bottom: 1.5mm; border-bottom: 1px solid #dedfd9; break-after: avoid; }
 .compat-report .compat-body h3.sub:first-child { margin-top: 0; }
 .compat-report .compat-body ul.sub-list { margin: 0 0 5mm; padding-left: 6mm; }
 .compat-report .compat-body ul.sub-list li { margin-bottom: 1.5mm; }
