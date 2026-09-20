@@ -25,6 +25,14 @@ test('귀인·매력은 원국에 실제로 있는 신살만 쓴다', () => {
   assert.ok(c.found.every((f) => f.core && f.shadow));
 });
 
+test('귀인은 같은 기둥과 이름의 반복 근거를 한 번만 노출한다', () => {
+  // 1980-01-07의 일주 장성살은 연지·일지 기준으로 원본에 두 번 들어온다.
+  const r = readFree('noble', { year: 1980, month: 1, day: 7, hour: 12, minute: 0, gender: '남', isLunar: false });
+  const ids = r.found.map((f) => `${f.pillar}:${f.name}`);
+  assert.equal(ids.filter((id) => id === 'day:장성살').length, 1);
+  assert.equal(new Set(ids).size, ids.length);
+});
+
 test('시각을 모르면 정오로 가정한 시주를 근거로 쓰지 않는다', () => {
   const n = readFree('noble', bNoHour);
   assert.ok(n.found.every((f) => f.pillar !== 'hour'));

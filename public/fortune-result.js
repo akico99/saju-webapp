@@ -40,10 +40,10 @@
     sub.innerHTML = '';
     if (best.offset === 0) {
       const b = document.createElement('b'); b.textContent = '오늘';
-      sub.append(b, '이 가장 좋은 날 — 미뤄둔 게 있다면 오늘 움직여보세요.');
+      sub.append(b, '의 참고 지수가 이번 주 가장 높습니다.');
     } else {
       const b = document.createElement('b'); b.textContent = `${shortDate(best.date)} ${best.weekday}요일 ${best.score}점`;
-      sub.append(b, ' — 중요한 일정은 그날로.');
+      sub.append(b, '의 참고 지수가 이번 주 가장 높습니다.');
     }
   }
 
