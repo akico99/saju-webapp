@@ -34,13 +34,13 @@
 <body class="reading-page">
 <div class="app no-nav">
   <header>
-    <a class="back" href="/charge.html">←</a>
+    <a class="back" href="javascript:history.back()">←</a>
     <div class="ttl">카드 결제</div>
     <a class="home-link" href="/" aria-label="홈으로"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M4 11.5L12 4l8 7.5"/><path d="M6 10v9.5h12V10"/></svg></a>
   </header>
   <main>
     <section class="order-sheet">
-      <div class="kicker">주문서</div>
+      <div class="kicker">주문서 · 단건 결제</div>
       <div class="name" id="orderName">불러오는 중...</div>
       <div class="row"><span>결제 금액</span><b id="orderAmount">-</b></div>
       <span class="test-badge hidden" id="testBadge">테스트 모드 · 실제 청구 없음</span>
@@ -50,7 +50,7 @@
       <div id="payment-method"></div>
       <div id="agreement"></div>
       <button type="button" class="pay-btn" id="payBtn" disabled>결제 준비 중...</button>
-      <p class="terms-line">결제 즉시 포인트가 충전되며(1P = 1원), 사용하지 않은 포인트는 <a href="/terms.html">이용약관 제7조</a>에 따라 전액 환불됩니다. 리포트는 포인트 차감 후 자동 생성되어 최대 10분 내 제공됩니다.</p>
+      <p class="terms-line">결제 승인 즉시 이 리포트의 생성이 시작되어 최대 10분 내 제공됩니다(정기결제 없음). 생성에 실패하면 자동 환불되며, 그 외 환불은 <a href="/terms.html">이용약관 제7조</a>를 따릅니다.</p>
     </div>
     <div class="error-box hidden" id="errorBox" style="margin-top:12px;"></div>
   </main>
@@ -65,12 +65,12 @@
     try {
       const me = await fetch('/api/auth/me').then((r) => r.json());
       if (!me.user) { location.href = '/login.html?redirect=' + encodeURIComponent(location.pathname + location.search); return; }
-      if (!orderId) throw new Error('주문 정보가 없어요. 충전 페이지에서 다시 시작해주세요.');
+      if (!orderId) throw new Error('주문 정보가 없어요. 상품 페이지에서 다시 시작해주세요.');
 
-      // 주문은 charge.html에서 /api/pay/prepare로 이미 만들어졌다 — 여기서는 내 주문인지와 금액만 다시 읽는다.
+      // 주문은 상품 페이지에서 /api/pay/prepare로 이미 만들어졌다(상품·폼·가격은 서버가 보관) — 여기서는 내 주문인지와 금액만 다시 읽는다.
       const mine = await fetch('/api/pay/mine').then((r) => r.json());
       const order = (mine.payments || []).find((p) => p.orderId === orderId);
-      if (!order) throw new Error('주문을 찾을 수 없어요. 충전 페이지에서 다시 시작해주세요.');
+      if (!order) throw new Error('주문을 찾을 수 없어요. 상품 페이지에서 다시 시작해주세요.');
       if (order.status === 'paid') { location.replace('/pay-success.html?done=1&orderId=' + encodeURIComponent(orderId)); return; }
 
       const cfg = await fetch('/api/pay/config').then((r) => r.json());

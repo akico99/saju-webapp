@@ -33,27 +33,15 @@
       </div>
     </div>
 
-    <div class="card" id="cardChargeBox">
-      <h3>카드로 충전하기</h3>
-      <p class="hint" style="margin:-4px 0 12px;">신용·체크카드로 결제하면 포인트가 바로 충전돼요. 1P = 1원, 결제 즉시 반영.</p>
-      <div class="chip-row" id="cardChips">
-        <button type="button" class="chip" data-amount="5000">5,000원</button>
-        <button type="button" class="chip" data-amount="10000">10,000원</button>
-        <button type="button" class="chip" data-amount="15000">15,000원</button>
-        <button type="button" class="chip" data-amount="30000">30,000원</button>
-      </div>
-      <form id="cardForm">
-        <div class="field">
-          <label>충전 금액(원)</label>
-          <input type="number" name="amountKrw" id="cardAmount" min="1000" max="500000" step="100" required placeholder="예: 14900">
-        </div>
-        <button type="submit" class="primary" id="cardPayBtn">카드로 결제하기</button>
-        <p class="hint" id="cardTestNote" style="display:none;margin-top:10px;"></p>
-      </form>
+    <!-- 카드 결제는 상품 페이지에서 상품 가격 그대로 단건 결제한다(선불 충전 없음). 이 페이지는
+         계좌이체로 크레딧을 미리 넣어두는 경로만 남는다 — 카드 결제가 열리기 전의 이용 방법이자,
+         카드 없이 쓰는 사람을 위한 보조 수단. -->
+    <div class="card" style="padding:16px 18px;">
+      <p class="hint" style="margin:0;line-height:1.7;">리포트는 각 상품 페이지에서 <b>상품 가격 그대로 카드로 단건 결제</b>할 수 있어요(충전 불필요). 계좌이체를 쓰고 싶거나 카드 결제가 어려운 경우에만 아래로 크레딧을 미리 넣어두세요. 보유 크레딧이 상품 가격 이상이면 결제창 없이 바로 차감됩니다.</p>
     </div>
 
-    <details class="card" id="bankChargeBox">
-      <summary style="cursor:pointer;font-weight:800;font-size:14px;">계좌이체로 충전하기 (운영자 확인 후 지급)</summary>
+    <div class="card" id="bankChargeBox">
+      <h3>계좌이체로 크레딧 넣기 <span style="font-weight:600;font-size:12px;color:var(--muted);">운영자 확인 후 지급</span></h3>
       <div class="deposit-note" id="depositNote" style="margin-top:12px;">불러오는 중...</div>
       <div class="chip-row">
         <button type="button" class="chip bank-chip" data-amount="10000">10,000원</button>
@@ -72,10 +60,10 @@
         </div>
         <button type="submit" class="primary">충전 신청하기</button>
       </form>
-    </details>
+    </div>
 
     <div class="card">
-      <h3>충전 내역</h3>
+      <h3>결제·충전 내역</h3>
       <div class="table-scroll">
         <table id="requestTable">
           <thead><tr><th>일시</th><th>방법</th><th>금액</th><th>상태</th></tr></thead>
@@ -127,9 +115,9 @@
     const rows = [
       ...data.requests.map((r) => ({ at: r.created_at, how: '계좌이체', amount: r.amount_krw, status: r.status, label: STATUS_LABEL[r.status] || r.status })),
       ...cards.filter((p) => p.status !== 'ready').map((p) => ({
-        at: p.createdAt, how: p.testMode ? '카드(테스트)' : '카드', amount: p.amountKrw,
+        at: p.createdAt, how: (p.testMode ? '카드(테스트) · ' : '카드 · ') + p.orderName, amount: p.amountKrw,
         status: p.status === 'paid' ? 'approved' : 'rejected',
-        label: p.status === 'paid' ? (p.testMode ? '테스트 승인' : '충전 완료') : '실패'
+        label: p.status === 'paid' ? '결제 완료' : (p.status === 'canceled' ? '취소' : '실패')
       }))
     ].sort((a, b) => (a.at < b.at ? 1 : -1));
     const body = document.getElementById('requestBody');
@@ -161,40 +149,6 @@
       });
     });
   }
-  bindChips('#cardChips .chip', 'cardAmount');
-  bindChips('.bank-chip', 'amountInput');
-
-  // 카드 충전 — 주문을 먼저 만들고(서버가 금액 확정) 결제 페이지로 넘긴다.
-  fetch('/api/pay/config').then((r) => r.json()).then((cfg) => {
-    if (cfg.testMode) {
-      const note = document.getElementById('cardTestNote');
-      note.style.display = 'block';
-      note.textContent = '현재 카드결제는 PG 심사 중인 테스트 모드예요. 결제창은 열리지만 실제 청구되지 않고 포인트도 지급되지 않습니다. 정식 오픈 전까지는 위의 계좌이체를 이용해주세요.';
-      const cardBox = document.getElementById('cardChargeBox');
-      const bankBox = document.getElementById('bankChargeBox');
-      cardBox.parentNode.insertBefore(bankBox, cardBox);
-      bankBox.open = true;
-      bankBox.querySelector('summary').textContent = '계좌이체로 충전하기 (지금 이용 가능 · 운영자 확인 후 지급)';
-    }
-  }).catch(() => {});
-  document.getElementById('cardForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const btn = document.getElementById('cardPayBtn');
-    btn.disabled = true;
-    try {
-      const res = await fetch('/api/pay/prepare', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amountKrw: Number(document.getElementById('cardAmount').value) })
-      });
-      const data = await res.json();
-      if (!res.ok) { showToast(data.error || '결제 준비 실패'); btn.disabled = false; return; }
-      location.href = '/pay.html?orderId=' + encodeURIComponent(data.orderId);
-    } catch (err) {
-      showToast('결제 준비 실패: ' + err.message);
-      btn.disabled = false;
-    }
-  });
-
   document.getElementById('chargeForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);

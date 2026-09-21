@@ -14,6 +14,7 @@ const { renderPdf } = require('../../pdf/renderPdf');
 const points = require('../../db/points');
 const orders = require('../../db/orders');
 const { requireAuth } = require('../middleware/auth');
+const { HttpError, handle } = require('../httpError');
 
 const router = express.Router();
 const { OUTPUT_ROOT } = require('../../config/outputDir');
@@ -33,27 +34,28 @@ function parseBody(body) {
   return { input: { year, month, day, hour, minute, gender, isLunar, isLeap }, name, gender, topic };
 }
 
-router.post('/quick', requireAuth, async (req, res) => {
+/** 심층 리딩 시작 — 라우트(/api/quick)와 카드 결제 승인(pay.js)이 같은 함수를 쓴다. */
+async function startDeep(userId, body) {
   let parsed;
   try {
-    parsed = parseBody(req.body);
+    parsed = parseBody(body);
   } catch (e) {
-    return res.status(400).json({ error: e.message });
+    throw new HttpError(400, { error: e.message });
   }
 
   let engineResult;
   try {
     engineResult = computeSaju(parsed.input);
   } catch (e) {
-    return res.status(400).json({ error: '명식 계산 실패: ' + e.message });
+    throw new HttpError(400, { error: '명식 계산 실패: ' + e.message });
   }
 
   // 이미 생성 중인 같은 상품이 있으면 또 결제/생성하지 않는다 — 프론트에서 버튼을
   // 잠가도(setFormBusy) 여러 탭이나 직접 API 호출까지는 못 막으므로 서버에서 한 번 더 막는다.
   const productKey = 'deep_' + parsed.topic;
-  const pending = orders.findPendingByUserAndProduct(req.session.userId, productKey);
+  const pending = orders.findPendingByUserAndProduct(userId, productKey);
   if (pending) {
-    return res.status(409).json({
+    throw new HttpError(409, {
       error: '이미 생성 중인 심층 리딩이 있어요. 완료될 때까지 잠시만 기다려주세요.',
       code: 'already_pending', jobId: pending.job_id
     });
@@ -69,12 +71,12 @@ router.post('/quick', requireAuth, async (req, res) => {
   // 환불이 필요 없다.
   let price;
   try {
-    price = points.chargeForProductAndCreateOrder(req.session.userId, productKey, { label, jobId });
+    price = points.chargeForProductAndCreateOrder(userId, productKey, { label, jobId });
   } catch (e) {
     if (e.code === 'insufficient_points') {
-      return res.status(402).json({ error: e.message, code: e.code, required: e.required, balance: e.balance });
+      throw new HttpError(402, { error: e.message, code: e.code, required: e.required, balance: e.balance });
     }
-    return res.status(500).json({ error: '결제 처리 중 오류가 발생했습니다. 포인트는 차감되지 않았습니다.' });
+    throw new HttpError(500, { error: '결제 처리 중 오류가 발생했습니다. 포인트는 차감되지 않았습니다.' });
   }
 
   let jobDir;
@@ -83,11 +85,11 @@ router.post('/quick', requireAuth, async (req, res) => {
     fs.mkdirSync(jobDir, { recursive: true });
   } catch (e) {
     orders.markError(jobId, e.message || String(e));
-    points.refund(req.session.userId, price, '생성 준비 실패 환불: ' + productKey, jobId);
-    return res.status(500).json({ error: '생성 준비 중 오류가 발생했습니다. 포인트는 환불되었습니다.' });
+    points.refund(userId, price, '생성 준비 실패 환불: ' + productKey, jobId);
+    throw new HttpError(500, { error: '생성 준비 중 오류가 발생했습니다. 포인트는 환불되었습니다.' });
   }
 
-  res.json({ jobId, topic: topicLabel });
+  const payload = ({ jobId, topic: topicLabel, topicKey: parsed.topic });
 
   orders.updateStatus(jobId, 'generating');
   generateDeepReading(engineResult, person, parsed.topic)
@@ -102,8 +104,12 @@ router.post('/quick', requireAuth, async (req, res) => {
     })
     .catch((e) => {
       orders.markError(jobId, e.message);
-      points.refund(req.session.userId, price, '생성 실패 환불: ' + productKey, jobId);
+      points.refund(userId, price, '생성 실패 환불: ' + productKey, jobId);
     });
-});
+  return payload;
+}
+
+router.post('/quick', requireAuth, handle(startDeep));
 
 module.exports = router;
+module.exports.start = startDeep;

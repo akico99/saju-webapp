@@ -226,7 +226,7 @@ form.addEventListener('submit', async (e) => {
       progressBlock.classList.add('hidden');
       setFormBusy(false);
       if (res.status === 401) { location.href = '/login.html?redirect=' + encodeURIComponent(location.pathname); return; }
-      if (res.status === 402) { alert(`포인트가 부족합니다 (필요 ${data.required}P / 보유 ${data.balance}P). 마이페이지에서 충전해주세요.`); location.href = '/mypage.html'; return; }
+      if (res.status === 402) { progressBlock.classList.add('hidden'); PayFlow.onInsufficient('full', body, data, showError); return; }
       showError(data.error || '요청 실패');
       return;
     }
@@ -242,3 +242,15 @@ form.addEventListener('submit', async (e) => {
     setFormBusy(false);
   }
 });
+
+// 카드 결제를 마치고 돌아온 경우(?jobId=…) — 결제 승인 시 서버가 이미 생성을 시작했다. 진행 상황에 붙는다.
+(() => {
+  const r = window.PayFlow && PayFlow.resume();
+  if (!r) return;
+  result.classList.remove('hidden');
+  progressBlock.classList.remove('hidden');
+  if (r.payload && r.payload.engineSummary) renderEngineSummary(r.payload.engineSummary);
+  setFormBusy(true);
+  poll(r.jobId);
+  result.scrollIntoView({ behavior: 'smooth', block: 'start' });
+})();

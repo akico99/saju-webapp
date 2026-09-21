@@ -13,6 +13,7 @@ const { renderCardHtml, renderCardImage } = require('../../pdf/renderCard');
 const points = require('../../db/points');
 const orders = require('../../db/orders');
 const { requireAuth } = require('../middleware/auth');
+const { HttpError, handle } = require('../httpError');
 
 const router = express.Router();
 const { OUTPUT_ROOT } = require('../../config/outputDir');
@@ -33,25 +34,27 @@ function parseBody(body) {
   return { year, month, day, hour, minute, gender, isLunar, isLeap, lonOff, city, lon, name };
 }
 
-router.post('/generate', requireAuth, async (req, res) => {
+/** 평생사주 생성 시작 — 포인트 차감 + 주문 생성 후 비동기 생성을 걸고 응답 본문을 돌려준다.
+    라우트(/api/generate)와 카드 결제 승인(pay.js)이 같은 함수를 쓴다. 실패는 HttpError로. */
+async function startFull(userId, body) {
   let input;
   try {
-    input = parseBody(req.body);
+    input = parseBody(body);
   } catch (e) {
-    return res.status(400).json({ error: e.message });
+    throw new HttpError(400, { error: e.message });
   }
 
   let engineResult;
   try {
     engineResult = computeSaju(input);
   } catch (e) {
-    return res.status(400).json({ error: '명식 계산 실패: ' + e.message });
+    throw new HttpError(400, { error: '명식 계산 실패: ' + e.message });
   }
 
   // 이미 생성 중인 같은 상품이 있으면 또 결제/생성하지 않는다.
-  const pending = orders.findPendingByUserAndProduct(req.session.userId, 'full');
+  const pending = orders.findPendingByUserAndProduct(userId, 'full');
   if (pending) {
-    return res.status(409).json({
+    throw new HttpError(409, {
       error: '이미 생성 중인 평생사주 리포트가 있어요. 완료될 때까지 잠시만 기다려주세요.',
       code: 'already_pending', jobId: pending.job_id
     });
@@ -65,12 +68,12 @@ router.post('/generate', requireAuth, async (req, res) => {
   // 별도 환불이 필요 없다.
   let price;
   try {
-    price = points.chargeForProductAndCreateOrder(req.session.userId, 'full', { label, jobId });
+    price = points.chargeForProductAndCreateOrder(userId, 'full', { label, jobId });
   } catch (e) {
     if (e.code === 'insufficient_points') {
-      return res.status(402).json({ error: e.message, code: e.code, required: e.required, balance: e.balance });
+      throw new HttpError(402, { error: e.message, code: e.code, required: e.required, balance: e.balance });
     }
-    return res.status(500).json({ error: '결제 처리 중 오류가 발생했습니다. 포인트는 차감되지 않았습니다.' });
+    throw new HttpError(500, { error: '결제 처리 중 오류가 발생했습니다. 포인트는 차감되지 않았습니다.' });
   }
 
   // 포인트는 이미 차감됐다(위) — 이 블록(파일시스템 작업)은 DB 트랜잭션 밖이라, 여기서
@@ -82,11 +85,11 @@ router.post('/generate', requireAuth, async (req, res) => {
     fs.writeFileSync(path.join(jobDir, 'engine.json'), JSON.stringify(engineResult, null, 2));
   } catch (e) {
     orders.markError(jobId, e.message || String(e));
-    points.refund(req.session.userId, price, '생성 준비 실패 환불: full', jobId);
-    return res.status(500).json({ error: '생성 준비 중 오류가 발생했습니다. 포인트는 환불되었습니다.' });
+    points.refund(userId, price, '생성 준비 실패 환불: full', jobId);
+    throw new HttpError(500, { error: '생성 준비 중 오류가 발생했습니다. 포인트는 환불되었습니다.' });
   }
 
-  res.json({
+  const payload = ({
     jobId,
     engineSummary: {
       palja: engineResult.palja,
@@ -137,8 +140,12 @@ router.post('/generate', requireAuth, async (req, res) => {
     })
     .catch((e) => {
       orders.markError(jobId, e.message);
-      points.refund(req.session.userId, price, '생성 실패 환불: full', jobId);
+      points.refund(userId, price, '생성 실패 환불: full', jobId);
     });
-});
+  return payload;
+}
+
+router.post('/generate', requireAuth, handle(startFull));
 
 module.exports = router;
+module.exports.start = startFull;

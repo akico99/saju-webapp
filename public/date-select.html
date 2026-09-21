@@ -250,6 +250,7 @@
   </main>
 </div>
 
+<script src="/pay-flow.js"></script>
 <script src="/profile-picker.js"></script>
 <script>
   const form = document.getElementById('dsForm');
@@ -449,7 +450,7 @@
         }
         setFormBusy(false);
         if (res.status === 401) { location.href = '/login.html?redirect=' + encodeURIComponent(location.pathname + location.search); return; }
-        if (res.status === 402) { alert(`포인트가 부족합니다 (필요 ${data.required}P / 보유 ${data.balance}P). 마이페이지에서 충전해주세요.`); location.href = '/mypage.html'; return; }
+        if (res.status === 402) { PayFlow.onInsufficient('date_select', body, data, (m) => { errorBox.textContent = m; errorBox.classList.remove('hidden'); }); return; }
         errorBox.textContent = data.error || '요청 실패';
         errorBox.classList.remove('hidden');
         return;
@@ -463,6 +464,18 @@
       errorBox.classList.remove('hidden');
     }
   });
+
+  // 카드 결제를 마치고 돌아온 경우(?jobId=…) — 서버가 이미 생성을 시작했다. 요약(가장 좋은 날)은
+  // 결제 완료 페이지가 넘겨준 시작 응답에서 그리고, 본문은 poll로 받는다.
+  (() => {
+    const r = window.PayFlow && PayFlow.resume();
+    if (!r) return;
+    if (r.payload && r.payload.best !== undefined) renderSummary(r.payload);
+    else document.getElementById('dsResult').style.display = 'block';
+    setFormBusy(true);
+    poll(r.jobId);
+    document.getElementById('dsResult').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  })();
 
   if (window.ProfilePicker) {
     window.ProfilePicker.mount(document.getElementById('profilePicker'), form);

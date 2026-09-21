@@ -190,9 +190,9 @@ try {
   console.warn('[DB] 진행 중 주문 고유 인덱스 생성 실패 — 중복된 활성 주문이 있는지 확인 필요:', e.message);
 }
 
-/* 카드 결제(토스페이먼츠) — 포인트 충전을 카드로 하는 경로의 주문 원장. 계좌이체 수동 승인
-   (point_requests)과 별도로 둔다. status: ready(결제창 열림) → paid(승인 완료) / failed.
-   test_mode=1이면 테스트 키로 승인된 결제(실제 청구 없음)라 포인트를 지급하지 않는다. */
+/* 카드 결제(토스페이먼츠) — 상품 1건을 그 가격으로 단건 결제하는 경로의 원장. 결제창을 열기 전에
+   ready 행을 만들어 상품·금액·폼 입력을 서버가 기억하고, 승인 뒤 같은 행에 결과와 시작된 주문(job_id)을
+   적는다. status: ready → paid / failed. test_mode=1은 테스트 키 결제(실제 청구 없음). */
 db.exec(`
   CREATE TABLE IF NOT EXISTS card_payments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -209,5 +209,10 @@ db.exec(`
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
 `);
+// 처음 배포본은 "포인트 충전" 원장이었다 — 상품 단건 결제로 바꾸면서 상품·폼·주문 열을 더한다.
+const cpColumns = db.prepare('PRAGMA table_info(card_payments)').all().map((c) => c.name);
+if (!cpColumns.includes('product_key')) db.exec('ALTER TABLE card_payments ADD COLUMN product_key TEXT');
+if (!cpColumns.includes('form_json')) db.exec('ALTER TABLE card_payments ADD COLUMN form_json TEXT');
+if (!cpColumns.includes('job_id')) db.exec('ALTER TABLE card_payments ADD COLUMN job_id TEXT');
 
 module.exports = db;

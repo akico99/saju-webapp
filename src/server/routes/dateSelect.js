@@ -31,6 +31,7 @@ const { renderPdf } = require('../../pdf/renderPdf');
 const orders = require('../../db/orders');
 const points = require('../../db/points');
 const { requireAuth } = require('../middleware/auth');
+const { HttpError, handle } = require('../httpError');
 
 const router = express.Router();
 const { OUTPUT_ROOT } = require('../../config/outputDir');
@@ -277,15 +278,17 @@ router.get('/date-select/occasions', (req, res) => {
   res.json({ occasions: OCCASIONS });
 });
 
-router.post('/date-select', requireAuth, async (req, res) => {
-  const occasionKey = req.body.occasion;
+/** 택일 리포트 시작 — 라우트(/api/date-select)와 카드 결제 승인(pay.js)이 같은 함수를 쓴다. */
+async function startDateSelect(userId, body) {
+  const occasionKey = body.occasion;
   const occasion = OCCASIONS[occasionKey];
-  if (!occasion) return res.status(400).json({ error: '알 수 없는 종류입니다.' });
+  if (!occasion) throw new HttpError(400, { error: '알 수 없는 종류입니다.' });
 
-  if (occasion.mode === 'month') return runMonthSearch(req, res, occasionKey, occasion);
-  if (occasion.mode === 'couple') return runWeddingSearch(req, res, occasionKey, occasion);
-  return runBirthSearch(req, res, occasionKey, occasion);
-});
+  if (occasion.mode === 'month') return runMonthSearch(userId, body, occasionKey, occasion);
+  if (occasion.mode === 'couple') return runWeddingSearch(userId, body, occasionKey, occasion);
+  return runBirthSearch(userId, body, occasionKey, occasion);
+}
+router.post('/date-select', requireAuth, handle(startDateSelect));
 
 function daysInTargetMonth(year, month) {
   const count = new Date(Date.UTC(year, month, 0)).getUTCDate();
@@ -334,20 +337,20 @@ function bestHourOf(date, ctx) {
 }
 
 // 달 단위 모드 — 이사/개업. 목표 연월 안에서 가장 좋은 날짜·시간 하나를 찾는다.
-async function runMonthSearch(req, res, occasionKey, occasion) {
-  const targetYear = Number(req.body.targetYear), targetMonth = Number(req.body.targetMonth);
+async function runMonthSearch(userId, body, occasionKey, occasion) {
+  const targetYear = Number(body.targetYear), targetMonth = Number(body.targetMonth);
   const nowYear = new Date().getFullYear();
   if (!targetYear || !targetMonth || targetMonth < 1 || targetMonth > 12 || targetYear < nowYear || targetYear > nowYear + 5) {
-    return res.status(400).json({ error: `목표 연월을 올바르게 입력해주세요 (연도는 ${nowYear}~${nowYear + 5} 사이).` });
+    throw new HttpError(400, { error: `목표 연월을 올바르게 입력해주세요 (연도는 ${nowYear}~${nowYear + 5} 사이).` });
   }
 
-  const basics = computePersonBasics(req.body, '');
-  if (basics.error) return res.status(400).json({ error: basics.error });
+  const basics = computePersonBasics(body, '');
+  if (basics.error) throw new HttpError(400, { error: basics.error });
   const { yongshinMain, personDayStem, personDayBranch, personGanZhiKo, personGender, personName } = basics;
 
-  const pending = orders.findPendingByUserAndProduct(req.session.userId, occasion.productKey);
+  const pending = orders.findPendingByUserAndProduct(userId, occasion.productKey);
   if (pending) {
-    return res.status(409).json({
+    throw new HttpError(409, {
       error: `이미 생성 중인 ${occasion.label} 리포트가 있어요. 완료될 때까지 잠시만 기다려주세요.`,
       code: 'already_pending', jobId: pending.job_id
     });
@@ -356,12 +359,12 @@ async function runMonthSearch(req, res, occasionKey, occasion) {
   const jobId = crypto.randomUUID();
   const orderLabel = `${occasion.label} 리포트${personName ? ' — ' + personName : ''}`;
   try {
-    points.chargeForProductAndCreateOrder(req.session.userId, occasion.productKey, { label: orderLabel, jobId });
+    points.chargeForProductAndCreateOrder(userId, occasion.productKey, { label: orderLabel, jobId });
   } catch (e) {
     if (e.code === 'insufficient_points') {
-      return res.status(402).json({ error: e.message, code: e.code, required: e.required, balance: e.balance });
+      throw new HttpError(402, { error: e.message, code: e.code, required: e.required, balance: e.balance });
     }
-    return res.status(500).json({ error: '결제 처리 중 오류가 발생했습니다. 포인트는 차감되지 않았습니다.' });
+    throw new HttpError(500, { error: '결제 처리 중 오류가 발생했습니다. 포인트는 차감되지 않았습니다.' });
   }
 
   const ctx = { occasionKey, yongshinMain, personDayStem, personDayBranch };
@@ -375,18 +378,18 @@ async function runMonthSearch(req, res, occasionKey, occasion) {
     extras.direction = { ohaeng: OHAENG_KO[yongshinMain], ...OHAENG_DIRECTION[yongshinMain] };
     extras.mood = OHAENG_MOOD[yongshinMain];
     extras.homeObject = OHAENG_HOME_OBJECT[yongshinMain];
-    extras.currentAddress = sanitizeText(req.body.currentAddress, 40);
+    extras.currentAddress = sanitizeText(body.currentAddress, 40);
   }
   if (occasionKey === 'opening' && OHAENG_BUSINESS[yongshinMain]) {
     extras.business = { ohaeng: OHAENG_KO[yongshinMain], ...OHAENG_BUSINESS[yongshinMain] };
     extras.bizObject = OHAENG_BIZ_OBJECT[yongshinMain];
-    extras.industry = sanitizeText(req.body.industry, 40);
+    extras.industry = sanitizeText(body.industry, 40);
   }
 
   const bestOut = best ? { year: bestDay.year, month: bestDay.month, day: bestDay.day, hour: best.hour, ganZhiKo: best.ganZhiKo, hourGanZhiKo: best.hourGanZhiKo, score: best.score } : null;
   const bestValue = formatBestValue(best ? { ...best, year: bestDay.year, month: bestDay.month, day: bestDay.day } : null);
 
-  res.json({ occasion: occasionKey, occasionLabel: occasion.label, name: personName, jobId, best: bestOut, extras });
+  const payload = ({ occasion: occasionKey, occasionLabel: occasion.label, name: personName, jobId, best: bestOut, extras });
 
   orders.updateStatus(jobId, 'generating');
   (async () => {
@@ -409,7 +412,7 @@ async function runMonthSearch(req, res, occasionKey, occasion) {
     try {
       orders.updateStatus(jobId, 'rendering');
       await finishReport({
-        jobId, userId: req.session.userId, occasion, name: personName,
+        jobId, userId: userId, occasion, name: personName,
         title: `${personName || '고객'} 님의 ${occasion.label} 리포트`,
         eyebrow: `命 式 關 係 圖 · ${occasion.label} 리포트`,
         metaLine: `목표 <b>${targetYear}년 ${targetMonth}월</b>`,
@@ -418,27 +421,28 @@ async function runMonthSearch(req, res, occasionKey, occasion) {
       });
     } catch (e) {
       orders.markError(jobId, e.message || String(e));
-      points.refund(req.session.userId, points.PRICES[occasion.productKey], `생성 실패 환불: ${occasion.productKey}`, jobId);
+      points.refund(userId, points.PRICES[occasion.productKey], `생성 실패 환불: ${occasion.productKey}`, jobId);
     }
   })();
+  return payload;
 }
 
 // 두 사람 모드 — 결혼. 목표 연도의 주말 중 두 사람 모두에게 좋은 날을 찾고, 실제 궁합도 함께 담는다.
-async function runWeddingSearch(req, res, occasionKey, occasion) {
-  const targetYear = Number(req.body.targetYear);
+async function runWeddingSearch(userId, body, occasionKey, occasion) {
+  const targetYear = Number(body.targetYear);
   const nowYear = new Date().getFullYear();
   if (!targetYear || targetYear < nowYear || targetYear > nowYear + 5) {
-    return res.status(400).json({ error: `연도는 ${nowYear}~${nowYear + 5} 사이로 입력해주세요.` });
+    throw new HttpError(400, { error: `연도는 ${nowYear}~${nowYear + 5} 사이로 입력해주세요.` });
   }
 
-  const basicsA = computePersonBasics(req.body, '');
-  if (basicsA.error) return res.status(400).json({ error: '본인 정보: ' + basicsA.error });
-  const basicsB = computePersonBasics(req.body, 'p');
-  if (basicsB.error) return res.status(400).json({ error: '상대방 정보: ' + basicsB.error });
+  const basicsA = computePersonBasics(body, '');
+  if (basicsA.error) throw new HttpError(400, { error: '본인 정보: ' + basicsA.error });
+  const basicsB = computePersonBasics(body, 'p');
+  if (basicsB.error) throw new HttpError(400, { error: '상대방 정보: ' + basicsB.error });
 
-  const pending = orders.findPendingByUserAndProduct(req.session.userId, occasion.productKey);
+  const pending = orders.findPendingByUserAndProduct(userId, occasion.productKey);
   if (pending) {
-    return res.status(409).json({
+    throw new HttpError(409, {
       error: `이미 생성 중인 ${occasion.label} 리포트가 있어요. 완료될 때까지 잠시만 기다려주세요.`,
       code: 'already_pending', jobId: pending.job_id
     });
@@ -448,12 +452,12 @@ async function runWeddingSearch(req, res, occasionKey, occasion) {
   const coupleName = [basicsA.personName, basicsB.personName].filter(Boolean).join(' · ');
   const orderLabel = `${occasion.label} 리포트${coupleName ? ' — ' + coupleName : ''}`;
   try {
-    points.chargeForProductAndCreateOrder(req.session.userId, occasion.productKey, { label: orderLabel, jobId });
+    points.chargeForProductAndCreateOrder(userId, occasion.productKey, { label: orderLabel, jobId });
   } catch (e) {
     if (e.code === 'insufficient_points') {
-      return res.status(402).json({ error: e.message, code: e.code, required: e.required, balance: e.balance });
+      throw new HttpError(402, { error: e.message, code: e.code, required: e.required, balance: e.balance });
     }
-    return res.status(500).json({ error: '결제 처리 중 오류가 발생했습니다. 포인트는 차감되지 않았습니다.' });
+    throw new HttpError(500, { error: '결제 처리 중 오류가 발생했습니다. 포인트는 차감되지 않았습니다.' });
   }
 
   const ctxA = { occasionKey, yongshinMain: basicsA.yongshinMain, personDayStem: basicsA.personDayStem, personDayBranch: basicsA.personDayBranch };
@@ -489,7 +493,7 @@ async function runWeddingSearch(req, res, occasionKey, occasion) {
   const bestValue = formatBestValue(best && bestDay ? { ...best, year: bestDay.year, month: bestDay.month, day: bestDay.day } : null);
   const bestOut = best && bestDay ? { year: bestDay.year, month: bestDay.month, day: bestDay.day, hour: best.hour, ganZhiKo: best.ganZhiKo, hourGanZhiKo: best.hourGanZhiKo, score: best.score } : null;
 
-  res.json({
+  const payload = ({
     occasion: occasionKey, occasionLabel: occasion.label, name: basicsA.personName, spouseName: basicsB.personName,
     jobId, best: bestOut, compat: { score: compat.score }
   });
@@ -528,7 +532,7 @@ async function runWeddingSearch(req, res, occasionKey, occasion) {
     try {
       orders.updateStatus(jobId, 'rendering');
       await finishReport({
-        jobId, userId: req.session.userId, occasion, name: coupleName,
+        jobId, userId: userId, occasion, name: coupleName,
         title: `${coupleName || '두 분'}의 결혼 리포트`,
         eyebrow: '命 式 關 係 圖 · 결혼 리포트',
         metaLine: `목표 <b>${targetYear}년</b> · 궁합 참고 점수 <b>${compat.score}점</b>`,
@@ -537,27 +541,28 @@ async function runWeddingSearch(req, res, occasionKey, occasion) {
       });
     } catch (e) {
       orders.markError(jobId, e.message || String(e));
-      points.refund(req.session.userId, points.PRICES[occasion.productKey], `생성 실패 환불: ${occasion.productKey}`, jobId);
+      points.refund(userId, points.PRICES[occasion.productKey], `생성 실패 환불: ${occasion.productKey}`, jobId);
     }
   })();
+  return payload;
 }
 
 // 부모 모드 — 임신·출산. 예정일 범위 안에서 오행이 골고루 갖춰지는 날짜·시간을 찾는다.
-async function runBirthSearch(req, res, occasionKey, occasion) {
-  const { baseYear, baseMonth, baseDay } = req.body;
+async function runBirthSearch(userId, body, occasionKey, occasion) {
+  const { baseYear, baseMonth, baseDay } = body;
   const by = Number(baseYear), bm = Number(baseMonth), bd = Number(baseDay);
   if (!by || !bm || !bd || by < 1900 || by > 2100 || bm < 1 || bm > 12 || bd < 1 || bd > 31) {
-    return res.status(400).json({ error: '예정일을 올바르게 입력해주세요.' });
+    throw new HttpError(400, { error: '예정일을 올바르게 입력해주세요.' });
   }
-  const rangeDays = Math.min(10, Math.max(1, Number(req.body.rangeDays) || 5));
+  const rangeDays = Math.min(10, Math.max(1, Number(body.rangeDays) || 5));
 
   let parentDayBranches = [];
   let parentNames = [];
   let motherYongshinMain = null; // 산모 힐링 포인트(맛)는 아이가 아니라 산모 본인의 용신 기준이어야 한다.
   try {
     ['a', 'b'].forEach((prefix) => {
-      if (!req.body[`${prefix}Year`]) return;
-      const parentInput = parsePerson(req.body, prefix);
+      if (!body[`${prefix}Year`]) return;
+      const parentInput = parsePerson(body, prefix);
       if (!parentInput) return;
       const parentEngine = computeSaju(parentInput);
       parentDayBranches.push(parentEngine.palja.dayPillar.branch);
@@ -567,12 +572,12 @@ async function runBirthSearch(req, res, occasionKey, occasion) {
       }
     });
   } catch (e) {
-    return res.status(400).json({ error: e.message });
+    throw new HttpError(400, { error: e.message });
   }
 
-  const pending = orders.findPendingByUserAndProduct(req.session.userId, occasion.productKey);
+  const pending = orders.findPendingByUserAndProduct(userId, occasion.productKey);
   if (pending) {
-    return res.status(409).json({
+    throw new HttpError(409, {
       error: `이미 생성 중인 ${occasion.label} 리포트가 있어요. 완료될 때까지 잠시만 기다려주세요.`,
       code: 'already_pending', jobId: pending.job_id
     });
@@ -582,12 +587,12 @@ async function runBirthSearch(req, res, occasionKey, occasion) {
   const parentDisplayName = parentNames.join(' · ');
   const orderLabel = `${occasion.label} 리포트${parentDisplayName ? ' — ' + parentDisplayName : ''}`;
   try {
-    points.chargeForProductAndCreateOrder(req.session.userId, occasion.productKey, { label: orderLabel, jobId });
+    points.chargeForProductAndCreateOrder(userId, occasion.productKey, { label: orderLabel, jobId });
   } catch (e) {
     if (e.code === 'insufficient_points') {
-      return res.status(402).json({ error: e.message, code: e.code, required: e.required, balance: e.balance });
+      throw new HttpError(402, { error: e.message, code: e.code, required: e.required, balance: e.balance });
     }
-    return res.status(500).json({ error: '결제 처리 중 오류가 발생했습니다. 포인트는 차감되지 않았습니다.' });
+    throw new HttpError(500, { error: '결제 처리 중 오류가 발생했습니다. 포인트는 차감되지 않았습니다.' });
   }
 
   const base = new Date(Date.UTC(by, bm - 1, bd));
@@ -626,7 +631,7 @@ async function runBirthSearch(req, res, occasionKey, occasion) {
   const bestValue = formatBestValue(best);
   const bestOut = best ? { year: best.year, month: best.month, day: best.day, hour: best.hour, ganZhiKo: best.ganZhiKo, hourGanZhiKo: best.hourGanZhiKo, score: best.score } : null;
 
-  res.json({ occasion: occasionKey, occasionLabel: occasion.label, jobId, best: bestOut });
+  const payload = ({ occasion: occasionKey, occasionLabel: occasion.label, jobId, best: bestOut });
 
   orders.updateStatus(jobId, 'generating');
   (async () => {
@@ -648,7 +653,7 @@ async function runBirthSearch(req, res, occasionKey, occasion) {
     try {
       orders.updateStatus(jobId, 'rendering');
       await finishReport({
-        jobId, userId: req.session.userId, occasion, name: parentDisplayName,
+        jobId, userId: userId, occasion, name: parentDisplayName,
         title: `${parentLabel || '우리 가족'}을 위한 임신·출산 리포트`,
         eyebrow: '命 式 關 係 圖 · 임신·출산 리포트',
         metaLine: `예정일 <b>${by}.${String(bm).padStart(2, '0')}.${String(bd).padStart(2, '0')}</b> 전후 ±${rangeDays}일`,
@@ -657,9 +662,12 @@ async function runBirthSearch(req, res, occasionKey, occasion) {
       });
     } catch (e) {
       orders.markError(jobId, e.message || String(e));
-      points.refund(req.session.userId, points.PRICES[occasion.productKey], `생성 실패 환불: ${occasion.productKey}`, jobId);
+      points.refund(userId, points.PRICES[occasion.productKey], `생성 실패 환불: ${occasion.productKey}`, jobId);
     }
   })();
+  return payload;
 }
 
 module.exports = router;
+module.exports.start = startDateSelect;
+module.exports.OCCASIONS = OCCASIONS;

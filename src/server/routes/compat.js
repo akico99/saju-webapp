@@ -16,6 +16,7 @@ const { safeName } = require('../../pdf/personName');
 const points = require('../../db/points');
 const orders = require('../../db/orders');
 const { requireAuth } = require('../middleware/auth');
+const { HttpError, handle } = require('../httpError');
 
 const router = express.Router();
 const { OUTPUT_ROOT } = require('../../config/outputDir');
@@ -33,13 +34,14 @@ function parsePerson(body, prefix) {
   return { input: { year, month, day, hour, minute, gender, isLunar, isLeap }, name };
 }
 
-router.post('/compat', requireAuth, async (req, res) => {
+/** 궁합 리포트 시작 — 라우트(/api/compat)와 카드 결제 승인(pay.js)이 같은 함수를 쓴다. */
+async function startCompat(userId, body) {
   let personAInput, personBInput;
   try {
-    personAInput = parsePerson(req.body, 'a');
-    personBInput = parsePerson(req.body, 'b');
+    personAInput = parsePerson(body, 'a');
+    personBInput = parsePerson(body, 'b');
   } catch (e) {
-    return res.status(400).json({ error: e.message });
+    throw new HttpError(400, { error: e.message });
   }
 
   let engineA, engineB;
@@ -47,13 +49,13 @@ router.post('/compat', requireAuth, async (req, res) => {
     engineA = computeSaju(personAInput.input);
     engineB = computeSaju(personBInput.input);
   } catch (e) {
-    return res.status(400).json({ error: '명식 계산 실패: ' + e.message });
+    throw new HttpError(400, { error: '명식 계산 실패: ' + e.message });
   }
 
   // 이미 생성 중인 같은 상품이 있으면 또 결제/생성하지 않는다.
-  const pending = orders.findPendingByUserAndProduct(req.session.userId, 'compat');
+  const pending = orders.findPendingByUserAndProduct(userId, 'compat');
   if (pending) {
-    return res.status(409).json({
+    throw new HttpError(409, {
       error: '이미 생성 중인 궁합 리포트가 있어요. 완료될 때까지 잠시만 기다려주세요.',
       code: 'already_pending', jobId: pending.job_id
     });
@@ -63,18 +65,18 @@ router.post('/compat', requireAuth, async (req, res) => {
   const personB = { name: personBInput.name };
   const compat = analyzeCompatibility(engineA, engineB);
   // 관계 유형에 따라 볼 자리가 다르다(연애=끌림·다툼, 부부=살림, 재회=어긋난 구조). 골격이 여기서 갈린다.
-  const relation = normalizeRelation(req.body.relation);
+  const relation = normalizeRelation(body.relation);
   const jobId = crypto.randomUUID();
   const label = `궁합 리포트(${RELATIONS[relation].label}) — ${personA.name || '본인'} · ${personB.name || '상대방'}`;
 
   let price;
   try {
-    price = points.chargeForProductAndCreateOrder(req.session.userId, 'compat', { label, jobId });
+    price = points.chargeForProductAndCreateOrder(userId, 'compat', { label, jobId });
   } catch (e) {
     if (e.code === 'insufficient_points') {
-      return res.status(402).json({ error: e.message, code: e.code, required: e.required, balance: e.balance });
+      throw new HttpError(402, { error: e.message, code: e.code, required: e.required, balance: e.balance });
     }
-    return res.status(500).json({ error: '결제 처리 중 오류가 발생했습니다. 포인트는 차감되지 않았습니다.' });
+    throw new HttpError(500, { error: '결제 처리 중 오류가 발생했습니다. 포인트는 차감되지 않았습니다.' });
   }
 
   let jobDir;
@@ -83,11 +85,11 @@ router.post('/compat', requireAuth, async (req, res) => {
     fs.mkdirSync(jobDir, { recursive: true });
   } catch (e) {
     orders.markError(jobId, e.message || String(e));
-    points.refund(req.session.userId, price, '생성 준비 실패 환불: compat', jobId);
-    return res.status(500).json({ error: '생성 준비 중 오류가 발생했습니다. 포인트는 환불되었습니다.' });
+    points.refund(userId, price, '생성 준비 실패 환불: compat', jobId);
+    throw new HttpError(500, { error: '생성 준비 중 오류가 발생했습니다. 포인트는 환불되었습니다.' });
   }
 
-  res.json({ jobId, compatSummary: { score: compat.score } });
+  const payload = ({ jobId, compatSummary: { score: compat.score } });
 
   orders.updateStatus(jobId, 'generating');
   generateCompatReport(engineA, engineB, personA, personB, compat, relation)
@@ -101,8 +103,12 @@ router.post('/compat', requireAuth, async (req, res) => {
     })
     .catch((e) => {
       orders.markError(jobId, e.message);
-      points.refund(req.session.userId, price, '생성 실패 환불: compat', jobId);
+      points.refund(userId, price, '생성 실패 환불: compat', jobId);
     });
-});
+  return payload;
+}
+
+router.post('/compat', requireAuth, handle(startCompat));
 
 module.exports = router;
+module.exports.start = startCompat;

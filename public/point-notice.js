@@ -20,12 +20,11 @@
 
   fetch('/api/auth/me').then((r) => r.json()).then((data) => {
     if (!data.user) {
-      el.innerHTML = `${topic} <b>${price.toLocaleString('ko-KR')}P</b>가 필요해요. <a href="/login.html?redirect=${encodeURIComponent(location.pathname + location.search)}">로그인하고 계속하기 →</a>`;
+      el.innerHTML = `${topic} <b>${price.toLocaleString('ko-KR')}원</b>(카드 결제)이에요. <a href="/login.html?redirect=${encodeURIComponent(location.pathname + location.search)}">로그인하고 계속하기 →</a>`;
       return;
     }
     if (data.user.pointBalance < price) {
-      el.classList.add('warn');
-      el.innerHTML = `${label} 가격은 <b>${price.toLocaleString('ko-KR')}P</b>인데, 보유 포인트가 <b>${data.user.pointBalance.toLocaleString('ko-KR')}P</b>로 부족해요. <a href="/charge.html">충전하러 가기 →</a>`;
+      el.innerHTML = `${label} <b>${price.toLocaleString('ko-KR')}원</b> — 제출하면 카드 결제창이 열리고, 결제 즉시 생성이 시작됩니다.${data.user.pointBalance > 0 ? ` (보유 크레딧 ${data.user.pointBalance.toLocaleString('ko-KR')}P는 가격 이상일 때 자동으로 먼저 쓰여요)` : ''}`;
       return;
     }
     el.innerHTML = `${label} 가격 <b>${price.toLocaleString('ko-KR')}P</b> — 제출하면 보유 포인트(${data.user.pointBalance.toLocaleString('ko-KR')}P)에서 바로 차감됩니다.`;
