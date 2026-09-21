@@ -24,10 +24,10 @@
       return;
     }
     if (data.user.pointBalance < price) {
-      el.innerHTML = `${label} <b>${price.toLocaleString('ko-KR')}원</b> — 제출하면 카드 결제창이 열리고, 결제 즉시 생성이 시작됩니다.${data.user.pointBalance > 0 ? ` (보유 크레딧 ${data.user.pointBalance.toLocaleString('ko-KR')}P는 가격 이상일 때 자동으로 먼저 쓰여요)` : ''}`;
+      el.innerHTML = `${label} <b>${price.toLocaleString('ko-KR')}원</b> — 제출하면 카드 결제창이 열리고, 결제 즉시 생성이 시작됩니다.${data.user.pointBalance > 0 ? ` (이전 입금 잔여금 ${data.user.pointBalance.toLocaleString('ko-KR')}원이 가격 이상이면 결제창 없이 먼저 사용돼요)` : ''}`;
       return;
     }
-    el.innerHTML = `${label} 가격 <b>${price.toLocaleString('ko-KR')}P</b> — 제출하면 보유 포인트(${data.user.pointBalance.toLocaleString('ko-KR')}P)에서 바로 차감됩니다.`;
+    el.innerHTML = `${label} <b>${price.toLocaleString('ko-KR')}원</b> — 이전 입금 잔여금(${data.user.pointBalance.toLocaleString('ko-KR')}원)에서 차감되어 결제창 없이 바로 시작됩니다.`;
   }).catch(() => {
     el.textContent = '로그인 상태를 확인하지 못했습니다.';
   });

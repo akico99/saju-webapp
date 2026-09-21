@@ -36,7 +36,7 @@
 
     <div class="card hidden" id="verifyCard" style="background:var(--paper);border:1px dashed var(--line);">
       <h3>이메일 인증이 필요해요</h3>
-      <p class="hint">가입하실 때 인증 메일을 보내드렸어요. 계좌이체 크레딧 신청 같은 일부 기능은 이메일 인증 후 이용할 수 있습니다.</p>
+      <p class="hint">가입하실 때 인증 메일을 보내드렸어요. 비밀번호 찾기 등 일부 기능은 이메일 인증 후 이용할 수 있습니다.</p>
       <button class="btn-primary" id="resendVerifyBtn" style="display:block;width:100%;box-sizing:border-box;">인증 메일 다시 보내기</button>
     </div>
 
@@ -56,14 +56,14 @@
       <a class="fortune-cta hidden" id="fortuneCta" href="/today-fortune.html">오늘의 운세 더 자세히 보기 →</a>
     </div>
 
-    <!-- 크레딧은 계좌이체로 미리 넣어둔 잔액(보조 수단). 카드는 상품 페이지에서 단건 결제하므로
-         잔액이 0이면 이 카드를 보이지 않는다. -->
+    <!-- 결제는 상품 페이지에서 리포트 1건 = 결제 1건. 잔액을 사고팔지 않는다. 예전(계좌이체 충전 시절)에
+         입금하고 남은 금액이 있는 회원에게만 그 사실을 알린다 — 다음 결제에 자동으로 먼저 쓰인다. -->
     <div class="card hidden" id="balanceCard">
       <div class="balance-row">
-        <span class="label">보유 크레딧</span>
-        <span class="value"><span id="balanceValue">0</span><span class="unit">P</span></span>
+        <span class="label">이전 입금 잔여금</span>
+        <span class="value"><span id="balanceValue">0</span><span class="unit">원</span></span>
       </div>
-      <p class="hint" style="margin:0;">리포트를 결제할 때 크레딧이 가격 이상이면 결제창 없이 먼저 차감돼요.</p>
+      <p class="hint" style="margin:0;">예전에 입금하신 금액 중 남은 부분이에요. 다음 리포트 결제 때 자동으로 먼저 사용되고, 전액 환불도 요청할 수 있어요(문의: sooky2001@gmail.com).</p>
     </div>
 
     <div class="card">

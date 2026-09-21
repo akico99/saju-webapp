@@ -2,27 +2,13 @@
 const express = require('express');
 const points = require('../../db/points');
 const users = require('../../db/users');
-const { requireAuth, requireVerifiedEmail } = require('../middleware/auth');
+const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
 
-router.get('/points/deposit-info', requireAuth, (req, res) => {
-  res.json({
-    account: process.env.DEPOSIT_ACCOUNT_INFO || '[운영자가 .env의 DEPOSIT_ACCOUNT_INFO를 아직 설정하지 않았습니다]',
-    pointRate: '1P = 1원',
-    notice: '입금 후 신청하시면, 운영자가 입금을 직접 확인한 뒤 포인트를 지급합니다(자동 지급 아님).'
-  });
-});
-
-router.post('/points/request', requireAuth, requireVerifiedEmail, (req, res) => {
-  const amountKrw = Number(req.body.amountKrw);
-  const depositorName = (req.body.depositorName || '').slice(0, 30);
-  if (!amountKrw || amountKrw < 1000) {
-    return res.status(400).json({ error: '충전 금액은 1,000원 이상이어야 합니다.' });
-  }
-  const row = points.createRequest({ userId: req.session.userId, amountKrw, depositorName });
-  res.json({ request: row });
-});
+/* 예전의 "포인트 충전"(입금 안내 + 충전 신청) API는 없앴다. 사이트 안에 잔액을 사고파는 흐름이 있으면
+   PG 심사에서 선불 전자지급수단으로 읽힌다. 결제는 상품 페이지에서 리포트 1건마다 카드로 하고(pay.js),
+   여기는 예전 입금 잔여금 조회만 남긴다. 잔여금은 다음 결제 때 자동으로 먼저 차감된다. */
 
 router.get('/points/mine', requireAuth, (req, res) => {
   const user = users.findById(req.session.userId);

@@ -8,7 +8,7 @@ const publicDir = path.join(__dirname, '..', 'public');
 const pages = [
   'free', 'life-graph', 'today-preview', 'today-fortune', 'quick', 'compat',
   'lifetime-report', 'date-select', 'login', 'signup', 'forgot-password',
-  'reset-password', 'profiles', 'charge', 'mypage', 'services'
+  'reset-password', 'profiles', 'mypage', 'services'
 ];
 
 // 2026-09 판매 종료된 상품 페이지 — 새 상품으로 바로 보낸다. 링크·북마크로 들어온
