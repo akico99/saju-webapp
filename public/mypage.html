@@ -36,7 +36,7 @@
 
     <div class="card hidden" id="verifyCard" style="background:var(--paper);border:1px dashed var(--line);">
       <h3>이메일 인증이 필요해요</h3>
-      <p class="hint">가입하실 때 인증 메일을 보내드렸어요. 포인트 충전 같은 일부 기능은 이메일 인증 후 이용할 수 있습니다.</p>
+      <p class="hint">가입하실 때 인증 메일을 보내드렸어요. 계좌이체 크레딧 신청 같은 일부 기능은 이메일 인증 후 이용할 수 있습니다.</p>
       <button class="btn-primary" id="resendVerifyBtn" style="display:block;width:100%;box-sizing:border-box;">인증 메일 다시 보내기</button>
     </div>
 
@@ -56,12 +56,14 @@
       <a class="fortune-cta hidden" id="fortuneCta" href="/today-fortune.html">오늘의 운세 더 자세히 보기 →</a>
     </div>
 
-    <div class="card">
+    <!-- 크레딧은 계좌이체로 미리 넣어둔 잔액(보조 수단). 카드는 상품 페이지에서 단건 결제하므로
+         잔액이 0이면 이 카드를 보이지 않는다. -->
+    <div class="card hidden" id="balanceCard">
       <div class="balance-row">
-        <span class="label">내 포인트</span>
+        <span class="label">보유 크레딧</span>
         <span class="value"><span id="balanceValue">0</span><span class="unit">P</span></span>
       </div>
-      <a href="/charge.html" class="btn-primary" style="display:block;text-align:center;text-decoration:none;box-sizing:border-box;">충전하러 가기 →</a>
+      <p class="hint" style="margin:0;">리포트를 결제할 때 크레딧이 가격 이상이면 결제창 없이 먼저 차감돼요.</p>
     </div>
 
     <div class="card">
@@ -125,6 +127,7 @@
     const res = await fetch('/api/points/mine');
     const data = await res.json();
     document.getElementById('balanceValue').textContent = data.balance.toLocaleString('ko-KR');
+    document.getElementById('balanceCard').classList.toggle('hidden', !(data.balance > 0));
   }
 
   const ORDER_STATUS_CLASS = {
