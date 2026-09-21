@@ -105,7 +105,7 @@
     function render(p, data) {
       ttl.textContent = data.alreadyConfirmed ? '이미 결제가 완료된 주문이에요' : '결제가 완료됐어요';
       desc.textContent = data.jobId
-        ? '리포트 생성이 시작됐어요. 아래 버튼을 누르면 진행 상황과 결과를 볼 수 있어요.'
+        ? '리포트 생성이 시작됐어요. 아래 버튼을 누르면 진행 상황과 결과를 볼 수 있어요. 마이페이지 주문 내역에서도 언제든 확인할 수 있어요.'
         : '결제 내역은 마이페이지에서 확인할 수 있어요.';
       document.getElementById('orderNameEl').textContent = p.orderName;
       document.getElementById('amountEl').textContent = p.amountKrw.toLocaleString('ko-KR') + '원';
@@ -121,7 +121,7 @@
         const url = data.page + (data.page.includes('?') ? '&' : '?') + 'jobId=' + encodeURIComponent(data.jobId);
         const go = document.getElementById('goReport');
         go.href = url; go.classList.remove('hidden');
-        setTimeout(() => { location.href = url; }, 1800);
+        // 자동으로 넘기지 않는다 — 승인 완료 화면(결제수단·승인시각·주문번호)을 사용자가 확인하고 넘어간다.
       }
     }
   }
