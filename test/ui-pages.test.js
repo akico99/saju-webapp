@@ -65,6 +65,26 @@ test('life graph retains IDs used by result rendering and control events', () =>
   assert.ok(fs.existsSync(path.join(publicDir, 'reading-ui.css')));
 });
 
+test('free result pages expose image save and image share actions', () => {
+  const freeHtml = fs.readFileSync(path.join(publicDir, 'free.html'), 'utf8');
+  const previewHtml = fs.readFileSync(path.join(publicDir, 'today-preview.html'), 'utf8');
+  const lifeHtml = fs.readFileSync(path.join(publicDir, 'life-graph.html'), 'utf8');
+
+  assert.match(freeHtml, /<script src="\/share-card\.js"><\/script>/);
+  assert.match(freeHtml, /id="freeShareActions"/);
+  assert.match(freeHtml, /id="freeImageSaveBtn"/);
+  assert.match(freeHtml, /id="freeImageShareBtn"/);
+
+  assert.match(previewHtml, /<script src="\/share-card\.js"><\/script>/);
+  assert.match(previewHtml, /id="todayShareActions"/);
+  assert.match(previewHtml, /id="todayImageSaveBtn"/);
+  assert.match(previewHtml, /id="todayImageShareBtn"/);
+
+  assert.match(lifeHtml, /<script src="\/share-card\.js"><\/script>/);
+  assert.match(lifeHtml, /id="lgSaveBtn"/);
+  assert.match(lifeHtml, /id="lgImageShareBtn"/);
+});
+
 test('life graph shows results before asking for a topic', () => {
   const html = fs.readFileSync(path.join(publicDir, 'life-graph.html'), 'utf8');
   assert.match(html, /<form id="lgForm">/);

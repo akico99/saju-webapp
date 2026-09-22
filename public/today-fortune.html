@@ -30,7 +30,9 @@
 <link rel="stylesheet" href="/reading-ui.css">
 <link rel="stylesheet" href="/editorial-refresh.css">
 <link rel="stylesheet" href="/fortune-result.css">
+<link rel="stylesheet" href="/share-card.css">
 <script src="/fortune-result.js"></script>
+<script src="/share-card.js"></script>
 <style>
   /* 결과 스타일은 fortune-result.css — 무료 체험(today-preview.html)과 같은 파일을 쓴다. */
   .reading-page main { padding-top: 18px; }
@@ -91,10 +93,42 @@
         <span class="fr-next-btn"><span id="tfUpsellName"></span><span class="price" id="tfUpsellPrice"></span></span>
       </a>
     </div>
+    <div class="share-actions hidden" id="todayShareActions" aria-label="오늘의 운세 공유">
+      <button type="button" id="todayImageSaveBtn">이미지 저장</button>
+      <button type="button" id="todayImageShareBtn">이미지 공유</button>
+      <p class="share-hint">오늘의 운세 요약을 한 장의 카드로 남겨보세요.</p>
+    </div>
   </main>
 </div>
+<div class="toast" id="todayToast"></div>
 
 <script>
+  let currentFortune = null;
+  const todayToast = document.getElementById('todayToast');
+  function showTodayToast(message) {
+    todayToast.textContent = message;
+    todayToast.classList.add('show');
+    clearTimeout(window.__todayToastTimer);
+    window.__todayToastTimer = setTimeout(() => todayToast.classList.remove('show'), 2200);
+  }
+  function todaySharePayload() {
+    const fortune = currentFortune || {};
+    const weather = fortune.weather || {};
+    return {
+      title: '오늘의 운세',
+      headline: `${fortune.title || '오늘의 흐름'} · ${fortune.score || '-'}점`,
+      lines: [weather.label && `날씨처럼 읽은 오늘의 기운: ${weather.label}`, ...(fortune.summary3 || [])],
+      filename: `사주보는수달-오늘의운세-${fortune.date || '오늘'}`,
+      shareText: '오늘의 운세를 한 장의 카드로 정리했어요.'
+    };
+  }
+  ShareCard.bind({
+    saveButton: document.getElementById('todayImageSaveBtn'),
+    shareButton: document.getElementById('todayImageShareBtn'),
+    getPayload: todaySharePayload,
+    onStatus: showTodayToast
+  });
+
   // 이 페이지는 홈 화면·마이페이지 두 곳 모두에서 들어올 수 있어서, 뒤로가기 화살표를
   // 마이페이지로 고정해두면 홈에서 들어온 사람은 엉뚱한 곳으로 돌아가게 된다. 같은
   // 사이트에서 온 경우(referrer)엔 실제로 왔던 페이지로 돌려보내고, 새 탭/북마크처럼
@@ -145,10 +179,12 @@
   }
 
   function render(fortune, week) {
+    currentFortune = fortune;
     FortuneResult.render(fortune, week, 'tf');
     renderQuest(fortune.quest, fortune.date);
     document.getElementById('loadingBox').classList.add('hidden');
     document.getElementById('content').classList.remove('hidden');
+    document.getElementById('todayShareActions').classList.remove('hidden');
   }
 
   (async () => {

@@ -1,0 +1,39 @@
+/* 결과를 읽은 뒤 자연스럽게 이어지는 이미지 저장·공유 도구막대. */
+.share-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 22px 0 0;
+  padding: 16px 0 0;
+  border-top: 1px solid var(--line);
+}
+
+.share-actions button {
+  flex: 1 1 150px;
+  width: auto;
+  min-height: 0;
+  margin: 0;
+  padding: 11px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-btn);
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.share-actions button:first-child {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+}
+
+.share-actions button:disabled { cursor: wait; opacity: .55; }
+.share-actions .share-hint { flex: 0 0 100%; margin: 0; color: var(--muted); font-size: 11.5px; line-height: 1.55; }
+
+@media (max-width: 360px) {
+  .share-actions button { flex-basis: 100%; }
+}

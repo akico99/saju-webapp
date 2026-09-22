@@ -32,8 +32,10 @@
 <link rel="stylesheet" href="/balance-experience.css">
 <link rel="stylesheet" href="/balance-book.css">
 <link rel="stylesheet" href="/fortune-result.css">
+<link rel="stylesheet" href="/share-card.css">
 <script src="/analysis-loader.js"></script>
 <script src="/balance-book.js" defer></script>
+<script src="/share-card.js"></script>
 <style>
   /* 무료 미니 리딩 3종(귀인·오행·매력)이 이 한 페이지를 쓴다. kind별 차이는 JS 설정표에 있다. */
   .preview-teaser { margin: 0 0 20px; padding-left: 18px; font-size: 13.5px; line-height: 2; color: var(--ink); }
@@ -178,8 +180,14 @@
         <div class="fr-others" id="others"></div>
       </div>
     </div>
+    <div class="share-actions hidden" id="freeShareActions" aria-label="무료 결과 공유">
+      <button type="button" id="freeImageSaveBtn">이미지 저장</button>
+      <button type="button" id="freeImageShareBtn">이미지 공유</button>
+      <p class="share-hint">지금 보이는 무료 결과를 한 장의 카드로 남겨보세요.</p>
+    </div>
   </main>
 </div>
+<div class="toast" id="freeToast"></div>
 
 <script>
   // kind별 소개 문구 — 결과는 서버(freeReadings.js)가 만든다. 여기는 폼 위 예고와 그리기만.
@@ -207,6 +215,39 @@
   const cfg = KINDS[kind];
   if (!cfg) location.replace('/free.html?kind=balance');
   if (kind === 'balance') document.body.classList.add('balance-experience');
+
+  const freeShareActions = document.getElementById('freeShareActions');
+  const freeToast = document.getElementById('freeToast');
+  function showFreeToast(message) {
+    freeToast.textContent = message;
+    freeToast.classList.add('show');
+    clearTimeout(window.__freeToastTimer);
+    window.__freeToastTimer = setTimeout(() => freeToast.classList.remove('show'), 2200);
+  }
+  function freeSharePayload() {
+    const balance = kind === 'balance';
+    const root = document.getElementById(balance ? 'result' : 'frResult');
+    const headline = document.getElementById(balance ? 'rHeadline' : 'frHeadline').textContent;
+    const lead = document.getElementById(balance ? 'rLead' : 'frLead').textContent;
+    const details = [...root.querySelectorAll(balance
+      ? '.bb-summary, .bb-basis, .bb-insight-part p, .bb-missing-item p'
+      : '.fr-entry .core, .fr-entry .tip, .fr-entry .shadow, .fr-note')]
+      .map((node) => node.textContent).filter(Boolean).slice(0, 4);
+    return {
+      title: cfg.title,
+      headline,
+      lines: [lead, ...details],
+      filename: `사주보는수달-${cfg.title}`,
+      shareText: `내 ${cfg.title} 무료 결과를 한 장으로 정리했어요.`
+    };
+  }
+  ShareCard.bind({
+    saveButton: document.getElementById('freeImageSaveBtn'),
+    shareButton: document.getElementById('freeImageShareBtn'),
+    getPayload: freeSharePayload,
+    onStatus: showFreeToast
+  });
+  function showFreeShareActions() { freeShareActions.classList.remove('hidden'); }
 
   document.title = `사주보는 수달 — ${cfg.title} (무료)`;
   document.getElementById('pageTitle').textContent = cfg.title + ' · 무료';
@@ -281,6 +322,7 @@
       document.getElementById('frUpPrice').textContent = r.upsell.price;
       document.getElementById('frUpLink').href = r.upsell.href;
       document.getElementById('frResult').classList.remove('hidden');
+      showFreeShareActions();
       return;
     }
     document.getElementById('rEyebrow').textContent = cfg.eyebrow;
@@ -293,6 +335,7 @@
     document.getElementById('upPrice').textContent = r.upsell.price;
     document.getElementById('upLink').href = r.upsell.href;
     document.getElementById('result').classList.remove('hidden');
+    showFreeShareActions();
   }
   document.getElementById('unfoldBtn').addEventListener('click', () => {
     document.getElementById('folded').classList.add('hidden');

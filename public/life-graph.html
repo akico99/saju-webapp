@@ -30,6 +30,8 @@
 <link rel="stylesheet" href="/reading-ui.css">
 <link rel="stylesheet" href="/editorial-refresh.css">
 <link rel="stylesheet" href="/fortune-result.css">
+<link rel="stylesheet" href="/share-card.css">
+<script src="/share-card.js"></script>
 <script src="/analysis-loader.js"></script>
 <script src="/concern-step.js"></script>
 <style>
@@ -350,8 +352,9 @@
       <div class="lg-actions">
         <button type="button" id="lgShareBtn">링크로 공유하기</button>
         <button type="button" id="lgSaveBtn">이미지로 저장</button>
+        <button type="button" id="lgImageShareBtn">이미지 공유</button>
       </div>
-      <p class="lg-hint" style="margin-top:8px;">링크로 공유하면 상대방이 내 그래프 전체를 직접 드래그해서 볼 수 있어요. 이미지로 저장하면 지금 보고 있는 시점의 그래프와 오행 균형이 한 장에 함께 담겨요.</p>
+      <p class="lg-hint" style="margin-top:8px;">링크로 공유하면 상대방이 내 그래프 전체를 직접 드래그해서 볼 수 있어요. 이미지 저장·공유에는 지금 보고 있는 시점의 그래프와 오행 균형이 한 장에 함께 담겨요.</p>
     </section>
   </main>
 </div>
@@ -954,6 +957,21 @@
       link.click();
     } catch (e) {
       showToast('이미지 저장 실패: ' + e.message);
+    }
+  });
+
+  document.getElementById('lgImageShareBtn').addEventListener('click', async () => {
+    if (!points.length) { showToast('먼저 생년월일을 입력해주세요'); return; }
+    dragging = false;
+    try {
+      const blob = await buildShareCard();
+      await ShareCard.shareBlob(blob, {
+        title: '사주보는 수달 — 인생 그래프',
+        filename: '사주보는수달-인생그래프',
+        shareText: '내 인생 그래프를 한 장의 카드로 정리했어요.'
+      }, showToast);
+    } catch (e) {
+      showToast('이미지 공유 실패: ' + e.message);
     }
   });
 

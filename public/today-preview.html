@@ -30,8 +30,10 @@
 <link rel="stylesheet" href="/reading-ui.css">
 <link rel="stylesheet" href="/editorial-refresh.css">
 <link rel="stylesheet" href="/fortune-result.css">
+<link rel="stylesheet" href="/share-card.css">
 <script src="/analysis-loader.js"></script>
 <script src="/fortune-result.js"></script>
+<script src="/share-card.js"></script>
 <style>
   /* 결과 영역의 스타일은 fortune-result.css — 회원판(today-fortune.html)과 같은 파일을 쓴다. */
 
@@ -167,13 +169,47 @@
         <a href="/signup.html">회원가입하고 저장하기</a>
       </div>
     </div>
+    <div class="share-actions hidden" id="todayShareActions" aria-label="오늘의 운세 공유">
+      <button type="button" id="todayImageSaveBtn">이미지 저장</button>
+      <button type="button" id="todayImageShareBtn">이미지 공유</button>
+      <p class="share-hint">오늘의 운세 요약을 한 장의 카드로 남겨보세요.</p>
+    </div>
   </div>
 </div>
+<div class="toast" id="todayToast"></div>
 
 <script>
+  let currentFortune = null;
+  const todayToast = document.getElementById('todayToast');
+  function showTodayToast(message) {
+    todayToast.textContent = message;
+    todayToast.classList.add('show');
+    clearTimeout(window.__todayToastTimer);
+    window.__todayToastTimer = setTimeout(() => todayToast.classList.remove('show'), 2200);
+  }
+  function todaySharePayload() {
+    const fortune = currentFortune || {};
+    const weather = fortune.weather || {};
+    return {
+      title: '오늘의 운세',
+      headline: `${fortune.title || '오늘의 흐름'} · ${fortune.score || '-'}점`,
+      lines: [weather.label && `날씨처럼 읽은 오늘의 기운: ${weather.label}`, ...(fortune.summary3 || [])],
+      filename: `사주보는수달-오늘의운세-${fortune.date || '오늘'}`,
+      shareText: '오늘의 운세를 한 장의 카드로 정리했어요.'
+    };
+  }
+  ShareCard.bind({
+    saveButton: document.getElementById('todayImageSaveBtn'),
+    shareButton: document.getElementById('todayImageShareBtn'),
+    getPayload: todaySharePayload,
+    onStatus: showTodayToast
+  });
+
   function render(fortune, week) {
+    currentFortune = fortune;
     FortuneResult.render(fortune, week, 'tp');
     document.getElementById('result').classList.remove('hidden');
+    document.getElementById('todayShareActions').classList.remove('hidden');
   }
 
   /* ---------- 대화 흐름 ---------- */
