@@ -139,3 +139,26 @@ test('all-services catalog groups daily and life-flow readings with the free ser
   assert.ok(freeSection.indexOf('/life-graph.html') < freeSection.indexOf('/free.html?kind=balance'));
   assert.doesNotMatch(html, /id="todayFortuneCard"|id="tfTitle"|id="tfDesc"|id="tfCta"/);
 });
+
+// 공유 링크 미리보기 — 카카오톡·검색에 제목과 그림이 뜨려면 og:* 가 있어야 하고, og:image는
+// 절대 URL이어야 크롤러가 받아간다. scripts/injectOG.js 가 만드는 결과를 고정한다.
+test('shared pages expose share preview metadata with an absolute image', () => {
+  const shared = ['index', 'services', 'free', 'life-graph', 'today-preview', 'today-fortune',
+    'quick', 'compat', 'date-select', 'lifetime-report', 'consult'];
+  for (const name of shared) {
+    const html = fs.readFileSync(path.join(publicDir, `${name}.html`), 'utf8');
+    const title = html.match(/<title>([^<]*)<\/title>/);
+    assert.ok(title, `${name}: missing title`);
+    assert.ok(html.includes(`<meta property="og:title" content="${title[1].trim()}">`),
+      `${name}: og:title should mirror the page title`);
+    assert.equal((html.match(/property="og:title"/g) || []).length, 1,
+      `${name}: injector must stay idempotent`);
+    assert.match(html, /<meta name="description" content="[^"]{10,}">/);
+    assert.match(html, /<meta property="og:image" content="https:\/\/sajuotter\.com\/og-cover\.jpg">/);
+    assert.match(html, /<meta name="twitter:card" content="summary_large_image">/);
+    const canonical = name === 'index' ? 'https://sajuotter.com/' : `https://sajuotter.com/${name}.html`;
+    assert.ok(html.includes(`<link rel="canonical" href="${canonical}">`),
+      `${name}: canonical should be the absolute page URL`);
+  }
+  assert.ok(fs.existsSync(path.join(publicDir, 'og-cover.jpg')), 'share preview image missing');
+});
