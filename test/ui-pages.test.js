@@ -164,7 +164,7 @@ test('all-services catalog groups daily and life-flow readings with the free ser
 // 절대 URL이어야 크롤러가 받아간다. scripts/injectOG.js 가 만드는 결과를 고정한다.
 test('shared pages expose share preview metadata with an absolute image', () => {
   const shared = ['index', 'services', 'free', 'life-graph', 'today-preview', 'today-fortune',
-    'quick', 'compat', 'date-select', 'lifetime-report', 'consult'];
+    'quick', 'compat', 'date-select', 'lifetime-report', 'consult', 'webtoon/lifetime'];
   for (const name of shared) {
     const html = fs.readFileSync(path.join(publicDir, `${name}.html`), 'utf8');
     const title = html.match(/<title>([^<]*)<\/title>/);

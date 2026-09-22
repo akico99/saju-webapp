@@ -85,3 +85,18 @@ test('평생사주 웹툰 그림이 모두 존재하고 전송 용량 제한을 
   }
   assert.ok(fs.existsSync(path.join(publicDir, 'webtoon', 'lifetime', 'thumb.webp')));
 });
+
+test('홈이 직접 구매 경로를 유지하면서 평생사주 웹툰 경로를 추가한다', () => {
+  const html = fs.readFileSync(path.join(publicDir, 'index.html'), 'utf8');
+  assert.match(html, /<a class="tile" href="\/lifetime-report\.html">[\s\S]*?<div class="name">평생사주<\/div>/);
+  assert.match(html, /<a class="today-fortune-card" href="\/webtoon\/lifetime\.html\?from=home-lifetime-story">/);
+  assert.match(html, /웹툰으로 먼저 보기 →/);
+});
+
+test('평생사주 웹툰 CTA가 기존 유료 상품을 가리킨다', () => {
+  const { lifetime } = require('../public/webtoon/episodes.js');
+  assert.equal(lifetime.cta.href, '/lifetime-report.html?from=lifetime-webtoon');
+  assert.ok(fs.existsSync(path.join(publicDir, 'lifetime-report.html')));
+  const services = fs.readFileSync(path.join(publicDir, 'services.html'), 'utf8');
+  assert.match(services, /<section id="free">/);
+});
