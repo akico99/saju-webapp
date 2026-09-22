@@ -67,3 +67,21 @@ test('뷰어 CSS가 좁은 화면과 모션 감소 설정을 지원한다', () =
   assert.match(css, /@media\s*\(prefers-reduced-motion:\s*reduce\)/);
   assert.match(css, /\.cut-gap-xl\s*\{[^}]*margin-bottom:\s*140px/);
 });
+
+test('평생사주 웹툰 그림이 모두 존재하고 전송 용량 제한을 지킨다', () => {
+  const { lifetime } = require('../public/webtoon/episodes.js');
+  let total = 0;
+  for (const cut of lifetime.cuts) {
+    const file = path.join(publicDir, cut.src.slice(1));
+    assert.ok(fs.existsSync(file), `${cut.src}: missing`);
+    const size = fs.statSync(file).size;
+    assert.ok(size > 20 * 1024, `${cut.src}: unexpectedly small`);
+    assert.ok(size < 400 * 1024, `${cut.src}: over per-panel ceiling`);
+    total += size;
+  }
+  assert.ok(total < 4 * 1024 * 1024, `episode is ${(total / 1024 / 1024).toFixed(2)}MB`);
+  for (const ref of ['otter-sheet.png', 'jiho-sheet.png']) {
+    assert.ok(fs.existsSync(path.join(publicDir, 'webtoon', '_refs', ref)), `${ref}: missing`);
+  }
+  assert.ok(fs.existsSync(path.join(publicDir, 'webtoon', 'lifetime', 'thumb.webp')));
+});
