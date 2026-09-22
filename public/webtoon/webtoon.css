@@ -114,6 +114,11 @@
   text-shadow: 0 1px 8px var(--bg);
 }
 
+.bubble-narration {
+  background: rgba(255, 249, 239, .88);
+  border-radius: 14px;
+}
+
 .bubble-key {
   border-bottom: 2px solid var(--gold);
   font-size: clamp(18px, 5vw, 24px);
@@ -122,6 +127,12 @@
 .pos-top-left { top: 6%; left: 7%; }
 .pos-top-right { top: 7%; right: 7%; }
 .pos-bottom-left { bottom: 7%; left: 7%; }
+
+#cut-15 .bubble {
+  max-width: 32%;
+  padding: 11px 13px;
+  font-size: 15px;
+}
 
 .image-missing img {
   visibility: hidden;
@@ -196,6 +207,11 @@ a:focus-visible {
     display: block;
     max-width: none;
     margin: 10px 14px 0;
+  }
+
+  #cut-15 .bubble {
+    max-width: none;
+    padding: 13px 17px;
   }
 }
 

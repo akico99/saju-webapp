@@ -66,6 +66,8 @@ test('뷰어 CSS가 좁은 화면과 모션 감소 설정을 지원한다', () =
   assert.match(css, /@media\s*\(max-width:\s*320px\)/);
   assert.match(css, /@media\s*\(prefers-reduced-motion:\s*reduce\)/);
   assert.match(css, /\.cut-gap-xl\s*\{[^}]*margin-bottom:\s*140px/);
+  assert.match(css, /\.bubble-narration\s*\{[^}]*background:\s*rgba\(255,\s*249,\s*239,/s);
+  assert.match(css, /#cut-15\s+\.bubble\s*\{[^}]*max-width:\s*32%/s);
 });
 
 test('평생사주 웹툰 그림이 모두 존재하고 전송 용량 제한을 지킨다', () => {
