@@ -36,3 +36,34 @@ test('평생사주 모든 컷에 안정적인 접근성 메타데이터가 있�
     [4, 6, 11, 16]
   );
 });
+
+test('평생사주 웹툰 골격이 데이터와 렌더러, 메타데이터, noscript 대체 화면을 불러온다', () => {
+  const html = fs.readFileSync(path.join(publicDir, 'webtoon', 'lifetime.html'), 'utf8');
+  assert.match(html, /<meta name="description" content="[^"]{10,}">/);
+  assert.match(html, /<link rel="canonical" href="https:\/\/sajuotter\.com\/webtoon\/lifetime\.html">/);
+  assert.match(html, /data-webtoon-root/);
+  assert.match(html, /<script src="\/webtoon\/episodes\.js"><\/script>/);
+  assert.match(html, /<script src="\/webtoon\/webtoon\.js"><\/script>/);
+  assert.match(html, /<noscript>[\s\S]*lifetime-report\.html/);
+});
+
+test('뷰어가 읽을 수 있는 대체 화면을 유지하고 실패한 이미지를 표시한다', () => {
+  const renderer = require('../public/webtoon/webtoon.js');
+  assert.equal(renderer.validateEpisode(null), false);
+  assert.equal(renderer.validateEpisode({ cuts: [] }), false);
+  assert.equal(renderer.loadingMode(0), 'eager');
+  assert.equal(renderer.loadingMode(1), 'eager');
+  assert.equal(renderer.loadingMode(2), 'lazy');
+  assert.match(renderer.fallbackMarkup(), /웹툰을 불러오지 못했어요/);
+  assert.match(renderer.fallbackMarkup(), /lifetime-report\.html\?from=lifetime-webtoon/);
+  const added = [];
+  renderer.markImageMissing({ classList: { add: (name) => added.push(name) } });
+  assert.deepEqual(added, ['image-missing']);
+});
+
+test('뷰어 CSS가 좁은 화면과 모션 감소 설정을 지원한다', () => {
+  const css = fs.readFileSync(path.join(publicDir, 'webtoon', 'webtoon.css'), 'utf8');
+  assert.match(css, /@media\s*\(max-width:\s*320px\)/);
+  assert.match(css, /@media\s*\(prefers-reduced-motion:\s*reduce\)/);
+  assert.match(css, /\.cut-gap-xl\s*\{[^}]*margin-bottom:\s*140px/);
+});

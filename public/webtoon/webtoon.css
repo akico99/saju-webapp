@@ -1,0 +1,210 @@
+@import url('/theme.css');
+
+.webtoon-page {
+  margin: 0;
+  background: var(--bg-outer);
+  color: var(--ink);
+}
+
+.toon-header,
+.toon-intro,
+.toon,
+.toon-error {
+  width: min(560px, 100%);
+  margin-inline: auto;
+}
+
+.toon-header {
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 18px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.toon-header a {
+  display: inline-flex;
+}
+
+.toon-header img {
+  display: block;
+  width: 116px;
+  height: auto;
+}
+
+.toon-intro {
+  padding: 72px 24px 56px;
+  text-align: center;
+  background: var(--bg);
+}
+
+.toon-intro p {
+  margin: 0;
+  color: var(--gold);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .12em;
+}
+
+.toon-intro h1 {
+  margin: 10px 0 24px;
+  font-family: var(--font-serif);
+  font-size: clamp(30px, 8vw, 42px);
+  line-height: 1.35;
+  letter-spacing: -.05em;
+}
+
+.toon-intro > span {
+  color: var(--gold);
+  font-size: 22px;
+}
+
+.toon {
+  background: var(--bg);
+  overflow: hidden;
+}
+
+.cut {
+  position: relative;
+  margin: 0;
+  background: var(--surface-2);
+}
+
+.cut img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.cut-gap-sm { margin-bottom: 8px; }
+.cut-gap-md { margin-bottom: 28px; }
+.cut-gap-lg { margin-bottom: 72px; }
+.cut-gap-xl { margin-bottom: 140px; }
+
+.bubble {
+  position: absolute;
+  z-index: 2;
+  max-width: 78%;
+  padding: 13px 17px;
+  color: var(--ink);
+  font-size: clamp(15px, 4vw, 18px);
+  line-height: 1.55;
+  word-break: keep-all;
+}
+
+.bubble-talk {
+  background: rgba(255,253,250,.96);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: var(--shadow-1);
+}
+
+.bubble-thought {
+  background: rgba(243,234,217,.94);
+  border-radius: 20px;
+}
+
+.bubble-narration,
+.bubble-key {
+  font-family: var(--font-serif);
+  text-shadow: 0 1px 8px var(--bg);
+}
+
+.bubble-key {
+  border-bottom: 2px solid var(--gold);
+  font-size: clamp(18px, 5vw, 24px);
+}
+
+.pos-top-left { top: 6%; left: 7%; }
+.pos-top-right { top: 7%; right: 7%; }
+.pos-bottom-left { bottom: 7%; left: 7%; }
+
+.image-missing img {
+  visibility: hidden;
+}
+
+.image-missing {
+  min-height: 300px;
+  background: var(--surface-2);
+}
+
+.toon-mid-cta {
+  padding: 10px 24px 88px;
+  text-align: center;
+  background: var(--bg);
+}
+
+.toon-mid-cta a,
+.toon-cta-sub {
+  color: var(--ink);
+  text-underline-offset: 4px;
+}
+
+.toon-cta {
+  padding: 56px 24px 72px;
+  text-align: center;
+  background: var(--bg);
+}
+
+.toon-cta p {
+  margin: 0 0 20px;
+  font-family: var(--font-serif);
+  font-size: 21px;
+}
+
+.toon-cta .primary {
+  display: flex;
+  min-height: 54px;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-btn);
+  color: #fff;
+  background: var(--accent);
+  text-decoration: none;
+  font-weight: 800;
+}
+
+.toon-cta-sub {
+  display: inline-block;
+  margin-top: 18px;
+  font-size: 14px;
+}
+
+.toon-error {
+  padding: 72px 24px;
+  text-align: center;
+  background: var(--bg);
+}
+
+.toon-error a {
+  color: var(--accent);
+  font-weight: 800;
+}
+
+a:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 4px;
+}
+
+@media (max-width: 320px) {
+  .bubble {
+    position: static;
+    display: block;
+    max-width: none;
+    margin: 10px 14px 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
