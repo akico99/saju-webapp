@@ -124,7 +124,18 @@ test('home uses dedicated editorial images for every previously icon-only servic
 
 test('all-services catalog reuses the same dedicated editorial images', () => {
   const html = fs.readFileSync(path.join(publicDir, 'services.html'), 'utf8');
-  for (const asset of ['balance.webp', 'noble.webp', 'charm.webp', 'intro.webp', 'love.webp', 'relationship.webp']) {
+  for (const asset of ['today-fortune.webp', 'life-graph-services.webp', 'balance.webp', 'noble.webp', 'charm.webp', 'intro.webp', 'love.webp', 'relationship.webp']) {
     assert.ok(html.includes(`/tiles/${asset}`), `${asset}: missing from catalog`);
   }
+});
+
+test('all-services catalog groups daily and life-flow readings with the free services', () => {
+  const html = fs.readFileSync(path.join(publicDir, 'services.html'), 'utf8');
+  const freeSection = html.match(/<section id="free">[\s\S]*?<\/section>/)?.[0];
+  assert.ok(freeSection, 'free service section should exist');
+  assert.equal((freeSection.match(/class="tile"/g) || []).length, 5,
+    'free section should contain five consistent service tiles');
+  assert.ok(freeSection.indexOf('/today-preview.html') < freeSection.indexOf('/life-graph.html'));
+  assert.ok(freeSection.indexOf('/life-graph.html') < freeSection.indexOf('/free.html?kind=balance'));
+  assert.doesNotMatch(html, /id="todayFortuneCard"|id="tfTitle"|id="tfDesc"|id="tfCta"/);
 });
