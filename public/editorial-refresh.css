@@ -231,7 +231,7 @@
 /* 홈 타일 — 청월당식 포스터 줄. 흰 카드 테두리를 걷고, 그림(정사각 포스터)을 크게 두고
    그 아래 이름·설명·가격만 적는다. 폰에서 한 화면에 1.6장쯤 보이게 해 옆으로 더 있다는
    걸 알린다(배너 슬라이드보다는 작게). 이름은 세리프, 가격은 표 숫자. */
-.editorial-home .row-scroll { gap: 16px; padding-bottom: 8px; }
+.editorial-home .row-scroll { gap: 16px; margin: 0; padding: 2px 28px 12px; }
 .editorial-home .row-scroll .tile,
 .editorial-home .row-scroll .tile.tile-featured-free {
   flex-basis: clamp(228px, 60vw, 270px);
@@ -262,4 +262,33 @@
 @media (min-width: 900px) {
   .editorial-home .row-scroll .tile,
   .editorial-home .row-scroll .tile.tile-featured-free { flex-basis: 250px; }
+}
+
+/* PC에서도 넘김의 존재를 알 수 있도록 화살표를 카드 중앙에 둔다. 모바일은
+   손가락으로 넘기는 흐름을 방해하지 않도록 버튼을 숨긴다. */
+.service-carousel { position: relative; }
+.service-carousel .carousel-control {
+  display: none;
+  position: absolute;
+  top: 42%;
+  z-index: 2;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid rgba(255, 253, 250, .8);
+  border-radius: 50%;
+  background: rgba(29, 45, 69, .86);
+  color: #fffdfa;
+  font-family: var(--font-serif);
+  font-size: 28px;
+  line-height: 28px;
+  box-shadow: 0 4px 12px rgba(29, 45, 69, .2);
+  cursor: pointer;
+}
+.service-carousel .carousel-control.prev { left: 4px; }
+.service-carousel .carousel-control.next { right: 4px; }
+.service-carousel .carousel-control:disabled { opacity: .25; cursor: default; }
+.service-carousel .carousel-control:not(:disabled):hover { background: var(--editorial-night); }
+@media (min-width: 701px) {
+  .service-carousel.is-overflowing .carousel-control { display: block; }
 }

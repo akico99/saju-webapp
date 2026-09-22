@@ -87,3 +87,44 @@ test('balance free reading uses the three-page result book without changing othe
   assert.ok(fs.existsSync(path.join(publicDir, 'balance-book.css')));
   assert.ok(fs.existsSync(path.join(publicDir, 'balance-book.js')));
 });
+
+test('home service rows expose desktop carousel controls and keep edge breathing room', () => {
+  const html = fs.readFileSync(path.join(publicDir, 'index.html'), 'utf8');
+  const rows = html.match(/class="row-scroll"/g) || [];
+  assert.ok(rows.length >= 5, 'home should keep the service rows');
+  assert.equal((html.match(/data-service-carousel/g) || []).length, rows.length,
+    'each service row should have one carousel root');
+  assert.equal((html.match(/data-carousel-track/g) || []).length, rows.length,
+    'each service row should have one track marker');
+  assert.equal((html.match(/data-carousel-prev/g) || []).length, rows.length,
+    'each service row should have a previous control');
+  assert.equal((html.match(/data-carousel-next/g) || []).length, rows.length,
+    'each service row should have a next control');
+  assert.match(html, /<script src="\/service-carousel\.js"><\/script>/);
+
+  const css = fs.readFileSync(path.join(publicDir, 'editorial-refresh.css'), 'utf8');
+  assert.match(css, /\.editorial-home \.row-scroll\s*\{[^}]*padding[^}]*28px/);
+  assert.match(css, /\.service-carousel \.carousel-control/);
+});
+
+test('home uses dedicated editorial images for every previously icon-only service', () => {
+  const html = fs.readFileSync(path.join(publicDir, 'index.html'), 'utf8');
+  for (const asset of ['life-graph.webp', 'balance.webp', 'noble.webp', 'charm.webp', 'intro.webp', 'love.webp', 'relationship.webp']) {
+    assert.ok(fs.existsSync(path.join(publicDir, 'tiles', asset)), `${asset}: missing image`);
+    assert.ok(html.includes(`/tiles/${asset}`), `${asset}: not connected to home`);
+  }
+  assert.match(html, /내 인생의 파도는 지금 어디쯤일까/);
+  assert.match(html, /많은 기운과 비어 있는 기운을 한눈에/);
+  assert.match(html, /나를 돕는 사람의 결을 살펴보세요/);
+  assert.match(html, /사람들은 나를 어떻게 기억할까/);
+  assert.match(html, /내 사주의 첫 문장부터 읽어보세요/);
+  assert.match(html, /인연이 시작되고 깊어지는 방식/);
+  assert.match(html, /사람 사이에서 반복되는 나의 패턴/);
+});
+
+test('all-services catalog reuses the same dedicated editorial images', () => {
+  const html = fs.readFileSync(path.join(publicDir, 'services.html'), 'utf8');
+  for (const asset of ['balance.webp', 'noble.webp', 'charm.webp', 'intro.webp', 'love.webp', 'relationship.webp']) {
+    assert.ok(html.includes(`/tiles/${asset}`), `${asset}: missing from catalog`);
+  }
+});
