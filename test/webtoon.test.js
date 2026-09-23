@@ -17,6 +17,10 @@ test('평생사주 웹툰은 문제 제기 → 쉬운 사주 제안 → 서비�
     '<p class="brand-name">사주보는 수달',
     '그래서 어떻게',
     '예를 들면 이렇게요',
+    '첫 장에 <span class="hl">3줄 요약',
+    '<span class="hl">형광펜으로 쫙',
+    '<span class="hl">바로 옆에 풀이',
+    '<span class="hl">3초 요약 카드',
     '받아보세요',
     '무료 리딩 5종',
   ].map((marker) => {
@@ -69,10 +73,29 @@ test('구매·무료 링크가 실제 경로를 가리킨다', () => {
   assert.match(read('services.html'), /<section id="free">/);
 });
 
+// 웹툰이 내세우는 리포트 장점은 실제 생성 코드가 하는 일이어야 한다.
+test('웹툰이 내세우는 리포트 장점 4가지가 실제 리포트 생성 코드에 있다', () => {
+  const html = page();
+  const src = (rel) => fs.readFileSync(path.join(__dirname, '..', 'src', rel), 'utf8');
+
+  // 01 표지 3줄 요약
+  assert.match(src('pdf/templates/partials/cover.ejs'), /평생사주 3줄 요약/);
+  // 02 챕터마다 핵심 2~5곳 형광펜 — 페이지에 적은 숫자와 생성 규칙의 숫자가 같아야 한다
+  const prompt = src('llm/systemPrompt.js');
+  assert.match(prompt, /핵심 결론 2~5곳만/);
+  assert.match(prompt, /형광펜으로 칠한 것처럼/);
+  assert.match(src('pdf/textMarkup.js'), /<mark>\$1<\/mark>/);
+  assert.match(html, /핵심 결론 2~5곳만 칠해 드려요/);
+  // 03 전문용어는 나오는 자리에서 바로 풀이
+  assert.match(prompt, /명리학 전문용어는 등장하는 그 자리에서 즉시 쉬운 말로 풀어씁니다/);
+  // 04 요약 카드가 본편보다 먼저 나온다
+  assert.match(read('lifetime-report.html'), /요약 카드가 먼저 나왔어요/);
+});
+
 test('웹툰 그림이 모두 존재하고 선언한 크기와 전송 용량 제한을 지킨다', async () => {
   const html = page();
   const images = [...html.matchAll(/<img src="(\/webtoon\/lifetime\/[^"]+)" width="(\d+)" height="(\d+)" alt="([^"]{8,})"/g)];
-  assert.equal(images.length, 4);
+  assert.equal(images.length, 7);
   let total = 0;
   for (const [, src, width, height] of images) {
     const file = path.join(publicDir, src.slice(1));

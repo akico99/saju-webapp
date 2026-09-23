@@ -45,8 +45,10 @@ async function main() {
     height: document.body.scrollHeight,
   }));
   console.log(JSON.stringify(report));
+  // 전체 캡처는 화면을 한 번에 늘려서 형광펜 애니메이션이 그리는 도중에 찍힌다. 미리 다 그려 둔다.
+  await page.evaluate(() => document.querySelectorAll('.hl').forEach((el) => el.classList.add('is-drawn')));
   await page.evaluate(() => window.scrollTo(0, 0));
-  await new Promise((r) => setTimeout(r, 400));
+  await new Promise((r) => setTimeout(r, 1200));
   // 고정 버튼은 전체 캡처에서 엉뚱한 위치에 찍히므로 숨기고, 실제 화면 캡처로 따로 확인한다.
   await page.addStyleTag({ content: '.cta-bar{display:none!important}' });
   await page.screenshot({ path: path.join(out, 'full-' + width + '.png'), fullPage: true });
