@@ -44,7 +44,7 @@
 
 .toon-intro p {
   margin: 0;
-  color: var(--gold);
+  color: #8A6412;
   font-size: 12px;
   font-weight: 800;
   letter-spacing: .12em;
@@ -135,12 +135,27 @@
 }
 
 .image-missing img {
-  visibility: hidden;
+  display: none;
 }
 
 .image-missing {
   min-height: 300px;
   background: var(--surface-2);
+}
+
+.image-fallback {
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  color: var(--muted);
+  text-align: center;
+  background: var(--surface-2);
+}
+
+.image-fallback[hidden] {
+  display: none;
 }
 
 .toon-mid-cta {
@@ -197,7 +212,7 @@
 }
 
 a:focus-visible {
-  outline: 3px solid var(--gold);
+  outline: 3px solid #8A6412;
   outline-offset: 4px;
 }
 

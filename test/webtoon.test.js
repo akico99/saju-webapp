@@ -2,6 +2,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const sharp = require('sharp');
 
 const publicDir = path.join(__dirname, '..', 'public');
 
@@ -45,20 +46,83 @@ test('평생사주 웹툰 골격이 데이터와 렌더러, 메타데이터, nos
   assert.match(html, /<script src="\/webtoon\/episodes\.js"><\/script>/);
   assert.match(html, /<script src="\/webtoon\/webtoon\.js"><\/script>/);
   assert.match(html, /<noscript>[\s\S]*lifetime-report\.html/);
+  assert.doesNotMatch(html, /data-webtoon-root[^>]*aria-live/);
+  assert.match(html, /G-THWHBPH5WR/);
+  const gaScript = fs.readFileSync(path.join(__dirname, '..', 'scripts', 'injectGA.js'), 'utf8');
+  assert.match(gaScript, /'webtoon\/lifetime\.html'/);
 });
 
 test('뷰어가 읽을 수 있는 대체 화면을 유지하고 실패한 이미지를 표시한다', () => {
   const renderer = require('../public/webtoon/webtoon.js');
+  const { lifetime } = require('../public/webtoon/episodes.js');
   assert.equal(renderer.validateEpisode(null), false);
   assert.equal(renderer.validateEpisode({ cuts: [] }), false);
+  assert.equal(renderer.validateEpisode({ cuts: [{}] }), false);
   assert.equal(renderer.loadingMode(0), 'eager');
   assert.equal(renderer.loadingMode(1), 'eager');
   assert.equal(renderer.loadingMode(2), 'lazy');
   assert.match(renderer.fallbackMarkup(), /웹툰을 불러오지 못했어요/);
   assert.match(renderer.fallbackMarkup(), /lifetime-report\.html\?from=lifetime-webtoon/);
-  const added = [];
-  renderer.markImageMissing({ classList: { add: (name) => added.push(name) } });
-  assert.deepEqual(added, ['image-missing']);
+  assert.match(renderer.fallbackMarkup(), /role="status"/);
+
+  const fakeDocument = {
+    createDocumentFragment() {
+      return {
+        children: [],
+        append(...children) { this.children.push(...children); }
+      };
+    },
+    createElement(tagName) {
+      const listeners = {};
+      const attributes = {};
+      const classes = new Set();
+      return {
+        tagName,
+        children: [],
+        hidden: false,
+        classList: { add: (name) => classes.add(name), contains: (name) => classes.has(name) },
+        append(...children) { this.children.push(...children); },
+        addEventListener(type, listener) { listeners[type] = listener; },
+        dispatch(type) { listeners[type](); },
+        setAttribute(name, value) { attributes[name] = String(value); },
+        getAttribute(name) { return attributes[name]; }
+      };
+    }
+  };
+  const failedCut = renderer.createCut(fakeDocument, lifetime.cuts[3], 3);
+  const failedImage = failedCut.children[0];
+  const imageFallback = failedCut.children[1];
+  failedImage.dispatch('error');
+  assert.equal(failedCut.classList.contains('image-missing'), true);
+  assert.equal(failedImage.getAttribute('aria-hidden'), 'true');
+  assert.equal(imageFallback.hidden, false);
+  assert.equal(imageFallback.getAttribute('role'), 'img');
+  assert.equal(imageFallback.getAttribute('aria-label'), lifetime.cuts[3].alt);
+  assert.equal(imageFallback.textContent, lifetime.cuts[3].alt);
+
+  const renderedRoot = {
+    ownerDocument: fakeDocument,
+    children: [],
+    replaceChildren(...children) { this.children = children; }
+  };
+  assert.equal(renderer.render(renderedRoot, lifetime), true);
+  const rendered = renderedRoot.children[0].children;
+  assert.equal(rendered.length, 18);
+  assert.equal(rendered[0].children[0].loading, 'eager');
+  assert.equal(rendered[2].children[0].loading, 'lazy');
+  assert.equal(rendered[10].className, 'toon-mid-cta');
+  assert.equal(rendered[17].className, 'toon-cta');
+
+  const malformedRoot = { innerHTML: '', ownerDocument: null };
+  assert.equal(renderer.render(malformedRoot, { cuts: [{}] }), false);
+  assert.match(malformedRoot.innerHTML, /웹툰을 불러오지 못했어요/);
+
+  const explodingRoot = {
+    innerHTML: '',
+    ownerDocument: { createDocumentFragment: () => { throw new Error('render failed'); } }
+  };
+  assert.doesNotThrow(() => renderer.render(explodingRoot, lifetime));
+  assert.match(explodingRoot.innerHTML, /웹툰을 불러오지 못했어요/);
 });
 
 test('뷰어 CSS가 좁은 화면과 모션 감소 설정을 지원한다', () => {
@@ -68,9 +132,11 @@ test('뷰어 CSS가 좁은 화면과 모션 감소 설정을 지원한다', () =
   assert.match(css, /\.cut-gap-xl\s*\{[^}]*margin-bottom:\s*140px/);
   assert.match(css, /\.bubble-narration\s*\{[^}]*background:\s*rgba\(255,\s*249,\s*239,/s);
   assert.match(css, /#cut-15\s+\.bubble\s*\{[^}]*max-width:\s*32%/s);
+  assert.match(css, /\.toon-intro p\s*\{[^}]*color:\s*#8A6412/s);
+  assert.match(css, /a:focus-visible\s*\{[^}]*outline:\s*3px solid #8A6412/s);
 });
 
-test('평생사주 웹툰 그림이 모두 존재하고 전송 용량 제한을 지킨다', () => {
+test('평생사주 웹툰 그림이 모두 존재하고 전송 용량 제한을 지킨다', async () => {
   const { lifetime } = require('../public/webtoon/episodes.js');
   let total = 0;
   for (const cut of lifetime.cuts) {
@@ -79,6 +145,10 @@ test('평생사주 웹툰 그림이 모두 존재하고 전송 용량 제한을 
     const size = fs.statSync(file).size;
     assert.ok(size > 20 * 1024, `${cut.src}: unexpectedly small`);
     assert.ok(size < 400 * 1024, `${cut.src}: over per-panel ceiling`);
+    const metadata = await sharp(file).metadata();
+    assert.equal(metadata.format, 'webp', `${cut.src}: format`);
+    assert.equal(metadata.width, cut.width, `${cut.src}: width`);
+    assert.equal(metadata.height, cut.height, `${cut.src}: height`);
     total += size;
   }
   assert.ok(total < 4 * 1024 * 1024, `episode is ${(total / 1024 / 1024).toFixed(2)}MB`);

@@ -16,16 +16,54 @@
     }
   }
 })(typeof window !== 'undefined' ? window : null, function createRenderer() {
+  const validGaps = new Set(['sm', 'md', 'lg', 'xl']);
+
+  function isNonEmptyString(value) {
+    return typeof value === 'string' && value.trim().length > 0;
+  }
+
+  function validateLink(link, withPrice) {
+    return Boolean(link
+      && isNonEmptyString(link.href)
+      && isNonEmptyString(link.label)
+      && (!withPrice || isNonEmptyString(link.price)));
+  }
+
+  function validateCut(cut) {
+    return Boolean(cut
+      && isNonEmptyString(cut.src)
+      && Number.isInteger(cut.width) && cut.width > 0
+      && Number.isInteger(cut.height) && cut.height > 0
+      && isNonEmptyString(cut.alt)
+      && validGaps.has(cut.gap)
+      && Array.isArray(cut.texts)
+      && cut.texts.every((item) => item
+        && isNonEmptyString(item.type)
+        && isNonEmptyString(item.position)
+        && isNonEmptyString(item.body)));
+  }
+
   function validateEpisode(episode) {
-    return Boolean(episode && Array.isArray(episode.cuts) && episode.cuts.length);
+    return Boolean(episode
+      && Array.isArray(episode.cuts)
+      && episode.cuts.length
+      && episode.cuts.every(validateCut)
+      && Number.isInteger(episode.midCtaAfter)
+      && episode.midCtaAfter > 0
+      && episode.midCtaAfter < episode.cuts.length
+      && validateLink(episode.midCta, false)
+      && validateLink(episode.cta, true)
+      && validateLink(episode.subCta, false));
   }
 
   function fallbackMarkup() {
-    return '<section class="toon-error"><p>웹툰을 불러오지 못했어요.</p><a href="/lifetime-report.html?from=lifetime-webtoon">평생사주 리포트 바로 보기</a></section>';
+    return '<section class="toon-error" role="status" aria-live="polite"><p>웹툰을 불러오지 못했어요.</p><a href="/lifetime-report.html?from=lifetime-webtoon">평생사주 리포트 바로 보기</a></section>';
   }
 
-  function markImageMissing(figure) {
+  function markImageMissing(figure, image, fallback) {
     figure.classList.add('image-missing');
+    if (image) image.setAttribute('aria-hidden', 'true');
+    if (fallback) fallback.hidden = false;
   }
 
   function loadingMode(index) {
@@ -52,9 +90,15 @@
     image.alt = cut.alt;
     image.decoding = 'async';
     image.loading = loadingMode(index);
-    image.addEventListener('error', () => markImageMissing(figure));
+    const fallback = documentRef.createElement('div');
+    fallback.className = 'image-fallback';
+    fallback.hidden = true;
+    fallback.setAttribute('role', 'img');
+    fallback.setAttribute('aria-label', cut.alt);
+    fallback.textContent = cut.alt;
+    image.addEventListener('error', () => markImageMissing(figure, image, fallback));
 
-    figure.append(image, ...cut.texts.map((item) => createTextBlock(documentRef, item, index + 1)));
+    figure.append(image, fallback, ...cut.texts.map((item) => createTextBlock(documentRef, item, index + 1)));
     return figure;
   }
 
@@ -95,17 +139,22 @@
       return false;
     }
 
-    const documentRef = root.ownerDocument;
-    const fragment = documentRef.createDocumentFragment();
-    episode.cuts.forEach((cut, index) => {
-      fragment.append(createCut(documentRef, cut, index));
-      if (index + 1 === episode.midCtaAfter) {
-        fragment.append(createMidCta(documentRef, episode.midCta));
-      }
-    });
-    fragment.append(createFinalCta(documentRef, episode));
-    root.replaceChildren(fragment);
-    return true;
+    try {
+      const documentRef = root.ownerDocument;
+      const fragment = documentRef.createDocumentFragment();
+      episode.cuts.forEach((cut, index) => {
+        fragment.append(createCut(documentRef, cut, index));
+        if (index + 1 === episode.midCtaAfter) {
+          fragment.append(createMidCta(documentRef, episode.midCta));
+        }
+      });
+      fragment.append(createFinalCta(documentRef, episode));
+      root.replaceChildren(fragment);
+      return true;
+    } catch (_error) {
+      root.innerHTML = fallbackMarkup();
+      return false;
+    }
   }
 
   return {
