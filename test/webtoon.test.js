@@ -9,20 +9,20 @@ const publicDir = path.join(__dirname, '..', 'public');
 test('평생사주 웹툰이 승인된 16컷 에피소드를 제공한다', () => {
   const episodes = require('../public/webtoon/episodes.js');
   const episode = episodes.lifetime;
-  assert.equal(episode.title, '한 번은, 내 삶의 지도를 펼쳐보고 싶었다');
+  assert.equal(episode.title, '올해 운세만 다섯 번 봤다');
   assert.equal(episode.cuts.length, 16);
-  assert.deepEqual(episode.cta, {
-    href: '/lifetime-report.html?from=lifetime-webtoon',
-    label: '내 삶의 지도 펼쳐보기',
-    price: '14,900원'
-  });
+  assert.equal(episode.cta.href, '/lifetime-report.html?from=lifetime-webtoon');
+  assert.equal(episode.cta.label, '내 평생사주 펼쳐보기');
+  assert.equal(episode.cta.price, '14,900원');
+  assert.match(episode.cta.spec, /100쪽 PDF/);
   assert.equal(episode.subCta.href, '/services.html#free');
-  assert.equal(episode.midCtaAfter, 10);
+  assert.equal(episode.midCtaAfter, 12);
+  assert.equal(episode.midCta.href, '/lifetime-report.html?from=lifetime-webtoon-mid');
 });
 
 test('평생사주 모든 컷에 안정적인 접근성 메타데이터가 있다', () => {
   const { lifetime } = require('../public/webtoon/episodes.js');
-  const validGaps = new Set(['sm', 'md', 'lg', 'xl']);
+  const validGaps = new Set(['none', 'beat', 'breath']);
   lifetime.cuts.forEach((cut, index) => {
     assert.equal(cut.src, `/webtoon/lifetime/cut-${String(index + 1).padStart(2, '0')}.webp`);
     assert.ok(Number.isInteger(cut.width) && cut.width > 0, `cut ${index + 1}: width`);
@@ -34,8 +34,14 @@ test('평생사주 모든 컷에 안정적인 접근성 메타데이터가 있�
   });
   assert.deepEqual(
     lifetime.cuts.map((cut, index) => cut.texts.length === 0 ? index + 1 : null).filter(Boolean),
-    [4, 6, 11, 16]
+    [11, 16]
   );
+  // 간격은 연출 장치다. 기본은 붙이고, 멈춰야 하는 두 지점에만 'breath'를 쓴다.
+  assert.deepEqual(
+    lifetime.cuts.map((cut, index) => cut.gap === 'breath' ? index + 1 : null).filter(Boolean),
+    [6, 12]
+  );
+  assert.ok(lifetime.cuts.filter((cut) => cut.gap === 'none').length >= 8);
 });
 
 test('평생사주 웹툰 골격이 데이터와 렌더러, 메타데이터, noscript 대체 화면을 불러온다', () => {
@@ -58,6 +64,10 @@ test('뷰어가 읽을 수 있는 대체 화면을 유지하고 실패한 이미
   assert.equal(renderer.validateEpisode(null), false);
   assert.equal(renderer.validateEpisode({ cuts: [] }), false);
   assert.equal(renderer.validateEpisode({ cuts: [{}] }), false);
+  // 가격만 있고 사양이 빠진 CTA는 렌더하지 않는다.
+  const noSpec = JSON.parse(JSON.stringify(lifetime));
+  delete noSpec.cta.spec;
+  assert.equal(renderer.validateEpisode(noSpec), false);
   assert.equal(renderer.loadingMode(0), 'eager');
   assert.equal(renderer.loadingMode(1), 'eager');
   assert.equal(renderer.loadingMode(2), 'lazy');
@@ -110,8 +120,9 @@ test('뷰어가 읽을 수 있는 대체 화면을 유지하고 실패한 이미
   assert.equal(rendered.length, 18);
   assert.equal(rendered[0].children[0].loading, 'eager');
   assert.equal(rendered[2].children[0].loading, 'lazy');
-  assert.equal(rendered[10].className, 'toon-mid-cta');
+  assert.equal(rendered[12].className, 'toon-mid-cta');
   assert.equal(rendered[17].className, 'toon-cta');
+  assert.equal(rendered[17].children[1].className, 'toon-cta-spec');
 
   const malformedRoot = { innerHTML: '', ownerDocument: null };
   assert.equal(renderer.render(malformedRoot, { cuts: [{}] }), false);
@@ -129,10 +140,18 @@ test('뷰어 CSS가 좁은 화면과 모션 감소 설정을 지원한다', () =
   const css = fs.readFileSync(path.join(publicDir, 'webtoon', 'webtoon.css'), 'utf8');
   assert.match(css, /@media\s*\(max-width:\s*320px\)/);
   assert.match(css, /@media\s*\(prefers-reduced-motion:\s*reduce\)/);
-  assert.match(css, /\.cut-gap-xl\s*\{[^}]*margin-bottom:\s*140px/);
+  // 컷은 기본적으로 붙어 있어야 한 편으로 읽힌다.
+  assert.match(css, /\.cut-gap-none\s*\{\s*margin-bottom:\s*0;/);
+  assert.match(css, /\.cut-gap-breath\s*\{\s*margin-bottom:\s*120px;/);
+  // 대사는 본문 UI 폰트가 아니라 웹툰용 고딕을 쓰고, 말풍선에는 꼬리가 있어야 한다.
+  assert.match(css, /--font-toon:\s*'Gothic A1'/);
+  assert.match(css, /\.bubble\s*\{[^}]*font-family:\s*var\(--font-toon\)/s);
+  assert.match(css, /\.bubble-talk\.pos-top-right::after/);
+  assert.match(css, /\.bubble-thought\s*\{[^}]*border:\s*2px dashed/s);
   assert.match(css, /\.bubble-narration\s*\{[^}]*background:\s*rgba\(255,\s*249,\s*239,/s);
-  assert.match(css, /#cut-15\s+\.bubble\s*\{[^}]*max-width:\s*32%/s);
-  assert.match(css, /\.toon-intro p\s*\{[^}]*color:\s*#8A6412/s);
+  assert.doesNotMatch(css, /#cut-15\s+\.bubble/);
+  assert.match(css, /\.toon-intro \.eyebrow\s*\{[^}]*color:\s*#8A6412/s);
+  assert.match(css, /\.toon-intro h1\s*\{[^}]*word-break:\s*keep-all/s);
   assert.match(css, /a:focus-visible\s*\{[^}]*outline:\s*3px solid #8A6412/s);
 });
 

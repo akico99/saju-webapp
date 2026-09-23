@@ -16,17 +16,18 @@
     }
   }
 })(typeof window !== 'undefined' ? window : null, function createRenderer() {
-  const validGaps = new Set(['sm', 'md', 'lg', 'xl']);
+  const validGaps = new Set(['none', 'beat', 'breath']);
 
   function isNonEmptyString(value) {
     return typeof value === 'string' && value.trim().length > 0;
   }
 
+  // 구매 링크는 가격과 제공 사양이 함께 보여야 눌린다. 둘 중 하나라도 비면 렌더를 막는다.
   function validateLink(link, withPrice) {
     return Boolean(link
       && isNonEmptyString(link.href)
       && isNonEmptyString(link.label)
-      && (!withPrice || isNonEmptyString(link.price)));
+      && (!withPrice || (isNonEmptyString(link.price) && isNonEmptyString(link.spec))));
   }
 
   function validateCut(cut) {
@@ -117,7 +118,11 @@
     aside.className = 'toon-cta';
 
     const lead = documentRef.createElement('p');
-    lead.textContent = '이번에는 당신의 삶을 한 권으로 펼쳐보세요.';
+    lead.textContent = '당신의 지도에는 뭐라고 적혀 있을까요?';
+
+    const spec = documentRef.createElement('p');
+    spec.className = 'toon-cta-spec';
+    spec.textContent = episode.cta.spec;
 
     const primary = documentRef.createElement('a');
     primary.className = 'primary';
@@ -129,7 +134,7 @@
     secondary.href = episode.subCta.href;
     secondary.textContent = episode.subCta.label;
 
-    aside.append(lead, primary, secondary);
+    aside.append(lead, spec, primary, secondary);
     return aside;
   }
 

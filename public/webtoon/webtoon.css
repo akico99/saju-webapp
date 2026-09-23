@@ -4,6 +4,11 @@
   margin: 0;
   background: var(--bg-outer);
   color: var(--ink);
+
+  /* 말풍선 대사는 본문 UI 폰트가 아니라 웹툰용 고딕으로 읽혀야 한다. */
+  --font-toon: 'Gothic A1', 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  --toon-line: #17243D;
+  --toon-paper: #FFFDFA;
 }
 
 .toon-header,
@@ -36,13 +41,15 @@
   height: auto;
 }
 
+/* ── 표지 ─────────────────────────────────────────── */
+
 .toon-intro {
-  padding: 72px 24px 56px;
+  padding: 76px 24px 60px;
   text-align: center;
   background: var(--bg);
 }
 
-.toon-intro p {
+.toon-intro .eyebrow {
   margin: 0;
   color: #8A6412;
   font-size: 12px;
@@ -51,17 +58,30 @@
 }
 
 .toon-intro h1 {
-  margin: 10px 0 24px;
+  margin: 12px 0 14px;
   font-family: var(--font-serif);
-  font-size: clamp(30px, 8vw, 42px);
-  line-height: 1.35;
-  letter-spacing: -.05em;
+  font-size: clamp(25px, 6.6vw, 34px);
+  font-weight: 700;
+  line-height: 1.38;
+  letter-spacing: -.035em;
+  word-break: keep-all;
 }
 
-.toon-intro > span {
+.toon-intro .sub {
+  margin: 0 auto 26px;
+  max-width: 22em;
+  color: var(--muted);
+  font-size: 14.5px;
+  line-height: 1.7;
+  word-break: keep-all;
+}
+
+.toon-intro .scroll-hint {
   color: var(--gold);
   font-size: 22px;
 }
+
+/* ── 컷 ───────────────────────────────────────────── */
 
 .toon {
   background: var(--bg);
@@ -71,68 +91,159 @@
 .cut {
   position: relative;
   margin: 0;
-  background: var(--surface-2);
+  background: transparent;
 }
 
 .cut img {
   display: block;
   width: 100%;
   height: auto;
+  vertical-align: bottom;
 }
 
-.cut-gap-sm { margin-bottom: 8px; }
-.cut-gap-md { margin-bottom: 28px; }
-.cut-gap-lg { margin-bottom: 72px; }
-.cut-gap-xl { margin-bottom: 140px; }
+/* 기본은 붙인다. 떨어뜨리는 건 연출이 필요한 자리뿐이다. */
+.cut-gap-none { margin-bottom: 0; }
+.cut-gap-beat { margin-bottom: 40px; }
+.cut-gap-breath { margin-bottom: 120px; }
+
+/* ── 말풍선 ───────────────────────────────────────── */
 
 .bubble {
   position: absolute;
   z-index: 2;
-  max-width: 78%;
-  padding: 13px 17px;
+  max-width: 74%;
+  margin: 0;
+  padding: 13px 18px;
   color: var(--ink);
-  font-size: clamp(15px, 4vw, 18px);
-  line-height: 1.55;
+  font-family: var(--font-toon);
+  font-size: clamp(15px, 4.1vw, 18px);
+  font-weight: 700;
+  line-height: 1.5;
   word-break: keep-all;
+  white-space: pre-line;
 }
 
 .bubble-talk {
-  background: rgba(255,253,250,.96);
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  box-shadow: var(--shadow-1);
+  background: var(--toon-paper);
+  border: 2px solid var(--toon-line);
+  border-radius: 24px;
+  box-shadow: 0 6px 18px rgba(23, 36, 61, .16);
 }
 
+.bubble-talk::before,
+.bubble-talk::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-style: solid;
+}
+
+.bubble-talk.pos-top-left::before,
+.bubble-talk.pos-top-center::before,
+.bubble-talk.pos-top-right::before {
+  bottom: -17px;
+  border-width: 17px 15px 0 0;
+  border-color: var(--toon-line) transparent transparent transparent;
+}
+
+.bubble-talk.pos-top-left::after,
+.bubble-talk.pos-top-center::after,
+.bubble-talk.pos-top-right::after {
+  bottom: -12px;
+  border-width: 12px 10px 0 0;
+  border-color: var(--toon-paper) transparent transparent transparent;
+}
+
+.bubble-talk.pos-top-left::before { left: 28px; }
+.bubble-talk.pos-top-left::after { left: 31px; }
+.bubble-talk.pos-top-center::before { left: calc(50% - 8px); }
+.bubble-talk.pos-top-center::after { left: calc(50% - 5px); }
+
+.bubble-talk.pos-top-right::before {
+  right: 28px;
+  border-width: 17px 0 0 15px;
+  border-color: var(--toon-line) transparent transparent transparent;
+}
+
+.bubble-talk.pos-top-right::after {
+  right: 31px;
+  border-width: 12px 0 0 10px;
+  border-color: var(--toon-paper) transparent transparent transparent;
+}
+
+/* 속마음은 점선 구름 + 방울 꼬리로 대사와 구분한다. */
 .bubble-thought {
-  background: rgba(243,234,217,.94);
-  border-radius: 20px;
+  background: rgba(255, 253, 250, .95);
+  border: 2px dashed rgba(23, 36, 61, .5);
+  border-radius: 26px;
+  font-weight: 600;
 }
 
-.bubble-narration,
-.bubble-key {
-  font-family: var(--font-serif);
-  text-shadow: 0 1px 8px var(--bg);
+.bubble-thought::before,
+.bubble-thought::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 253, 250, .95);
+  border: 2px solid rgba(23, 36, 61, .45);
 }
 
+.bubble-thought::before { width: 13px; height: 13px; bottom: -19px; }
+.bubble-thought::after { width: 8px; height: 8px; bottom: -33px; }
+
+.bubble-thought.pos-top-left::before { left: 26px; }
+.bubble-thought.pos-top-left::after { left: 16px; }
+.bubble-thought.pos-top-center::before { left: calc(50% - 6px); }
+.bubble-thought.pos-top-center::after { left: calc(50% - 16px); }
+.bubble-thought.pos-top-right::before { right: 26px; }
+.bubble-thought.pos-top-right::after { right: 16px; }
+
+/* 내레이션은 풍선이 아니라 자막이다. */
 .bubble-narration {
-  background: rgba(255, 249, 239, .88);
-  border-radius: 14px;
+  max-width: 70%;
+  padding: 11px 16px 11px 15px;
+  background: rgba(255, 249, 239, .93);
+  border-left: 3px solid var(--gold);
+  border-radius: 4px 14px 14px 4px;
+  font-family: var(--font-serif);
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(23, 36, 61, .1);
 }
 
+/* 핵심 한 줄은 상자 없이 그림 위에 얹는다. */
 .bubble-key {
-  border-bottom: 2px solid var(--gold);
-  font-size: clamp(18px, 5vw, 24px);
+  max-width: 86%;
+  padding: 0 0 10px;
+  border-bottom: 3px solid var(--gold);
+  font-family: var(--font-serif);
+  font-size: clamp(20px, 5.4vw, 26px);
+  font-weight: 700;
+  line-height: 1.45;
+  letter-spacing: -.02em;
+  text-shadow: 0 2px 14px var(--bg), 0 0 26px var(--bg);
 }
 
-.pos-top-left { top: 6%; left: 7%; }
-.pos-top-right { top: 7%; right: 7%; }
-.pos-bottom-left { bottom: 7%; left: 7%; }
+.pos-top-left { top: 5%; left: 6%; }
+.pos-top-right { top: 5%; right: 6%; }
+.pos-bottom-left { bottom: 7%; left: 6%; }
+.pos-bottom-right { bottom: 7%; right: 6%; }
 
-#cut-15 .bubble {
-  max-width: 32%;
-  padding: 11px 13px;
-  font-size: 15px;
+/* left:50%만 주면 칸이 컨테이너 절반으로 좁아져 글이 잘게 쪼개진다.
+   내용 폭(max-content)을 기준으로 잡고 가운데로 당겨야 의도한 줄수가 나온다. */
+.pos-top-center,
+.pos-bottom-center {
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: 86%;
+  text-align: center;
 }
+
+.pos-top-center { top: 3.5%; }
+.pos-bottom-center { bottom: 7%; }
+
+/* ── 이미지 실패 대체 ─────────────────────────────── */
 
 .image-missing img {
   display: none;
@@ -158,33 +269,56 @@
   display: none;
 }
 
+/* ── 전환 ─────────────────────────────────────────── */
+
 .toon-mid-cta {
-  padding: 10px 24px 88px;
+  padding: 34px 24px 46px;
   text-align: center;
   background: var(--bg);
 }
 
-.toon-mid-cta a,
-.toon-cta-sub {
+.toon-mid-cta a {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  padding: 0 26px;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-pill);
   color: var(--ink);
-  text-underline-offset: 4px;
+  background: var(--bg);
+  font-weight: 800;
+  font-size: 15px;
+  text-decoration: none;
 }
 
 .toon-cta {
-  padding: 56px 24px 72px;
+  padding: 56px 24px 76px;
   text-align: center;
   background: var(--bg);
 }
 
 .toon-cta p {
-  margin: 0 0 20px;
+  margin: 0 0 10px;
   font-family: var(--font-serif);
-  font-size: 21px;
+  font-size: 22px;
+  line-height: 1.5;
+  word-break: keep-all;
+}
+
+.toon-cta .toon-cta-spec {
+  margin: 0 auto 22px;
+  max-width: 26em;
+  color: var(--muted);
+  font-family: var(--font-toon);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.7;
+  white-space: pre-line;
 }
 
 .toon-cta .primary {
   display: flex;
-  min-height: 54px;
+  min-height: 56px;
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-btn);
@@ -192,12 +326,15 @@
   background: var(--accent);
   text-decoration: none;
   font-weight: 800;
+  font-size: 16px;
 }
 
 .toon-cta-sub {
   display: inline-block;
   margin-top: 18px;
+  color: var(--ink);
   font-size: 14px;
+  text-underline-offset: 4px;
 }
 
 .toon-error {
@@ -216,17 +353,23 @@ a:focus-visible {
   outline-offset: 4px;
 }
 
+/* 아주 좁은 화면에서는 겹침을 피해 그림 아래로 내린다. */
 @media (max-width: 320px) {
   .bubble {
     position: static;
     display: block;
     max-width: none;
+    width: auto;
     margin: 10px 14px 0;
+    transform: none;
+    text-align: left;
   }
 
-  #cut-15 .bubble {
-    max-width: none;
-    padding: 13px 17px;
+  .bubble-talk::before,
+  .bubble-talk::after,
+  .bubble-thought::before,
+  .bubble-thought::after {
+    display: none;
   }
 }
 
