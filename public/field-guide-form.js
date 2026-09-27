@@ -7,6 +7,13 @@
   const submitButton = document.getElementById('fieldGuideSubmit');
   const errorBox = document.getElementById('fieldGuideError');
   const result = document.getElementById('fieldGuideResult');
+  const shareActions = window.FieldGuideShare.bind({
+    actions: document.getElementById('fieldGuideActions'),
+    saveButton: document.getElementById('fieldGuideImageSave'),
+    shareButton: document.getElementById('fieldGuideLinkShare'),
+    status: document.getElementById('fieldGuideShareStatus'),
+    getReport: () => result.querySelector('.fg-report'),
+  });
   const unknownHour = form.elements.hourUnknown;
   const hourFields = [form.elements.hour, form.elements.minute];
 
@@ -39,6 +46,7 @@
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || '사주 도감을 만들지 못했어.');
       window.renderFieldGuide(payload.guide, result);
+      shareActions.show();
       result.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } catch (error) {
       errorBox.textContent = error.message || '요청에 실패했어. 잠시 뒤 다시 시도해줘.';

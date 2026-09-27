@@ -8,6 +8,7 @@
   <meta name="description" content="실제 만세력으로 계산한 나만의 사주 도감을 무료로 만들어 보세요.">
   <link rel="stylesheet" href="/theme.css">
   <link rel="stylesheet" href="/field-guide.css">
+  <link rel="stylesheet" href="/share-card.css">
 </head>
 <body>
   <div class="app fg-app no-nav">
@@ -64,9 +65,15 @@
       </form>
       <div id="fieldGuideError" class="error-box hidden" role="alert"></div>
       <div id="fieldGuideResult" aria-live="polite"></div>
+      <div id="fieldGuideActions" class="share-actions hidden" aria-label="사주 도감 저장 및 공유">
+        <button type="button" id="fieldGuideImageSave">이미지 저장</button>
+        <button type="button" id="fieldGuideLinkShare">친구에게 링크 공유</button>
+        <p class="share-hint" id="fieldGuideShareStatus" aria-live="polite">이미지에는 생년월일시가 들어가지 않아. 공유 링크는 도감 입력 화면으로 연결돼.</p>
+      </div>
     </main>
   </div>
   <script src="/field-guide-view.js"></script>
+  <script src="/field-guide-share.js"></script>
   <script src="/field-guide-form.js"></script>
 </body>
 </html>

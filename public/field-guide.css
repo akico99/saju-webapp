@@ -315,3 +315,56 @@
   .fg-report.fg-export .fg-card-grid.fg-grid-2 { grid-template-columns: 1.15fr 1fr; }
   .fg-report.fg-export .fg-growth .fg-timeline { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 }
+
+/* Export always uses the 1024px desktop composition, even when the button is
+   pressed from a narrow phone viewport. These selectors outrank the mobile UI. */
+.fg-report.fg-export .fg-cover { min-height: 294px; padding: 36px 42px; border-radius: 26px; }
+.fg-report.fg-export .fg-cover-copy { width: 74%; }
+.fg-report.fg-export .fg-title { max-width: none; font-size: 58px; }
+.fg-report.fg-export .fg-title-suffix { display: inline; margin-left: .24em; font-size: .76em; }
+.fg-report.fg-export .fg-cover-story { max-width: none; margin-top: 12px; font-size: 16px; }
+.fg-report.fg-export .fg-cover-one-line { max-width: 590px; font-size: 14px; }
+.fg-report.fg-export .fg-cover-facts { gap: 7px; margin-top: 17px; }
+.fg-report.fg-export .fg-fact { padding: 4px 10px; font-size: 11px; }
+.fg-report.fg-export .fg-number-stamp { top: 24px; right: 25%; width: 78px; height: 78px; }
+.fg-report.fg-export .fg-number-stamp span { font-size: 10px; }
+.fg-report.fg-export .fg-number-stamp strong { font-size: 27px; }
+.fg-report.fg-export .fg-number-stamp small { font-size: 9px; }
+.fg-report.fg-export .fg-cover-art { right: 1.2%; width: 29%; }
+.fg-report.fg-export .fg-pillars { margin: -28px 28px 0; padding: 19px 22px 35px; }
+.fg-report.fg-export .fg-pillar-layout { flex-direction: row; align-items: center; gap: 20px; }
+.fg-report.fg-export .fg-pillar-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.fg-report.fg-export .fg-pillar { min-height: 124px; }
+.fg-report.fg-export .fg-pillar-glyphs { font-size: 32px; }
+.fg-report.fg-export .fg-ohaeng-list { display: block; flex: 0 0 126px; }
+.fg-report.fg-export .fg-card-grid { gap: 16px; margin-top: 16px; }
+.fg-report.fg-export .fg-card { padding: 20px 20px 38px; border-radius: var(--radius-card); }
+.fg-report.fg-export .fg-card-heading { gap: 9px; margin-bottom: 16px; }
+.fg-report.fg-export .fg-card-heading h2 { font-size: 20px; }
+.fg-report.fg-export .fg-card-subtitle { font-size: 10px; }
+.fg-report.fg-export .fg-basis { left: 20px; }
+.fg-report.fg-export .fg-battery-shell { width: 30px; height: 51px; }
+.fg-report.fg-export .fg-habit-layout { justify-content: center; gap: 14px; }
+.fg-report.fg-export .fg-donut { width: 100px; height: 100px; flex-basis: 100px; }
+.fg-report.fg-export .fg-donut::before { width: 57px; height: 57px; }
+.fg-report.fg-export .fg-habit-legend li { font-size: 10px; }
+.fg-report.fg-export .fg-growth { margin-top: 16px; }
+.fg-report.fg-export .fg-growth .fg-timeline { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; padding-top: 12px; }
+.fg-report.fg-export .fg-timeline::before { top: 41px; right: 5%; bottom: auto; left: 5%; border-top: 1px dashed #d9c9a9; border-left: 0; }
+.fg-report.fg-export .fg-growth-item { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.fg-report.fg-export .fg-growth-glyphs { grid-column: auto; grid-row: auto; width: 58px; height: 58px; margin-bottom: 8px; }
+.fg-report.fg-export .fg-growth-age { grid-column: auto; grid-row: auto; align-self: auto; font-size: 12px; }
+.fg-report.fg-export .fg-growth-line { grid-column: auto; grid-row: auto; margin: 8px 0 0; padding: 7px 5px; }
+.fg-report.fg-export .fg-growth-item.is-now .fg-growth-glyphs { grid-row: auto; }
+.fg-report.fg-export .fg-now-label { grid-column: auto; grid-row: auto; justify-self: auto; margin: -8px 0 4px; }
+.fg-report.fg-export .fg-year-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.fg-report.fg-export .fg-memo { grid-template-columns: minmax(150px, 220px) minmax(0, 1fr); gap: 14px; margin-top: 16px; }
+.fg-report.fg-export .fg-memo-art { height: 100%; min-height: 180px; max-height: 250px; border-radius: 17px; }
+.fg-report.fg-export .fg-memo-note { padding: 19px 22px; border: 1px solid var(--line); border-radius: 18px; }
+.fg-report.fg-export .fg-memo-note h2 { font-size: 19px; }
+.fg-report.fg-export .fg-memo-line { font-size: 12px; }
+.fg-report.fg-export .fg-memo-hand { font-size: 23px; }
+.fg-report.fg-export .fg-tags { gap: 5px; }
+.fg-report.fg-export .fg-tags span { padding: 3px 8px; font-size: 9px; }
+.fg-report.fg-export .fg-report-footer { align-items: center; flex-direction: row; gap: 14px; margin-top: 14px; }
+.fg-report.fg-export .fg-footer-callout { width: auto; justify-content: flex-end; gap: 12px; }

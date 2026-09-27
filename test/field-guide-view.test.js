@@ -106,6 +106,8 @@ test('renders guide sections and inserts a supplied name as text', () => {
   assert.ok(container.textContent.includes(guide.name.display));
   assert.ok(container.textContent.includes(`${guide.name.display} 사주 도감`));
   assert.ok(container.textContent.includes('관찰자 수달의 메모'));
+  assert.ok(!container.textContent.includes('1996'));
+  assert.ok(!container.textContent.includes('14:30'));
   assert.ok(!container.textContent.includes('undefined'));
 });
 
