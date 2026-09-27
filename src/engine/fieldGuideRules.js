@@ -37,7 +37,9 @@ function ohaengSummary(oh, yong) {
   else s = strong + ' 기운이 두드러져요.';
   if (yong && OH_META[yong]) {
     const n = OH_META[yong].name;
-    s += ' 채우면 편해지는 쪽은 ' + n + (hasBatchim(n) ? '이에요.' : '예요.');
+    // 용신이 이미 많은 오행이면 "채운다"가 앞 문장과 부딪힌다 — 그때는 살려 쓰는 쪽으로 말한다.
+    const verb = (oh[yong] || 0) >= 2 ? '살려 쓰면' : '채우면';
+    s += ' ' + verb + ' 편해지는 쪽은 ' + n + (hasBatchim(n) ? '이에요.' : '예요.');
   }
   return s;
 }
