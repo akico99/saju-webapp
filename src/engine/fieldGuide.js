@@ -188,7 +188,7 @@ function buildFieldGuide(r, opts = {}) {
       facts: [
         { label: '서식', value: iljuText.habitat },
         { label: '체질', value: OH_ORDER.filter((o) => ohaeng[o] >= 2).sort((a, b) => ohaeng[b] - ohaeng[a]).map((o) => R.OH_META[o].name + ' ' + ohaeng[o]).join(' · ') || R.OH_META[r.ilgan.ohaeng].name + ' 중심' },
-        nowDw ? { label: '현재', value: nowDw.ganZhi + ' 대운' } : null
+        nowDw ? { label: '지금', value: nowDw.ganZhiKo + ' 대운 (' + nowDw.startAge + '~' + nowDw.endAge + '세)' } : null
       ].filter(Boolean)
     },
     pillars,
@@ -196,18 +196,18 @@ function buildFieldGuide(r, opts = {}) {
       total,
       items: OH_ORDER.map((o) => ({ ohaeng: o, ...R.OH_META[o], count: ohaeng[o], ...R.batteryLabel(ohaeng[o]) })),
       summary: R.ohaengSummary(ohaeng, yong),
-      basis: '오행 개수'
+      basis: total + '글자 속 나무·불·흙·쇠·물(오행) 개수'
     },
-    habit: { ...R.habit(groups), groups, basis: '십성 개수' },
-    traits: { items: R.pickTraits(traitCandidates(r, keys), ctx), basis: '신살 · 형충' },
-    growth: { items: current, basis: '대운 · 한국 나이' },
-    yearly: { items: yearlyOf(r, nowYear, ctx), basis: '세운' },
-    chemistry: { items: R.chemistry(day.branch), basis: '태어난 날의 지지(' + day.branch + ') 기준 삼합·육합·충' },
-    approach: { items: iljuText.approach, basis: '일주' },
-    favorites: yong ? { ohaeng: yong, ...R.favorites(yong), basis: '용신 ' + yong } : null,
+    habit: { ...R.habit(groups), groups, basis: '나와 다른 글자들의 관계(십성)를 다섯 묶음으로 센 것' },
+    traits: { items: R.pickTraits(traitCandidates(r, keys), ctx), basis: '사주에 있는 특별한 표지(신살)와 부딪히는 글자(충·형)' },
+    growth: { items: current, basis: '10년마다 바뀌는 큰 흐름(대운) · 나이는 태어난 해를 1살로 셈' },
+    yearly: { items: yearlyOf(r, nowYear, ctx), basis: '그해에 들어오는 기운(세운)' },
+    chemistry: { items: R.chemistry(day.branch), basis: '태어난 날 글자(' + BRANCH_KO[day.branch] + ')와 잘 맞고 부딪히는 띠' },
+    approach: { items: iljuText.approach, basis: '태어난 날(' + ko(ilju) + '일주)의 성향' },
+    favorites: yong ? { ohaeng: yong, ...R.favorites(yong), basis: '나에게 도움이 되는 기운(용신) · ' + R.OH_META[yong].name } : null,
     memo: { lines: iljuText.memo, hand: iljuText.hand },
-    tags: ['#' + ko(ilju) + '일주', '#' + ohTag, nowDw ? '#지금은' + nowDw.ganZhi + '대운' : null, '#사주보는수달', '#사주도감', '#No' + no].filter(Boolean),
-    note: hourKnown ? null : '태어난 시각을 몰라 시주는 빼고 계산했어요.'
+    tags: ['#' + ko(ilju) + '일주', '#' + ohTag, nowDw ? '#지금은' + nowDw.ganZhiKo + '대운' : null, '#사주보는수달', '#사주도감', '#No' + no].filter(Boolean),
+    note: hourKnown ? null : '태어난 시각을 몰라서 태어난 시의 두 글자는 빼고 계산했어요.'
   };
 }
 

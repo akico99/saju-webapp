@@ -5,7 +5,6 @@
 const { hasBatchim } = require('./freeReadings');
 const { SHIPSIN_GROUP, BRANCH_KO, STEM_OHAENG, BRANCH_MAIN_STEM } = require('./constants');
 
-const iga = (w) => w + (hasBatchim(w) ? '이' : '가');
 const eunneun = (w) => w + (hasBatchim(w) ? '은' : '는');
 
 /* ---------- 오행 ---------- */
@@ -38,8 +37,9 @@ function ohaengSummary(oh, yong) {
   if (yong && OH_META[yong]) {
     const n = OH_META[yong].name;
     // 용신이 이미 많은 오행이면 "채운다"가 앞 문장과 부딪힌다 — 그때는 살려 쓰는 쪽으로 말한다.
-    const verb = (oh[yong] || 0) >= 2 ? '살려 쓰면' : '채우면';
-    s += ' ' + verb + ' 편해지는 쪽은 ' + n + (hasBatchim(n) ? '이에요.' : '예요.');
+    s += (oh[yong] || 0) >= 2
+      ? ' 넉넉한 ' + n + ' 기운을 잘 살려 쓰면 편해져요.'
+      : ' ' + n + ' 기운을 채워 주면 균형이 맞아요.';
   }
   return s;
 }
@@ -101,7 +101,7 @@ const TRAITS = {
   형: { seal: '刑', title: '까다로운 기준', desc: '기준이 높아 부딪힘이 생기기 쉬워요. 규칙을 미리 맞춰 두면 편해요.' }
 };
 const TRAIT_ORDER = ['천을귀인', '양인', '괴강', '도화살', '장성살', '역마살', '화개살', '문창귀인', '백호', '반안살', '암록', '협록', '충', '자형', '형'];
-const TRAIT_NONE = { seal: '平', title: '무난한 결', desc: '눈에 띄는 신살이 적은 사주예요. 한쪽으로 치우치지 않고 고르게 움직이는 편이에요.' };
+const TRAIT_NONE = { seal: '平', title: '무난한 결', desc: '눈에 띄는 특별한 표지가 적은 사주예요. 한쪽으로 치우치지 않고 고르게 움직이는 편이에요.' };
 
 function pickTraits(cands) {
   const out = [];
@@ -149,7 +149,7 @@ function growthLine(item) {
   const line = GROWTH_DETAIL[pairKey(item.stemShipsinKo, item.branchShipsinKo)]
     || (sg && bg && sg !== bg && GROWTH_PAIR[pairKey(sg, bg)]) || GROWTH_MAIN[sg] || GROWTH_MAIN[bg] || '';
   const names = item.newOhaeng.map((o) => OH_META[o].name).join(' · ');
-  const highlight = names ? '없던 ' + iga(names) + (item.firstNew ? ' 처음 들어온 10년' : ' 다시 들어오는 10년') : null;
+  const highlight = names ? '내게 없던 ' + names + ' 기운이 ' + (item.firstNew ? '처음 들어온 10년' : '다시 들어오는 10년') : null;
   return { line, highlight };
 }
 
@@ -166,7 +166,7 @@ const CHUNG_OF = { 子: '午', 午: '子', 丑: '未', 未: '丑', 寅: '申', �
 function yearCard(item, ctx) {
   const parts = [];
   const over = [item.stemOhaeng, item.branchOhaeng].find((o) => o && ctx.ohaeng[o] >= 3);
-  if (over) parts.push('원래 많은 ' + iga(OH_META[over].name) + ' 또 들어와요.');
+  if (over) parts.push('이미 많은 ' + OH_META[over].name + ' 기운이 한 번 더 들어와요.');
   // 두 해 연속 같은 그룹이면 둘째 해는 지지 쪽 그룹으로 말해 같은 문장이 반복되지 않게 한다.
   let group = SHIPSIN_GROUP[item.stemShipsinKo];
   const branchGroup = SHIPSIN_GROUP[item.branchShipsinKo];
@@ -218,7 +218,7 @@ function favorites(yong) {
       { label: '편한 자리', value: f.place },
       { label: '힘이 나는 때', value: f.season },
       { label: '기운 나는 일', value: f.act },
-      { label: '주문', value: f.spell, hand: true }
+      { label: '마음속 주문', value: f.spell, hand: true }
     ],
     note: '재미로 참고해요.'
   };

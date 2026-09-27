@@ -74,7 +74,7 @@
   }
 
   function renderPillars(guide) {
-    const section = card(SECTION_NUMBERS[0], '분류 기록', '태어난 순간의 네 글자', 'fg-pillars', '사주 원국 · 실제 만세력 계산');
+    const section = card(SECTION_NUMBERS[0], '분류 기록', '태어난 해·달·날·시의 글자', 'fg-pillars', '실제 만세력으로 계산한 사주(원국)');
     const row = element('div', 'fg-pillar-layout');
     const pillars = element('div', 'fg-pillar-grid');
     guide.pillars.forEach((pillar) => {
@@ -91,7 +91,7 @@
         setColor(stem, colorFor(guide, pillar.stemOhaeng));
         setColor(branch, colorFor(guide, pillar.branchOhaeng));
         append(glyphs, stem, branch);
-        append(tile, glyphs);
+        append(tile, glyphs, element('span', 'fg-pillar-ko', `${pillar.stemKo}${pillar.branchKo}`));
       }
       append(tile, element('span', 'fg-pillar-meaning', pillar.meaning));
       append(pillars, tile);
@@ -111,7 +111,7 @@
   }
 
   function renderConstitution(guide) {
-    const section = card(SECTION_NUMBERS[1], '체질', '오행 배터리', 'fg-constitution', guide.constitution.basis);
+    const section = card(SECTION_NUMBERS[1], '체질', '다섯 기운 배터리', 'fg-constitution', guide.constitution.basis);
     const batteries = element('div', 'fg-batteries');
     guide.constitution.items.forEach((item) => {
       const battery = element('div', 'fg-battery');
@@ -135,7 +135,7 @@
   }
 
   function renderHabit(guide) {
-    const section = card(SECTION_NUMBERS[2], '습성', '타고난 역할 배분', 'fg-habit', guide.habit.basis);
+    const section = card(SECTION_NUMBERS[2], '습성', '내가 자주 쓰는 힘', 'fg-habit', guide.habit.basis);
     const layout = element('div', 'fg-habit-layout');
     const chart = element('div', 'fg-donut');
     const values = guide.habit.legend.filter((entry) => entry.count > 0);
@@ -165,7 +165,7 @@
   }
 
   function renderTraits(guide) {
-    const section = card(SECTION_NUMBERS[3], '특이 행동', '신살 · 형충', 'fg-traits', guide.traits.basis);
+    const section = card(SECTION_NUMBERS[3], '특이 행동', '타고난 특별한 표지', 'fg-traits', guide.traits.basis);
     const list = element('div', 'fg-trait-list');
     guide.traits.items.forEach((trait) => {
       const row = element('article', 'fg-trait');
@@ -179,7 +179,7 @@
   }
 
   function renderGrowth(guide) {
-    const section = card(SECTION_NUMBERS[4], '성장 기록', '10년마다 바뀌는 계절 · 대운', 'fg-growth', guide.growth.basis);
+    const section = card(SECTION_NUMBERS[4], '성장 기록', '10년마다 바뀌는 인생의 계절', 'fg-growth', guide.growth.basis);
     const timeline = element('div', 'fg-timeline');
     guide.growth.items.forEach((item) => {
       const entry = element('article', `fg-growth-item${item.isNow ? ' is-now' : ''}`);
@@ -191,6 +191,7 @@
       setColor(branch, colorFor(guide, item.branchOhaeng));
       append(circle, stem, branch);
       const age = element('strong', 'fg-growth-age', `${item.startAge}~${item.endAge}세`);
+      append(age, element('small', 'fg-growth-ko', `${item.ganZhiKo} 대운`));
       const description = element('p', 'fg-growth-line');
       if (item.highlight) append(description, element('b', '', item.highlight), element('span', '', item.line));
       else description.textContent = item.line;
@@ -202,7 +203,7 @@
   }
 
   function renderYearly(guide) {
-    const section = card(SECTION_NUMBERS[5], '올해의 관찰 기록', '세운', 'fg-yearly', guide.yearly.basis);
+    const section = card(SECTION_NUMBERS[5], '올해의 관찰 기록', '올해와 내년의 흐름', 'fg-yearly', guide.yearly.basis);
     const years = element('div', 'fg-year-grid');
     guide.yearly.items.forEach((item) => {
       const year = element('article', `fg-year${item.label ? ' is-highlighted' : ''}`);
@@ -222,7 +223,7 @@
   }
 
   function renderChemistry(guide) {
-    const section = card(SECTION_NUMBERS[6], '어울리는 종 · 부딪히는 종', '상대의 띠', 'fg-chemistry', guide.chemistry.basis);
+    const section = card(SECTION_NUMBERS[6], '어울리는 종 · 부딪히는 종', '상대의 띠로 보는 궁합', 'fg-chemistry', guide.chemistry.basis);
     const list = element('div', 'fg-chemistry-list');
     guide.chemistry.items.forEach((item) => {
       const row = element('article', `fg-chemistry-row kind-${item.kind}`);
@@ -257,7 +258,7 @@
 
   function renderFavorites(guide) {
     const favorites = guide.favorites;
-    const section = card(SECTION_NUMBERS[8], '좋아하는 것과 서식지', favorites ? `${favorites.name} 기운을 채우는 기록` : '생활 참고 기록', 'fg-favorites', favorites ? favorites.basis : null);
+    const section = card(SECTION_NUMBERS[8], '좋아하는 것과 서식지', favorites ? `나에게 힘이 되는 ${favorites.name} 기운` : '생활 참고 기록', 'fg-favorites', favorites ? favorites.basis : null);
     if (!favorites) {
       append(section.fgBody, element('p', 'fg-empty', '이 기록은 아직 비어 있어요.'));
       return section;
@@ -310,15 +311,15 @@
     const report = element('article', 'fg-report');
     report.setAttribute('aria-label', `${guide.name.display} 사주 도감`);
     append(report, renderCover(guide));
-    if (guide.note) append(report, element('p', 'fg-hour-note', guide.note));
-
+    // 분류 기록 카드가 표지 위로 겹쳐 올라가므로, 시각 안내는 그 카드 바로 아래에 둔다.
+    const note = guide.note ? element('p', 'fg-hour-note', guide.note) : null;
     const top = element('div', 'fg-card-grid fg-grid-3');
     append(top, renderConstitution(guide), renderHabit(guide), renderTraits(guide));
     const middle = element('div', 'fg-card-grid fg-grid-2');
     append(middle, renderYearly(guide), renderChemistry(guide));
     const lower = element('div', 'fg-card-grid fg-grid-2');
     append(lower, renderApproach(guide), renderFavorites(guide));
-    append(report, renderPillars(guide), top, renderGrowth(guide), middle, lower, renderMemo(guide), renderFooter());
+    append(report, renderPillars(guide), note, top, renderGrowth(guide), middle, lower, renderMemo(guide), renderFooter());
     container.replaceChildren(report);
     return report;
   }

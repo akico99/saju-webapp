@@ -39,7 +39,7 @@
 | memo | { lines: string[3], hand } | 관찰자 수달의 메모 | hand는 손글씨 한 줄 |
 | tags | string[] | 메모 아래 | 해시태그 |
 
-각 섹션의 basis는 카드 왼쪽 아래 "근거 · …" 표시용 짧은 문자열이다.
+각 섹션의 basis는 카드 아래 "근거 · …" 표시용 문자열이다. 일반인이 읽을 수 있게 쉬운 말을 앞에 쓰고 명리 용어는 괄호에 넣는다. 예: '그해에 들어오는 기운(세운)'.
 
 ### cover
 | 필드 | 예 |
@@ -48,7 +48,7 @@
 | ilju, iljuKo | '戊午', '무오일주' |
 | alias | '한여름 들판 위의 큰 산' |
 | oneLine | '뜨거운 마음을 산처럼 묵묵히 품은 사람' |
-| facts | [{label:'서식', value:'한여름 들판'}, {label:'체질', value:'불 3 · 흙 3 · 물 2'}, {label:'현재', value:'庚寅 대운'}] (현재는 대운 전이면 없음) |
+| facts | [{label:'서식', value:'한여름 들판'}, {label:'체질', value:'불 3 · 흙 3 · 물 2'}, {label:'지금', value:'경인 대운 (26~35세)'}] (지금은 대운 전이면 없음) |
 
 ### Pillar
 `{ key, label, meaning, unknown, isMe, stem, branch, stemKo, branchKo, stemOhaeng, branchOhaeng }`
@@ -80,5 +80,5 @@ label('귀인의 해' | '변화의 해' | null)이 있는 카드를 남색으로
 `{ kind('good'|'push'|'mirror'), label('찰떡'|'밀당'|'거울'), branches:[{hanja, ko, ohaeng}], animals('호랑이·개·양띠'), line }`
 
 ### favorites
-`{ ohaeng, name, rows:[{label, value, hand?}], note, basis }`. rows는 좋아하는 색, 편한 자리, 힘이 나는 때, 기운 나는 일, 주문 순서. hand가 true인 행은 손글씨체.
+`{ ohaeng, name, rows:[{label, value, hand?}], note, basis }`. rows는 좋아하는 색, 편한 자리, 힘이 나는 때, 기운 나는 일, 마음속 주문 순서. hand가 true인 행은 손글씨체.
 

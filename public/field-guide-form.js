@@ -25,6 +25,14 @@
   }
 
   unknownHour.addEventListener('change', updateHourFields);
+  // 저장된 인물을 고르면 공용 위젯이 값을 채운다. 시각 모름 체크는 이벤트 없이 바뀌므로
+  // 폼까지 올라온 change 이벤트에서 시각 칸 잠금 상태를 다시 맞춘다.
+  form.addEventListener('change', (event) => {
+    if (event.target.classList.contains('profile-picker-select')) updateHourFields();
+  });
+  if (window.ProfilePicker) {
+    window.ProfilePicker.mount(document.getElementById('profilePicker'), form, { placeholder: '직접 입력할게' });
+  }
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     errorBox.classList.add('hidden');
