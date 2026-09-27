@@ -14,6 +14,20 @@
 .fg-report { width: 100%; max-width: 1110px; margin: 0 auto; }
 .fg-report, .fg-report button, .fg-report a { font-family: inherit; }
 
+.fg-intro { max-width: 680px; margin: 5px auto 18px; text-align: center; }
+.fg-intro-kicker { color: var(--gold); font-size: 11px; font-weight: 700; letter-spacing: .08em; }
+.fg-intro h1 { margin: 5px 0; font-family: var(--font-serif); font-size: clamp(23px, 4vw, 32px); line-height: 1.35; }
+.fg-intro p { margin: 0; color: var(--muted); font-size: 13px; }
+.fg-input-card { width: min(100%, 620px); margin: 0 auto 18px; padding: 20px; border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--paper); box-shadow: var(--shadow-1); }
+.fg-input-card .field:last-of-type { margin-bottom: 9px; }
+.fg-optional { margin-left: 4px; color: var(--muted); font-size: 10px; font-weight: 400; }
+.fg-hour-unknown { margin-top: 8px !important; }
+.fg-form-note { margin: 2px 0 10px; color: var(--muted); font-size: 10px; }
+.fg-input-card button[type="submit"] { margin-top: 2px; }
+.fg-input-card button[type="submit"]:disabled { opacity: .75; }
+#fieldGuideResult:empty { display: none; }
+#fieldGuideResult:not(:empty) { scroll-margin-top: 16px; }
+
 .fg-cover {
   min-height: 294px;
   position: relative;
@@ -231,6 +245,8 @@
   .fg-grid-2 { grid-template-columns: 1fr; }
   .fg-card { padding-right: 16px; padding-left: 16px; }
   .fg-basis { left: 16px; }
+  .fg-intro { margin-bottom: 14px; }
+  .fg-input-card { padding: 17px; }
 }
 
 @media (max-width: 430px) {

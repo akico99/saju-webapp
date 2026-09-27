@@ -54,7 +54,7 @@
     const mark = element('span', 'fg-cover-mark', '수달이 기록한 사주 도감');
     const identity = element('p', 'fg-cover-identity', `No.${guide.cover.no} · ${guide.cover.iljuKo} ${guide.cover.ilju}`);
     const title = element('h1', 'fg-title', guide.name.display);
-    append(title, element('span', 'fg-title-suffix', '사주 도감'));
+    append(title, ' ', element('span', 'fg-title-suffix', '사주 도감'));
     const story = element('p', 'fg-cover-story', guide.cover.alias);
     const oneLine = element('p', 'fg-cover-one-line', guide.cover.oneLine);
     const facts = element('div', 'fg-cover-facts');

@@ -1,0 +1,52 @@
+(function bindFieldGuideForm() {
+  'use strict';
+
+  const form = document.getElementById('fieldGuideForm');
+  if (!form) return;
+
+  const submitButton = document.getElementById('fieldGuideSubmit');
+  const errorBox = document.getElementById('fieldGuideError');
+  const result = document.getElementById('fieldGuideResult');
+  const unknownHour = form.elements.hourUnknown;
+  const hourFields = [form.elements.hour, form.elements.minute];
+
+  function updateHourFields() {
+    hourFields.forEach((field) => {
+      field.disabled = unknownHour.checked;
+      if (unknownHour.checked) field.value = '';
+    });
+  }
+
+  unknownHour.addEventListener('change', updateHourFields);
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    errorBox.classList.add('hidden');
+    errorBox.textContent = '';
+    submitButton.disabled = true;
+    submitButton.textContent = '도감을 만드는 중…';
+
+    const formData = new FormData(form);
+    const body = Object.fromEntries(formData.entries());
+    body.hourUnknown = unknownHour.checked;
+    body.name = typeof body.name === 'string' ? body.name.trim().slice(0, 10) : '';
+
+    try {
+      const response = await fetch('/api/field-guide', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || '사주 도감을 만들지 못했어.');
+      window.renderFieldGuide(payload.guide, result);
+      result.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (error) {
+      errorBox.textContent = error.message || '요청에 실패했어. 잠시 뒤 다시 시도해줘.';
+      errorBox.classList.remove('hidden');
+      errorBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } finally {
+      submitButton.disabled = false;
+      submitButton.textContent = '무료로 도감 만들기';
+    }
+  });
+}());
