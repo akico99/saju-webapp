@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin
+Disallow: /pay
+Disallow: /mypage.html
+Disallow: /profiles.html
+Disallow: /login.html
+Disallow: /signup.html
+Disallow: /forgot-password.html
+Disallow: /reset-password.html
+Disallow: /balance-cover-preview.html
+
+Sitemap: https://sajuotter.com/sitemap.xml

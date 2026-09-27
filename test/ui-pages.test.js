@@ -182,3 +182,22 @@ test('shared pages expose share preview metadata with an absolute image', () => 
   }
   assert.ok(fs.existsSync(path.join(publicDir, 'og-cover.jpg')), 'share preview image missing');
 });
+
+// 검색 노출 — robots.txt가 사이트맵을 가리키고, 사이트맵의 모든 주소는 실제 공개 파일이며
+// 그 파일의 canonical과 정확히 같아야 한다. 없는 주소나 다른 canonical이 섞이면 검색엔진이
+// 사이트맵 전체를 덜 믿는다.
+test('sitemap lists only real public pages whose canonical matches', () => {
+  const robots = fs.readFileSync(path.join(publicDir, 'robots.txt'), 'utf8');
+  assert.match(robots, /^Sitemap: https:\/\/sajuotter\.com\/sitemap\.xml$/m);
+  const sitemap = fs.readFileSync(path.join(publicDir, 'sitemap.xml'), 'utf8');
+  const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+  assert.ok(locs.length >= 10, 'sitemap should list the public service pages');
+  for (const loc of locs) {
+    const rel = loc.replace('https://sajuotter.com/', '') || 'index.html';
+    const file = path.join(publicDir, rel);
+    assert.ok(fs.existsSync(file), loc + ': no such public file');
+    const html = fs.readFileSync(file, 'utf8');
+    assert.ok(html.includes('<link rel="canonical" href="' + loc + '">'), loc + ': canonical mismatch');
+    assert.doesNotMatch(html, /name="robots" content="[^"]*noindex/, loc + ': noindex page in sitemap');
+  }
+});
