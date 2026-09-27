@@ -147,24 +147,41 @@ test('all-services catalog reuses the same dedicated editorial images', () => {
   for (const asset of ['today-fortune.webp', 'life-graph-services.webp', 'balance.webp', 'noble.webp', 'charm.webp', 'intro.webp', 'love.webp', 'relationship.webp']) {
     assert.ok(html.includes(`/tiles/${asset}`), `${asset}: missing from catalog`);
   }
+  assert.ok(html.includes('src="/illustrations/otter-field-guide.png"'), 'field guide image missing from catalog');
 });
 
 test('all-services catalog groups daily and life-flow readings with the free services', () => {
   const html = fs.readFileSync(path.join(publicDir, 'services.html'), 'utf8');
   const freeSection = html.match(/<section id="free">[\s\S]*?<\/section>/)?.[0];
   assert.ok(freeSection, 'free service section should exist');
-  assert.equal((freeSection.match(/class="tile"/g) || []).length, 5,
-    'free section should contain five consistent service tiles');
+  assert.equal((freeSection.match(/class="tile"/g) || []).length, 6,
+    'free section should contain six consistent service tiles');
   assert.ok(freeSection.indexOf('/today-preview.html') < freeSection.indexOf('/life-graph.html'));
   assert.ok(freeSection.indexOf('/life-graph.html') < freeSection.indexOf('/free.html?kind=balance'));
+  assert.match(freeSection, /href="\/field-guide\.html"[\s\S]*?수달이 기록한 나의 사주 도감/);
   assert.doesNotMatch(html, /id="todayFortuneCard"|id="tfTitle"|id="tfDesc"|id="tfCta"/);
+});
+
+test('home menu and free service carousel expose the field guide', () => {
+  const html = fs.readFileSync(path.join(publicDir, 'index.html'), 'utf8');
+  const freeMenu = html.match(/<div class="menu-section">\s*<div class="menu-section-ttl">무료로 먼저 보기<\/div>([\s\S]*?)<\/div>/)?.[1];
+  const freeCarousel = html.match(/<div class="service-carousel" data-service-carousel>[\s\S]*?<\/section>/)?.[0];
+  assert.ok(freeMenu?.includes('href="/field-guide.html"'), 'field guide missing from the free menu');
+  assert.ok(freeCarousel?.includes('href="/field-guide.html"'), 'field guide missing from the home free-service cards');
+  assert.ok(freeCarousel?.includes('/illustrations/otter-field-guide.png'), 'field guide art missing from the home card');
+  assert.ok(freeCarousel?.includes('수달이 기록한 나의 사주 도감'), 'field guide card title missing from home');
+});
+
+test('llms lists the field guide as a free service', () => {
+  const llms = fs.readFileSync(path.join(publicDir, 'llms.txt'), 'utf8');
+  assert.match(llms, /무료 서비스[\s\S]*?\[사주 도감\]\(https:\/\/sajuotter\.com\/field-guide\.html\)/);
 });
 
 // 공유 링크 미리보기 — 카카오톡·검색에 제목과 그림이 뜨려면 og:* 가 있어야 하고, og:image는
 // 절대 URL이어야 크롤러가 받아간다. scripts/injectOG.js 가 만드는 결과를 고정한다.
 test('shared pages expose share preview metadata with an absolute image', () => {
   const shared = ['index', 'services', 'free', 'life-graph', 'today-preview', 'today-fortune',
-    'quick', 'compat', 'date-select', 'lifetime-report', 'consult', 'webtoon/lifetime'];
+    'quick', 'compat', 'date-select', 'lifetime-report', 'consult', 'webtoon/lifetime', 'field-guide'];
   for (const name of shared) {
     const html = fs.readFileSync(path.join(publicDir, `${name}.html`), 'utf8');
     const title = html.match(/<title>([^<]*)<\/title>/);
