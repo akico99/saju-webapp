@@ -1,0 +1,143 @@
+{
+  "input": {
+    "year": 1996,
+    "month": 5,
+    "day": 21,
+    "hour": 14,
+    "minute": 30,
+    "gender": "여"
+  },
+  "opts": {
+    "name": "지은",
+    "now": "2026-09-27T12:00:00+09:00"
+  },
+  "expect": {
+    "name": {
+      "display": "지은이",
+      "vocative": "지은아"
+    },
+    "cover": {
+      "no": 55,
+      "ilju": "戊午",
+      "iljuKo": "무오일주",
+      "alias": "한여름 들판 위의 큰 산"
+    },
+    "pillars": [
+      "丙子",
+      "癸巳",
+      "戊午",
+      "己未"
+    ],
+    "ohaeng": {
+      "木": 0,
+      "火": 3,
+      "土": 3,
+      "金": 0,
+      "水": 2
+    },
+    "groups": {
+      "비겁": 2,
+      "식상": 0,
+      "재성": 2,
+      "관성": 0,
+      "인성": 3
+    },
+    "traitKeys": [
+      "천을귀인",
+      "양인",
+      "장성살",
+      "반안살"
+    ],
+    "growth": [
+      {
+        "ganZhi": "壬辰",
+        "startAge": 6,
+        "isNow": false,
+        "highlight": null
+      },
+      {
+        "ganZhi": "辛卯",
+        "startAge": 16,
+        "isNow": false,
+        "highlight": "없던 쇠 · 나무가 처음 들어온 10년"
+      },
+      {
+        "ganZhi": "庚寅",
+        "startAge": 26,
+        "isNow": true,
+        "highlight": "없던 쇠 · 나무가 다시 들어오는 10년"
+      },
+      {
+        "ganZhi": "己丑",
+        "startAge": 36,
+        "isNow": false,
+        "highlight": null
+      },
+      {
+        "ganZhi": "戊子",
+        "startAge": 46,
+        "isNow": false,
+        "highlight": null
+      }
+    ],
+    "yearly": [
+      {
+        "year": 2026,
+        "ganZhi": "丙午",
+        "label": null
+      },
+      {
+        "year": 2027,
+        "ganZhi": "丁未",
+        "label": "귀인의 해"
+      }
+    ],
+    "chemistry": {
+      "good": "호랑이·개·양띠",
+      "push": "쥐띠",
+      "mirror": "말띠"
+    },
+    "favorites": "金",
+    "tags": [
+      "#무오일주",
+      "#불3흙3",
+      "#지금은庚寅대운",
+      "#사주보는수달",
+      "#사주도감",
+      "#No55"
+    ]
+  },
+  "noHour": {
+    "input": {
+      "year": 1996,
+      "month": 5,
+      "day": 21,
+      "hour": null,
+      "gender": "여"
+    },
+    "opts": {
+      "name": "수아",
+      "now": "2026-09-27T12:00:00+09:00"
+    },
+    "expect": {
+      "name": {
+        "display": "수아",
+        "vocative": "수아야"
+      },
+      "hourKnown": false,
+      "hourPillarUnknown": true,
+      "ohaeng": {
+        "木": 0,
+        "火": 3,
+        "土": 1,
+        "金": 0,
+        "水": 2
+      },
+      "traitKeys": [
+        "양인",
+        "장성살",
+        "子午충"
+      ]
+    }
+  }
+}
