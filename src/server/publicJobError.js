@@ -4,7 +4,7 @@
 function publicJobError(error, productKey) {
   if (!error) return null;
   const refunded = productKey && productKey !== 'free';
-  const refundNote = refunded ? '차감된 포인트는 자동 환불됩니다. ' : '';
+  const refundNote = refunded ? '결제는 자동으로 취소됩니다. ' : '';
   const message = String(error);
   if (/credit balance|insufficient credits|plans?\s*&\s*billing|purchase credits|billing/i.test(message)) {
     return `현재 리딩 생성 서비스가 일시적으로 중단되었습니다. ${refundNote}복구 후 다시 이용해 주세요.`;

@@ -1,6 +1,5 @@
 'use strict';
-/* 관리자(=운영자 본인) 전용 — 포인트 충전 신청을 눈으로 확인하고 승인/거절하고, 회원을
-   검색·조회하고, 포인트를 수동으로 조정하거나 계정을 정지시킨다.
+/* 관리자(=운영자 본인) 전용 — 회원을 검색·조회하고 계정을 정지시키고, 카드 결제·주문·원가를 본다.
    별도 로그인(ADMIN_PASSWORD)이며 일반 사용자 세션과는 완전히 분리되어 있다. */
 const express = require('express');
 const fs = require('fs');
@@ -92,32 +91,6 @@ router.post('/admin/backup/run', requireAdmin, async (req, res) => {
   }
 });
 
-router.get('/admin/points/pending', requireAdmin, (req, res) => {
-  res.json({ requests: points.listPendingRequests() });
-});
-
-router.get('/admin/points/all', requireAdmin, (req, res) => {
-  res.json({ requests: points.listAllRequests() });
-});
-
-router.post('/admin/points/:id/approve', requireAdmin, (req, res) => {
-  try {
-    const row = points.approveRequest(Number(req.params.id), req.body.note);
-    res.json({ request: row });
-  } catch (e) {
-    res.status(400).json({ error: e.message });
-  }
-});
-
-router.post('/admin/points/:id/reject', requireAdmin, (req, res) => {
-  try {
-    const row = points.rejectRequest(Number(req.params.id), req.body.note);
-    res.json({ request: row });
-  } catch (e) {
-    res.status(400).json({ error: e.message });
-  }
-});
-
 /* ---------- 회원관리 ---------- */
 router.get('/admin/stats', requireAdmin, (req, res) => {
   res.json(users.adminStats());
@@ -130,16 +103,6 @@ router.get('/admin/users', requireAdmin, (req, res) => {
   const list = users.listAll({ search, limit, offset: (page - 1) * limit });
   const total = users.countAll({ search });
   res.json({ users: list, total, page, pageCount: Math.max(1, Math.ceil(total / limit)) });
-});
-
-router.post('/admin/users/:id/points', requireAdmin, (req, res) => {
-  try {
-    const delta = Number(req.body.delta);
-    const balance = points.adminAdjust(Number(req.params.id), delta, req.body.reason);
-    res.json({ pointBalance: balance });
-  } catch (e) {
-    res.status(400).json({ error: e.message });
-  }
 });
 
 router.post('/admin/users/:id/status', requireAdmin, (req, res) => {
@@ -204,7 +167,7 @@ router.delete('/admin/orders/:jobId/file', requireAdmin, (req, res) => {
 /* 상품별 원가 요약 — 건수/평균/합계. 판매가(PRICES)를 같이 내려줘서 마진율 계산은
    프론트에서 한다. /admin/orders/:jobId보다 먼저 등록해야 "cost-summary"가 jobId로
    잘못 매칭되지 않는다. */
-// 카드 결제 원장(토스페이먼츠) — 테스트 모드 결제는 test_mode=1로 표시되고 포인트가 지급되지 않는다.
+// 카드 결제 원장(토스페이먼츠) — admin-payments.html이 쓴다. 테스트 모드 결제는 test_mode=1로 표시된다.
 router.get('/admin/card-payments', requireAdmin, (req, res) => {
   res.json({ payments: cardPayments.listAll() });
 });

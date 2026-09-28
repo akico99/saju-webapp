@@ -15,22 +15,11 @@ const cardPayments = require('../../db/cardPayments');
 const { resolveProduct } = require('../products');
 const { HttpError } = require('../httpError');
 const { requireAuth } = require('../middleware/auth');
+const { CLIENT_KEY, SECRET_KEY, TEST_MODE, confirmPayment, cancelPayment } = require('../tossPayments');
 
 const router = express.Router();
 
-const CLIENT_KEY = process.env.TOSS_CLIENT_KEY || process.env.TOSS_TEST_CLIENT_KEY || 'test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm';
-const SECRET_KEY = process.env.TOSS_SECRET_KEY || process.env.TOSS_TEST_SECRET_KEY || '';
-const API = 'https://api.tosspayments.com/v1/payments';
-const TEST_MODE = !SECRET_KEY.startsWith('live_');
 const TEST_LIMIT_PER_USER = 3;
-
-const authHeader = () => `Basic ${Buffer.from(`${SECRET_KEY}:`).toString('base64')}`;
-
-async function tossPost(url, body) {
-  const res = await fetch(url, { method: 'POST', headers: { Authorization: authHeader(), 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-  const data = await res.json().catch(() => ({}));
-  return { ok: res.ok, status: res.status, data };
-}
 
 router.get('/pay/config', requireAuth, (req, res) => {
   res.json({ clientKey: CLIENT_KEY, testMode: TEST_MODE });
@@ -75,7 +64,7 @@ router.post('/pay/confirm', requireAuth, async (req, res) => {
   // 1) 토스 승인
   let approved;
   try {
-    approved = await tossPost(`${API}/confirm`, { paymentKey, orderId, amount: row.amount_krw });
+    approved = await confirmPayment({ paymentKey, orderId, amount: row.amount_krw });
   } catch (e) {
     cardPayments.markFailed(row, e.message);
     return res.status(500).json({ error: '결제 승인 서버 호출 중 오류: ' + e.message });
@@ -95,12 +84,18 @@ router.post('/pay/confirm', requireAuth, async (req, res) => {
     cardPayments.setJob(paid, payload.jobId);
     return res.json({ payment: summarize(paid), jobId: payload.jobId, page: resolved.page, payload });
   } catch (e) {
-    // 승인은 됐지만 상품을 시작하지 못했다 — 크레딧 회수 + 토스 결제 취소. 사용자에겐 이유를 그대로 보여준다.
+    // 승인은 됐지만 상품을 시작하지 못했다. 상품이 이미 차감까지 한 뒤 실패했다면 그쪽에서
+    // refundPurchase가 이 결제를 선점해 카드 취소를 진행 중이다 — 그때는 두 번 취소하지 않는다.
     const reason = (e.body && e.body.error) || e.message || '상품 시작 실패';
-    cardPayments.revertCredit(paid, reason);
-    const cancel = await tossPost(`${API}/${encodeURIComponent(paymentKey)}/cancel`, { cancelReason: reason.slice(0, 200) }).catch((err) => ({ ok: false, data: { message: err.message } }));
-    if (!cancel.ok) console.error('[pay] 결제 취소 실패 — 수동 취소 필요:', orderId, cancel.data);
     const status = e instanceof HttpError ? e.status : 500;
+    const current = cardPayments.findById(paid.id);
+    if (current.status !== 'paid') {
+      return res.status(status).json({ error: `${reason} 결제는 자동으로 취소돼요.`, code: e.body && e.body.code, canceled: true });
+    }
+    // 차감 전에 실패했다 — 크레딧 회수 + 토스 결제 취소. 사용자에겐 이유를 그대로 보여준다.
+    cardPayments.revertCredit(paid, reason);
+    const cancel = await cancelPayment(paymentKey, reason);
+    if (!cancel.ok) console.error('[pay] 결제 취소 실패 — 수동 취소 필요:', orderId, cancel.data);
     return res.status(status).json({
       error: `${reason} 결제는 ${cancel.ok ? '자동으로 취소되었습니다' : '취소 요청 중 문제가 생겨 운영자가 확인 후 환불합니다'}.`,
       code: e.body && e.body.code, canceled: cancel.ok

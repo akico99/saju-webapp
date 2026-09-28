@@ -68,16 +68,6 @@
       <a class="fortune-cta hidden" id="fortuneCta" href="/today-fortune.html">오늘의 운세 더 자세히 보기 →</a>
     </div>
 
-    <!-- 결제는 상품 페이지에서 리포트 1건 = 결제 1건. 잔액을 사고팔지 않는다. 예전(계좌이체 충전 시절)에
-         입금하고 남은 금액이 있는 회원에게만 그 사실을 알린다 — 다음 결제에 자동으로 먼저 쓰인다. -->
-    <div class="card hidden" id="balanceCard">
-      <div class="balance-row">
-        <span class="label">이전 입금 잔여금</span>
-        <span class="value"><span id="balanceValue">0</span><span class="unit">원</span></span>
-      </div>
-      <p class="hint" style="margin:0;">예전에 입금하신 금액 중 남은 부분이에요. 다음 리포트 결제 때 자동으로 먼저 사용되고, 전액 환불도 요청할 수 있어요(문의: sooky2001@gmail.com).</p>
-    </div>
-
     <div class="card">
       <h3>다시보기 — 내가 만든 리포트</h3>
       <div class="table-scroll">
@@ -133,13 +123,6 @@
     } catch (e) {
       document.getElementById('fortuneTitle').textContent = '오늘의 운세를 불러오지 못했어요';
     }
-  }
-
-  async function loadMine() {
-    const res = await fetch('/api/points/mine');
-    const data = await res.json();
-    document.getElementById('balanceValue').textContent = data.balance.toLocaleString('ko-KR');
-    document.getElementById('balanceCard').classList.toggle('hidden', !(data.balance > 0));
   }
 
   const ORDER_STATUS_CLASS = {
@@ -256,7 +239,6 @@
       showToast('이메일 인증이 완료됐어요!');
     }
     loadFortune();
-    loadMine();
     loadOrders();
   })();
 </script>

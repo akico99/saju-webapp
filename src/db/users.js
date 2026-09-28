@@ -9,7 +9,6 @@ function toPublicUser(row) {
     id: row.id,
     email: row.email,
     name: row.name,
-    pointBalance: row.point_balance,
     gender: row.gender,
     emailVerified: !!row.email_verified,
     birth: row.birth_year ? {
@@ -99,7 +98,6 @@ function toAdminUser(row) {
     id: row.id,
     email: row.email,
     name: row.name,
-    pointBalance: row.point_balance,
     provider: row.provider,
     status: row.status,
     emailVerified: !!row.email_verified,
@@ -132,7 +130,8 @@ function setStatus(id, status) {
 function adminStats() {
   const totalUsers = db.prepare('SELECT COUNT(*) AS c FROM users').get().c;
   const todaySignups = db.prepare("SELECT COUNT(*) AS c FROM users WHERE date(created_at) = date('now')").get().c;
-  const totalRevenue = db.prepare("SELECT COALESCE(SUM(amount_krw), 0) AS s FROM point_requests WHERE status = 'approved'").get().s;
+  // 실제로 결제되고 취소되지 않은 카드 결제만 센다(테스트 결제 제외).
+  const totalRevenue = db.prepare("SELECT COALESCE(SUM(amount_krw), 0) AS s FROM card_payments WHERE status = 'paid' AND test_mode = 0").get().s;
   return { totalUsers, todaySignups, totalRevenue };
 }
 

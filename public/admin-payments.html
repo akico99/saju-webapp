@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="/favicon.png">
+<title>사주보는 수달 — 카드 결제 내역</title>
+<link rel="stylesheet" href="/theme.css">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1><svg class="otter-mark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="7" cy="7" r="2.4" fill="currentColor"/><circle cx="17" cy="7" r="2.4" fill="currentColor"/><ellipse cx="12" cy="13.5" rx="8" ry="7" fill="currentColor"/><circle cx="9" cy="12.5" r="1.1" fill="var(--paper)"/><circle cx="15" cy="12.5" r="1.1" fill="var(--paper)"/><ellipse cx="12" cy="16" rx="1.6" ry="1.1" fill="var(--paper)"/></svg> 카드 결제 내역</h1>
+    <div style="display:flex;align-items:center;gap:14px;">
+      <a href="/admin.html" style="font-size:12.5px;color:var(--muted);text-decoration:none;">← 관리자 홈</a>
+      <button class="logout" id="logoutBtn">관리자 로그아웃</button>
+    </div>
+  </header>
+  <div class="tabs">
+    <button class="tab active" data-view="attention">수동 환불 필요</button>
+    <button class="tab" data-view="all">전체 내역</button>
+  </div>
+  <p style="font-size:12.5px;color:var(--muted);margin:0 0 12px;">리포트 생성에 실패하면 카드 결제가 자동으로 취소돼요. 자동 취소가 실패한 건만 "수동 환불 필요"에 남으니, 토스페이먼츠 상점관리자에서 같은 주문번호를 찾아 취소해 주세요.</p>
+  <table>
+    <thead><tr><th>일시</th><th>회원</th><th>상품</th><th>금액</th><th>상태</th><th>주문번호 · 메모</th></tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+  <div class="empty hidden" id="empty">표시할 내역이 없습니다.</div>
+</div>
+
+<script>
+  const tbody = document.getElementById('tbody');
+  const empty = document.getElementById('empty');
+  // 상태 이름과 색(theme.css의 .status 클래스) — 결제 완료는 초록, 취소는 회색, 수동 확인은 노랑.
+  const STATUS = {
+    ready: ['결제 전', 'rejected'], failed: ['승인 실패', 'rejected'], paid: ['결제 완료', 'approved'],
+    refunding: ['취소 진행 중', 'pending'], canceled: ['취소됨', 'rejected'], cancel_failed: ['수동 환불 필요', 'pending']
+  };
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  let currentView = 'attention';
+  let all = [];
+
+  async function checkAdmin() {
+    const res = await fetch('/api/admin/me');
+    const data = await res.json();
+    if (!data.isAdmin) { location.href = '/admin-login.html'; return false; }
+    return true;
+  }
+
+  function row(r) {
+    const [label, cls] = STATUS[r.status] || [r.status, 'pending'];
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${esc((r.approved_at || r.created_at || '').slice(0, 16).replace('T', ' '))}</td>
+      <td>${esc(r.name || '-')}<br><span style="color:var(--muted);font-size:11px;">${esc(r.email)}</span></td>
+      <td>${esc(r.order_name)}</td>
+      <td>${Number(r.amount_krw).toLocaleString('ko-KR')}원${r.test_mode ? '<br><span style="color:var(--muted);font-size:11px;">테스트</span>' : ''}</td>
+      <td><span class="status ${cls}">${esc(label)}</span></td>
+      <td style="font-size:11.5px;">${esc(r.order_id)}${r.error ? '<br><span style="color:var(--muted);">' + esc(r.error) + '</span>' : ''}</td>
+    `;
+    return tr;
+  }
+
+  function render() {
+    const list = currentView === 'attention' ? all.filter((r) => r.status === 'cancel_failed' || r.status === 'refunding') : all;
+    tbody.innerHTML = '';
+    empty.classList.toggle('hidden', list.length > 0);
+    list.forEach((r) => tbody.appendChild(row(r)));
+  }
+
+  async function load() {
+    const res = await fetch('/api/admin/card-payments');
+    const data = await res.json();
+    all = data.payments || [];
+    render();
+  }
+
+  document.querySelectorAll('.tab').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach((t) => t.classList.remove('active'));
+      tab.classList.add('active');
+      currentView = tab.dataset.view;
+      render();
+    });
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    await fetch('/api/admin/logout', { method: 'POST' });
+    location.href = '/admin-login.html';
+  });
+
+  (async () => {
+    if (!(await checkAdmin())) return;
+    load();
+  })();
+</script>
+</body>
+</html>
+

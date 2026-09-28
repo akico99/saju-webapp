@@ -30,7 +30,7 @@ test('크레딧 오류는 메일을 보내고, 일시 오류는 보내지 않는
   assert.strictEqual(sent.length, 1);
   assert.match(sent[0].subject, /크레딧 소진/);
   assert.match(sent[0].html, /Plans &amp; Billing|Plans & Billing/);
-  assert.match(sent[0].html, /자동 환불/);
+  assert.match(sent[0].html, /카드 결제는 자동으로 취소/);
 });
 
 test('같은 종류는 쿨다운 안에 다시 보내지 않고, 다른 종류는 보낸다', async () => {

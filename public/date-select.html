@@ -396,7 +396,7 @@
   }
   function renderReport(report, jobId) {
     if (report) renderBody(report);
-    else document.getElementById('dsReportBody').textContent = '리포트를 만드는 데 문제가 생겼어요. 포인트는 환불되었습니다. 잠시 후 다시 시도해주세요.';
+    else document.getElementById('dsReportBody').textContent = '리포트를 만드는 데 문제가 생겼어요. 결제는 자동으로 취소돼요. 잠시 후 다시 시도해주세요.';
 
     const downloadBox = document.getElementById('dsDownload');
     if (report && jobId) {

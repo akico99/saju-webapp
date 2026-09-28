@@ -17,11 +17,10 @@
 <link rel="stylesheet" href="/hero-styles.css">
 <link rel="stylesheet" href="/journey.css">
 <style>
-  /* 실제 사이트에 맞춰 최소한으로 얹는 것들 — 로그인/포인트 표시, 실제 메뉴 링크.
+  /* 실제 사이트에 맞춰 최소한으로 얹는 것들 — 로그인 표시, 실제 메뉴 링크.
      색상·폰트·레이아웃은 전달받은 디자인(hero-styles.css/journey.css) 그대로 쓴다. */
   .header-actions { display: flex; align-items: center; gap: 12px; }
   .account-area a { font-size: 13px; font-weight: 700; color: var(--ink); }
-  .account-area .point-pill { padding: 8px 12px; border-radius: 20px; background: #ede7df; color: #60574f; font-size: 13px; font-weight: 700; margin-right: 10px; }
   @media (max-width: 720px) { .account-area a { font-size: 12px; } }
 </style>
 </head>
@@ -183,13 +182,13 @@
   veil.addEventListener('click', closeMenu);
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMenu(); });
 
-  // 로그인 상태 — 있으면 포인트/마이페이지, 없으면 로그인 링크 그대로 둔다.
+  // 로그인 상태 — 있으면 마이페이지, 없으면 로그인 링크 그대로 둔다.
   (async function loadAccountState() {
     try {
       const res = await fetch('/api/auth/me');
       const data = await res.json();
       if (!data.user) return;
-      $('#accountArea').innerHTML = `<span class="point-pill">${data.user.pointBalance.toLocaleString('ko-KR')}P</span><a href="/mypage.html">마이페이지</a>`;
+      $('#accountArea').innerHTML = '<a href="/mypage.html">마이페이지</a>';
       const logoutBtn = $('#menu-logout');
       logoutBtn.classList.remove('hidden');
       logoutBtn.addEventListener('click', async () => { await fetch('/api/auth/logout', { method: 'POST' }); location.href = '/'; });

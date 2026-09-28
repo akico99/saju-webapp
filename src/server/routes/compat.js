@@ -14,6 +14,7 @@ const { renderCompatHtml } = require('../../pdf/renderCompatHtml');
 const { renderPdf } = require('../../pdf/renderPdf');
 const { safeName } = require('../../pdf/personName');
 const points = require('../../db/points');
+const { refundPurchase } = require('../refundPurchase');
 const orders = require('../../db/orders');
 const { requireAuth } = require('../middleware/auth');
 const { HttpError, handle } = require('../httpError');
@@ -76,7 +77,7 @@ async function startCompat(userId, body) {
     if (e.code === 'insufficient_points') {
       throw new HttpError(402, { error: e.message, code: e.code, required: e.required, balance: e.balance });
     }
-    throw new HttpError(500, { error: '결제 처리 중 오류가 발생했습니다. 포인트는 차감되지 않았습니다.' });
+    throw new HttpError(500, { error: '주문을 만드는 중 오류가 발생했습니다.' });
   }
 
   let jobDir;
@@ -85,8 +86,8 @@ async function startCompat(userId, body) {
     fs.mkdirSync(jobDir, { recursive: true });
   } catch (e) {
     orders.markError(jobId, e.message || String(e));
-    points.refund(userId, price, '생성 준비 실패 환불: compat', jobId);
-    throw new HttpError(500, { error: '생성 준비 중 오류가 발생했습니다. 포인트는 환불되었습니다.' });
+    refundPurchase(userId, price, '생성 준비 실패 환불: compat', jobId);
+    throw new HttpError(500, { error: '생성 준비 중 오류가 발생했습니다.' });
   }
 
   const payload = ({ jobId, compatSummary: { score: compat.score } });
@@ -103,7 +104,7 @@ async function startCompat(userId, body) {
     })
     .catch((e) => {
       orders.markError(jobId, e.message);
-      points.refund(userId, price, '생성 실패 환불: compat', jobId);
+      refundPurchase(userId, price, '생성 실패 환불: compat', jobId);
     });
   return payload;
 }

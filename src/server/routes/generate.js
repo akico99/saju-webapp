@@ -11,6 +11,7 @@ const { renderHtml } = require('../../pdf/renderHtml');
 const { renderPdf } = require('../../pdf/renderPdf');
 const { renderCardHtml, renderCardImage } = require('../../pdf/renderCard');
 const points = require('../../db/points');
+const { refundPurchase } = require('../refundPurchase');
 const orders = require('../../db/orders');
 const { requireAuth } = require('../middleware/auth');
 const { HttpError, handle } = require('../httpError');
@@ -73,7 +74,7 @@ async function startFull(userId, body) {
     if (e.code === 'insufficient_points') {
       throw new HttpError(402, { error: e.message, code: e.code, required: e.required, balance: e.balance });
     }
-    throw new HttpError(500, { error: '결제 처리 중 오류가 발생했습니다. 포인트는 차감되지 않았습니다.' });
+    throw new HttpError(500, { error: '주문을 만드는 중 오류가 발생했습니다.' });
   }
 
   // 포인트는 이미 차감됐다(위) — 이 블록(파일시스템 작업)은 DB 트랜잭션 밖이라, 여기서
@@ -85,8 +86,8 @@ async function startFull(userId, body) {
     fs.writeFileSync(path.join(jobDir, 'engine.json'), JSON.stringify(engineResult, null, 2));
   } catch (e) {
     orders.markError(jobId, e.message || String(e));
-    points.refund(userId, price, '생성 준비 실패 환불: full', jobId);
-    throw new HttpError(500, { error: '생성 준비 중 오류가 발생했습니다. 포인트는 환불되었습니다.' });
+    refundPurchase(userId, price, '생성 준비 실패 환불: full', jobId);
+    throw new HttpError(500, { error: '생성 준비 중 오류가 발생했습니다.' });
   }
 
   const payload = ({
@@ -140,7 +141,7 @@ async function startFull(userId, body) {
     })
     .catch((e) => {
       orders.markError(jobId, e.message);
-      points.refund(userId, price, '생성 실패 환불: full', jobId);
+      refundPurchase(userId, price, '생성 실패 환불: full', jobId);
     });
   return payload;
 }

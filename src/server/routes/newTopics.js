@@ -11,6 +11,7 @@ const { analyzeCompatibility, classifyPair, PILLAR_KO } = require('../../engine/
 const { computeCareerTimeline, balanceScoreOf } = require('../../engine/timing');
 const { STEM_KO, BRANCH_KO } = require('../../engine/constants');
 const points = require('../../db/points');
+const { refundPurchase } = require('../refundPurchase');
 const orders = require('../../db/orders');
 const { requireAuth } = require('../middleware/auth');
 
@@ -101,7 +102,7 @@ router.post('/career-timing', requireAuth, (req, res) => {
     if (e.code === 'insufficient_points') {
       return res.status(402).json({ error: e.message, code: e.code, required: e.required, balance: e.balance });
     }
-    return res.status(500).json({ error: '결제 처리 중 오류가 발생했습니다. 포인트는 차감되지 않았습니다.' });
+    return res.status(500).json({ error: '주문을 만드는 중 오류가 발생했습니다.' });
   }
 
   try {
@@ -114,8 +115,8 @@ router.post('/career-timing', requireAuth, (req, res) => {
     res.json({ ilgan: engineResult.ilgan, timeline, best });
   } catch (e) {
     orders.markError(jobId, e.message || String(e));
-    points.refund(req.session.userId, points.PRICES.career_timing, '생성 실패 환불: career_timing', jobId);
-    res.status(500).json({ error: '계산 중 오류가 발생했습니다. 포인트는 환불되었습니다.' });
+    refundPurchase(req.session.userId, points.PRICES.career_timing, '생성 실패 환불: career_timing', jobId);
+    res.status(500).json({ error: '계산 중 오류가 발생했습니다. 결제는 자동으로 취소돼요.' });
   }
 });
 
@@ -144,7 +145,7 @@ router.post('/reunion-check', requireAuth, (req, res) => {
     if (e.code === 'insufficient_points') {
       return res.status(402).json({ error: e.message, code: e.code, required: e.required, balance: e.balance });
     }
-    return res.status(500).json({ error: '결제 처리 중 오류가 발생했습니다. 포인트는 차감되지 않았습니다.' });
+    return res.status(500).json({ error: '주문을 만드는 중 오류가 발생했습니다.' });
   }
 
   try {
@@ -210,8 +211,8 @@ router.post('/reunion-check', requireAuth, (req, res) => {
     res.json({ compat, thisYearSignal, yearSignals, bestYearSignal, notablePillarMatches, plain });
   } catch (e) {
     orders.markError(jobId, e.message || String(e));
-    points.refund(req.session.userId, points.PRICES.reunion, '생성 실패 환불: reunion', jobId);
-    res.status(500).json({ error: '계산 중 오류가 발생했습니다. 포인트는 환불되었습니다.' });
+    refundPurchase(req.session.userId, points.PRICES.reunion, '생성 실패 환불: reunion', jobId);
+    res.status(500).json({ error: '계산 중 오류가 발생했습니다. 결제는 자동으로 취소돼요.' });
   }
 });
 
@@ -250,7 +251,7 @@ router.post('/birth-timing', requireAuth, (req, res) => {
     if (e.code === 'insufficient_points') {
       return res.status(402).json({ error: e.message, code: e.code, required: e.required, balance: e.balance });
     }
-    return res.status(500).json({ error: '결제 처리 중 오류가 발생했습니다. 포인트는 차감되지 않았습니다.' });
+    return res.status(500).json({ error: '주문을 만드는 중 오류가 발생했습니다.' });
   }
 
   try {
@@ -293,8 +294,8 @@ router.post('/birth-timing', requireAuth, (req, res) => {
     res.json({ candidates: candidates.slice(0, 8) });
   } catch (e) {
     orders.markError(jobId, e.message || String(e));
-    points.refund(req.session.userId, points.PRICES.birth_timing, '생성 실패 환불: birth_timing', jobId);
-    res.status(500).json({ error: '계산 중 오류가 발생했습니다. 포인트는 환불되었습니다.' });
+    refundPurchase(req.session.userId, points.PRICES.birth_timing, '생성 실패 환불: birth_timing', jobId);
+    res.status(500).json({ error: '계산 중 오류가 발생했습니다. 결제는 자동으로 취소돼요.' });
   }
 });
 

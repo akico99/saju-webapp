@@ -8,7 +8,7 @@ test('external provider credit errors become customer-safe copy', () => {
   const raw = '400 {"type":"error","error":{"message":"Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to purchase credits."},"request_id":"req_secret"}';
   const message = publicJobError(raw, 'quick');
   assert.match(message, /일시적으로 중단/);
-  assert.match(message, /자동 환불/);
+  assert.match(message, /결제는 자동으로 취소/);
   assert.doesNotMatch(message, /Anthropic|credit|Billing|req_secret|400/);
 });
 

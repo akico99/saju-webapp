@@ -1,5 +1,7 @@
 'use strict';
-/* 포인트 충전 신청 + 관리자 수동 승인 + 상품 구매 차감. 1포인트 = 1원(고정, v1). */
+/* 상품 가격표 + 내부 결제 원장(1포인트 = 1원).
+   사이트에서 잔액을 사고팔지 않는다. 카드 결제 1건이 승인되면 그 금액이 원장에 들어왔다가(cardPayments)
+   곧바로 상품 차감으로 나가서 잔액은 늘 0이다. 예전의 무통장 충전 신청·관리자 수동 지급은 없앴다. */
 const db = require('./index');
 const { adjustPointBalance, findById } = require('./users');
 const orders = require('./orders');
@@ -31,31 +33,10 @@ Object.assign(PRICES, LEGACY_PRICES);
 const SELLABLE = new Set(Object.keys(PRICES).filter((k) => !(k in LEGACY_PRICES)));
 
 const stmts = {
-  insertRequest: db.prepare(`
-    INSERT INTO point_requests (user_id, amount_krw, points, depositor_name, status)
-    VALUES (@userId, @amountKrw, @points, @depositorName, 'pending')
-  `),
-  findRequest: db.prepare('SELECT * FROM point_requests WHERE id = ?'),
-  listByUser: db.prepare('SELECT * FROM point_requests WHERE user_id = ? ORDER BY id DESC'),
-  listPending: db.prepare(`
-    SELECT pr.*, u.email, u.name FROM point_requests pr
-    JOIN users u ON u.id = pr.user_id
-    WHERE pr.status = 'pending' ORDER BY pr.id ASC
-  `),
-  listAll: db.prepare(`
-    SELECT pr.*, u.email, u.name FROM point_requests pr
-    JOIN users u ON u.id = pr.user_id
-    ORDER BY pr.id DESC LIMIT 200
-  `),
-  resolveRequest: db.prepare(`
-    UPDATE point_requests SET status=@status, admin_note=@adminNote, resolved_at=datetime('now')
-    WHERE id=@id
-  `),
   insertTx: db.prepare(`
     INSERT INTO point_transactions (user_id, delta, reason, ref_type, ref_id)
     VALUES (@userId, @delta, @reason, @refType, @refId)
   `),
-  listTxByUser: db.prepare('SELECT * FROM point_transactions WHERE user_id = ? ORDER BY id DESC'),
   findRefundByRefId: db.prepare(
     "SELECT id FROM point_transactions WHERE ref_type='refund' AND ref_id=? LIMIT 1"
   )
@@ -71,7 +52,8 @@ function chargeForProduct(userId, productKey, refId) {
 
   const user = findById(userId);
   if (!user || user.point_balance < price) {
-    const err = new Error('포인트가 부족합니다.');
+    // 잔액은 늘 0이므로 카드 결제 없이 부른 경우는 모두 여기로 온다 — 402를 받은 화면이 결제창을 연다.
+    const err = new Error('결제가 필요합니다.');
     err.code = 'insufficient_points';
     err.required = price;
     err.balance = user ? user.point_balance : 0;
@@ -99,8 +81,8 @@ function chargeForProductAndCreateOrder(userId, productKey, { label, jobId }) {
   return price;
 }
 
-/** 생성 실패 시 차감했던 포인트를 되돌린다. refId를 넘기면(예: jobId) 거래 내역에서
-    어떤 작업 때문에 환불됐는지 추적할 수 있다 — 서버 재시작 복구 로직이 사용한다. */
+/** 카드 결제가 아닌 주문의 생성 실패 환불 — 차감했던 금액을 원장에 되돌린다. 직접 부르지 말고
+    server/refundPurchase.js를 거친다(카드 결제면 거기서 카드 취소로 처리한다). */
 function refund(userId, amount, reason, refId) {
   // refId(jobId)가 있으면 멱등하게 처리한다 — 같은 작업에 대해 두 번 호출돼도(예: 재시작
   // 복구와 실패 콜백이 겹치는 극단적인 경우) 두 번째 호출은 조용히 무시한다.
@@ -113,67 +95,13 @@ function refund(userId, amount, reason, refId) {
   tx();
 }
 
-/** 관리자가 회원관리 화면에서 포인트를 수동으로 더하거나 뺀다(보너스 지급, 오류 정정 등). */
-function adminAdjust(userId, delta, reason) {
-  if (!Number.isInteger(delta) || delta === 0) throw new Error('조정 값이 올바르지 않습니다.');
-  const user = findById(userId);
-  if (!user) throw new Error('회원을 찾을 수 없습니다.');
-  if (delta < 0 && user.point_balance + delta < 0) throw new Error('보유 포인트보다 많이 차감할 수 없습니다.');
-
-  const tx = db.transaction(() => {
-    stmts.insertTx.run({ userId, delta, reason: reason || '관리자 수동 조정', refType: 'admin_adjust', refId: null });
-    adjustPointBalance(userId, delta);
-  });
-  tx();
-  return findById(userId).point_balance;
-}
-
-function createRequest({ userId, amountKrw, depositorName }) {
-  const points = amountKrw; // 1P = 1원
-  const info = stmts.insertRequest.run({ userId, amountKrw, points, depositorName: depositorName || null });
-  return stmts.findRequest.get(info.lastInsertRowid);
-}
-
-function listMyRequests(userId) {
-  return stmts.listByUser.all(userId);
-}
-
-function listPendingRequests() {
-  return stmts.listPending.all();
-}
-
-function listAllRequests() {
-  return stmts.listAll.all();
-}
-
-function approveRequest(id, adminNote) {
-  const reqRow = stmts.findRequest.get(id);
-  if (!reqRow) throw new Error('요청을 찾을 수 없습니다.');
-  if (reqRow.status !== 'pending') throw new Error('이미 처리된 요청입니다.');
-
-  const tx = db.transaction(() => {
-    stmts.resolveRequest.run({ id, status: 'approved', adminNote: adminNote || null });
-    stmts.insertTx.run({ userId: reqRow.user_id, delta: reqRow.points, reason: '포인트 충전 승인', refType: 'point_request', refId: id });
-    adjustPointBalance(reqRow.user_id, reqRow.points);
-  });
-  tx();
-  return stmts.findRequest.get(id);
-}
-
-function rejectRequest(id, adminNote) {
-  const reqRow = stmts.findRequest.get(id);
-  if (!reqRow) throw new Error('요청을 찾을 수 없습니다.');
-  if (reqRow.status !== 'pending') throw new Error('이미 처리된 요청입니다.');
-  stmts.resolveRequest.run({ id, status: 'rejected', adminNote: adminNote || null });
-  return stmts.findRequest.get(id);
-}
-
-function listMyTransactions(userId) {
-  return stmts.listTxByUser.all(userId);
+/** 카드 결제 주문의 환불을 원장에 기록만 한다(잔액 변동 0 — 돈은 카드 취소로 돌아간다).
+    같은 jobId로 나중에 refund()가 또 불려도 이 기록 때문에 잔액이 늘지 않는다. */
+function recordCardRefund(userId, reason, refId) {
+  if (refId && stmts.findRefundByRefId.get(refId)) return;
+  stmts.insertTx.run({ userId, delta: 0, reason: `카드 결제 취소: ${reason}`.slice(0, 200), refType: 'refund', refId: refId || null });
 }
 
 module.exports = {
-  PRICES, LEGACY_PRICES, SELLABLE, chargeForProduct, chargeForProductAndCreateOrder, refund, adminAdjust,
-  createRequest, listMyRequests, listPendingRequests, listAllRequests,
-  approveRequest, rejectRequest, listMyTransactions
+  PRICES, LEGACY_PRICES, SELLABLE, chargeForProduct, chargeForProductAndCreateOrder, refund, recordCardRefund
 };

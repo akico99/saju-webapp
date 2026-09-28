@@ -382,10 +382,7 @@
 
       if (!data.user) return; // 로그아웃 상태 — 기본 마크업(로그인 버튼) 그대로 둠
 
-      accountArea.innerHTML = `
-        <span class="point-pill">${data.user.pointBalance.toLocaleString('ko-KR')}P</span>
-        <a href="/mypage.html">마이페이지</a>
-      `;
+      accountArea.innerHTML = '<a href="/mypage.html">마이페이지</a>';
       const menuTodayFortune = document.getElementById('menuTodayFortune');
       if (menuTodayFortune) menuTodayFortune.href = '/today-fortune.html';
       document.getElementById('menuLogoutSection').classList.remove('hidden');

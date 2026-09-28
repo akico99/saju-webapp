@@ -7,8 +7,9 @@ const fs = require('fs');
 const Database = require('better-sqlite3');
 
 const DATA_DIR = path.join(__dirname, '..', '..', 'data');
-fs.mkdirSync(DATA_DIR, { recursive: true });
-const DB_PATH = path.join(DATA_DIR, 'app.db');
+// 테스트는 SAJU_DB_PATH로 임시 파일을 쓴다. 운영은 늘 data/app.db.
+const DB_PATH = process.env.SAJU_DB_PATH || path.join(DATA_DIR, 'app.db');
+fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
 
 const db = new Database(DB_PATH);
 db.pragma('journal_mode = WAL');
@@ -214,5 +215,21 @@ const cpColumns = db.prepare('PRAGMA table_info(card_payments)').all().map((c) =
 if (!cpColumns.includes('product_key')) db.exec('ALTER TABLE card_payments ADD COLUMN product_key TEXT');
 if (!cpColumns.includes('form_json')) db.exec('ALTER TABLE card_payments ADD COLUMN form_json TEXT');
 if (!cpColumns.includes('job_id')) db.exec('ALTER TABLE card_payments ADD COLUMN job_id TEXT');
+
+/* 2026-09-28 잔액 회수 — 사이트는 더 이상 잔액을 보관하지 않는다(약관 제6조). 예전 무통장입금·테스트로
+   남은 잔액을 한 번만 0으로 돌리고 원장에 기록한다. user_version으로 한 번만 실행한다. */
+if (db.pragma('user_version', { simple: true }) < 1) {
+  db.transaction(() => {
+    const rows = db.prepare('SELECT id, point_balance FROM users WHERE point_balance <> 0').all();
+    const insertTx = db.prepare(`
+      INSERT INTO point_transactions (user_id, delta, reason, ref_type, ref_id)
+      VALUES (?, ?, '서비스 정리: 잔액 회수(잔액 보관 중단)', 'admin_adjust', NULL)
+    `);
+    rows.forEach((r) => insertTx.run(r.id, -r.point_balance));
+    db.prepare('UPDATE users SET point_balance = 0 WHERE point_balance <> 0').run();
+    if (rows.length) console.log(`[DB] 잔액 회수: ${rows.length}명의 잔액을 0으로 정리했습니다.`);
+    db.pragma('user_version = 1');
+  })();
+}
 
 module.exports = db;

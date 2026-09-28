@@ -7,6 +7,7 @@
    'error'로 종료한다. */
 const orders = require('../db/orders');
 const points = require('../db/points');
+const { refundPurchase } = require('../server/refundPurchase');
 
 function recoverPendingOrders() {
   const pending = orders.listAllPending();
@@ -25,7 +26,7 @@ function recoverPendingOrders() {
       orders.markError(order.job_id, '서버 재시작으로 인해 완료되지 못함(상품 정보 불명, 수동 환불 필요)');
       continue;
     }
-    points.refund(order.user_id, price, `서버 재시작으로 중단된 작업 자동 환불: ${order.product_key}`, order.job_id);
+    refundPurchase(order.user_id, price, `서버 재시작으로 중단된 작업 자동 환불: ${order.product_key}`, order.job_id);
     orders.markError(order.job_id, '서버 재시작으로 인해 완료되지 못해 자동 환불 처리됨');
     refunded++;
   }

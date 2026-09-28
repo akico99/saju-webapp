@@ -30,6 +30,7 @@ const { renderDateSelectHtml } = require('../../pdf/renderDateSelectHtml');
 const { renderPdf } = require('../../pdf/renderPdf');
 const orders = require('../../db/orders');
 const points = require('../../db/points');
+const { refundPurchase } = require('../refundPurchase');
 const { requireAuth } = require('../middleware/auth');
 const { HttpError, handle } = require('../httpError');
 
@@ -256,7 +257,7 @@ function computePersonBasics(body, prefix) {
 async function finishReport({ jobId, userId, occasion, name, title, eyebrow, metaLine, bestLabel, bestValue, text, usage }) {
   if (!text) {
     orders.markError(jobId, 'LLM 리포트 생성 실패(빈 응답)');
-    points.refund(userId, points.PRICES[occasion.productKey], `생성 실패 환불: ${occasion.productKey}`, jobId);
+    refundPurchase(userId, points.PRICES[occasion.productKey], `생성 실패 환불: ${occasion.productKey}`, jobId);
     return;
   }
 
@@ -270,7 +271,7 @@ async function finishReport({ jobId, userId, occasion, name, title, eyebrow, met
     orders.markDone(jobId, { resultPath: pdfPath, llmCostUsd: costUsd(usage), resultText: text });
   } catch (e) {
     orders.markError(jobId, e.message || String(e));
-    points.refund(userId, points.PRICES[occasion.productKey], `생성 실패 환불: ${occasion.productKey}`, jobId);
+    refundPurchase(userId, points.PRICES[occasion.productKey], `생성 실패 환불: ${occasion.productKey}`, jobId);
   }
 }
 
@@ -364,7 +365,7 @@ async function runMonthSearch(userId, body, occasionKey, occasion) {
     if (e.code === 'insufficient_points') {
       throw new HttpError(402, { error: e.message, code: e.code, required: e.required, balance: e.balance });
     }
-    throw new HttpError(500, { error: '결제 처리 중 오류가 발생했습니다. 포인트는 차감되지 않았습니다.' });
+    throw new HttpError(500, { error: '주문을 만드는 중 오류가 발생했습니다.' });
   }
 
   const ctx = { occasionKey, yongshinMain, personDayStem, personDayBranch };
@@ -421,7 +422,7 @@ async function runMonthSearch(userId, body, occasionKey, occasion) {
       });
     } catch (e) {
       orders.markError(jobId, e.message || String(e));
-      points.refund(userId, points.PRICES[occasion.productKey], `생성 실패 환불: ${occasion.productKey}`, jobId);
+      refundPurchase(userId, points.PRICES[occasion.productKey], `생성 실패 환불: ${occasion.productKey}`, jobId);
     }
   })();
   return payload;
@@ -457,7 +458,7 @@ async function runWeddingSearch(userId, body, occasionKey, occasion) {
     if (e.code === 'insufficient_points') {
       throw new HttpError(402, { error: e.message, code: e.code, required: e.required, balance: e.balance });
     }
-    throw new HttpError(500, { error: '결제 처리 중 오류가 발생했습니다. 포인트는 차감되지 않았습니다.' });
+    throw new HttpError(500, { error: '주문을 만드는 중 오류가 발생했습니다.' });
   }
 
   const ctxA = { occasionKey, yongshinMain: basicsA.yongshinMain, personDayStem: basicsA.personDayStem, personDayBranch: basicsA.personDayBranch };
@@ -541,7 +542,7 @@ async function runWeddingSearch(userId, body, occasionKey, occasion) {
       });
     } catch (e) {
       orders.markError(jobId, e.message || String(e));
-      points.refund(userId, points.PRICES[occasion.productKey], `생성 실패 환불: ${occasion.productKey}`, jobId);
+      refundPurchase(userId, points.PRICES[occasion.productKey], `생성 실패 환불: ${occasion.productKey}`, jobId);
     }
   })();
   return payload;
@@ -592,7 +593,7 @@ async function runBirthSearch(userId, body, occasionKey, occasion) {
     if (e.code === 'insufficient_points') {
       throw new HttpError(402, { error: e.message, code: e.code, required: e.required, balance: e.balance });
     }
-    throw new HttpError(500, { error: '결제 처리 중 오류가 발생했습니다. 포인트는 차감되지 않았습니다.' });
+    throw new HttpError(500, { error: '주문을 만드는 중 오류가 발생했습니다.' });
   }
 
   const base = new Date(Date.UTC(by, bm - 1, bd));
@@ -662,7 +663,7 @@ async function runBirthSearch(userId, body, occasionKey, occasion) {
       });
     } catch (e) {
       orders.markError(jobId, e.message || String(e));
-      points.refund(userId, points.PRICES[occasion.productKey], `생성 실패 환불: ${occasion.productKey}`, jobId);
+      refundPurchase(userId, points.PRICES[occasion.productKey], `생성 실패 환불: ${occasion.productKey}`, jobId);
     }
   })();
   return payload;

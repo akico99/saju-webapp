@@ -36,7 +36,7 @@
   <div class="stat-row">
     <div class="stat-box"><div class="num" id="statTotal">-</div><div class="lbl">전체 회원 수</div></div>
     <div class="stat-box"><div class="num" id="statToday">-</div><div class="lbl">오늘 가입</div></div>
-    <div class="stat-box"><div class="num" id="statRevenue">-</div><div class="lbl">누적 승인된 충전 금액</div></div>
+    <div class="stat-box"><div class="num" id="statRevenue">-</div><div class="lbl">누적 카드 결제 금액</div></div>
   </div>
 
   <div class="search-row">
@@ -45,7 +45,7 @@
   </div>
 
   <table>
-    <thead><tr><th>회원</th><th>가입일</th><th>포인트</th><th>가입경로</th><th>상태</th><th>관리</th></tr></thead>
+    <thead><tr><th>회원</th><th>가입일</th><th>가입경로</th><th>상태</th><th>관리</th></tr></thead>
     <tbody id="tbody"></tbody>
   </table>
   <div class="empty hidden" id="empty" style="text-align:center;padding:30px;color:var(--muted);">검색 결과가 없습니다.</div>
@@ -82,11 +82,9 @@
     tr.innerHTML = `
       <td>${u.name || '-'}<br><span style="color:var(--muted);font-size:11px;">${u.email}</span></td>
       <td>${u.createdAt.slice(0, 10)}</td>
-      <td>${u.pointBalance.toLocaleString('ko-KR')}P</td>
       <td>${PROVIDER_LABEL[u.provider] || u.provider}</td>
       <td><span class="status-badge ${u.status}">${u.status === 'suspended' ? '정지됨' : '활성'}</span></td>
       <td class="row-actions">
-        <button type="button" class="approve-btn" data-action="points" data-id="${u.id}">포인트 조정</button>
         <button type="button" class="${u.status === 'suspended' ? 'approve-btn' : 'reject-btn'}" data-action="toggle-status" data-id="${u.id}" data-current="${u.status}">
           ${u.status === 'suspended' ? '정지 해제' : '정지'}
         </button>
@@ -127,22 +125,6 @@
     const btn = e.target.closest('button[data-action]');
     if (!btn) return;
     const id = btn.dataset.id;
-
-    if (btn.dataset.action === 'points') {
-      const deltaStr = prompt('조정할 포인트를 입력하세요 (지급은 양수, 차감은 음수. 예: 5000 또는 -1000)');
-      if (deltaStr === null || deltaStr.trim() === '') return;
-      const delta = Number(deltaStr);
-      if (!Number.isInteger(delta) || delta === 0) { alert('올바른 정수를 입력해주세요.'); return; }
-      const reason = prompt('조정 사유를 입력하세요 (회원에게는 보이지 않고 내부 기록용입니다)') || '관리자 수동 조정';
-      const res = await fetch(`/api/admin/users/${id}/points`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ delta, reason })
-      });
-      const data = await res.json();
-      if (!res.ok) { alert(data.error || '조정 실패'); return; }
-      loadUsers();
-      return;
-    }
 
     if (btn.dataset.action === 'toggle-status') {
       const next = btn.dataset.current === 'suspended' ? 'active' : 'suspended';

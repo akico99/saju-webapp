@@ -27,6 +27,7 @@ const { renderDateSelectHtml } = require('../../pdf/renderDateSelectHtml');
 const { renderPdf } = require('../../pdf/renderPdf');
 const orders = require('../../db/orders');
 const points = require('../../db/points');
+const { refundPurchase } = require('../refundPurchase');
 const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
@@ -250,7 +251,7 @@ function currentDaewoon(engine) {
 async function finishReport({ jobId, userId, productKey, name, label, title, eyebrow, metaLine, bestLabel, bestValue, text, usage }) {
   if (!text) {
     orders.markError(jobId, 'LLM 리포트 생성 실패(빈 응답)');
-    points.refund(userId, points.PRICES[productKey], `생성 실패 환불: ${productKey}`, jobId);
+    refundPurchase(userId, points.PRICES[productKey], `생성 실패 환불: ${productKey}`, jobId);
     return;
   }
 
@@ -264,7 +265,7 @@ async function finishReport({ jobId, userId, productKey, name, label, title, eye
     orders.markDone(jobId, { resultPath: pdfPath, llmCostUsd: costUsd(usage), resultText: text });
   } catch (e) {
     orders.markError(jobId, e.message || String(e));
-    points.refund(userId, points.PRICES[productKey], `생성 실패 환불: ${productKey}`, jobId);
+    refundPurchase(userId, points.PRICES[productKey], `생성 실패 환불: ${productKey}`, jobId);
   }
 }
 
@@ -315,7 +316,7 @@ async function runCompat(req, res, topic) {
     points.chargeForProductAndCreateOrder(req.session.userId, topic.productKey, { label: orderLabel, jobId });
   } catch (e) {
     if (e.code === 'insufficient_points') return res.status(402).json({ error: e.message, code: e.code, required: e.required, balance: e.balance });
-    return res.status(500).json({ error: '결제 처리 중 오류가 발생했습니다. 포인트는 차감되지 않았습니다.' });
+    return res.status(500).json({ error: '주문을 만드는 중 오류가 발생했습니다.' });
   }
 
   const yongshinKo = OHAENG_KO[basics.yongshinMain] || basics.yongshinMain;
@@ -375,7 +376,7 @@ async function runCompat(req, res, topic) {
       });
     } catch (e) {
       orders.markError(jobId, e.message || String(e));
-      points.refund(req.session.userId, points.PRICES[topic.productKey], `생성 실패 환불: ${topic.productKey}`, jobId);
+      refundPurchase(req.session.userId, points.PRICES[topic.productKey], `생성 실패 환불: ${topic.productKey}`, jobId);
     }
   })();
 }
@@ -401,7 +402,7 @@ async function runWealth(req, res, topic) {
     points.chargeForProductAndCreateOrder(req.session.userId, topic.productKey, { label: orderLabel, jobId });
   } catch (e) {
     if (e.code === 'insufficient_points') return res.status(402).json({ error: e.message, code: e.code, required: e.required, balance: e.balance });
-    return res.status(500).json({ error: '결제 처리 중 오류가 발생했습니다. 포인트는 차감되지 않았습니다.' });
+    return res.status(500).json({ error: '주문을 만드는 중 오류가 발생했습니다.' });
   }
 
   const jeongjae = basics.engine.counts.shipsinDetail['정재'] || 0;
@@ -442,7 +443,7 @@ async function runWealth(req, res, topic) {
       });
     } catch (e) {
       orders.markError(jobId, e.message || String(e));
-      points.refund(req.session.userId, points.PRICES[topic.productKey], `생성 실패 환불: ${topic.productKey}`, jobId);
+      refundPurchase(req.session.userId, points.PRICES[topic.productKey], `생성 실패 환불: ${topic.productKey}`, jobId);
     }
   })();
 }
@@ -467,7 +468,7 @@ async function runHealth(req, res, topic) {
     points.chargeForProductAndCreateOrder(req.session.userId, topic.productKey, { label: orderLabel, jobId });
   } catch (e) {
     if (e.code === 'insufficient_points') return res.status(402).json({ error: e.message, code: e.code, required: e.required, balance: e.balance });
-    return res.status(500).json({ error: '결제 처리 중 오류가 발생했습니다. 포인트는 차감되지 않았습니다.' });
+    return res.status(500).json({ error: '주문을 만드는 중 오류가 발생했습니다.' });
   }
 
   const grades = basics.engine.counts.ohaengGrade;
@@ -507,7 +508,7 @@ async function runHealth(req, res, topic) {
       });
     } catch (e) {
       orders.markError(jobId, e.message || String(e));
-      points.refund(req.session.userId, points.PRICES[topic.productKey], `생성 실패 환불: ${topic.productKey}`, jobId);
+      refundPurchase(req.session.userId, points.PRICES[topic.productKey], `생성 실패 환불: ${topic.productKey}`, jobId);
     }
   })();
 }
