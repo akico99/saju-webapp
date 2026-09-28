@@ -29,8 +29,7 @@
   .pay-btn:disabled { background: #d9d5cc; color: #8b857b; cursor: default; }
   .terms-line { margin: 12px 2px 0; font-size: 11.5px; line-height: 1.7; color: var(--muted); }
   .terms-line a { color: inherit; }
-  .order-agree { margin: 14px 0 0; }
-  .order-agree ul { margin: 8px 0 0 27px; padding: 0; font-size: 12px; line-height: 1.7; color: var(--muted); word-break: keep-all; }
+  #payConsent { margin: 14px 0 0; }
 </style>
 </head>
 <body class="reading-page">
@@ -51,15 +50,9 @@
     <div class="card" style="margin-top:16px;">
       <div id="payment-method"></div>
       <div id="agreement"></div>
-      <!-- 주문 동의 — 체크 해제 상태로 시작한다. 체크해야 결제 버튼이 켜지고, 서버에 동의 기록이 남은 뒤 결제창이 열린다. -->
-      <div class="consent-block order-agree">
-        <label><input type="checkbox" id="agreeOrder"> <span>[필수] 주문 내용을 확인했으며 결제에 동의합니다</span></label>
-        <ul>
-          <li>상품과 금액: <span id="agreeSummary">-</span></li>
-          <li>결제 즉시 생성이 시작되는 디지털 콘텐츠라, 생성이 시작된 뒤에는 단순 변심으로 인한 취소가 제한돼요.</li>
-          <li>생성에 실패하면 결제는 자동으로 전액 취소돼요.</li>
-        </ul>
-      </div>
+      <!-- 결제 동의 — 체크 해제 상태로 시작한다. 아직 약관에 동의하지 않은 회원은 이용약관·개인정보·만 14세 동의도
+           여기서 함께 받는다. 모두 체크해야 결제 버튼이 켜지고, 서버에 동의 기록이 남은 뒤 결제창이 열린다. -->
+      <div id="payConsent"></div>
       <button type="button" class="pay-btn" id="payBtn" disabled>결제 준비 중...</button>
     <p class="terms-line">결제 승인 즉시 이 리포트의 생성이 시작되어 최대 10분 내 제공됩니다(정기결제 없음). 생성이 시작된 뒤에는 단순 변심으로 인한 취소가 제한되고, 생성에 실패하면 결제가 자동으로 취소됩니다. 자세한 내용은 <a href="/terms.html">이용약관 제7조</a>를 따릅니다.</p>
     </div>
@@ -68,6 +61,7 @@
 </div>
 
 <script src="https://js.tosspayments.com/v2/standard"></script>
+<script src="/consent-block.js"></script>
 <script>
   async function init() {
     const errorBox = document.getElementById('errorBox');
@@ -87,8 +81,31 @@
       const cfg = await fetch('/api/pay/config').then((r) => r.json());
       document.getElementById('orderName').textContent = order.orderName;
       document.getElementById('orderAmount').textContent = order.amountKrw.toLocaleString('ko-KR') + '원';
-      document.getElementById('agreeSummary').textContent = order.orderName + ' · ' + order.amountKrw.toLocaleString('ko-KR') + '원';
       if (cfg.testMode) document.getElementById('testBadge').classList.remove('hidden');
+
+      // 동의 칸은 주문 정보를 읽자마자 그린다 — 결제위젯이 늦게 떠도 먼저 읽고 체크할 수 있게.
+      // 결제 버튼은 위젯 준비와 필수 동의가 둘 다 끝나야 켜진다.
+      const payLabel = order.amountKrw.toLocaleString('ko-KR') + '원 결제하기';
+      const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+      let consentOk = false;
+      let widgetReady = false;
+      const syncPayBtn = () => {
+        payBtn.disabled = !(consentOk && widgetReady);
+        payBtn.textContent = !consentOk ? '필수 항목에 동의해 주세요' : widgetReady ? payLabel : '결제 준비 중...';
+      };
+      const consent = ConsentBlock.mount(document.getElementById('payConsent'), (ok) => { consentOk = ok; syncPayBtn(); }, {
+        signup: !!me.needsConsent,
+        extra: [{
+          name: 'agreeOrder',
+          label: '[필수] 주문 내용을 확인했으며 결제에 동의합니다',
+          detailHtml: `<ul>
+            <li>상품과 금액: ${esc(order.orderName)} · ${order.amountKrw.toLocaleString('ko-KR')}원</li>
+            <li>결제 즉시 생성이 시작되는 디지털 콘텐츠라, 생성이 시작된 뒤에는 단순 변심으로 인한 취소가 제한돼요.</li>
+            <li>생성에 실패하면 결제는 자동으로 전액 취소돼요.</li>
+          </ul>`
+        }]
+      });
+      syncPayBtn();
 
       const tossPayments = TossPayments(cfg.clientKey);
       // customerKey는 회원 식별용 — 이메일을 그대로 쓰지 않고 서버 id 기반 문자열을 쓴다.
@@ -98,24 +115,18 @@
         widgets.renderPaymentMethods({ selector: '#payment-method', variantKey: 'DEFAULT' }),
         widgets.renderAgreement({ selector: '#agreement', variantKey: 'AGREEMENT' })
       ]);
-
-      const agreeOrder = document.getElementById('agreeOrder');
-      const payLabel = order.amountKrw.toLocaleString('ko-KR') + '원 결제하기';
-      const syncPayBtn = () => {
-        payBtn.disabled = !agreeOrder.checked;
-        payBtn.textContent = agreeOrder.checked ? payLabel : '주문 동의에 체크해 주세요';
-      };
-      agreeOrder.addEventListener('change', syncPayBtn);
+      widgetReady = true;
       syncPayBtn();
+
       payBtn.addEventListener('click', async () => {
-        if (!agreeOrder.checked) return;
+        if (!consent.isValid()) return;
         payBtn.disabled = true;
         payBtn.textContent = '결제창 여는 중...';
         errorBox.classList.add('hidden');
         try {
           const agreed = await fetch('/api/pay/agree', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ orderId: order.orderId, agreeOrder: true })
+            body: JSON.stringify(Object.assign({ orderId: order.orderId }, consent.values()))
           });
           if (!agreed.ok) throw new Error((await agreed.json().catch(() => ({}))).error || '동의 기록에 실패했어요.');
           await widgets.requestPayment({

@@ -531,6 +531,8 @@ input[type="text"], input[type="email"], input[type="password"], input[type="num
 .consent-block .consent-all { padding-bottom: 10px; margin-bottom: 6px; border-bottom: 1px solid var(--line); font-weight: 700; }
 .consent-block .consent-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; padding: 6px 0; }
 .consent-block .consent-row a { flex-shrink: 0; font-size: 12px; color: var(--muted); }
+.consent-block .consent-detail { margin: -2px 0 4px 27px; font-size: 12px; line-height: 1.7; color: var(--muted); word-break: keep-all; }
+.consent-block .consent-detail ul { margin: 0; padding-left: 16px; }
 /* 동의 전에는 다음 버튼이 꺼져 있다는 게 눈에 보여야 한다(공용 버튼 스타일은 disabled를 흐리게 하지 않는다). */
 .consent-block ~ button:disabled { background: #d9d5cc !important; color: #8b857b !important; box-shadow: none !important; cursor: not-allowed; }
 .checkbox-field label { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted); font-weight: 400; }

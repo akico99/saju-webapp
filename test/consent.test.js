@@ -74,29 +74,43 @@ test('signup with all consents records them and needs no further consent', async
   assert.equal(consents.hasSignupConsent(res.data.user.id), true);
 });
 
-test('an account without consent is asked for it and cannot create an order until it agrees', async () => {
+test('an account without consent agrees to everything on the payment page in one step', async () => {
   const call = client();
   seq += 1;
   const email = `legacy${seq}@example.com`;
   const bcrypt = require('bcryptjs');
-  users.createUser({ email, passwordHash: await bcrypt.hash('password123', 4) });
+  const user = users.createUser({ email, passwordHash: await bcrypt.hash('password123', 4) });
 
   const login = await call('POST', '/api/auth/login', { email, password: 'password123' });
   assert.equal(login.data.needsConsent, true);
 
-  const blocked = await call('POST', '/api/pay/prepare', { product: 'compat', form: {} });
-  assert.equal(blocked.status, 403);
-  assert.equal(blocked.data.code, 'consent_required');
-
-  const half = await call('POST', '/api/auth/consent', { agreeTerms: true });
-  assert.equal(half.status, 400);
-  const agreed = await call('POST', '/api/auth/consent', ALL_AGREED);
-  assert.equal(agreed.status, 200);
-  assert.equal((await call('GET', '/api/auth/me')).data.needsConsent, false);
-
+  // 주문은 동의 전에도 만들 수 있다 — 동의는 결제 화면에서 받는다.
   const order = await call('POST', '/api/pay/prepare', { product: 'compat', form: {} });
   assert.equal(order.status, 200);
-  assert.ok(order.data.orderId);
+
+  // 주문 동의만으로는 부족하다(가입 동의가 없는 회원).
+  const orderOnly = await call('POST', '/api/pay/agree', { orderId: order.data.orderId, agreeOrder: true });
+  assert.equal(orderOnly.status, 400);
+  assert.equal(consents.hasOrderConsent(user.id, order.data.orderId), false);
+
+  const all = await call('POST', '/api/pay/agree', { orderId: order.data.orderId, agreeOrder: true, ...ALL_AGREED });
+  assert.equal(all.status, 200);
+  assert.equal(consents.hasSignupConsent(user.id), true);
+  assert.equal(consents.hasOrderConsent(user.id, order.data.orderId), true);
+  assert.equal((await call('GET', '/api/auth/me')).data.needsConsent, false);
+});
+
+test('the consent page still records signup consent for social first logins', async () => {
+  const call = client();
+  seq += 1;
+  const email = `social${seq}@example.com`;
+  const bcrypt = require('bcryptjs');
+  users.createUser({ email, passwordHash: await bcrypt.hash('password123', 4) });
+  await call('POST', '/api/auth/login', { email, password: 'password123' });
+
+  assert.equal((await call('POST', '/api/auth/consent', { agreeTerms: true })).status, 400);
+  assert.equal((await call('POST', '/api/auth/consent', ALL_AGREED)).status, 200);
+  assert.equal((await call('GET', '/api/auth/me')).data.needsConsent, false);
 });
 
 test('a payment without the order consent is not confirmed', async () => {

@@ -29,10 +29,6 @@ router.get('/pay/config', requireAuth, (req, res) => {
 // 결제창을 열기 전에 주문을 만든다 — 상품과 폼 입력을 보관하고 가격은 서버(points.PRICES)가 정한다.
 router.post('/pay/prepare', requireAuth, (req, res) => {
   const { product, form } = req.body || {};
-  // 현재 약관에 동의하지 않은 회원은 주문을 만들 수 없다 — 화면(pay-flow.js)이 동의 페이지로 보낸다.
-  if (!consents.hasSignupConsent(req.session.userId)) {
-    return res.status(403).json({ error: '결제 전에 이용약관과 개인정보 수집·이용에 동의해 주세요.', code: 'consent_required' });
-  }
   const resolved = resolveProduct(product, form);
   if (!resolved) return res.status(400).json({ error: '알 수 없는 상품입니다.' });
   const user = users.findById(req.session.userId);
@@ -46,13 +42,18 @@ router.post('/pay/prepare', requireAuth, (req, res) => {
   });
 });
 
-// 결제창을 열기 직전 — 이용자가 주문서의 동의 체크박스를 직접 체크했다는 기록을 남긴다.
+// 결제창을 열기 직전 — 이용자가 결제 화면에서 직접 체크한 동의를 기록한다. 아직 현재 약관에 동의하지 않은
+// 회원은 같은 화면에서 이용약관·개인정보·만 14세 동의도 함께 받는다(동의 페이지를 따로 거치지 않는다).
 router.post('/pay/agree', requireAuth, (req, res) => {
   const { orderId, agreeOrder } = req.body || {};
   const row = orderId ? cardPayments.findByOrderId(orderId) : null;
   if (!row || row.user_id !== req.session.userId) return res.status(404).json({ error: '주문을 찾을 수 없습니다.' });
-  if (agreeOrder !== true) return res.status(400).json({ error: '주문 내용 확인 및 결제에 동의해 주세요.', code: 'consent_required' });
   if (row.status !== 'ready') return res.status(409).json({ error: '이미 처리된 주문입니다.', code: row.status });
+  const needsSignup = !consents.hasSignupConsent(req.session.userId);
+  if (agreeOrder !== true || (needsSignup && !consents.signupAgreed(req.body))) {
+    return res.status(400).json({ error: '필수 항목에 모두 동의해 주세요.', code: 'consent_required' });
+  }
+  if (needsSignup) consents.recordSignupConsents(req.session.userId, req);
   consents.recordOrderConsent(req.session.userId, orderId, req);
   res.json({ ok: true });
 });
@@ -67,8 +68,8 @@ router.post('/pay/confirm', requireAuth, async (req, res) => {
   // 새로고침 등으로 두 번 와도 두 번 시작하지 않는다.
   if (row.status === 'paid') return res.json({ payment: summarize(row), jobId: row.job_id, page: pageOf(row), alreadyConfirmed: true });
   if (row.status !== 'ready') return res.status(409).json({ error: '이미 처리된 주문입니다.', code: row.status });
-  // 주문 동의 기록이 없는 결제는 승인하지 않는다(토스 승인 전이라 청구되지 않는다).
-  if (!consents.hasOrderConsent(row.user_id, orderId)) {
+  // 가입 동의·주문 동의 기록이 없는 결제는 승인하지 않는다(토스 승인 전이라 청구되지 않는다).
+  if (!consents.hasSignupConsent(row.user_id) || !consents.hasOrderConsent(row.user_id, orderId)) {
     cardPayments.markFailed(row, '주문 동의 기록 없음');
     return res.status(400).json({ error: '주문 내용 확인 및 결제 동의가 확인되지 않아 결제를 진행하지 않았어요. 다시 시도해 주세요.', code: 'consent_required' });
   }
