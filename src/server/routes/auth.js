@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs');
 const users = require('../../db/users');
 const passwordResets = require('../../db/passwordResets');
 const emailVerifications = require('../../db/emailVerifications');
+const consents = require('../../db/consents');
 const { sendEmail } = require('../../email/resend');
 const { passwordResetEmail, verifyEmailEmail } = require('../../email/templates');
 const { requireAuth } = require('../middleware/auth');
@@ -13,6 +14,16 @@ const { userLoginLimiter, signupLimiter, forgotPasswordLimiter } = require('../m
 const router = express.Router();
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:4500';
+
+/** 소셜 로그인 뒤 갈 곳 — 현재 약관에 동의하지 않았으면(처음 가입했거나 약관이 바뀐 경우) 동의 페이지가 먼저다. */
+function afterSocialLogin(user) {
+  const next = user.birth_year ? '/' : '/mypage.html';
+  return consents.hasSignupConsent(user.id) ? next : '/consent.html?next=' + encodeURIComponent(next);
+}
+
+function withConsent(row) {
+  return { user: users.toPublicUser(row), needsConsent: !consents.hasSignupConsent(row.id) };
+}
 
 function parseBirth(body) {
   const year = Number(body.year), month = Number(body.month), day = Number(body.day);
@@ -52,16 +63,20 @@ router.post('/auth/signup', signupLimiter, async (req, res) => {
     if (users.findByEmail(email)) {
       return res.status(409).json({ error: '이미 가입된 이메일입니다.' });
     }
+    if (!consents.signupAgreed(req.body)) {
+      return res.status(400).json({ error: '이용약관, 개인정보 수집·이용, 만 14세 이상 확인에 모두 동의해야 가입할 수 있어요.', code: 'consent_required' });
+    }
     const birth = parseBirth(req.body);
     const passwordHash = await bcrypt.hash(password, 10);
     const row = users.createUser({ email, passwordHash, name: (name || '').slice(0, 30), ...birth });
+    consents.recordSignupConsents(row.id, req);
 
     // 세션 고정(session fixation) 방지 — 비로그인 상태에서 만들어져 있던 세션 ID를 그대로
     // 승격시키지 않고 새 세션으로 갈아탄다.
     req.session.regenerate((err) => {
       if (err) return res.status(500).json({ error: '가입 처리 중 오류가 발생했습니다.' });
       req.session.userId = row.id;
-      res.json({ user: users.toPublicUser(row) });
+      res.json(withConsent(row));
 
       // 가입 자체는 인증 메일 발송 성공 여부와 무관하게 완료시킨다 — 응답은 이미 보냈으니
       // 이 아래는 실패해도 사용자 경험에 영향 없이 로그로만 남는다.
@@ -87,8 +102,17 @@ router.post('/auth/login', userLoginLimiter, async (req, res) => {
   req.session.regenerate((err) => {
     if (err) return res.status(500).json({ error: '로그인 처리 중 오류가 발생했습니다.' });
     req.session.userId = row.id;
-    res.json({ user: users.toPublicUser(row) });
+    res.json(withConsent(row));
   });
+});
+
+// 가입 동의를 아직 하지 않은 로그인 회원(소셜 첫 가입, 약관 변경 후)이 consent.html에서 동의한다.
+router.post('/auth/consent', requireAuth, (req, res) => {
+  if (!consents.signupAgreed(req.body)) {
+    return res.status(400).json({ error: '필수 항목에 모두 동의해 주세요.', code: 'consent_required' });
+  }
+  if (!consents.hasSignupConsent(req.session.userId)) consents.recordSignupConsents(req.session.userId, req);
+  res.json({ ok: true, version: consents.CONSENT_VERSION });
 });
 
 router.post('/auth/logout', (req, res) => {
@@ -98,7 +122,8 @@ router.post('/auth/logout', (req, res) => {
 router.get('/auth/me', (req, res) => {
   if (!req.session || !req.session.userId) return res.json({ user: null });
   const row = users.findById(req.session.userId);
-  res.json({ user: users.toPublicUser(row) });
+  if (!row) return res.json({ user: null });
+  res.json(withConsent(row));
 });
 
 /* ---------- 비밀번호 재설정 ---------- */
@@ -240,7 +265,7 @@ router.get('/auth/naver/callback', async (req, res) => {
     req.session.regenerate((err) => {
       if (err) return res.redirect('/login.html?error=' + encodeURIComponent('로그인 처리 중 오류가 발생했어요.'));
       req.session.userId = user.id;
-      res.redirect(user.birth_year ? '/' : '/mypage.html');
+      res.redirect(afterSocialLogin(user));
     });
     return;
   } catch (e) {
@@ -316,7 +341,7 @@ router.get('/auth/google/callback', async (req, res) => {
     req.session.regenerate((err) => {
       if (err) return res.redirect('/login.html?error=' + encodeURIComponent('로그인 처리 중 오류가 발생했어요.'));
       req.session.userId = user.id;
-      res.redirect(user.birth_year ? '/' : '/mypage.html');
+      res.redirect(afterSocialLogin(user));
     });
     return;
   } catch (e) {
@@ -392,7 +417,7 @@ router.get('/auth/kakao/callback', async (req, res) => {
     req.session.regenerate((err) => {
       if (err) return res.redirect('/login.html?error=' + encodeURIComponent('로그인 처리 중 오류가 발생했어요.'));
       req.session.userId = user.id;
-      res.redirect(user.birth_year ? '/' : '/mypage.html');
+      res.redirect(afterSocialLogin(user));
     });
     return;
   } catch (e) {

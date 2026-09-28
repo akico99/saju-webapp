@@ -14,6 +14,11 @@
       body: JSON.stringify({ product, form })
     });
     const data = await res.json();
+    // 현재 약관에 동의하지 않은 회원 — 동의를 받고 이 상품 페이지로 돌아온다.
+    if (res.status === 403 && data.code === 'consent_required') {
+      location.href = '/consent.html?next=' + encodeURIComponent(location.pathname + location.search);
+      return new Promise(() => {});
+    }
     if (!res.ok) throw new Error(data.error || '결제 준비에 실패했어요.');
     location.href = '/pay.html?orderId=' + encodeURIComponent(data.orderId);
     return new Promise(() => {}); // 페이지가 떠나므로 돌아오지 않는다

@@ -90,7 +90,8 @@
       });
       const data = await res.json();
       if (!res.ok) { errorBox.textContent = data.error || '로그인 실패'; errorBox.classList.remove('hidden'); return; }
-      location.href = redirect;
+      // 현재 약관에 동의하지 않은 계정은 동의부터 받고 원래 가려던 곳으로 보낸다.
+      location.href = data.needsConsent ? '/consent.html?next=' + encodeURIComponent(redirect) : redirect;
     } catch (err) {
       errorBox.textContent = '요청 실패: ' + err.message;
       errorBox.classList.remove('hidden');

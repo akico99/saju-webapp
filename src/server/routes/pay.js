@@ -12,6 +12,7 @@
 const express = require('express');
 const users = require('../../db/users');
 const cardPayments = require('../../db/cardPayments');
+const consents = require('../../db/consents');
 const { resolveProduct } = require('../products');
 const { HttpError } = require('../httpError');
 const { requireAuth } = require('../middleware/auth');
@@ -28,6 +29,10 @@ router.get('/pay/config', requireAuth, (req, res) => {
 // 결제창을 열기 전에 주문을 만든다 — 상품과 폼 입력을 보관하고 가격은 서버(points.PRICES)가 정한다.
 router.post('/pay/prepare', requireAuth, (req, res) => {
   const { product, form } = req.body || {};
+  // 현재 약관에 동의하지 않은 회원은 주문을 만들 수 없다 — 화면(pay-flow.js)이 동의 페이지로 보낸다.
+  if (!consents.hasSignupConsent(req.session.userId)) {
+    return res.status(403).json({ error: '결제 전에 이용약관과 개인정보 수집·이용에 동의해 주세요.', code: 'consent_required' });
+  }
   const resolved = resolveProduct(product, form);
   if (!resolved) return res.status(400).json({ error: '알 수 없는 상품입니다.' });
   const user = users.findById(req.session.userId);
@@ -41,6 +46,17 @@ router.post('/pay/prepare', requireAuth, (req, res) => {
   });
 });
 
+// 결제창을 열기 직전 — 이용자가 주문서의 동의 체크박스를 직접 체크했다는 기록을 남긴다.
+router.post('/pay/agree', requireAuth, (req, res) => {
+  const { orderId, agreeOrder } = req.body || {};
+  const row = orderId ? cardPayments.findByOrderId(orderId) : null;
+  if (!row || row.user_id !== req.session.userId) return res.status(404).json({ error: '주문을 찾을 수 없습니다.' });
+  if (agreeOrder !== true) return res.status(400).json({ error: '주문 내용 확인 및 결제에 동의해 주세요.', code: 'consent_required' });
+  if (row.status !== 'ready') return res.status(409).json({ error: '이미 처리된 주문입니다.', code: row.status });
+  consents.recordOrderConsent(req.session.userId, orderId, req);
+  res.json({ ok: true });
+});
+
 // successUrl에서 돌아온 뒤 — 승인하고, 바로 상품을 시작한다.
 router.post('/pay/confirm', requireAuth, async (req, res) => {
   const { paymentKey, orderId, amount } = req.body;
@@ -51,6 +67,11 @@ router.post('/pay/confirm', requireAuth, async (req, res) => {
   // 새로고침 등으로 두 번 와도 두 번 시작하지 않는다.
   if (row.status === 'paid') return res.json({ payment: summarize(row), jobId: row.job_id, page: pageOf(row), alreadyConfirmed: true });
   if (row.status !== 'ready') return res.status(409).json({ error: '이미 처리된 주문입니다.', code: row.status });
+  // 주문 동의 기록이 없는 결제는 승인하지 않는다(토스 승인 전이라 청구되지 않는다).
+  if (!consents.hasOrderConsent(row.user_id, orderId)) {
+    cardPayments.markFailed(row, '주문 동의 기록 없음');
+    return res.status(400).json({ error: '주문 내용 확인 및 결제 동의가 확인되지 않아 결제를 진행하지 않았어요. 다시 시도해 주세요.', code: 'consent_required' });
+  }
   if (Number(amount) !== row.amount_krw) {
     cardPayments.markFailed(row, `금액 불일치: 요청 ${amount}, 주문 ${row.amount_krw}`);
     return res.status(400).json({ error: '결제 금액이 주문 금액과 다릅니다. 결제가 승인되지 않았습니다.' });

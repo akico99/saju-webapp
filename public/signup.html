@@ -128,15 +128,19 @@
         <div class="checkbox-row"><input type="checkbox" name="noLonCorrection" id="noLonCorrection"><label for="noLonCorrection">경도 보정 끄기 (해외 출생 시 권장)</label></div>
       </div>
 
-      <button type="submit">가입하고 시작하기</button>
+      <div id="consentBlock"></div>
+      <button type="submit" id="signupSubmit" disabled>가입하고 시작하기</button>
     </form>
     <p class="switch-link">이미 계정이 있으신가요? <a href="/login.html" id="switchToLogin">로그인</a></p>
   </main>
 </div>
 
+<script src="/consent-block.js"></script>
 <script>
   const form = document.getElementById('signupForm');
   const errorBox = document.getElementById('errorBox');
+  const signupSubmit = document.getElementById('signupSubmit');
+  const consent = ConsentBlock.mount(document.getElementById('consentBlock'), (ok) => { signupSubmit.disabled = !ok; });
   const params = new URLSearchParams(location.search);
   const redirect = params.get('redirect') || '/mypage.html';
   const switchToLogin = document.getElementById('switchToLogin');
@@ -145,6 +149,11 @@
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     errorBox.classList.add('hidden');
+    if (!consent.isValid()) {
+      errorBox.textContent = '필수 약관에 모두 동의해 주세요.';
+      errorBox.classList.remove('hidden');
+      return;
+    }
     const fd = new FormData(form);
     if (fd.get('password') !== fd.get('passwordConfirm')) {
       errorBox.textContent = '비밀번호가 서로 달라요. 다시 확인해주세요.';
@@ -153,6 +162,8 @@
     }
     const body = Object.fromEntries(fd.entries());
     delete body.passwordConfirm;
+    delete body.agreeTerms; delete body.agreePrivacy; delete body.agreeAge;
+    Object.assign(body, consent.values());
     body.isLeap = fd.get('isLeap') === 'on';
     body.hourUnknown = fd.get('hourUnknown') === 'on';
     body.noLonCorrection = fd.get('noLonCorrection') === 'on';
