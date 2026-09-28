@@ -33,7 +33,7 @@ const stmts = {
   findByProvider: db.prepare('SELECT * FROM users WHERE provider = ? AND provider_id = ?'),
   insertSocial: db.prepare(`
     INSERT INTO users (email, password_hash, name, provider, provider_id, email_verified)
-    VALUES (@email, @passwordHash, @name, @provider, @providerId, 1)
+    VALUES (@email, @passwordHash, @name, @provider, @providerId, @emailVerified)
   `),
   adjustBalance: db.prepare('UPDATE users SET point_balance = point_balance + ? WHERE id = ?'),
   updateBirth: db.prepare(`
@@ -65,12 +65,13 @@ function findByProvider(provider, providerId) {
   return stmts.findByProvider.get(provider, String(providerId));
 }
 
-function createSocialUser({ email, name, provider, providerId }) {
+/** emailVerified: 제공사가 확인해 준 실제 이메일일 때만 true. 가짜 주소(…@social.sajusudal.local)는 false. */
+function createSocialUser({ email, name, provider, providerId, emailVerified = false }) {
   /* 소셜 계정은 비밀번호가 없다 — 아무도 모르는 무작위 값을 bcrypt 해시로 저장해
      password_hash NOT NULL 제약을 만족시키되, 이메일/비밀번호 로그인으로는 절대 맞을 수 없게 한다. */
   const passwordHash = bcrypt.hashSync(crypto.randomBytes(32).toString('hex'), 10);
   const info = stmts.insertSocial.run({
-    email, passwordHash, name: name || null, provider, providerId: String(providerId)
+    email, passwordHash, name: name || null, provider, providerId: String(providerId), emailVerified: emailVerified ? 1 : 0
   });
   return stmts.findById.get(info.lastInsertRowid);
 }

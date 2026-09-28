@@ -232,4 +232,13 @@ if (db.pragma('user_version', { simple: true }) < 1) {
   })();
 }
 
+/* 2026-09-28 간편 로그인 인증 상태 바로잡기 — 이메일을 받지 못해 가짜 주소(…@social.sajusudal.local)로
+   만든 계정까지 인증 완료로 저장돼 있었다. 메일을 받을 수 없는 주소이므로 인증 전으로 돌린다. */
+if (db.pragma('user_version', { simple: true }) < 2) {
+  db.transaction(() => {
+    db.prepare("UPDATE users SET email_verified = 0 WHERE email LIKE '%@social.sajusudal.local'").run();
+    db.pragma('user_version = 2');
+  })();
+}
+
 module.exports = db;

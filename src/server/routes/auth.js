@@ -6,6 +6,7 @@ const users = require('../../db/users');
 const passwordResets = require('../../db/passwordResets');
 const emailVerifications = require('../../db/emailVerifications');
 const consents = require('../../db/consents');
+const { resolveSocialUser } = require('../socialAccounts');
 const { sendEmail } = require('../../email/resend');
 const { passwordResetEmail, verifyEmailEmail } = require('../../email/templates');
 const { requireAuth } = require('../middleware/auth');
@@ -245,18 +246,12 @@ router.get('/auth/naver/callback', async (req, res) => {
     }
 
     const naverProfile = profileData.response;
-    // provider_id로 못 찾으면 이메일로 기존 계정에 병합(이메일/비번 가입자가 네이버로도 로그인하는 경우 대비).
-    let user = users.findByProvider('naver', naverProfile.id);
-    if (!user) {
-      const email = naverProfile.email || `naver_${naverProfile.id}@social.sajusudal.local`;
-      user = users.findByEmail(email);
-      if (!user) {
-        user = users.createSocialUser({
-          email, name: naverProfile.name || naverProfile.nickname,
-          provider: 'naver', providerId: naverProfile.id
-        });
-      }
-    }
+    // 네이버가 넘겨주는 이메일은 네이버가 인증한 주소다(제공 동의를 받은 경우에만 온다).
+    const user = resolveSocialUser({
+      provider: 'naver', providerId: naverProfile.id,
+      email: naverProfile.email, emailVerified: !!naverProfile.email,
+      name: naverProfile.name || naverProfile.nickname
+    });
 
     if (user.status === 'suspended') {
       return res.redirect('/login.html?error=' + encodeURIComponent('이용이 제한된 계정입니다. 문의: sooky2001@gmail.com'));
@@ -321,18 +316,12 @@ router.get('/auth/google/callback', async (req, res) => {
     const googleProfile = await profileRes.json();
     if (!googleProfile.id) throw new Error('프로필 조회 실패');
 
-    // provider_id로 못 찾으면 이메일로 기존 계정에 병합(이메일/비번 가입자가 구글로도 로그인하는 경우 대비).
-    let user = users.findByProvider('google', googleProfile.id);
-    if (!user) {
-      const email = googleProfile.email || `google_${googleProfile.id}@social.sajusudal.local`;
-      user = users.findByEmail(email);
-      if (!user) {
-        user = users.createSocialUser({
-          email, name: googleProfile.name,
-          provider: 'google', providerId: googleProfile.id
-        });
-      }
-    }
+    const user = resolveSocialUser({
+      provider: 'google', providerId: googleProfile.id,
+      email: googleProfile.email,
+      emailVerified: googleProfile.verified_email === true || googleProfile.email_verified === true,
+      name: googleProfile.name
+    });
 
     if (user.status === 'suspended') {
       return res.redirect('/login.html?error=' + encodeURIComponent('이용이 제한된 계정입니다. 문의: sooky2001@gmail.com'));
@@ -397,18 +386,13 @@ router.get('/auth/kakao/callback', async (req, res) => {
     if (!kakaoProfile.id) throw new Error('프로필 조회 실패');
 
     const account = kakaoProfile.kakao_account || {};
-    // provider_id로 못 찾으면 이메일로 기존 계정에 병합(이메일/비번 가입자가 카카오로도 로그인하는 경우 대비).
-    let user = users.findByProvider('kakao', kakaoProfile.id);
-    if (!user) {
-      const email = account.email || `kakao_${kakaoProfile.id}@social.sajusudal.local`;
-      user = users.findByEmail(email);
-      if (!user) {
-        user = users.createSocialUser({
-          email, name: account.profile ? account.profile.nickname : null,
-          provider: 'kakao', providerId: kakaoProfile.id
-        });
-      }
-    }
+    // 카카오는 이메일이 유효하고(is_email_valid) 인증된(is_email_verified) 경우만 확인된 것으로 본다.
+    const user = resolveSocialUser({
+      provider: 'kakao', providerId: kakaoProfile.id,
+      email: account.email,
+      emailVerified: account.is_email_valid === true && account.is_email_verified === true,
+      name: account.profile ? account.profile.nickname : null
+    });
 
     if (user.status === 'suspended') {
       return res.redirect('/login.html?error=' + encodeURIComponent('이용이 제한된 계정입니다. 문의: sooky2001@gmail.com'));
