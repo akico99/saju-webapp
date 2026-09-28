@@ -1,8 +1,12 @@
+# scripts/buildSeo.js가 만든다. 직접 고치지 말고 스크립트를 고친 뒤 다시 실행한다.
 User-agent: *
 Allow: /
 Disallow: /api/
 Disallow: /admin
-Disallow: /pay
+Disallow: /pay.html
+Disallow: /pay-success.html
+Disallow: /pay-fail.html
+Disallow: /consent.html
 Disallow: /mypage.html
 Disallow: /profiles.html
 Disallow: /login.html

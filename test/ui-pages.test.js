@@ -35,6 +35,7 @@ for (const name of pages) {
     assert.match(html, /<body class="(?:reading-page(?: life-graph-page| paid-flow)?|otter-stage)(?: editorial-result-page)?">/);
     assert.match(html, /<link rel="stylesheet" href="\/reading-ui\.css">/);
     for (const match of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)) {
+      if (match[0].startsWith('<script type="application/ld+json">')) continue; // 데이터 블록 — 아래 JSON-LD 테스트가 본다
       new vm.Script(match[1], { filename: `${name}.html` });
     }
   });
@@ -178,7 +179,7 @@ test('llms lists the field guide as a free service', () => {
 });
 
 // 공유 링크 미리보기 — 카카오톡·검색에 제목과 그림이 뜨려면 og:* 가 있어야 하고, og:image는
-// 절대 URL이어야 크롤러가 받아간다. scripts/injectOG.js 가 만드는 결과를 고정한다.
+// 절대 URL이어야 크롤러가 받아간다. scripts/buildSeo.js 가 만드는 결과를 고정한다.
 test('shared pages expose share preview metadata with an absolute image', () => {
   const shared = ['index', 'services', 'free', 'life-graph', 'today-preview', 'today-fortune',
     'quick', 'compat', 'date-select', 'lifetime-report', 'consult', 'webtoon/lifetime', 'field-guide'];
@@ -216,5 +217,50 @@ test('sitemap lists only real public pages whose canonical matches', () => {
     const html = fs.readFileSync(file, 'utf8');
     assert.ok(html.includes('<link rel="canonical" href="' + loc + '">'), loc + ': canonical mismatch');
     assert.doesNotMatch(html, /name="robots" content="[^"]*noindex/, loc + ': noindex page in sitemap');
+  }
+});
+
+// 구조화 데이터 — JSON-LD가 깨지면 구글이 통째로 버린다. 모든 블록이 파싱되고 @context가 있으며,
+// 유료 상품의 가격이 원화 숫자로 들어가 있어야 한다.
+test('JSON-LD blocks parse and describe real offers', () => {
+  const { PAGES } = require('../scripts/buildSeo');
+  for (const page of PAGES.filter((p) => p.keywords || p.service)) {
+    const html = fs.readFileSync(path.join(publicDir, page.file), 'utf8');
+    const blocks = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)];
+    assert.equal(blocks.length, 1, page.file + ': expected exactly one JSON-LD block');
+    const data = JSON.parse(blocks[0][1]);
+    assert.equal(data['@context'], 'https://schema.org', page.file + ': missing @context');
+    const types = data['@graph'].map((n) => n['@type']);
+    assert.ok(types.includes('Organization') && types.includes('WebSite'), page.file + ': site entities missing');
+    if (page.service) {
+      const service = data['@graph'].find((n) => n['@type'] === 'Service');
+      const offers = service.offers ? [service.offers] : service.hasOfferCatalog.itemListElement;
+      for (const o of offers) {
+        assert.equal(o.priceCurrency, 'KRW');
+        assert.equal(o.price, String(page.service.price), page.file + ': price mismatch');
+      }
+    }
+  }
+});
+
+// 핵심 키워드 — 제목 앞쪽, 화면에 보이는 H1이나 첫 문단, JSON-LD에 한 번씩 들어가 있어야 한다.
+test('priority keywords sit in title, visible intro and JSON-LD', () => {
+  const cases = [
+    ['field-guide.html', '2026년 신년운세'],
+    ['compat.html', '사주 궁합'],
+    ['quick.html', '이직운'],
+    ['index.html', '2026년 신년운세'],
+    ['index.html', '사주 궁합']
+  ];
+  for (const [file, keyword] of cases) {
+    const html = fs.readFileSync(path.join(publicDir, file), 'utf8');
+    const title = html.match(/<title>([^<]*)<\/title>/)[1];
+    assert.ok(title.includes(keyword), `${file}: title lacks ${keyword}`);
+    const body = html.slice(html.indexOf('<body'));
+    const intro = body.match(/<h1[\s\S]*?<\/h1>[\s\S]{0,400}/)[0].replace(/<[^>]+>/g, '');
+    const kicker = body.slice(0, body.indexOf('</h1>')).replace(/<[^>]+>/g, '');
+    assert.ok(intro.includes(keyword) || kicker.includes(keyword), `${file}: visible intro lacks ${keyword}`);
+    const ld = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)[1];
+    assert.ok(ld.includes(keyword), `${file}: JSON-LD lacks ${keyword}`);
   }
 });
