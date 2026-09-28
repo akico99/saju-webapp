@@ -8,7 +8,8 @@
 
    키는 .env의 TOSS_CLIENT_KEY / TOSS_SECRET_KEY. 시크릿이 live_로 시작하지 않으면 테스트 모드 —
    결제창·승인은 실제와 같지만 청구가 없다. 테스트 모드에서도 상품은 실제로 생성한다(심사자가 결제 후
-   제공까지 봐야 하므로). 남용을 막기 위해 계정당 테스트 결제는 TEST_LIMIT_PER_USER건까지만 상품을 시작한다. */
+   제공까지 봐야 하므로). 테스트 결제도 실제 리포트를 만들어 비용이 드니, 계정당 24시간에 TEST_LIMIT_PER_USER건까지만
+   상품을 시작한다(결제 기록은 지우지 않고, 하루가 지나면 다시 쓸 수 있다). 건수는 TEST_LIMIT_PER_DAY 환경변수로 바꿀 수 있다. */
 const express = require('express');
 const users = require('../../db/users');
 const cardPayments = require('../../db/cardPayments');
@@ -20,7 +21,7 @@ const { CLIENT_KEY, SECRET_KEY, TEST_MODE, confirmPayment, cancelPayment } = req
 
 const router = express.Router();
 
-const TEST_LIMIT_PER_USER = 3;
+const TEST_LIMIT_PER_USER = Number(process.env.TEST_LIMIT_PER_DAY) || 3;
 
 router.get('/pay/config', requireAuth, (req, res) => {
   res.json({ clientKey: CLIENT_KEY, testMode: TEST_MODE });
@@ -80,7 +81,7 @@ router.post('/pay/confirm', requireAuth, async (req, res) => {
   if (!SECRET_KEY) return res.status(503).json({ error: '결제 서버 설정이 아직 완료되지 않았습니다(TOSS_SECRET_KEY 없음).' });
   if (row.test_mode && cardPayments.countPaidTest(row.user_id) >= TEST_LIMIT_PER_USER) {
     cardPayments.markFailed(row, '테스트 결제 한도 초과');
-    return res.status(429).json({ error: `테스트 모드에서는 계정당 ${TEST_LIMIT_PER_USER}건까지만 결제할 수 있어요.` });
+    return res.status(429).json({ error: `테스트 모드에서는 계정당 24시간에 ${TEST_LIMIT_PER_USER}건까지만 결제할 수 있어요. 내일 다시 시도해 주세요.` });
   }
 
   // 1) 토스 승인

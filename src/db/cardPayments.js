@@ -35,7 +35,12 @@ const stmts = {
     INSERT INTO point_transactions (user_id, delta, reason, ref_type, ref_id)
     VALUES (@userId, @delta, @reason, 'card_payment', @refId)
   `),
-  countPaidTest: db.prepare("SELECT COUNT(*) AS n FROM card_payments WHERE user_id = ? AND status = 'paid' AND test_mode = 1"),
+  // 최근 24시간 안에 승인된 테스트 결제 수. approved_at은 토스가 준 시각(+09:00 포함)이라 julianday로 UTC 비교한다.
+  countPaidTest: db.prepare(`
+    SELECT COUNT(*) AS n FROM card_payments
+    WHERE user_id = ? AND status = 'paid' AND test_mode = 1
+      AND julianday(COALESCE(approved_at, created_at)) >= julianday('now', '-1 day')
+  `),
   listByUser: db.prepare('SELECT * FROM card_payments WHERE user_id = ? ORDER BY id DESC LIMIT 50'),
   listAll: db.prepare(`
     SELECT cp.*, u.email, u.name FROM card_payments cp JOIN users u ON u.id = cp.user_id
