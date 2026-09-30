@@ -357,6 +357,7 @@ main { padding: 20px; }
 .page-intro { padding-bottom: 0; }
 .page-intro h1 { font-size: clamp(21px, 3vw, 26px); font-weight: 800; letter-spacing: -0.01em; line-height: 1.35; margin: 0 0 8px; word-break: keep-all; }
 .page-intro .section-lead { margin: 0; word-break: keep-all; }
+.page-intro .ai-badge { display: inline-block; margin: 0 0 8px; padding: 4px 11px; border-radius: var(--radius-pill); background: var(--surface-2); color: var(--accent); font-size: 12px; font-weight: 800; letter-spacing: -0.01em; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 .section-ttl { font-size: 11.5px; font-weight: 800; color: var(--muted); margin: 22px 0 10px; text-transform: uppercase; letter-spacing: 0.06em; }
 .section-title { font-size: 14px; font-weight: 800; margin: 24px 0 12px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--ink); }
