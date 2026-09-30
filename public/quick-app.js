@@ -25,6 +25,18 @@ function parseReading(report) {
 }
 const clean = (s) => s.replace(/\*\*/g, '');
 const bulletsOf = (section) => section.blocks.flatMap((b) => b.split('\n')).map((l) => clean(l.replace(/^\s*-\s*/, '')).trim()).filter(Boolean);
+const rawBulletsOf = (section) => section.blocks.flatMap((b) => b.split('\n')).map((l) => l.replace(/^\s*-\s*/, '').trim()).filter(Boolean);
+
+/* **강조** 구간을 굵은 형광 강조(<strong class="hl">)로 살려서 그린다. 예전엔 별표를 지우기만 해서
+   AI가 짚어 준 핵심 문장이 화면에서 본문과 똑같이 보였다. innerHTML 없이 텍스트 노드로 만든다. */
+function appendRich(el, s) {
+  String(s || '').split(/\*\*/).forEach((part, i) => {
+    if (!part) return;
+    if (i % 2) { const b = document.createElement('strong'); b.className = 'hl'; b.textContent = part; el.appendChild(b); }
+    else el.appendChild(document.createTextNode(part));
+  });
+  return el;
+}
 
 // 문단·소주제·불릿을 지면에 그린다. "### 소주제"는 섹션 안 소제목(h4)로.
 function renderProse(blocks, into) {
@@ -34,22 +46,24 @@ function renderProse(blocks, into) {
       const h = document.createElement('h4'); h.className = 'fr-sub'; h.textContent = first.replace(/^###\s*/, '');
       into.appendChild(h);
       const body = rest.join('\n').trim();
-      if (body) { const p = document.createElement('p'); p.textContent = clean(body); into.appendChild(p); }
+      if (body) into.appendChild(appendRich(document.createElement('p'), body));
     } else if (/^- /m.test(block)) {
       const ul = document.createElement('ul'); ul.className = 'fr-list';
-      block.split('\n').forEach((line) => { const li = document.createElement('li'); li.textContent = clean(line.replace(/^\s*-\s*/, '')); if (li.textContent) ul.appendChild(li); });
+      block.split('\n').forEach((line) => { const li = appendRich(document.createElement('li'), line.replace(/^\s*-\s*/, '')); if (li.textContent) ul.appendChild(li); });
       into.appendChild(ul);
     } else {
-      const p = document.createElement('p'); p.textContent = clean(block); into.appendChild(p);
+      into.appendChild(appendRich(document.createElement('p'), block));
     }
   }
 }
 
-function showReading(report, topic) {
+function showReading(report, topic, visual) {
   const sections = parseReading(report);
   webReading.classList.toggle('hidden', sections.length === 0);
   readingFallback.classList.toggle('hidden', sections.length !== 0);
   if (!sections.length) return;
+  // 서버가 엔진 숫자만으로 조립한 그래프 조각(src/pdf/deepVisuals.deepWebHtml). 예전 주문은 null.
+  document.getElementById('readingVisual').innerHTML = visual || '';
 
   const label = TOPIC_LABELS[topic] || '심층 리딩';
   const isDos = (t) => /할 것/.test(t) && !/피할/.test(t);
@@ -77,8 +91,8 @@ function showReading(report, topic) {
 
   const dosEl = document.getElementById('readingDos'), dontsEl = document.getElementById('readingDonts');
   dosEl.replaceChildren(); dontsEl.replaceChildren();
-  (dos ? bulletsOf(dos) : []).forEach((t) => { const li = document.createElement('li'); li.textContent = t; dosEl.appendChild(li); });
-  (donts ? bulletsOf(donts) : []).forEach((t) => { const li = document.createElement('li'); li.textContent = t; dontsEl.appendChild(li); });
+  (dos ? rawBulletsOf(dos) : []).forEach((t) => dosEl.appendChild(appendRich(document.createElement('li'), t)));
+  (donts ? rawBulletsOf(donts) : []).forEach((t) => dontsEl.appendChild(appendRich(document.createElement('li'), t)));
   dosEl.parentElement.hidden = !dosEl.children.length;
   dontsEl.parentElement.hidden = !dontsEl.children.length;
   document.getElementById('readingActions').hidden = !(dosEl.children.length || dontsEl.children.length);
@@ -187,7 +201,7 @@ async function poll(jobId, topic) {
       progressBlock.classList.add('hidden');
       downloadBlock.classList.remove('hidden');
       downloadLink.href = `/api/download/${jobId}`;
-      showReading(data.report, topic);
+      showReading(data.report, topic, data.visual);
       renderCrossSell(topic);
       setFormBusy(false);
       result.scrollIntoView({ behavior: 'smooth', block: 'start' });

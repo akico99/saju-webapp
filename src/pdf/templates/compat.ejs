@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <title><%= safeName(personA.name, '본인') %> · <%= safeName(personB.name, '상대방') %> 궁합 리포트</title>
 <style><%- reportCss %></style>
+<style><%- visualCss %>
+  .compat-report .vz-two .vz-panel .ttl { justify-content: center; }
+  .compat-report .vz-intro { margin: 0 0 6mm; color: #5d6776; font-size: 10pt; line-height: 1.7; }
+</style>
 </head>
 <body class="compat-report">
 
@@ -39,6 +43,20 @@
     관계는 두 사람의 선택과 노력으로 얼마든지 바뀝니다.
   </div>
   <div class="imprint">길잡이 여울</div>
+</section>
+
+<section class="compat-section page-break">
+  <h2>두 사람을 겹쳐 보면</h2>
+  <p class="vz-intro">두 명식의 오행 분포와 서로의 용신을 나란히 놓았습니다. 한쪽에 비어 있는 기운을 상대가 가지고 있으면 서로를 채워 주는 관계예요.</p>
+  <%- vz.cards %>
+  <div class="vz-two" style="margin-top:5mm;">
+    <div class="vz-panel"><div class="ttl"><%= safeName(personA.name, '본인') %> 오행</div><%- vz.radarA %></div>
+    <div class="vz-panel"><div class="ttl"><%= safeName(personB.name, '상대방') %> 오행</div><%- vz.radarB %></div>
+  </div>
+  <div class="vz-panel" style="margin-top:5mm;">
+    <div class="ttl">서로의 용신을 얼마나 채워 주는지 <small>용신 = 균형을 잡아 주는 기운</small></div>
+    <%- vz.fill %>
+  </div>
 </section>
 
 <section class="compat-section page-break">

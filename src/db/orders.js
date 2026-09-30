@@ -16,7 +16,7 @@ const stmts = {
   setCardPath: db.prepare('UPDATE orders SET card_path=@cardPath WHERE job_id=@jobId'),
   markDone: db.prepare(`
     UPDATE orders SET status='done', result_path=@resultPath, card_path=@cardPath,
-      llm_cost_usd=@llmCostUsd, result_text=@resultText, finished_at=datetime('now')
+      llm_cost_usd=@llmCostUsd, result_text=@resultText, result_visual=@resultVisual, finished_at=datetime('now')
     WHERE job_id=@jobId
   `),
   markError: db.prepare(`
@@ -63,10 +63,11 @@ function findByJobId(jobId) {
   return stmts.findByJobId.get(jobId);
 }
 
-function markDone(jobId, { resultPath, cardPath, llmCostUsd, resultText }) {
+function markDone(jobId, { resultPath, cardPath, llmCostUsd, resultText, resultVisual }) {
   stmts.markDone.run({
     jobId, resultPath: resultPath || null, cardPath: cardPath || null,
-    llmCostUsd: llmCostUsd != null ? llmCostUsd : null, resultText: resultText || null
+    llmCostUsd: llmCostUsd != null ? llmCostUsd : null, resultText: resultText || null,
+    resultVisual: resultVisual || null
   });
 }
 

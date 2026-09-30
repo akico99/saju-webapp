@@ -5,44 +5,70 @@
 <title><%= title %></title>
 <style><%- reportCss %></style>
 <style>
-  .quick-header { text-align: center; padding-bottom: 10mm; border-bottom: 1px solid var(--line); margin-bottom: 10mm; }
-  .quick-header .eyebrow { font-size: 10pt; letter-spacing: 0.24em; color: var(--gold); margin-bottom: 6mm; }
-  .quick-header h1 { font-family: 'ReportMyeongjo','Batang','바탕',serif; font-size: 22pt; color: var(--star); margin: 0 0 4mm; }
-  .quick-header .meta { font-size: 10pt; color: var(--muted); }
-  .quick-header .meta b { color: var(--gold); }
-  .best-box {
-    border: 1px solid var(--gold-dim); border-radius: 4px; padding: 6mm 8mm;
-    margin: 0 0 10mm; text-align: center;
-  }
-  .best-box .label { font-size: 9pt; letter-spacing: .08em; color: var(--muted); margin-bottom: 2mm; }
-  .best-box .value { font-family: 'ReportMyeongjo','Batang','바탕',serif; font-size: 17pt; color: var(--gold); }
-  .ds-heading {
-    font-family: 'ReportMyeongjo','Batang','바탕',serif; font-size: 13.5pt; color: var(--gold);
-    margin: 9mm 0 1mm; letter-spacing: .02em;
-  }
-  .ds-heading:first-of-type { margin-top: 0; }
+  /* 택일 리포트 — 주제별 심층 리딩과 같은 크림·남색 톤. 예전 다크 테마 1쪽짜리(추천일 한 줄 +
+     문단 3개)에서, 엔진이 계산한 달 전체 점수·시간대·히트맵을 먼저 보여주는 구성으로 바꿨다. */
+  html, body.ds-report { background: #faf8f4; }
+  body.ds-report { color: #29394b; font-size: 11pt; line-height: 1.78; }
+  .ds-report .chapter { padding: 16mm 23mm 16mm; }
+  .ds-report .ds-header { padding: 11mm 12mm 10mm; margin: 0 0 8mm; border-radius: 5mm; background: #24344b; color: #fff; break-inside: avoid; }
+  .ds-report .ds-brand { display: flex; justify-content: space-between; padding-bottom: 7mm; border-bottom: 1px solid rgba(255,255,255,.17); font-size: 8.5pt; font-weight: 700; letter-spacing: .07em; }
+  .ds-report .ds-brand .edition { color: #dfca95; font-weight: 400; }
+  .ds-report .ds-header .eyebrow { margin: 8mm 0 2mm; color: #e4cb92; font-size: 9pt; font-weight: 700; letter-spacing: .12em; }
+  .ds-report .ds-header h1 { margin: 0 0 7mm; color: #fff; font-family: 'ReportMyeongjo','Batang','바탕',serif; font-size: 23pt; font-weight: 700; line-height: 1.32; }
+  .ds-report .ds-header .meta { padding-top: 6mm; border-top: 1px solid rgba(255,255,255,.17); color: #cbd5df; font-size: 9pt; line-height: 1.5; }
+  .ds-report .ds-header .meta b { color: #fff; font-weight: 700; }
+  .ds-report .sec-label { margin: 8mm 0 3mm; color: #6d846f; font-size: 8.5pt; font-weight: 700; letter-spacing: .08em; }
+  .ds-report h2.sec { margin: 0 0 5mm; padding-bottom: 3mm; border-bottom: 1px solid #24344b; color: #24344b; font-family: 'ReportMyeongjo','Batang','바탕',serif; font-size: 16pt; font-weight: 700; }
+  .ds-report .ds-heading { margin: 7mm 0 2.5mm; padding-bottom: 1.5mm; border-bottom: 1px solid #e3e1d9; color: #24344b; font-family: 'ReportMyeongjo','Batang','바탕',serif; font-size: 12.5pt; font-weight: 700; break-after: avoid; }
+  .ds-report .ds-body p { margin: 0 0 5mm; color: #354457; text-align: left; line-height: 1.8; }
+  .ds-report mark { background: linear-gradient(transparent 56%, #f3d78a 56%); color: #14233a; font-weight: 700; padding: 0 .4mm; }
+  .ds-report .gloss { color: #697586; }
+  .ds-report .vz-verdict .h { font-size: 20pt; }
+  .ds-report .vd-sub { color: #2f6a5e; font-size: 10pt; font-weight: 700; }
+  .ds-report .vd-alts { display: flex; flex-wrap: wrap; gap: 2mm; margin-top: 4mm; }
+  .ds-report .vd-alts span { padding: 1.5mm 3mm; border-radius: 2mm; background: #f7f3e8; color: #5d6776; font-size: 8.5pt; }
+  .ds-report .disclaimer { margin-top: 9mm; border-top-color: #e3e1d9; color: #78838e; font-size: 8pt; line-height: 1.6; }
+  .ds-report .imprint { color: #7a663c; font-size: 8.5pt; }
+  .ds-report .best-plain { margin: 0 0 8mm; padding: 6mm 7mm; border: 1.5px solid #c7a13a; border-radius: 4mm; background: #fff; text-align: center; }
+  .ds-report .best-plain .label { color: #8a6a1f; font-size: 9pt; font-weight: 700; }
+  .ds-report .best-plain .value { margin-top: 2mm; color: #1d2c40; font-family: 'ReportMyeongjo','Batang','바탕',serif; font-size: 19pt; font-weight: 700; }
+  <%- visualCss %>
 </style>
 </head>
-<body>
+<body class="ds-report">
 
 <section class="chapter">
-  <div class="quick-header">
+  <div class="ds-header">
+    <div class="ds-brand"><span>사주보는 수달</span><span class="edition">DATE SELECTION</span></div>
     <div class="eyebrow"><%= eyebrow %></div>
     <h1><%= title %></h1>
     <div class="meta"><%- metaLine %></div>
   </div>
 
-  <% if (bestValue) { %>
-  <div class="best-box">
-    <div class="label"><%= bestLabel %></div>
-    <div class="value"><%= bestValue %></div>
-  </div>
+  <% if (parts) { %>
+    <%- verdictHtml(parts.verdict, bestLabel || '가장 좋은 때') %>
+    <%- parts.cards %>
+    <div class="sec-label">01 · 숫자로 보는 선택지</div>
+    <h2 class="sec">왜 이 날인지, 한눈에</h2>
+    <% parts.panels.forEach(function(x){ %>
+    <div class="vz-panel">
+      <div class="ttl"><%= x.title %><% if (x.sub) { %> <small><%= x.sub %></small><% } %></div>
+      <%- x.html %>
+      <% if (x.cap) { %><p class="cap"><%- x.cap %></p><% } %>
+    </div>
+    <% }); %>
+    <div class="sec-label">02 · 풀이</div>
+    <h2 class="sec">추천일을 이렇게 쓰세요</h2>
+  <% } else if (bestValue) { %>
+  <div class="best-plain"><div class="label"><%= bestLabel %></div><div class="value"><%= bestValue %></div></div>
   <% } %>
 
+  <div class="ds-body">
   <% sections.forEach(function(s) { %>
-    <% if (s.heading) { %><p class="ds-heading"><%= s.heading %></p><% } %>
+    <% if (s.heading) { %><h3 class="ds-heading"><%= s.heading %></h3><% } %>
     <p><%- renderMarkup(s.body) %></p>
   <% }) %>
+  </div>
 
   <p class="disclaimer">
     이 리포트는 명리학적 통계 경향에 근거한 참고 자료이며, 의학적·법적·재정적 조언을 대체하지 않습니다.
@@ -53,3 +79,4 @@
 <script>window.__chartsReady = true;</script>
 </body>
 </html>
+

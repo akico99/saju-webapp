@@ -157,6 +157,8 @@
 
 /* ---------- 유료 심층 리딩 웹 본문 ---------- */
 .fr-prose p { margin: 14px 0 0; font-size: 16px; line-height: 1.95; color: #2b3648; white-space: pre-line; overflow-wrap: anywhere; word-break: keep-all; }
+/* AI가 짚은 핵심 문장 — 진한 굵은 글씨 + 글자 아래쪽만 칠하는 형광. 옅은 배경 전체 칠하기는 눈에 안 띄었다. */
+.fortune-result strong, .fortune-result strong.hl { font-weight: 800; color: #14233a; background: linear-gradient(transparent 58%, #f6dc8f 58%); padding: 0 1px; }
 .fr-prose .fr-sub { margin: 28px 0 0; font-family: var(--font-serif); font-size: 18px; line-height: 1.4; letter-spacing: -.03em; color: var(--ink); }
 .fr-prose .fr-sub:first-of-type, .fr-prose .fr-h + .fr-sub { margin-top: 18px; }
 .fr-prose .fr-list { margin: 12px 0 0; padding-left: 20px; font-size: 15.5px; line-height: 1.85; color: #2b3648; }

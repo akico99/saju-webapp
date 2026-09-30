@@ -272,8 +272,11 @@ body {
 /* 형광펜 강조(핵심 결론) — LLM이 **로 감싼 문구를 <mark>로 변환해 넣는다.
    브라우저 기본 mark 스타일(검은 글자 위 노란 배경)은 다크 테마와 안 맞아 직접 재정의한다. */
 mark {
-  background: rgba(199,161,58,0.30);
-  color: var(--star);
+  /* 글자 아래 45%만 칠하는 형광펜 + 실제 Bold — 예전의 옅은 배경 전체 칠하기는
+     본문과 대비가 약해 "어디가 핵심인지" 잘 안 보였다. */
+  background: linear-gradient(transparent 55%, rgba(199,161,58,0.55) 55%);
+  color: #fff;
+  font-weight: 700;
   padding: 0 0.8mm;
   border-radius: 0.6mm;
   box-decoration-break: clone;
@@ -382,7 +385,8 @@ body.lifetime-report, body.compat-report { color: #29394b; font-size: 11.3pt; li
 .lifetime-report .chapter-keywords .kw-chip {
   border-color: #e6d9bd; background: #f6efdf; color: #7a5f2c; font-size: 8.8pt;
 }
-.lifetime-report mark, .compat-report mark { background: #eee4ca; color: #24344b; }
+/* 강조 — 실제 Bold + 글자 아래쪽만 칠하는 형광펜(예전 #eee4ca 전체 칠하기는 대비가 약했다). */
+.lifetime-report mark, .compat-report mark { background: linear-gradient(transparent 56%, #f3d78a 56%); color: #14233a; font-weight: 700; }
 .lifetime-report .gloss, .compat-report .gloss { color: #667486; }
 .lifetime-report .quest-card { border-color: #e6e2d8; border-left-color: #c7a13a; background: #f5f1e8; }
 .lifetime-report .quest-card-ttl { color: #24344b; }

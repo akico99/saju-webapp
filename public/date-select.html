@@ -122,6 +122,7 @@
 <link rel="stylesheet" href="/reading-ui.css">
 <link rel="stylesheet" href="/paid-flow.css">
 <link rel="stylesheet" href="/fortune-result.css">
+<link rel="stylesheet" href="/report-visuals.css">
 <style>
   .ds-icon-badge { width: 52px; height: 52px; border-radius: 16px; background: var(--accent-soft);
     display: flex; align-items: center; justify-content: center; margin-bottom: 8px; }
@@ -345,6 +346,8 @@
         <p class="fr-eyebrow" id="dsSummaryLabel"></p>
         <h2 class="fr-date-big"><span id="dsSummaryDate"></span><small id="dsSummarySub"></small></h2>
       </section>
+      <!-- 결론 카드·달력·시간대 막대·히트맵 — PDF와 같은 그래프(서버가 엔진 숫자로 조립) -->
+      <div id="dsVisual"></div>
       <div class="body fr-section fr-prose" id="dsReportBody"></div>
       <div class="ds-download hidden" id="dsDownload">
         <div class="txt">PDF로 저장해서 두고두고 볼 수 있어요. 마이페이지에서도 언제든 다시 받을 수 있어요.</div>
@@ -486,9 +489,12 @@
       if (body) { const p = document.createElement('p'); p.innerHTML = boldify(body); box.appendChild(p); }
     }
   }
-  function renderReport(report, jobId) {
+  function renderReport(report, jobId, visual) {
     if (report) renderBody(report);
     else document.getElementById('dsReportBody').textContent = '리포트를 만드는 데 문제가 생겼어요. 결제는 자동으로 취소돼요. 잠시 후 다시 시도해주세요.';
+    // 그래프 조각에 추천일 결론 카드가 들어 있어 위쪽 요약 카드와 겹치지 않게 숨긴다.
+    document.getElementById('dsVisual').innerHTML = report && visual ? visual : '';
+    if (report && visual) document.getElementById('dsSummary').classList.add('hidden');
 
     const downloadBox = document.getElementById('dsDownload');
     if (report && jobId) {
@@ -510,7 +516,7 @@
         return;
       }
       if (data.status === 'done') {
-        renderReport(data.report, jobId);
+        renderReport(data.report, jobId, data.visual);
         setFormBusy(false);
         return;
       }

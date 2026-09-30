@@ -6,6 +6,8 @@ const { renderMarkup, renderBody } = require('./textMarkup');
 const { getReportCss } = require('./reportCss');
 const { safeName } = require('./personName');
 const { tier } = require('../llm/deepReading');
+const { buildDeepVisuals } = require('./deepVisuals');
+const { VISUAL_CSS } = require('./visuals');
 
 const TEMPLATE_PATH = path.join(__dirname, 'templates', 'deep.ejs');
 
@@ -24,12 +26,13 @@ function formatBirthDisplay(meta) {
 function renderDeepHtml(engine, person, reading) {
   const reportCss = getReportCss();
   const birthDisplay = formatBirthDisplay(engine.meta);
+  const vz = buildDeepVisuals(engine, reading, person.gender || engine.meta.input.gender);
   return ejs.render(
     fs.readFileSync(TEMPLATE_PATH, 'utf8'),
     {
       engine, person: { ...person, birthDisplay },
       topicTitle: reading.title, chapters: reading.chapters, timing: reading.timing,
-      reportCss, renderMarkup, renderBody, safeName, tier
+      reportCss, renderMarkup, renderBody, safeName, tier, vz, visualCss: VISUAL_CSS
     },
     { filename: TEMPLATE_PATH }
   );

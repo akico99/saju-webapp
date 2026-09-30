@@ -8,6 +8,8 @@ const path = require('path');
 const ejs = require('ejs');
 const { renderMarkup } = require('./textMarkup');
 const { getReportCss } = require('./reportCss');
+const { VISUAL_CSS } = require('./visuals');
+const { buildDateSelectParts, verdictHtml } = require('./dateSelectVisuals');
 
 const TEMPLATE_PATH = path.join(__dirname, 'templates', 'dateSelect.ejs');
 
@@ -32,13 +34,15 @@ function splitSections(text) {
  * @param {string} [p.bestLabel] 예: "이사하기 가장 좋은 때"
  * @param {string} [p.bestValue] 예: "2026.10.12 (월) 9시"
  * @param {string} p.text LLM이 쓴 본문 전체
+ * @param {Object} [p.visual] 라우트가 계산한 후보 점수 전체(달력·시간대·히트맵용). 없으면 추천일 박스만.
  */
-function renderDateSelectHtml({ title, eyebrow, metaLine, bestLabel, bestValue, text }) {
+function renderDateSelectHtml({ title, eyebrow, metaLine, bestLabel, bestValue, text, visual }) {
   const reportCss = getReportCss();
   const sections = splitSections(text);
   return ejs.render(
     fs.readFileSync(TEMPLATE_PATH, 'utf8'),
-    { title, eyebrow, metaLine, bestLabel, bestValue, sections, renderMarkup, reportCss },
+    { title, eyebrow, metaLine, bestLabel, bestValue, sections, renderMarkup, reportCss,
+      parts: buildDateSelectParts(visual), verdictHtml, visualCss: VISUAL_CSS },
     { filename: TEMPLATE_PATH }
   );
 }

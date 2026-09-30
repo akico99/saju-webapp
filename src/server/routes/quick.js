@@ -10,6 +10,7 @@ const { computeSaju } = require('../../engine/index');
 const { generateDeepReading, DEEP_TOPICS, toPlainText } = require('../../llm/deepReading');
 const { costUsd } = require('../../llm/client');
 const { renderDeepHtml } = require('../../pdf/renderDeepHtml');
+const { buildDeepVisuals, deepWebHtml } = require('../../pdf/deepVisuals');
 const { renderPdf } = require('../../pdf/renderPdf');
 const points = require('../../db/points');
 const { refundPurchase } = require('../refundPurchase');
@@ -101,7 +102,10 @@ async function startDeep(userId, body) {
       await renderPdf(html, pdfPath, { name: person.name, label: reading.title });
       if (!fs.existsSync(pdfPath)) throw new Error('PDF 파일 생성 확인 실패');
       // PDF와 동일한 풀이를 주문에 보관해 웹에서도 읽을 수 있게 한다. 추가 LLM 호출은 없다.
-      orders.markDone(jobId, { resultPath: pdfPath, llmCostUsd: costUsd(reading.usage), resultText: toPlainText(reading) });
+      // 그래프 조각도 함께 보관해 웹 결과 화면이 PDF와 같은 그래프를 보여준다.
+      let resultVisual = null;
+      try { resultVisual = deepWebHtml(buildDeepVisuals(engineResult, reading, person.gender || engineResult.meta.input.gender)); } catch (e) { resultVisual = null; }
+      orders.markDone(jobId, { resultPath: pdfPath, llmCostUsd: costUsd(reading.usage), resultText: toPlainText(reading), resultVisual });
     })
     .catch((e) => {
       orders.markError(jobId, e.message);

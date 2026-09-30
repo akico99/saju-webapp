@@ -36,6 +36,11 @@ const path = require('path');
 const CSS_PATH = path.join(__dirname, 'templates', 'report.css');
 const GOTHIC_PATH = path.join(__dirname, 'fonts', 'NanumGothic-Regular.ttf');
 const MYEONGJO_PATH = path.join(__dirname, 'fonts', 'NanumMyeongjo-Regular.ttf');
+// 굵은 글씨(font-weight 700)용 실제 Bold 파일. 예전엔 Regular 한 벌만 등록돼 있어서
+// 템플릿이 굵게를 지정해도 Chromium이 Regular를 억지로 두껍게 그린(가짜 볼드) 흐릿한
+// 글씨가 나왔다 — 강조 문장과 소제목이 본문과 거의 구분되지 않던 원인.
+const GOTHIC_BOLD_PATH = path.join(__dirname, 'fonts', 'NanumGothic-Bold.ttf');
+const MYEONGJO_BOLD_PATH = path.join(__dirname, 'fonts', 'NanumMyeongjo-Bold.ttf');
 const HANJA_PATH = path.join(__dirname, 'fonts', 'ReportHanja.ttf');
 
 let cachedFontFaces = null;
@@ -49,6 +54,8 @@ function getFontFaceCss() {
   if (cachedFontFaces) return cachedFontFaces;
   const gothicUrl = toDataUri(GOTHIC_PATH, 'font/truetype');
   const myeongjoUrl = toDataUri(MYEONGJO_PATH, 'font/truetype');
+  const gothicBoldUrl = toDataUri(GOTHIC_BOLD_PATH, 'font/truetype');
+  const myeongjoBoldUrl = toDataUri(MYEONGJO_BOLD_PATH, 'font/truetype');
   // ReportHanja.ttf는 fonttools로 Noto Sans CJK KR(OTF/CFF)에서 뽑아낸 서브셋이라
   // TTF가 아니라 OTF(CFF 외곽선)다 — 확장자는 관례상 .ttf로 맞춰뒀지만 실제 포맷은
   // opentype. format() 힌트가 실제 바이트와 달라도 브라우저는 힌트를 강제하지 않고
@@ -57,8 +64,12 @@ function getFontFaceCss() {
   cachedFontFaces = `
 @font-face { font-family: 'ReportGothic'; src: url('${gothicUrl}') format('truetype'); font-weight: normal; font-style: normal; }
 @font-face { font-family: 'ReportMyeongjo'; src: url('${myeongjoUrl}') format('truetype'); font-weight: normal; font-style: normal; }
+@font-face { font-family: 'ReportGothic'; src: url('${gothicBoldUrl}') format('truetype'); font-weight: 600 900; font-style: normal; }
+@font-face { font-family: 'ReportMyeongjo'; src: url('${myeongjoBoldUrl}') format('truetype'); font-weight: 600 900; font-style: normal; }
 @font-face { font-family: 'ReportGothic'; src: url('${hanjaUrl}') format('opentype'); font-weight: normal; font-style: normal; unicode-range: U+4E00-9FFF; }
 @font-face { font-family: 'ReportMyeongjo'; src: url('${hanjaUrl}') format('opentype'); font-weight: normal; font-style: normal; unicode-range: U+4E00-9FFF; }
+@font-face { font-family: 'ReportGothic'; src: url('${hanjaUrl}') format('opentype'); font-weight: 600 900; font-style: normal; unicode-range: U+4E00-9FFF; }
+@font-face { font-family: 'ReportMyeongjo'; src: url('${hanjaUrl}') format('opentype'); font-weight: 600 900; font-style: normal; unicode-range: U+4E00-9FFF; }
 `;
   return cachedFontFaces;
 }

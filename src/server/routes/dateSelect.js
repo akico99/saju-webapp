@@ -27,6 +27,7 @@ const { classifyPair, analyzeCompatibility } = require('../../engine/compatibili
 const { generateDateSelectReport } = require('../../llm/dateSelectReading');
 const { costUsd } = require('../../llm/client');
 const { renderDateSelectHtml } = require('../../pdf/renderDateSelectHtml');
+const { dateSelectWebHtml } = require('../../pdf/dateSelectVisuals');
 const { renderPdf } = require('../../pdf/renderPdf');
 const orders = require('../../db/orders');
 const points = require('../../db/points');
@@ -254,7 +255,7 @@ function computePersonBasics(body, prefix) {
 // 또는 PDF 렌더링(디스크·puppeteer 오류 등) 실패 시, 주문 행은 남겨두고 차감했던 포인트를
 // 반드시 돌려준다 — 주문 행을 'pending'으로 방치하면 마이페이지에 "생성 중"이라고
 // 영원히 뜨는 거짓 상태가 되므로, 실패는 반드시 'error'로 마감한다.
-async function finishReport({ jobId, userId, occasion, name, title, eyebrow, metaLine, bestLabel, bestValue, text, usage }) {
+async function finishReport({ jobId, userId, occasion, name, title, eyebrow, metaLine, bestLabel, bestValue, text, usage, visual }) {
   if (!text) {
     orders.markError(jobId, 'LLM 리포트 생성 실패(빈 응답)');
     refundPurchase(userId, points.PRICES[occasion.productKey], `생성 실패 환불: ${occasion.productKey}`, jobId);
@@ -262,13 +263,13 @@ async function finishReport({ jobId, userId, occasion, name, title, eyebrow, met
   }
 
   try {
-    const html = renderDateSelectHtml({ title, eyebrow, metaLine, bestLabel, bestValue, text });
+    const html = renderDateSelectHtml({ title, eyebrow, metaLine, bestLabel, bestValue, text, visual });
     const jobDir = path.join(OUTPUT_ROOT, jobId);
     fs.mkdirSync(jobDir, { recursive: true });
     const pdfPath = path.join(jobDir, 'date-select-report.pdf');
     await renderPdf(html, pdfPath, { name, label: `${occasion.label} 리포트` });
     if (!fs.existsSync(pdfPath)) throw new Error('PDF 파일 생성 확인 실패');
-    orders.markDone(jobId, { resultPath: pdfPath, llmCostUsd: costUsd(usage), resultText: text });
+    orders.markDone(jobId, { resultPath: pdfPath, llmCostUsd: costUsd(usage), resultText: text, resultVisual: visual ? dateSelectWebHtml(visual) : null });
   } catch (e) {
     orders.markError(jobId, e.message || String(e));
     refundPurchase(userId, points.PRICES[occasion.productKey], `생성 실패 환불: ${occasion.productKey}`, jobId);
@@ -324,7 +325,8 @@ function scanDays(dateList, ctx) {
   }).filter(Boolean);
 }
 
-function bestHourOf(date, ctx) {
+// 그 날의 추천 시간 후보 전부(점수 내림차순) — 리포트의 시간대 막대그래프가 쓴다.
+function hoursOf(date, ctx) {
   const hourCandidates = DEFAULT_HOURS.map((hour) => {
     try {
       const engineResult = computeSaju({ year: date.year, month: date.month, day: date.day, hour, minute: 0 });
@@ -334,7 +336,11 @@ function bestHourOf(date, ctx) {
     }
   }).filter(Boolean);
   hourCandidates.sort((a, b) => b.score - a.score);
-  return hourCandidates[0] || null;
+  return hourCandidates;
+}
+
+function bestHourOf(date, ctx) {
+  return hoursOf(date, ctx)[0] || null;
 }
 
 // 달 단위 모드 — 이사/개업. 목표 연월 안에서 가장 좋은 날짜·시간 하나를 찾는다.
@@ -372,7 +378,8 @@ async function runMonthSearch(userId, body, occasionKey, occasion) {
   const dayResults = scanDays(daysInTargetMonth(targetYear, targetMonth), ctx);
   dayResults.sort((a, b) => b.score - a.score);
   const bestDay = dayResults[0];
-  const best = bestDay ? bestHourOf(bestDay, ctx) : null;
+  const bestHours = bestDay ? hoursOf(bestDay, ctx) : [];
+  const best = bestHours[0] || null;
 
   let extras = {};
   if (occasionKey === 'moving' && OHAENG_DIRECTION[yongshinMain]) {
@@ -389,6 +396,19 @@ async function runMonthSearch(userId, body, occasionKey, occasion) {
 
   const bestOut = best ? { year: bestDay.year, month: bestDay.month, day: bestDay.day, hour: best.hour, ganZhiKo: best.ganZhiKo, hourGanZhiKo: best.hourGanZhiKo, score: best.score } : null;
   const bestValue = formatBestValue(best ? { ...best, year: bestDay.year, month: bestDay.month, day: bestDay.day } : null);
+  // 리포트 시각 요소 — 달 전체 날짜 점수와 추천일의 시간대 점수. 계산은 위에서 이미 끝났다.
+  const visual = {
+    kind: 'month', occasion: occasionKey, label: occasion.label, year: targetYear, month: targetMonth,
+    days: dayResults.map((d) => ({ day: d.day, score: d.score })),
+    top: dayResults.slice(0, 3).map((d) => ({ month: d.month, day: d.day, score: d.score, weekday: WEEKDAY_KO[new Date(d.year, d.month - 1, d.day).getDay()] })),
+    hours: bestHours.map((h) => ({ hour: h.hour, score: h.score })),
+    best: bestOut, bestValue, yongshin: yongshinMain,
+    extras: {
+      direction: extras.direction || null, mood: extras.mood || null, homeObject: extras.homeObject || null,
+      business: extras.business || null, bizObject: extras.bizObject || null,
+      color: OHAENG_COLOR[yongshinMain] || null, taste: OHAENG_TASTE[yongshinMain] || null
+    }
+  };
 
   const payload = ({ occasion: occasionKey, occasionLabel: occasion.label, name: personName, jobId, best: bestOut, extras });
 
@@ -418,7 +438,7 @@ async function runMonthSearch(userId, body, occasionKey, occasion) {
         eyebrow: `命 式 關 係 圖 · ${occasion.label} 리포트`,
         metaLine: `목표 <b>${targetYear}년 ${targetMonth}월</b>`,
         bestLabel: `${occasion.label}하기 가장 좋은 때`, bestValue,
-        text: report, usage
+        text: report, usage, visual
       });
     } catch (e) {
       orders.markError(jobId, e.message || String(e));
@@ -480,9 +500,17 @@ async function runWeddingSearch(userId, body, occasionKey, occasion) {
   const bestDay = combined[0];
 
   let best = null;
+  let coupleHours = [];
   if (bestDay) {
-    const bestA = bestHourOf(bestDay, ctxA);
-    const bestB = bestHourOf(bestDay, ctxB);
+    const hoursA = hoursOf(bestDay, ctxA);
+    const hoursB = hoursOf(bestDay, ctxB);
+    const bestA = hoursA[0] || null;
+    const bestB = hoursB[0] || null;
+    // 두 사람 시간 점수의 평균 — 리포트의 시간대 막대그래프용.
+    coupleHours = hoursA.map((a) => {
+      const b = hoursB.find((x) => x.hour === a.hour);
+      return b ? { hour: a.hour, score: Math.round((a.score + b.score) / 2) } : null;
+    }).filter(Boolean);
     if (bestA && bestB) {
       best = { hour: bestA.hour, ganZhiKo: bestA.ganZhiKo, hourGanZhiKo: bestA.hourGanZhiKo, score: Math.round((bestA.score + bestB.score) / 2) };
     }
@@ -493,6 +521,31 @@ async function runWeddingSearch(userId, body, occasionKey, occasion) {
 
   const bestValue = formatBestValue(best && bestDay ? { ...best, year: bestDay.year, month: bestDay.month, day: bestDay.day } : null);
   const bestOut = best && bestDay ? { year: bestDay.year, month: bestDay.month, day: bestDay.day, hour: best.hour, ganZhiKo: best.ganZhiKo, hourGanZhiKo: best.hourGanZhiKo, score: best.score } : null;
+
+  // 달마다 가장 좋은 주말 하나 — 한 해를 12칸 막대로 보여준다.
+  const monthBest = [];
+  for (let m = 1; m <= 12; m++) {
+    const inMonth = combined.filter((d) => d.month === m);
+    if (inMonth.length) monthBest.push({ month: m, day: inMonth[0].day, score: inMonth[0].score });
+  }
+  const visual = {
+    kind: 'couple', occasion: occasionKey, label: occasion.label, year: targetYear,
+    months: monthBest,
+    top: combined.slice(0, 5).map((d) => ({
+      month: d.month, day: d.day, score: d.score, weekday: WEEKDAY_KO[new Date(d.year, d.month - 1, d.day).getDay()],
+      scoreA: byKey[`${d.month}-${d.day}`].scoreA, scoreB: byKey[`${d.month}-${d.day}`].scoreB
+    })),
+    hours: coupleHours, best: bestOut, bestValue,
+    names: [basicsA.personName || '본인', basicsB.personName || '상대방'],
+    compatScore: compat.score,
+    yongshin: [basicsA.yongshinMain, basicsB.yongshinMain],
+    extras: {
+      colorA: OHAENG_COLOR[basicsA.yongshinMain], colorB: OHAENG_COLOR[basicsB.yongshinMain],
+      textureA: OHAENG_TEXTURE[basicsA.yongshinMain], textureB: OHAENG_TEXTURE[basicsB.yongshinMain],
+      yukhap: compat.crossYukhap.length, chung: compat.crossChung.length, samhap: compat.crossSamhap.length,
+      dayRelation: compat.dayRelation?.type || null
+    }
+  };
 
   const payload = ({
     occasion: occasionKey, occasionLabel: occasion.label, name: basicsA.personName, spouseName: basicsB.personName,
@@ -538,7 +591,7 @@ async function runWeddingSearch(userId, body, occasionKey, occasion) {
         eyebrow: '命 式 關 係 圖 · 결혼 리포트',
         metaLine: `목표 <b>${targetYear}년</b> · 궁합 참고 점수 <b>${compat.score}점</b>`,
         bestLabel: '혼인신고 하기 가장 좋은 때', bestValue,
-        text: report, usage
+        text: report, usage, visual
       });
     } catch (e) {
       orders.markError(jobId, e.message || String(e));
@@ -621,7 +674,7 @@ async function runBirthSearch(userId, body, occasionKey, occasion) {
         year: y, month: m, day, hour,
         ganZhiKo: (STEM_KO[dayStem] || '') + (BRANCH_KO[dayBranch] || ''),
         hourGanZhiKo: (STEM_KO[hourStem] || '') + (BRANCH_KO[hourBranch] || ''),
-        dayStem, score, lacking: engineResult.counts.lacking, clashesWithParent, harmoniesWithParent
+        dayStem, score, lacking: engineResult.counts.lacking, counts: engineResult.counts.ohaeng, clashesWithParent, harmoniesWithParent
       });
     });
   }
@@ -631,6 +684,23 @@ async function runBirthSearch(userId, body, occasionKey, occasion) {
   const parentLabel = parentNames.length ? parentNames.join(' · ') + ' 부모님' : '';
   const bestValue = formatBestValue(best);
   const bestOut = best ? { year: best.year, month: best.month, day: best.day, hour: best.hour, ganZhiKo: best.ganZhiKo, hourGanZhiKo: best.hourGanZhiKo, score: best.score } : null;
+
+  // 날짜 × 시간 히트맵 — 예정일 전후 모든 후보의 점수. 행은 날짜 순서대로.
+  const rowMap = new Map();
+  candidates.forEach((c) => {
+    const key = `${c.year}-${c.month}-${c.day}`;
+    if (!rowMap.has(key)) rowMap.set(key, { key, year: c.year, month: c.month, day: c.day, cells: [] });
+    rowMap.get(key).cells.push({ hour: c.hour, score: c.score });
+  });
+  const rows = [...rowMap.values()].sort((a, b) => Date.UTC(a.year, a.month - 1, a.day) - Date.UTC(b.year, b.month - 1, b.day))
+    .map((r) => ({ ...r, label: `${r.month}.${r.day} (${WEEKDAY_KO[new Date(r.year, r.month - 1, r.day).getDay()]})`, isBase: r.year === by && r.month === bm && r.day === bd }));
+  const visual = {
+    kind: 'birth', occasion: occasionKey, label: occasion.label,
+    rows, hours: DEFAULT_HOURS, best: best ? { ...bestOut, key: `${best.year}-${best.month}-${best.day}` } : null, bestValue,
+    bestCounts: best ? best.counts : null, lacking: best ? best.lacking : [],
+    top: candidates.slice(0, 3).map((c) => ({ month: c.month, day: c.day, hour: c.hour, score: c.score, weekday: WEEKDAY_KO[new Date(c.year, c.month - 1, c.day).getDay()] })),
+    extras: { taste: motherYongshinMain ? OHAENG_TASTE[motherYongshinMain] : null }
+  };
 
   const payload = ({ occasion: occasionKey, occasionLabel: occasion.label, jobId, best: bestOut });
 
@@ -659,7 +729,7 @@ async function runBirthSearch(userId, body, occasionKey, occasion) {
         eyebrow: '命 式 關 係 圖 · 임신·출산 리포트',
         metaLine: `예정일 <b>${by}.${String(bm).padStart(2, '0')}.${String(bd).padStart(2, '0')}</b> 전후 ±${rangeDays}일`,
         bestLabel: '오행이 가장 골고루 갖춰지는 때', bestValue,
-        text: report, usage
+        text: report, usage, visual
       });
     } catch (e) {
       orders.markError(jobId, e.message || String(e));

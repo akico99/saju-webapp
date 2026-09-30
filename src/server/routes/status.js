@@ -40,6 +40,7 @@ router.get('/status/:jobId', requireAuth, (req, res) => {
     progress: { current: order.progress_current, total: order.progress_total },
     error: order.status === 'error' ? publicJobError(order.error, order.product_key) : null,
     report: order.result_text,
+    visual: order.result_visual || null,
     hasCard: !!order.card_path,
     chaptersReady: readChapters(req.params.jobId)
       .map((c, i) => (c ? { index: i, id: c.id, title: c.title } : null))

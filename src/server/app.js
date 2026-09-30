@@ -45,6 +45,10 @@ app.use(session({
 }));
 
 app.use(express.static(path.join(__dirname, '..', '..', 'public')));
+// 리포트 그래프 조각(src/pdf/visuals.js)의 스타일 — PDF와 웹 결과 화면이 같은 CSS를 쓴다.
+app.get('/report-visuals.css', (req, res) => {
+  res.type('text/css').set('Cache-Control', 'public, max-age=3600').send(require('../pdf/visuals').WEB_VISUAL_CSS);
+});
 // 관리자가 업로드한 배너 이미지는 data/uploads/banners(영구 디스크)에 저장된다 — 기본
 // 배너(public/banners에서 못 찾은 파일만 여기서 마저 찾도록 같은 /banners 경로에 추가로
 // 연결한다). src/server/routes/banners.js 참고.

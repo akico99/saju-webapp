@@ -64,7 +64,15 @@
   .deep-report .dd-box ol { margin: 0; padding-left: 5mm; font-size: 9.5pt; line-height: 1.7; color: #354457; }
   .deep-report .dd-box li { margin-bottom: 1.5mm; }
 
-  .deep-report mark { background: #e9e2cb; color: #26384b; }
+  /* 강조 — 실제 Bold + 글자 아래쪽만 칠하는 형광펜. 예전의 옅은 베이지 전체 칠하기는 본문과 대비가 약했다. */
+  .deep-report mark { background: linear-gradient(transparent 56%, #f3d78a 56%); color: #14233a; font-weight: 700; padding: 0 .4mm; }
+  .deep-report .dr-sec h3.sub { font-weight: 700; }
+  .deep-report .dr-sec h2 { font-weight: 700; }
+  .deep-report .dd-box li b, .deep-report .dd-box .ttl { font-weight: 700; }
+  .deep-report .dr-toc { grid-template-columns: repeat(5, 1fr); }
+  .deep-report .ms-grid { grid-template-columns: 1.15fr 1fr; }
+  .deep-report .radar-wrap { display: flex; align-items: center; justify-content: center; }
+  <%- visualCss %>
   .deep-report .gloss { color: #697586; }
   .deep-report .disclaimer { margin-top: 9mm; border-top-color: #e3e1d9; color: #78838e; font-size: 8pt; line-height: 1.6; }
   .deep-report .imprint { color: #7a663c; font-size: 8.5pt; }
@@ -72,12 +80,7 @@
 </head>
 <body class="deep-report">
 <%
-  var OH = ['木','火','土','金','水'];
-  var OH_KO = { '木':'목 · 성장', '火':'화 · 표현', '土':'토 · 안정', '金':'금 · 결단', '水':'수 · 지혜' };
-  var counts = engine.counts.ohaeng || {};
-  var maxCount = Math.max.apply(null, OH.map(function(o){ return counts[o] || 0; }).concat([1]));
   var t = timing.data;
-  function paras(s) { return String(s || '').split(/\n\n+/).map(function(p){ return p.trim(); }).filter(Boolean); }
 %>
 
 <section class="chapter">
@@ -85,19 +88,29 @@
     <div class="dr-brand"><span>사주보는 수달</span><span class="edition">DEEP READING</span></div>
     <div class="eyebrow">길잡이 여울 · 주제별 심층 리딩</div>
     <h1><%= safeName(person.name) %> 님의 <%= topicTitle %></h1>
-    <div class="meta">출생 정보 <b><%= person.birthDisplay %></b> · 현재 <b><%= t.currentAge %>세</b></div>
+    <div class="meta">출생 정보 <b><%= person.birthDisplay %></b> · 현재 <b><%= t.currentAge %>세</b> · 일간 <b><%= engine.ilgan.char %>(<%= engine.ilgan.ko %>)</b> · 용신 <b><%= engine.yongshin.final.main %></b></div>
+  </div>
+
+  <!-- 한눈에 결론 — 본문 핵심 요약의 첫 문장 + 엔진 점수 3개 -->
+  <div class="vz-verdict">
+    <div class="k">한눈에 보는 결론</div>
+    <% if (vz.verdict) { %><div class="h"><%= vz.verdict %></div><% } %>
+    <div class="stats">
+      <% vz.stats.forEach(function(st){ %><div class="stat"><small><%= st.k %></small><b><%= st.v %></b><span><%= st.s %></span></div><% }); %>
+    </div>
   </div>
 
   <div class="dr-toc">
-    <div><b>01</b>명식 한 장</div>
-    <div><b>02</b>타고난 구조</div>
-    <div><b>03</b>지금 대운, 앞으로 3년</div>
-    <div><b>04</b>할 것 · 피할 것</div>
+    <div><b>01</b>내 사주 한눈에</div>
+    <div><b>02</b><%= vz.gaugeTitle.replace(/^내 /, '').replace(/ —.*$/, '') %></div>
+    <div><b>03</b>타고난 구조</div>
+    <div><b>04</b>대운과 앞으로 3년</div>
+    <div><b>05</b>할 것 · 피할 것</div>
   </div>
 
-  <!-- 01 명식 한 장 — 엔진 값만으로 그린다 -->
+  <!-- 01 명식 + 오행 레이더 -->
   <div class="dr-sec">
-    <div class="label">01 · 명식 한 장</div>
+    <div class="label">01 · 내 사주 한눈에</div>
     <h2>이 리딩의 바탕이 되는 내 사주</h2>
     <div class="ms-grid">
       <div class="ms-box">
@@ -111,70 +124,66 @@
         <div class="ms-facts">
           일간 <b><%= engine.ilgan.char %>(<%= engine.ilgan.ko %>) · <%= engine.ilgan.ohaeng %> <%= engine.ilgan.yinyang %></b><br>
           격국 <b><%= engine.kyukguk.name %></b> · 신강약 <b><%= engine.strength.verdict %></b><br>
-          용신 <b><%= engine.yongshin.final.main %></b><% if (engine.yongshin.final.note) { %> <span class="gloss">— <%= engine.yongshin.final.note %></span><% } %>
+          용신 <b><%= engine.yongshin.final.main %></b> — 이 사주의 균형을 잡아 주는 기운<br>
+          <% if ((engine.counts.lacking || []).length) { %>비어 있는 기운 <b><%= engine.counts.lacking.join('·') %></b> — 채워야 할 자리<% } else { %>다섯 기운이 모두 있는 사주<% } %>
         </div>
       </div>
-      <div class="ms-box">
-        <div class="ttl">오행 균형</div>
-        <ul class="ms-oh">
-          <% OH.forEach(function(o){ var n = counts[o] || 0; %>
-          <li><span><%= OH_KO[o] %></span><span class="bar"><i style="width:<%= Math.round(n / maxCount * 100) %>%"></i></span><span class="n"><%= n %></span></li>
-          <% }); %>
-        </ul>
-        <div class="ms-facts">막대가 비어 있는 기운이 이 사주에서 <b>채워야 할 자리</b>이고, 가장 긴 기운이 <b>타고난 강점</b>입니다.</div>
+      <div class="ms-box radar-wrap">
+        <div style="width:100%">
+          <div class="ttl">오행 균형</div>
+          <%- vz.radar %>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- 02 타고난 구조 — 챕터 풀 분량 -->
-  <% /* 골격이 있는 본문은 "### 소주제"로 바로 시작한다 — 그때는 리드 문단을 따로 뽑지 않는다.
-        첫 블록이 소제목이 아닐 때(옛 본문)만 그 문단을 리드로 강조한다. */ %>
-  <% chapters.forEach(function(ch, ci){ var ps = paras(ch.text); var leadIdx = (ps.length && !/^###\s/.test(ps[0])) ? 0 : -1; %>
+  <!-- 02 주제 에너지 지도 -->
   <div class="dr-sec">
-    <div class="label">02<%= chapters.length > 1 ? '-' + (ci + 1) : '' %> · 타고난 구조</div>
+    <div class="label">02 · <%= vz.gaugeTitle %></div>
+    <h2><%= topicTitle %>을 움직이는 기운</h2>
+    <div class="vz-panel">
+      <%- vz.gauges %>
+      <%- vz.badges %>
+      <p class="cap">막대는 사주 여덟 글자 안에서 그 기운이 몇 개나 있는지를 보여줍니다. <b>빨간 막대는 비어 있는 자리</b>로, 본문에서 채우는 방법을 함께 풀었어요.</p>
+    </div>
+  </div>
+
+  <!-- 03 타고난 구조 — 챕터 풀 분량 -->
+  <% chapters.forEach(function(ch, ci){ var ps = String(ch.text || '').split(/\n\n+/).map(function(p){ return p.trim(); }).filter(Boolean); var leadIdx = (ps.length && !/^###\s/.test(ps[0])) ? 0 : -1; %>
+  <div class="dr-sec">
+    <div class="label">03<%= chapters.length > 1 ? '-' + (ci + 1) : '' %> · 타고난 구조</div>
     <h2><%= ch.title %></h2>
     <% if (leadIdx >= 0) { %><div class="dr-lead"><p><%- renderMarkup(ps[leadIdx]) %></p></div><% } %>
     <%- renderBody(ps.filter(function(_, i){ return i !== leadIdx; }).join('\n\n')) %>
   </div>
   <% }); %>
 
-  <!-- 03 지금 대운, 앞으로 3년 -->
+  <!-- 04 대운과 앞으로 3년 -->
   <div class="dr-sec">
-    <div class="label">03 · 지금 대운, 앞으로 3년</div>
+    <div class="label">04 · 지금 대운, 앞으로 3년</div>
     <h2>언제 풀리고, 언제 조심할지</h2>
-    <table class="tm-table">
-      <thead><tr><th>시기</th><th>간지</th><th>흐름 점수</th><th>비고</th></tr></thead>
-      <tbody>
-        <% if (t.current) { %>
-        <tr class="cur"><td>현재 대운 (<%= t.current.age %>세~)</td><td><%= t.current.ganZhiKo %> <span class="gloss"><%= t.current.ganZhi %></span></td><td class="sc"><%= t.current.score %><small><%= tier(t.current.score) %></small></td><td>10년 단위 바탕</td></tr>
-        <% } %>
-        <% t.years.forEach(function(y){ %>
-        <tr><td><%= y.year %>년 (<%= y.age %>세)</td><td><%= y.ganZhiKo %> <span class="gloss"><%= y.ganZhi %></span></td><td class="sc"><%= y.score %><small><%= tier(y.score) %></small></td><td><%= y.stemShipsin || '-' %> · <%= y.unseong || '-' %></td></tr>
-        <% }); %>
-        <% if (t.next) { %>
-        <tr><td>다음 대운 (<%= t.next.age %>세~)</td><td><%= t.next.ganZhiKo %> <span class="gloss"><%= t.next.ganZhi %></span></td><td class="sc"><%= t.next.score %><small><%= tier(t.next.score) %></small></td><td>다음 10년</td></tr>
-        <% } %>
-      </tbody>
-    </table>
-    <p class="tm-note">점수는 그 시기 간지의 오행이 내 용신(<%= t.yongshinMain %>)을 얼마나 도와주는지로 계산한 값입니다. 무료 인생 그래프와 같은 기준이에요.</p>
-    <% if (t.careerTimeline && t.careerTimeline.length) { %>
-    <table class="tm-table">
-      <thead><tr><th>연도</th><th>간지</th><th>커리어 점수</th><th>그 해의 기운</th></tr></thead>
-      <tbody>
-        <% t.careerTimeline.forEach(function(r){ %>
-        <tr><td><%= r.year %>년 (<%= r.age %>세)</td><td><%= r.ganZhiKo %></td><td class="sc"><%= r.score %></td><td><%= r.group %> · <%= r.desc %></td></tr>
-        <% }); %>
-      </tbody>
-    </table>
-    <p class="tm-note">이직·승진 관점으로 본 5년 흐름입니다. 위 표와 함께 읽으세요.</p>
+    <div class="vz-panel">
+      <div class="ttl">10년 단위 인생 흐름 <small>대운 점수 · 용신(<%= t.yongshinMain %>)을 얼마나 돕는지</small></div>
+      <%- vz.curve %>
+      <p class="cap">초록 띠(65점 이상)는 흐름이 도와주는 구간, 붉은 띠(40점 미만)는 속도를 늦추고 지킬 구간이에요. <b>금색 점선이 지금 서 있는 대운</b>입니다.</p>
+    </div>
+    <div class="vz-panel">
+      <div class="ttl">지금 대운과 앞으로 3년 <small>무료 인생 그래프와 같은 기준</small></div>
+      <%- vz.yearBars %>
+    </div>
+    <% if (vz.careerBars) { %>
+    <div class="vz-panel">
+      <div class="ttl">이직·승진 관점 5년 타임라인 <small>커리어 점수</small></div>
+      <%- vz.careerBars %>
+    </div>
     <% } %>
     <%- renderBody(timing.flow) %>
   </div>
 
-  <!-- 04 할 것 / 피할 것 -->
+  <!-- 05 할 것 / 피할 것 -->
   <% if (timing.dos.length || timing.donts.length) { %>
   <div class="dr-sec">
-    <div class="label">04 · 지금 할 것, 피할 것</div>
+    <div class="label">05 · 지금 할 것, 피할 것</div>
     <h2>이 시기에 실제로 움직일 방향</h2>
     <div class="dd-grid">
       <div class="dd-box do"><div class="ttl">지금 할 것</div><ol><% timing.dos.forEach(function(d){ %><li><%- renderMarkup(d) %></li><% }); %></ol></div>
@@ -193,3 +202,4 @@
 <script>window.__chartsReady = true;</script>
 </body>
 </html>
+
