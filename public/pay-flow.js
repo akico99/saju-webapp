@@ -11,7 +11,8 @@
   async function checkout(product, form) {
     const res = await fetch('/api/pay/prepare', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ product, form })
+      // 광고 유입값(public/track.js가 저장)을 주문에 붙여 캠페인별 매출을 볼 수 있게 한다.
+      body: JSON.stringify({ product, form, attribution: window.SoTrack ? window.SoTrack.attribution() : null })
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || '결제 준비에 실패했어요.');

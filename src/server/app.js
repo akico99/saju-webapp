@@ -69,5 +69,6 @@ app.use('/api', lifeGraphRouter);
 app.use('/api', profilesRouter);
 app.use('/api', dateSelectRouter);
 app.use('/api', payRouter);
+app.use('/api', require('./routes/tracking'));
 
 module.exports = app;

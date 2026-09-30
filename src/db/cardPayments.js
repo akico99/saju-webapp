@@ -8,8 +8,8 @@ const { adjustPointBalance } = require('./users');
 
 const stmts = {
   insert: db.prepare(`
-    INSERT INTO card_payments (user_id, order_id, order_name, amount_krw, test_mode, product_key, form_json)
-    VALUES (@userId, @orderId, @orderName, @amountKrw, @testMode, @productKey, @formJson)
+    INSERT INTO card_payments (user_id, order_id, order_name, amount_krw, test_mode, product_key, form_json, attribution)
+    VALUES (@userId, @orderId, @orderName, @amountKrw, @testMode, @productKey, @formJson, @attribution)
   `),
   findByOrderId: db.prepare('SELECT * FROM card_payments WHERE order_id = ?'),
   markPaid: db.prepare(`
@@ -52,9 +52,25 @@ function newOrderId() {
   return 'saju_' + Date.now().toString(36) + '_' + crypto.randomBytes(5).toString('hex');
 }
 
-function create({ userId, amountKrw, orderName, testMode, productKey, form }) {
+/* 브라우저가 보낸 유입값은 신뢰하지 않는다 — 정해진 키만, 길이를 잘라서 보관한다. */
+const ATTR_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'fbclid', 'gclid', 'referrer', 'landing', 'at'];
+function cleanAttribution(a, now = Date.now()) {
+  // 개인정보처리방침 개정안 시행일(config/tracking.js) 전에는 저장하지 않는다.
+  if (!require('../config/tracking').trackingOn(now)) return null;
+  if (!a || typeof a !== 'object') return null;
+  const pick = (o) => {
+    if (!o || typeof o !== 'object') return null;
+    const r = {};
+    ATTR_KEYS.forEach((k) => { if (typeof o[k] === 'string' && o[k]) r[k] = o[k].replace(/[\u0000-\u001f]/g, '').slice(0, 120); });
+    return Object.keys(r).length ? r : null;
+  };
+  const out = { first: pick(a.first), last: pick(a.last) };
+  return out.first || out.last ? JSON.stringify(out) : null;
+}
+
+function create({ userId, amountKrw, orderName, testMode, productKey, form, attribution }) {
   const orderId = newOrderId();
-  stmts.insert.run({ userId, orderId, orderName, amountKrw, testMode: testMode ? 1 : 0, productKey, formJson: JSON.stringify(form || {}) });
+  stmts.insert.run({ userId, orderId, orderName, amountKrw, testMode: testMode ? 1 : 0, productKey, formJson: JSON.stringify(form || {}), attribution: cleanAttribution(attribution) });
   return stmts.findByOrderId.get(orderId);
 }
 
@@ -106,5 +122,5 @@ function listAll() { return stmts.listAll.all(); }
 
 module.exports = {
   create, findByOrderId, findById, markPaidAndCredit, revertCredit, setJob, markFailed, countPaidTest, listByUser, listAll,
-  claimForRefund, finishRefund
+  claimForRefund, finishRefund, cleanAttribution
 };

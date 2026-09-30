@@ -9,6 +9,7 @@
   gtag('js', new Date());
   gtag('config', 'G-THWHBPH5WR');
 </script>
+<script src="/track.js"></script>
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -77,6 +78,7 @@
       const order = (mine.payments || []).find((p) => p.orderId === orderId);
       if (!order) throw new Error('주문을 찾을 수 없어요. 상품 페이지에서 다시 시작해주세요.');
       if (order.status === 'paid') { location.replace('/pay-success.html?done=1&orderId=' + encodeURIComponent(orderId)); return; }
+      if (window.SoTrack) SoTrack.beginCheckout({ orderId, value: order.amountKrw, name: order.orderName, productKey: order.productKey });
 
       const cfg = await fetch('/api/pay/config').then((r) => r.json());
       document.getElementById('orderName').textContent = order.orderName;

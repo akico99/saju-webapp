@@ -29,16 +29,16 @@ router.get('/pay/config', requireAuth, (req, res) => {
 
 // 결제창을 열기 전에 주문을 만든다 — 상품과 폼 입력을 보관하고 가격은 서버(points.PRICES)가 정한다.
 router.post('/pay/prepare', requireAuth, (req, res) => {
-  const { product, form } = req.body || {};
+  const { product, form, attribution } = req.body || {};
   const resolved = resolveProduct(product, form);
   if (!resolved) return res.status(400).json({ error: '알 수 없는 상품입니다.' });
   const user = users.findById(req.session.userId);
   const row = cardPayments.create({
     userId: user.id, amountKrw: resolved.price, orderName: resolved.label, testMode: TEST_MODE,
-    productKey: resolved.productKey, form
+    productKey: resolved.productKey, form, attribution
   });
   res.json({
-    orderId: row.order_id, orderName: row.order_name, amountKrw: row.amount_krw, page: resolved.page,
+    orderId: row.order_id, orderName: row.order_name, amountKrw: row.amount_krw, page: resolved.page, productKey: row.product_key,
     customerEmail: user.email, customerName: user.name || '고객', testMode: TEST_MODE
   });
 });
@@ -145,7 +145,8 @@ function pageOf(row) {
 function summarize(row) {
   return {
     orderId: row.order_id, orderName: row.order_name, amountKrw: row.amount_krw, status: row.status,
-    method: row.method, testMode: !!row.test_mode, approvedAt: row.approved_at, createdAt: row.created_at, jobId: row.job_id
+    method: row.method, testMode: !!row.test_mode, approvedAt: row.approved_at, createdAt: row.created_at, jobId: row.job_id,
+    productKey: row.product_key
   };
 }
 

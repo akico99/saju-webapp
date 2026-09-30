@@ -9,6 +9,7 @@
   gtag('js', new Date());
   gtag('config', 'G-THWHBPH5WR');
 </script>
+<script src="/track.js"></script>
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -96,6 +97,9 @@
         return;
       }
       render(data.payment, data);
+      // 결제 승인이 확인된 경우에만 구매 이벤트를 보낸다(주문번호당 한 번 — track.js가 중복을 막는다).
+      const p = data.payment;
+      if (p && p.status === 'paid' && window.SoTrack) SoTrack.purchase({ orderId: p.orderId, value: p.amountKrw, name: p.orderName, productKey: p.productKey, testMode: p.testMode });
     } catch (e) {
       ttl.textContent = '결제 확인 중 오류가 났어요';
       desc.textContent = e.message;
