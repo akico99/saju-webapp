@@ -171,15 +171,15 @@
 /* ── 1. 문제 ───────────────────────────────────────── */
 
 .s-problem {
-  padding-top: 52px;
+  padding-top: 24px;
   background: var(--paper);
 }
 
 .hanja-cloud {
   position: relative;
   z-index: 2;
-  height: 230px;
-  margin: 22px 0 -48px;
+  height: 76px;
+  margin: 14px 0 0;
 }
 
 .hj {
@@ -191,9 +191,9 @@
   white-space: nowrap;
 }
 
-.hj.h1 { left: 7%; top: 8%; font-size: 40px; opacity: .88; transform: rotate(-7deg); }
-.hj.h2 { right: 6%; top: 2%; font-size: 23px; opacity: .5; transform: rotate(5deg); }
-.hj.h3 { right: 8%; top: 32%; font-size: 29px; transform: rotate(9deg); }
+.hj.h1 { left: 7%; top: 12%; font-size: 32px; opacity: .88; transform: rotate(-7deg); }
+.hj.h2 { left: 39%; top: 18%; font-size: 22px; opacity: .5; transform: rotate(5deg); }
+.hj.h3 { right: 5%; top: 12%; font-size: 25px; transform: rotate(9deg); }
 .hj.h4 { left: 31%; top: 41%; font-size: 21px; opacity: .42; transform: rotate(-3deg); }
 .hj.h5 { left: 5%; top: 63%; font-size: 18px; opacity: .4; transform: rotate(4deg); }
 .hj.h6 { left: 43%; top: 71%; font-size: 24px; opacity: .6; transform: rotate(-8deg); }
@@ -220,8 +220,30 @@
 }
 
 .art-confused img {
+  height: 290px;
+  object-fit: cover;
+  object-position: 50% 70%;
   -webkit-mask-image: linear-gradient(180deg, #000 82%, transparent 100%);
   mask-image: linear-gradient(180deg, #000 82%, transparent 100%);
+}
+
+/* 첫 속마음은 그림 위에 얹지 않아 얼굴 표정이 또렷하게 보이도록 한다. */
+.reader-thought {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: flex-start;
+  min-height: 58px;
+  margin: 0 16px 8px;
+  padding-left: 2%;
+}
+
+.reader-thought .thought {
+  position: relative;
+  top: auto;
+  left: auto;
+  right: auto;
+  transform: rotate(-2deg);
 }
 
 /* 속마음 말풍선: 손글씨 + 둥근 구름 + 방울 꼬리 */
@@ -254,11 +276,10 @@
 .thought::before { width: 13px; height: 13px; }
 .thought::after { width: 8px; height: 8px; }
 
-.thought.t1 { left: 4%; top: 9%; transform: rotate(-2deg); }
 .thought.t1::before { right: 26%; bottom: -19px; }
 .thought.t1::after { right: 20%; bottom: -32px; }
 
-.thought.t2 { right: 3%; top: 21%; transform: rotate(2deg); }
+.thought.t2 { right: 3%; top: 64%; transform: rotate(2deg); }
 .thought.t2::before { left: 20%; bottom: -19px; }
 .thought.t2::after { left: 13%; bottom: -32px; }
 
@@ -278,7 +299,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 6px 24px 70px;
+  padding: 6px 24px 24px;
 }
 
 .beat-line {
@@ -299,12 +320,12 @@
 /* ── 2. 전환 ───────────────────────────────────────── */
 
 .s-turn {
-  padding-top: 210px;
+  padding-top: 76px;
   background: linear-gradient(180deg,
     var(--paper) 0,
-    #9A8E80 70px,
-    #2D3753 160px,
-    var(--night) 250px,
+    #9A8E80 18px,
+    #2D3753 48px,
+    var(--night) 76px,
     var(--night) 100%);
 }
 
@@ -333,7 +354,16 @@
   50% { opacity: 1; }
 }
 
-.art-hero { margin-top: 6px; }
+.brand-intro {
+  display: grid;
+  grid-template-columns: 1fr 124px;
+  align-items: center;
+  padding: 12px 20px 8px;
+}
+
+.art-hero { margin: 0; }
+.art-hero img { height: 142px; object-fit: cover; object-position: center 65%; }
+.s-turn .big { font-size: clamp(30px, 8.4vw, 40px); }
 
 /* 밤하늘 그림의 위아래 경계가 섹션 배경에 녹아들게 한다. */
 .art-hero img {
@@ -342,18 +372,14 @@
 }
 
 .brand-lockup {
-  position: absolute;
-  top: 7%;
-  left: 0;
-  right: 0;
-  text-align: center;
+  text-align: left;
 }
 
 .brand-name {
   display: inline-block;
   margin: 0;
   font-family: var(--f-hanja);
-  font-size: clamp(36px, 10.5vw, 46px);
+  font-size: clamp(23px, 6.3vw, 30px);
   font-weight: 900;
   letter-spacing: -.02em;
   background: linear-gradient(180deg, #FFF1C9 0%, #F0CD7A 45%, #C9923A 100%);
@@ -405,12 +431,12 @@
 /* ── 3. 서비스 소개 ───────────────────────────────── */
 
 .s-service {
-  padding-top: 200px;
+  padding-top: 64px;
   background: linear-gradient(180deg,
-    var(--night-2) 0,
-    #3A4460 80px,
-    #BDB4A6 150px,
-    var(--paper-2) 230px,
+    var(--night) 0,
+    #3A4460 20px,
+    #BDB4A6 44px,
+    var(--paper-2) 64px,
     var(--paper-2) 100%);
 }
 
@@ -424,7 +450,7 @@
 /* 점선 타원 말풍선 */
 .cloud-bubble {
   margin: 0;
-  padding: 26px 34px;
+  padding: 16px 28px;
   color: var(--ink);
   background: #FFFDF8;
   border: 2.5px dashed var(--ink);
@@ -557,7 +583,7 @@
 }
 
 .product {
-  padding: 96px 20px 0;
+  padding: 48px 20px 0;
   text-align: center;
 }
 
@@ -566,11 +592,12 @@
 /* ── 리포트 장점 4가지 ─────────────────────────────── */
 
 .perks {
-  padding: 84px 20px 0;
+  padding: 8px 20px 0;
   text-align: center;
 }
 
-.perk { padding-top: 64px; }
+.perk { padding-top: 46px; }
+.perk:first-of-type { padding-top: 24px; }
 
 .perk-num {
   margin: 0;
@@ -698,10 +725,42 @@
 
 .report {
   position: relative;
-  width: 86%;
-  margin: 58px auto 0;
-  transform: rotate(-2.5deg);
+  margin: 24px 0 0;
+  padding: 22px 20px;
+  color: #FFF9EF;
+  background: #0F1420;
+  border: 2px solid var(--ink);
+  border-radius: 4px 14px 6px 12px;
+  box-shadow: 5px 5px 0 var(--gold);
+  text-align: left;
 }
+
+.excerpt-label { color: var(--gold-2); font-weight: 800; font-size: 14px; }
+.excerpt-label span { float: right; color: #C4BCA7; font-size: 12px; font-weight: 500; }
+.report-excerpt { margin: 16px 0 0; }
+.report-excerpt p { display: grid; grid-template-columns: 22px 1fr; gap: 10px; margin: 14px 0 0; font-size: 16px; font-weight: 650; line-height: 1.65; word-break: keep-all; }
+.excerpt-index { color: var(--gold-2); font-size: 12px; line-height: 2.2; }
+.evidence-origin { margin: 16px 0 0; color: #625C50; font-size: 12px; line-height: 1.65; text-align: center; word-break: keep-all; }
+.evidence-origin a, .sample-link { color: var(--ink); text-decoration: underline; text-underline-offset: 4px; }
+.sample-original { margin-top: 10px; text-align: left; font-size: 13px; }
+.sample-original summary { width: fit-content; margin: auto; padding: 10px; cursor: pointer; }
+.sample-original img { display: block; width: 100%; height: auto; margin-top: 10px; }
+.proof-excerpt { padding: 28px 20px 22px; border-radius: 4px 14px 6px 12px; text-align: left; }
+.proof-excerpt blockquote { margin: 0; color: #EEE8D4; font-size: 17px; line-height: 1.8; word-break: keep-all; }
+.proof-excerpt mark { padding: 0 .08em; color: inherit; background: linear-gradient(transparent 52%, #9A7837 52%, #9A7837 91%, transparent 91%); }
+.term-transcript { margin: 18px 0 0; padding: 12px 0; font-size: 16px; line-height: 1.6; border-bottom: 2px dashed #D5A542; }
+.term-transcript span { display: block; }
+.reading-guide { display: grid; grid-template-columns: 128px 1fr; align-items: center; margin: 48px 20px 0; text-align: center; }
+.reading-guide .art-explain { margin: 0; }
+.reading-guide .art-explain img { height: 180px; object-fit: cover; object-position: 50% 65%; mask-image: linear-gradient(#000 82%, transparent); }
+.reading-guide .cloud-bubble { padding: 16px 8px; font-size: 16px; }
+.reading-title { margin: 12px 0 0; font-size: 26px; }
+.reading-path { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; grid-column: 1 / -1; list-style: none; margin: 8px 0 0; padding: 0; }
+.reading-path li { padding: 14px 4px; border-top: 3px solid var(--ink); }
+.reading-path b { display: block; font-size: 16px; }
+.reading-path span { display: block; margin-top: 6px; font-size: 12px; color: #625C50; }
+.reading-guide > .perk-desc { grid-column: 1 / -1; }
+.sample-link { display: inline-block; margin-top: 16px; font-size: 14px; font-weight: 700; }
 
 .report img {
   display: block;
@@ -716,7 +775,7 @@
   content: '';
   position: absolute;
   z-index: 1;
-  top: -16px;
+  top: -12px;
   left: 50%;
   width: 84px;
   height: 26px;
@@ -817,7 +876,7 @@
 .ticket-price small { margin-left: 4px; font-size: 24px; }
 
 .free {
-  padding: 70px 20px 0;
+  padding: 44px 20px 0;
   text-align: center;
 }
 
@@ -861,22 +920,22 @@
 
 .s-close {
   position: relative;
-  padding-top: 250px;
-  padding-bottom: 170px;
+  padding-top: 100px;
   text-align: center;
   background: linear-gradient(180deg,
     var(--paper-2) 0,
-    #BDB4A6 80px,
-    #3A4460 160px,
-    var(--night-2) 240px,
+    #BDB4A6 30px,
+    #3A4460 64px,
+    var(--night-2) 100px,
     var(--night-2) 100%);
 }
+.story .s-close { padding-bottom: calc(124px + env(safe-area-inset-bottom)); }
 
 /* 작은 별 몇 개 */
 .s-close::before {
   content: '';
   position: absolute;
-  inset: 240px 0 0;
+  inset: 100px 0 0;
   background:
     radial-gradient(1.6px 1.6px at 12% 18%, #FFF1C9, transparent),
     radial-gradient(1.2px 1.2px at 28% 62%, #FFFFFF, transparent),
@@ -945,6 +1004,10 @@ a:focus-visible {
   .translate-list li { grid-template-columns: 80px 26px 1fr; }
   .caption { font-size: 14.5px; white-space: normal; }
   .ticket-price { font-size: 46px; }
+  .brand-intro { grid-template-columns: 1fr 106px; padding-left: 16px; padding-right: 16px; }
+  .cta { font-size: 14px; }
+  .cta-price { font-size: 18px; }
+  .report { padding-left: 16px; padding-right: 16px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
