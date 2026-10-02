@@ -69,7 +69,10 @@
   .deep-report .dr-sec h3.sub { font-weight: 700; }
   .deep-report .dr-sec h2 { font-weight: 700; }
   .deep-report .dd-box li b, .deep-report .dd-box .ttl { font-weight: 700; }
-  .deep-report .dr-toc { grid-template-columns: repeat(5, 1fr); }
+  .deep-report .dr-toc { grid-template-columns: repeat(3, 1fr); }
+  .deep-report .mn-list { display: grid; grid-template-columns: 1fr 1fr; gap: 1.6mm 6mm; margin: 4mm 0 0; padding: 0; list-style: none; }
+  .deep-report .mn-list li { display: grid; grid-template-columns: 11mm 1fr; gap: 2mm; font-size: 9pt; line-height: 1.55; color: #354457; break-inside: avoid; }
+  .deep-report .mn-list li b { color: #24344b; font-weight: 700; }
   .deep-report .ms-grid { grid-template-columns: 1.15fr 1fr; }
   .deep-report .radar-wrap { display: flex; align-items: center; justify-content: center; }
   <%- visualCss %>
@@ -105,7 +108,8 @@
     <div><b>02</b><%= vz.gaugeTitle.replace(/^내 /, '').replace(/ —.*$/, '') %></div>
     <div><b>03</b>타고난 구조</div>
     <div><b>04</b>대운과 앞으로 3년</div>
-    <div><b>05</b>할 것 · 피할 것</div>
+    <div><b>05</b>앞으로 12개월</div>
+    <div><b>06</b>할 것 · 피할 것</div>
   </div>
 
   <!-- 01 명식 + 오행 레이더 -->
@@ -168,7 +172,7 @@
       <p class="cap">초록 띠(65점 이상)는 흐름이 도와주는 구간, 붉은 띠(40점 미만)는 속도를 늦추고 지킬 구간이에요. <b>금색 점선이 지금 서 있는 대운</b>입니다.</p>
     </div>
     <div class="vz-panel">
-      <div class="ttl">지금 대운과 앞으로 3년 <small>무료 인생 그래프와 같은 기준</small></div>
+      <div class="ttl">지금 대운과 앞으로 3년 <small>용신과 이 주제의 십신을 함께 본 점수</small></div>
       <%- vz.yearBars %>
     </div>
     <% if (vz.careerBars) { %>
@@ -180,10 +184,28 @@
     <%- renderBody(timing.flow) %>
   </div>
 
-  <!-- 05 할 것 / 피할 것 -->
+  <!-- 05 앞으로 12개월 — 엔진 점수 막대 + AI가 쓴 월별 한 줄(못 받았으면 그래프만) -->
+  <% if (vz.months) { %>
+  <div class="dr-sec">
+    <div class="label">05 · 앞으로 12개월</div>
+    <h2>달마다 어떻게 움직일까</h2>
+    <div class="vz-panel">
+      <div class="ttl">이번 달부터 12개월 <small><%= t.months[0].year %>년 <%= t.months[0].month %>월 시작</small></div>
+      <%- vz.months %>
+      <p class="cap">점수는 용신과 이 주제의 십신을 함께 본 값이에요.</p>
+      <% var mNotes = timing.monthNotes || []; if (mNotes.length) { %>
+      <ul class="mn-list">
+        <% t.months.forEach(function(m){ var n = mNotes.find(function(x){ return x.month === m.month; }); if (!n) return; %><li><b><%= m.month %>월</b><span><%- renderMarkup(n.note) %></span></li><% }); %>
+      </ul>
+      <% } %>
+    </div>
+  </div>
+  <% } %>
+
+  <!-- 06 할 것 / 피할 것 -->
   <% if (timing.dos.length || timing.donts.length) { %>
   <div class="dr-sec">
-    <div class="label">05 · 지금 할 것, 피할 것</div>
+    <div class="label">06 · 지금 할 것, 피할 것</div>
     <h2>이 시기에 실제로 움직일 방향</h2>
     <div class="dd-grid">
       <div class="dd-box do"><div class="ttl">지금 할 것</div><ol><% timing.dos.forEach(function(d){ %><li><%- renderMarkup(d) %></li><% }); %></ol></div>

@@ -114,6 +114,8 @@ function buildDeepVisuals(engine, reading, gender) {
   const best = years.slice().sort((a, b) => b.score - a.score)[0];
   const worst = years.slice().sort((a, b) => a.score - b.score)[0];
   const thisYear = years[0];
+  const months = t.months || [];
+  const bestMonth = months.length ? months.reduce((a, b) => (b.score > a.score ? b : a)) : null;
 
   const decades = computeDaewoonScores(engine.daewoon, t.yongshinMain);
   let curIdx = -1;
@@ -132,11 +134,14 @@ function buildDeepVisuals(engine, reading, gender) {
     stats: [
       thisYear && { k: thisYear.year + '년 흐름', v: thisYear.score + '점', s: V.scoreTier(thisYear.score).label },
       best && { k: '3년 중 가장 좋은 해', v: best.year + '년', s: best.score + '점 · ' + V.scoreTier(best.score).label },
-      worst && worst !== best && { k: '가장 조심할 해', v: worst.year + '년', s: worst.score + '점 · ' + V.scoreTier(worst.score).label }
+      bestMonth
+        ? { k: '12개월 중 가장 좋은 달', v: bestMonth.year + '년 ' + bestMonth.month + '월', s: bestMonth.score + '점 · ' + V.scoreTier(bestMonth.score).label }
+        : worst && worst !== best && { k: '가장 조심할 해', v: worst.year + '년', s: worst.score + '점 · ' + V.scoreTier(worst.score).label }
     ].filter(Boolean),
     radar: V.ohaengRadarSvg(engine.counts.ohaeng || {}),
     curve: V.lifeCurveSvg(curvePoints, curIdx),
     yearBars: V.scoreBarsHtml(yearRows),
+    months: months.length ? V.monthFlowHtml(months) : '',
     careerBars: careerRows.length ? V.scoreBarsHtml(careerRows) : '',
     gauges: V.gaugesHtml(topicGauges(engine, reading.topicKey, gender)),
     badges: V.badgesHtml(topicBadges(engine, reading.topicKey)),
@@ -153,7 +158,8 @@ function deepWebHtml(vz) {
     panel(vz.gaugeTitle, '사주 여덟 글자 속 기운의 개수', vz.gauges + vz.badges) +
     panel('오행 균형', '', vz.radar) +
     panel('10년 단위 인생 흐름', '금색 점선이 지금', vz.curve) +
-    panel('지금 대운과 앞으로 3년', '', vz.yearBars) +
+    panel('지금 대운과 앞으로 3년', '용신과 이 주제의 십신을 함께 본 점수', vz.yearBars) +
+    panel('앞으로 12개월', '용신과 이 주제의 십신을 함께 본 점수', vz.months) +
     panel('이직·승진 관점 5년 타임라인', '', vz.careerBars) +
     '</div>';
 }

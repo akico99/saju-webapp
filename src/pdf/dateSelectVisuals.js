@@ -8,6 +8,13 @@ function altLine(t, i) {
   return (i + 2) + '순위 · ' + t.month + '.' + pad(t.day) + ' (' + t.weekday + ')' + (t.hour ? ' ' + t.hour + '시' : '') + ' · ' + t.score + '점';
 }
 
+// "피하면 좋은 날" 목록 — 날짜·점수·엔진이 본 이유. 이유 문장은 라우트가 엔진 사실로만 만든다.
+function avoidListHtml(list) {
+  return '<div class="vz-avoid-list">' + list.map((a) => '<div class="row"><span class="dt">' + a.month + '.' + pad(a.day) + ' (' + V.esc(a.weekday) + ')</span><span class="sc">' + a.score + '점</span>' +
+    '<span class="why">' + V.esc(a.reason || '이 달 안에서 점수가 낮은 편이에요') +
+    (a.scoreA != null ? '<small>' + V.esc(a.scoreA + ' / ' + a.scoreB) + ' (두 사람 점수)</small>' : '') + '</span></div>').join('') + '</div>';
+}
+
 function buildDateSelectParts(v) {
   if (!v) return null;
   const best = v.best;
@@ -26,8 +33,12 @@ function buildDateSelectParts(v) {
   if (v.kind === 'month') {
     const ranks = {};
     (v.top || []).forEach((t, i) => { ranks[t.day] = i + 1; });
-    panels.push({ title: v.month + '월 한 달 날짜 점수', sub: '날마다 내 용신·' + v.label + ' 궁합으로 매긴 점수', html: V.monthCalendarHtml(v.year, v.month, v.days || [], ranks),
-      cap: '<b>진한 초록 날짜일수록 이 달 안에서 흐름이 가장 좋은 날</b>이고, 금색 테두리가 1~3순위예요. 추천일이 어렵다면 초록 칸 안에서 고르면 됩니다.' });
+    const avoidMap = {};
+    (v.avoid || []).forEach((a) => { avoidMap[a.day] = true; });
+    panels.push({ title: v.month + '월 한 달 날짜 점수', sub: '날마다 내 용신·' + v.label + ' 궁합으로 매긴 점수', html: V.monthCalendarHtml(v.year, v.month, v.days || [], ranks, avoidMap),
+      cap: '<b>진한 초록 날짜일수록 이 달 안에서 흐름이 가장 좋은 날</b>이고, 금색 테두리가 1~3순위예요.' + ((v.avoid || []).length ? ' 빨간 점선 칸(피함)은 이 달 점수가 가장 낮은 날이에요.' : '') + ' 추천일이 어렵다면 초록 칸 안에서 고르면 됩니다.' });
+    if ((v.avoid || []).length) panels.push({ title: '피하면 좋은 날', sub: '이 달 점수가 가장 낮은 3일', html: avoidListHtml(v.avoid),
+      cap: '꼭 그 날이어야 한다면 큰 문제는 아니고, <b>다른 날을 고를 수 있을 때 피하는 편이 무난</b>하다는 참고예요.' });
     if ((v.hours || []).length) panels.push({ title: '추천일의 시간대별 점수', sub: best ? best.month + '월 ' + best.day + '일' : '', html: V.hourBarsHtml(v.hours, best && best.hour),
       cap: '짐을 들이거나 문을 여는 <b>첫 행동을 가장 높은 막대 시간에</b> 맞추면 됩니다.' });
     const e = v.extras || {};
@@ -49,6 +60,8 @@ function buildDateSelectParts(v) {
       cap: '막대가 높은 달이 두 사람의 흐름이 함께 올라가는 달이에요. <b>금색 테두리가 추천 달</b>입니다.' });
     const rows = (v.top || []).map((t, i) => ({ label: (i + 1) + '순위 ' + t.month + '.' + pad(t.day) + ' (' + t.weekday + ')', sub: (v.names || [])[0] + ' ' + t.scoreA + ' · ' + (v.names || [])[1] + ' ' + t.scoreB, score: t.score, highlight: i === 0 }));
     if (rows.length) panels.push({ title: '두 사람 모두에게 좋은 주말 TOP 5', sub: '두 사람 점수의 평균', html: V.scoreBarsHtml(rows) });
+    if ((v.avoid || []).length) panels.push({ title: '피하면 좋은 날', sub: '올해 두 사람 점수가 가장 낮은 주말 3개', html: avoidListHtml(v.avoid),
+      cap: '다른 날을 고를 수 있을 때 <b>피하는 편이 무난</b>하다는 참고예요. 피할 수 없다면 크게 걱정하지 않으셔도 됩니다.' });
     if ((v.hours || []).length) panels.push({ title: '추천일의 시간대별 점수', sub: '두 사람 평균', html: V.hourBarsHtml(v.hours, best && best.hour) });
     const e = v.extras || {};
     const names = v.names || ['본인', '상대방'];

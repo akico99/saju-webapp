@@ -110,7 +110,7 @@ function badgesHtml(items) {
 }
 
 /* 한 달 달력 — 날마다 점수 색을 칠하고, 1~3순위 날짜에 순위 표시. days: [{day, score}] */
-function monthCalendarHtml(year, month, days, ranks = {}) {
+function monthCalendarHtml(year, month, days, ranks = {}, avoids = {}) {
   const byDay = {};
   days.forEach((d) => { byDay[d.day] = d.score; });
   const first = new Date(year, month - 1, 1).getDay();
@@ -121,8 +121,9 @@ function monthCalendarHtml(year, month, days, ranks = {}) {
     const s = byDay[d];
     const t = s == null ? null : scoreTier(s);
     const rank = ranks[d];
-    cells += '<div class="cell ' + (t ? t.key : 'none') + (rank ? ' rank rank' + rank : '') + '"><span class="d">' + d + '</span>' +
-      (s != null ? '<span class="s">' + s + '</span>' : '') + (rank ? '<span class="r">' + rank + '순위</span>' : '') + '</div>';
+    const avoid = avoids[d] && !rank;
+    cells += '<div class="cell ' + (t ? t.key : 'none') + (rank ? ' rank rank' + rank : '') + (avoid ? ' avoid' : '') + '"><span class="d">' + d + '</span>' +
+      (s != null ? '<span class="s">' + s + '</span>' : '') + (rank ? '<span class="r">' + rank + '순위</span>' : '') + (avoid ? '<span class="av">피함</span>' : '') + '</div>';
   }
   return '<div class="vz-cal"><div class="vz-cal-head">' + year + '년 ' + month + '월</div><div class="vz-cal-grid">' + cells + '</div>' + legendHtml() + '</div>';
 }
@@ -142,6 +143,20 @@ function hourBarsHtml(hours, bestHour) {
 }
 
 /* 한 해 12개월 — 달마다 가장 좋은 주말 점수. months: [{month, score, day}] */
+/* 월별 흐름 막대 — 리딩의 "앞으로 12개월", 신년운세의 1~12월. months: [{year, month, score, note?}]
+   가장 높은 달과 가장 낮은 달에 표시를 단다. note는 막대 아래 한 줄(선택). */
+function monthFlowHtml(months, opts = {}) {
+  if (!months || !months.length) return '';
+  const hi = months.reduce((a, b) => (b.score > a.score ? b : a));
+  const lo = months.reduce((a, b) => (b.score < a.score ? b : a));
+  return '<div class="vz-months vz-flow">' + (opts.title ? '<div class="vz-cal-head">' + esc(opts.title) + '</div>' : '') + '<div class="grid">' + months.map((m) => {
+    const t = scoreTier(m.score);
+    const tag = m === hi ? '<span class="tag">최고</span>' : m === lo ? '<span class="tag low">주의</span>' : '';
+    const yearMark = m.month === 1 || m === months[0] ? '<span class="d">' + m.year + '</span>' : '<span class="d">&nbsp;</span>';
+    return '<div class="col' + (m === hi ? ' best' : '') + '">' + tag + '<span class="v">' + m.score + '</span><div class="bar"><i style="height:' + clamp(m.score, 4, 100) + '%;background:' + TIER_COLOR[t.key] + '"></i></div><span class="h">' + m.month + '월</span>' + yearMark + '</div>';
+  }).join('') + '</div></div>';
+}
+
 function yearMonthsHtml(year, months, bestMonth) {
   return '<div class="vz-months"><div class="vz-cal-head">' + year + '년 달마다 가장 좋은 주말</div><div class="grid">' + months.map((m) => {
     const t = scoreTier(m.score);
@@ -170,6 +185,79 @@ function infoCardsHtml(cards) {
 function swatchHtml(ohaeng, label, sub) {
   return '<div class="vz-swatch"><i style="background:' + (OH_COLOR[ohaeng] || '#ccc') + '"></i><div><b>' + esc(label) + '</b><span>' + esc(sub || '') + '</span></div></div>';
 }
+
+/* 두 사람 막대 나란히 — 궁합의 "두 사람의 앞으로 3년"(재회는 6개월). periods: [{label, shortLabel?, a:{score}, b:{score}, combined}]
+   기간마다 A·B 막대 둘과 두 사람 평균을 보여 주고, bestIndex(평균이 가장 높은 때)에 표시를 단다.
+   opts: {nameA, nameB, bestIndex, bestTag} */
+function pairBarsHtml(periods, opts = {}) {
+  if (!periods || !periods.length) return '';
+  const bestIndex = opts.bestIndex == null ? -1 : opts.bestIndex;
+  const bar = (who, score) => '<div class="col ' + who + '"><span class="v">' + score + '</span><div class="bar"><i style="height:' + clamp(score, 4, 100) + '%"></i></div></div>';
+  return '<div class="vz-pair"><div class="vz-pair-legend"><span><i class="a"></i>' + esc(opts.nameA || '본인') + '</span><span><i class="b"></i>' + esc(opts.nameB || '상대방') + '</span><span><i class="c"></i>두 사람 평균</span></div>' +
+    '<div class="vz-pair-grid">' + periods.map((p, i) => {
+      const best = i === bestIndex;
+      return '<div class="grp' + (best ? ' best' : '') + '">' + (best ? '<span class="tag">' + esc(opts.bestTag || '함께 올라가는 때') + '</span>' : '') +
+        '<div class="pair">' + bar('a', p.a.score) + bar('b', p.b.score) + '</div>' +
+        '<span class="h">' + esc(p.shortLabel || p.label) + '</span><span class="avg">평균 <b>' + p.combined + '</b></span></div>';
+    }).join('') + '</div></div>';
+}
+
+/* 지금 할 것 / 피할 것 두 카드 — 심층 리딩의 dd-grid와 같은 모양(초록·붉은 윗선). **강조**는 rich로 바꾼다.
+   rich 기본: 이스케이프 후 **굵게** → <strong class="hl">. PDF는 textMarkup.renderMarkup(<mark>)을 넘긴다. */
+function ddCardsHtml(dos, donts, opts = {}) {
+  const rich = opts.rich || ((s) => esc(s).replace(/\*\*(.+?)\*\*/g, '<strong class="hl">$1</strong>'));
+  const list = (items) => '<ol>' + items.map((t) => '<li>' + rich(t) + '</li>').join('') + '</ol>';
+  const box = (cls, title, items) => (items && items.length ? '<div class="vz-dd ' + cls + '"><div class="ttl">' + esc(title) + '</div>' + list(items) + '</div>' : '');
+  const a = box('do', opts.doTitle || '지금 할 것', dos), b = box('dont', opts.dontTitle || '피할 것', donts);
+  if (!a && !b) return '';
+  return '<div class="vz-dd-grid' + (a && b ? '' : ' one') + '">' + a + b + '</div>';
+}
+
+const PAIR_CSS = `
+.vz-pair { margin-top: 1mm; }
+.vz-pair-legend { display: flex; flex-wrap: wrap; gap: 1.5mm 5mm; margin: 0 0 3mm; color: #5d6776; font-size: 8.5pt; }
+.vz-pair-legend i { display: inline-block; width: 3mm; height: 3mm; margin-right: 1.4mm; border-radius: .8mm; vertical-align: -.4mm; }
+.vz-pair-legend i.a, .vz-pair .col.a i { background: #24344b; }
+.vz-pair-legend i.b, .vz-pair .col.b i { background: #c7a13a; }
+.vz-pair-legend i.c { background: #2f7d6b; border-radius: 50%; }
+.vz-pair-grid { display: flex; align-items: stretch; gap: 3mm; height: 54mm; padding-top: 1mm; }
+.vz-pair .grp { position: relative; flex: 1; display: flex; flex-direction: column; align-items: center; min-width: 0; padding: 0 1mm 1.5mm; border-radius: 2mm; }
+.vz-pair .grp.best { background: #eef6f2; outline: 1.5px solid #2f7d6b; outline-offset: 0; }
+.vz-pair .pair { flex: 1; display: flex; align-items: stretch; gap: 1.2mm; width: 100%; justify-content: center; padding-top: 7mm; }
+.vz-pair .col { flex: 1; max-width: 9mm; display: flex; flex-direction: column; align-items: center; }
+.vz-pair .col .v { color: #24344b; font-size: 8pt; font-weight: 700; margin-bottom: .8mm; }
+.vz-pair .col .bar { flex: 1; width: 100%; display: flex; align-items: flex-end; border-radius: 1.2mm; background: #f1eee6; overflow: hidden; }
+.vz-pair .col .bar i { display: block; width: 100%; border-radius: 1.2mm 1.2mm 0 0; }
+.vz-pair .grp .h { margin-top: 1.2mm; color: #5d6776; font-size: 8pt; white-space: nowrap; }
+.vz-pair .grp.best .h { color: #24344b; font-weight: 700; }
+.vz-pair .grp .avg { margin-top: .6mm; padding: .3mm 2mm; border-radius: 2mm; background: #f1eee6; color: #5d6776; font-size: 7.5pt; white-space: nowrap; }
+.vz-pair .grp .avg b { color: #24344b; font-size: 9pt; }
+.vz-pair .grp.best .avg { background: #2f7d6b; color: #fff; }
+.vz-pair .grp.best .avg b { color: #fff; }
+.vz-pair .tag { position: absolute; top: 1mm; left: 50%; transform: translateX(-50%); padding: .3mm 1.6mm; border-radius: 1mm; background: #2f7d6b; color: #fff; font-size: 6.8pt; font-weight: 700; white-space: nowrap; }
+
+.vz-dd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; break-inside: avoid; margin-top: 6mm; }
+.vz-dd-grid.one { grid-template-columns: 1fr; }
+.vz-dd { padding: 5mm 6mm; border-radius: 3mm; background: #fff; border: 1px solid #e3e1d9; }
+.vz-dd.do { border-top: 3px solid #438779; }
+.vz-dd.dont { border-top: 3px solid #c9674b; }
+.vz-dd .ttl { margin-bottom: 3mm; font-size: 10pt; font-weight: 800; }
+.vz-dd.do .ttl { color: #2f6a5e; }
+.vz-dd.dont .ttl { color: #a3513a; }
+.vz-dd ol { margin: 0; padding-left: 5mm; font-size: 9.5pt; line-height: 1.7; color: #354457; }
+.vz-dd li { margin-bottom: 1.5mm; }
+.vz-dd strong.hl, .vz-dd mark { font-weight: 700; color: #1d2c40; background: linear-gradient(transparent 58%, rgba(199,161,58,.32) 58%); }
+.vz-web .vz-pair-grid { gap: 1.5mm; height: 48mm; }
+.vz-web .vz-pair .col .v { font-size: 7pt; }
+@media (max-width: 560px) {
+  .vz-dd-grid { grid-template-columns: 1fr; }
+  .vz-web .vz-pair .grp { padding: 0 .3mm 1.5mm; }
+  .vz-web .vz-pair .col { max-width: 5mm; }
+  .vz-web .vz-pair .grp .avg { padding: .3mm 1mm; font-size: 6.8pt; }
+}
+`;
+
+
 
 const VISUAL_CSS = `
 .vz-panel { margin: 0 0 6mm; padding: 5mm 6mm; border: 1px solid #e3e1d9; border-radius: 3mm; background: #fff; break-inside: avoid; }
@@ -222,6 +310,14 @@ const VISUAL_CSS = `
 .vz-cal .cell.t2 { background: #f6ddd1; } .vz-cal .cell.t1 { background: #e9b7a5; }
 .vz-cal .cell.rank { outline: 2px solid #c7a13a; outline-offset: -1px; }
 .vz-cal .cell.rank1 { outline-width: 3px; }
+.vz-cal .cell.avoid { outline: 2px dashed #c0533b; outline-offset: -1px; }
+.vz-cal .cell .av { position: absolute; left: 1.6mm; bottom: 1.1mm; padding: .2mm 1.2mm; border-radius: 1mm; background: #fff; border: .3mm solid #c0533b; color: #c0533b; font-size: 6.8pt; font-weight: 700; }
+.vz-avoid-list { display: grid; gap: 2.2mm; }
+.vz-avoid-list .row { display: grid; grid-template-columns: 24mm 12mm 1fr; gap: 3mm; align-items: baseline; padding: 2.4mm 3mm; border: 1px dashed #d9a79a; border-radius: 2mm; background: #fdf6f3; break-inside: avoid; }
+.vz-avoid-list .dt { color: #24344b; font-size: 9.5pt; font-weight: 700; }
+.vz-avoid-list .sc { color: #c0533b; font-size: 9.5pt; font-weight: 700; }
+.vz-avoid-list .why { color: #55606e; font-size: 8.5pt; line-height: 1.5; }
+.vz-avoid-list .why small { display: block; color: #8a929c; font-size: 7.5pt; }
 .vz-cal .cell .r { position: absolute; left: 1.6mm; bottom: 1.1mm; padding: .2mm 1.2mm; border-radius: 1mm; background: #c7a13a; color: #fff; font-size: 6.8pt; font-weight: 700; }
 .vz-legend { display: flex; flex-wrap: wrap; gap: 1.5mm 4mm; margin-top: 3mm; color: #6d7887; font-size: 7.8pt; }
 .vz-legend i { display: inline-block; width: 3mm; height: 3mm; margin-right: 1.2mm; border-radius: .8mm; vertical-align: -.4mm; }
@@ -236,6 +332,10 @@ const VISUAL_CSS = `
 .vz-hours .col.best .bar, .vz-months .col.best .bar { outline: 2px solid #c7a13a; outline-offset: 1px; }
 .vz-hours .col.best .h, .vz-months .col.best .h { color: #24344b; font-weight: 700; }
 .vz-hours .tag { position: absolute; top: -4.2mm; padding: .3mm 1.5mm; border-radius: 1mm; background: #c7a13a; color: #fff; font-size: 6.8pt; font-weight: 700; }
+.vz-flow .col { position: relative; }
+.vz-flow .tag { position: absolute; top: -4.2mm; padding: .3mm 1.2mm; border-radius: 1mm; background: #2f7d6b; color: #fff; font-size: 6.5pt; font-weight: 700; white-space: nowrap; }
+.vz-flow .tag.low { background: #c9674b; }
+.vz-flow .grid { gap: 1.6mm; }
 .vz-months { margin-top: 1mm; }
 
 .vz-heat { width: 100%; border-collapse: separate; border-spacing: 1.2mm; font-size: 8pt; }
@@ -269,6 +369,7 @@ const VISUAL_CSS = `
 .vz-verdict .vd-sub { color: #2f6a5e; font-size: 10pt; font-weight: 700; }
 .vz-verdict .vd-alts { display: flex; flex-wrap: wrap; gap: 2mm; margin-top: 4mm; }
 .vz-verdict .vd-alts span { padding: 1.5mm 3mm; border-radius: 2mm; background: #f7f3e8; color: #5d6776; font-size: 8.5pt; }
+${PAIR_CSS}
 `;
 
 /* 웹 결과 화면 — 같은 조각을 휴대폰 폭에 맞게 접는다. mm 단위는 화면에서도 그대로 동작한다. */
@@ -284,6 +385,7 @@ const WEB_VISUAL_CSS = VISUAL_CSS + `
   .vz-web .vz-bar { grid-template-columns: 30mm 1fr 16mm; gap: 2mm; }
   .vz-web .vz-cal .cell { min-height: 11mm; padding: 1mm 1.2mm; }
   .vz-web .vz-cal .cell .r { display: none; }
+  .vz-web .vz-cal .cell .av { display: none; }
   .vz-web .vz-hours, .vz-web .vz-months .grid { gap: 1.2mm; }
   .vz-web .vz-months .d { display: none; }
   .vz-web .vz-heat { border-spacing: .6mm; font-size: 7pt; }
@@ -293,7 +395,8 @@ const WEB_VISUAL_CSS = VISUAL_CSS + `
 module.exports = {
   OH, OH_LABEL, OH_COLOR, OH_MEANING, esc, scoreTier, TIER_COLOR,
   ohaengRadarSvg, lifeCurveSvg, scoreBarsHtml, gaugesHtml, badgesHtml,
-  monthCalendarHtml, hourBarsHtml, yearMonthsHtml, heatmapHtml, infoCardsHtml, swatchHtml, legendHtml,
+  monthCalendarHtml, hourBarsHtml, yearMonthsHtml, monthFlowHtml, heatmapHtml, infoCardsHtml, swatchHtml, legendHtml,
+  pairBarsHtml, ddCardsHtml,
   VISUAL_CSS, WEB_VISUAL_CSS
 };
 

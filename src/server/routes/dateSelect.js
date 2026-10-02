@@ -313,6 +313,28 @@ function weekendDaysInYear(year) {
   return list;
 }
 
+// 하위 날짜가 "왜 피하는 편이 무난한지" — 엔진이 이미 아는 사실(일지 충, 주제 십신, 용신 관계)만 모은다.
+function avoidReasonOf({ year, month, day }, ctx) {
+  const engineResult = computeSaju({ year, month, day, hour: 12, minute: 0 });
+  const r = scorePersonCandidate({ engineResult, includeHour: false, ...ctx });
+  const dayBranch = engineResult.palja.dayPillar.branch;
+  const chung = isChung(ctx.personDayBranch, dayBranch);
+  const parts = [];
+  if (chung) parts.push('태어난 날(일지)과 부딪히는 충(沖)이 있는 날');
+  if (r.occasionPhrase) parts.push(r.occasionPhrase);
+  if (r.dayPhrase) parts.push('이 날의 기운은 ' + r.dayPhrase.replace(/[ .]+$/, ''));
+  return { reason: parts.join(' · '), chung, occasionPhrase: r.occasionPhrase || '' };
+}
+
+function weekdayOf(d) { return WEEKDAY_KO[new Date(d.year, d.month - 1, d.day).getDay()]; }
+
+// 프롬프트에 넘기는 대안(2·3순위) 한 줄 — 점수·요일·1순위와의 차이.
+function altFacts(list, first) {
+  return list.slice(1, 3).map((d, i) => ({
+    rank: i + 2, month: d.month, day: d.day, weekday: weekdayOf(d), score: d.score, gap: first.score - d.score
+  }));
+}
+
 function scanDays(dateList, ctx) {
   return dateList.map(({ year, month, day }) => {
     try {
@@ -381,6 +403,15 @@ async function runMonthSearch(userId, body, occasionKey, occasion) {
   const bestHours = bestDay ? hoursOf(bestDay, ctx) : [];
   const best = bestHours[0] || null;
 
+  // 하위 3일(피하면 좋은 날) — 이미 점수순으로 정렬된 목록의 맨 끝에서 가져온다. 최고점 3일과 겹치지 않게 한다.
+  const avoidPool = dayResults.length > 6 ? dayResults.slice(-3).reverse() : [];
+  const avoid = avoidPool.map((d) => {
+    let info = { reason: '', chung: false };
+    try { info = avoidReasonOf(d, ctx); } catch (e) { /* 이유 계산 실패 시 점수만 표시 */ }
+    return { month: d.month, day: d.day, score: d.score, weekday: weekdayOf(d), reason: info.reason, chung: info.chung };
+  });
+  const alts = bestDay ? altFacts(dayResults, bestDay) : [];
+
   let extras = {};
   if (occasionKey === 'moving' && OHAENG_DIRECTION[yongshinMain]) {
     extras.direction = { ohaeng: OHAENG_KO[yongshinMain], ...OHAENG_DIRECTION[yongshinMain] };
@@ -401,6 +432,7 @@ async function runMonthSearch(userId, body, occasionKey, occasion) {
     kind: 'month', occasion: occasionKey, label: occasion.label, year: targetYear, month: targetMonth,
     days: dayResults.map((d) => ({ day: d.day, score: d.score })),
     top: dayResults.slice(0, 3).map((d) => ({ month: d.month, day: d.day, score: d.score, weekday: WEEKDAY_KO[new Date(d.year, d.month - 1, d.day).getDay()] })),
+    avoid,
     hours: bestHours.map((h) => ({ hour: h.hour, score: h.score })),
     best: bestOut, bestValue, yongshin: yongshinMain,
     extras: {
@@ -424,6 +456,7 @@ async function runMonthSearch(userId, body, occasionKey, occasion) {
         yongshinOhaengKo: OHAENG_KO[yongshinMain] || yongshinMain,
         targetYear, targetMonth,
         best: best ? { year: bestDay.year, month: bestDay.month, day: bestDay.day, ...best } : null,
+        alts, avoid,
         extras
       }));
     } catch (e) {
@@ -499,6 +532,24 @@ async function runWeddingSearch(userId, body, occasionKey, occasion) {
   combined.sort((a, b) => b.score - a.score);
   const bestDay = combined[0];
 
+  // 하위 3개 주말 — 두 사람 점수와 엔진 근거(일지 충 여부, 점수가 낮은 쪽의 주제 십신).
+  const wedAvoid = combined.length > 6 ? combined.slice(-3).reverse().map((d) => {
+    const k = `${d.month}-${d.day}`;
+    const sA = byKey[k].scoreA, sB = byKey[k].scoreB;
+    const parts = [];
+    let phrase = '';
+    try {
+      const ra = avoidReasonOf(d, ctxA), rb = avoidReasonOf(d, ctxB);
+      const nameA = basicsA.personName || '본인', nameB = basicsB.personName || '상대방';
+      if (ra.chung) parts.push(nameA + ' 님의 태어난 날과 충(沖)');
+      if (rb.chung) parts.push(nameB + ' 님의 태어난 날과 충(沖)');
+      phrase = (sA <= sB ? ra : rb).occasionPhrase;
+    } catch (e) { /* 이유 계산 실패 시 점수만 표시 */ }
+    if (phrase) parts.push(phrase);
+    return { month: d.month, day: d.day, score: d.score, weekday: weekdayOf(d), scoreA: sA, scoreB: sB, reason: parts.join(' · ') };
+  }) : [];
+  const wedAlts = bestDay ? altFacts(combined, bestDay).map((a) => ({ ...a, scoreA: byKey[`${a.month}-${a.day}`].scoreA, scoreB: byKey[`${a.month}-${a.day}`].scoreB })) : [];
+
   let best = null;
   let coupleHours = [];
   if (bestDay) {
@@ -535,6 +586,7 @@ async function runWeddingSearch(userId, body, occasionKey, occasion) {
       month: d.month, day: d.day, score: d.score, weekday: WEEKDAY_KO[new Date(d.year, d.month - 1, d.day).getDay()],
       scoreA: byKey[`${d.month}-${d.day}`].scoreA, scoreB: byKey[`${d.month}-${d.day}`].scoreB
     })),
+    avoid: wedAvoid,
     hours: coupleHours, best: bestOut, bestValue,
     names: [basicsA.personName || '본인', basicsB.personName || '상대방'],
     compatScore: compat.score,
@@ -568,6 +620,7 @@ async function runWeddingSearch(userId, body, occasionKey, occasion) {
         spouseYongshinOhaengKo: OHAENG_KO[basicsB.yongshinMain] || basicsB.yongshinMain,
         targetYear,
         best: best && bestDay ? { year: bestDay.year, month: bestDay.month, day: bestDay.day, ...best } : null,
+        alts: wedAlts, avoid: wedAvoid,
         compat: {
           score: compat.score,
           dayRelationType: compat.dayRelation?.type || null,
@@ -713,6 +766,7 @@ async function runBirthSearch(userId, body, occasionKey, occasion) {
         topic: 'birth', occasionLabel: occasion.label,
         parentNames,
         best,
+        alts: candidates.slice(1, 3).map((c, i) => ({ rank: i + 2, month: c.month, day: c.day, hour: c.hour, weekday: WEEKDAY_KO[new Date(c.year, c.month - 1, c.day).getDay()], score: c.score, gap: best.score - c.score })),
         temperament: best ? STEM_TEMPERAMENT[best.dayStem] : null,
         taste: motherYongshinMain ? OHAENG_TASTE[motherYongshinMain] : null,
         lackingKo: best ? best.lacking.map((k) => OHAENG_KO[k] || k) : []

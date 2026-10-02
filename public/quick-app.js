@@ -69,10 +69,13 @@ function showReading(report, topic, visual) {
   const isDos = (t) => /할 것/.test(t) && !/피할/.test(t);
   const isDonts = (t) => /피할 것/.test(t);
   const isTiming = (t) => /대운|앞으로 3년/.test(t);
+  // "앞으로 12개월"은 위 정규식에 걸리지 않는다("3년"·"대운"이 없다) — 월별 한 줄 불릿을 따로 그린다.
+  const isMonths = (t) => /앞으로 12개월/.test(t);
   const dos = sections.find((s) => isDos(s.title));
   const donts = sections.find((s) => isDonts(s.title));
   const timing = sections.find((s) => isTiming(s.title));
-  const chapters = sections.filter((s) => s !== dos && s !== donts && s !== timing);
+  const months = sections.find((s) => isMonths(s.title));
+  const chapters = sections.filter((s) => s !== dos && s !== donts && s !== timing && s !== months);
 
   // 표지 — 주제가 결론 자리에 오고, 그 아래 "핵심 요약" 소주제의 첫 문단이 리드가 된다.
   document.getElementById('readingKicker').textContent = label + ' 심층 리딩';
@@ -101,6 +104,11 @@ function showReading(report, topic, visual) {
   timingBody.replaceChildren();
   if (timing) renderProse(timing.blocks, timingBody);
   document.getElementById('readingTiming').hidden = !timing;
+
+  const monthsBody = document.getElementById('readingMonthsBody');
+  monthsBody.replaceChildren();
+  if (months) renderProse(months.blocks, monthsBody);
+  document.getElementById('readingMonths').hidden = !months;
 
   readingParagraphs.replaceChildren();
   chapters.forEach((ch) => {

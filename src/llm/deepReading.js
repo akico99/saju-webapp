@@ -19,6 +19,7 @@ const { generateText, sumUsage } = require('./client');
 const { computeDaewoonScores, relationScore } = require('../pdf/charts');
 const { STEM_OHAENG, BRANCH_MAIN_STEM, STEM_KO, BRANCH_KO } = require('../engine/constants');
 const { computeCareerTimeline } = require('../engine/timing');
+const { monthlyFlow } = require('../engine/monthlyFlow');
 
 const DEEP_TOPICS = {
   intro: { chapterIds: [1, 2, 3], perChapterWords: 2000, label: '내 사주 첫 풀이', focus: '이 사람의 타고난 성격·기질과 오행 균형 전체' },
@@ -53,7 +54,14 @@ function tier(score) {
 
 /* 인생 그래프(lifeGraph.js)와 같은 계산으로 현재 대운과 앞으로 3년 세운을 뽑는다.
    숫자는 여기서 확정하고 LLM에는 해석만 맡긴다 — 점수를 LLM이 지어내면 그래프와 어긋난다. */
-function buildTimingData(engineResult, now = new Date()) {
+/* 한국 달력(Asia/Seoul)으로 지금이 몇 년 몇 월인지 — 서버 시간대와 상관없이 같은 달을 가리키게 한다. */
+function seoulYearMonth(now) {
+  const parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul', year: 'numeric', month: 'numeric' }).formatToParts(now);
+  const pick = (type) => Number(parts.find((p) => p.type === type).value);
+  return { year: pick('year'), month: pick('month') };
+}
+
+function buildTimingData(engineResult, now = new Date(), opts = {}) {
   const yongshinMain = engineResult.yongshin.final.main;
   const birthYear = engineResult.meta.input.year;
   const currentAge = now.getFullYear() - birthYear + 1;
@@ -76,7 +84,15 @@ function buildTimingData(engineResult, now = new Date()) {
       unseong: y.unseong || null
     }));
 
-  return { yongshinMain, currentAge, current, next, years };
+  // 이번 달부터 12개월 — 용신 점수 60% + 이 주제의 십신 점수 40%(engine/monthlyFlow). 실패해도 나머지 풀이는 그대로 간다.
+  let months = [];
+  try {
+    const { year: fromYear, month: fromMonth } = seoulYearMonth(now);
+    const gender = opts.gender || engineResult.meta.input.gender || null;
+    months = monthlyFlow(engineResult, { fromYear, fromMonth, count: 12, topic: opts.topicKey || 'intro', gender });
+  } catch (e) { months = []; }
+
+  return { yongshinMain, currentAge, current, next, years, months };
 }
 
 /* 직업·적성 심층 리딩에만 붙는 5년 이직 타임라인 — 예전 990원 "이직 시기" 상품이 쓰던
@@ -102,13 +118,28 @@ function careerBlockText(rows) {
   return '\n\n## 이직·승진 관점 5년 타임라인 (확정값)\n' + lines.join('\n');
 }
 
+function monthsBlockText(months) {
+  if (!months || !months.length) return '';
+  const lines = months.map((m) => `- ${m.year}년 ${m.month}월 ${m.ganZhiKo}(${m.ganZhi})월: 점수 ${m.score} (${tier(m.score)}) · 천간 ${m.stemShipsin || '-'} · 지지 ${m.branchShipsin || '-'}`);
+  return '\n\n## 앞으로 12개월 점수 (확정값)\n점수는 용신과 이 주제의 십신을 함께 본 값입니다. 0~100, 높을수록 유리.\n' + lines.join('\n');
+}
+
 function buildTimingPrompt(topic, engineResult, person, timing) {
   const yearList = timing.years.map((y) => y.year + '년').join(' · ');
+  const hasMonths = !!(timing.months && timing.months.length);
+  const monthSection = hasMonths ? `
+
+### 월별 한 줄
+- 위 "앞으로 12개월 점수"의 순서 그대로 정확히 12줄. 각 줄은 "- N월: 한 줄 풀이" 형식(N은 월 숫자, 예: "- 10월: ...").
+- 각 줄은 40자 안팎. 그 달 점수와 십신(천간·지지)을 근거로 "${topic.label}" 관점에서 이 달에 어떻게 움직이면 좋은지만 쓰세요. 점수가 높은 달과 낮은 달의 말투 차이가 드러나야 합니다. 같은 문장을 반복하지 마세요.` : '';
+  const headingRule = hasMonths
+    ? '네 소제목("### 흐름", "### 지금 할 것", "### 피할 것", "### 월별 한 줄")을 정확히 이 표기로 쓰고'
+    : '세 소제목("### 흐름", "### 지금 할 것", "### 피할 것")을 정확히 이 표기로 쓰고';
   return `# ${topic.label} — 지금 대운과 앞으로 3년
 
 ## 점수 자료 (이 숫자는 확정값입니다. 바꾸거나 새로 만들지 마세요)
 점수는 그 시기 간지의 오행이 이 사람의 용신(${timing.yongshinMain})을 얼마나 도와주는지로 계산한 값입니다. 0~100, 높을수록 유리.
-${timingBlockText(timing)}${careerBlockText(timing.careerTimeline)}
+${timingBlockText(timing)}${careerBlockText(timing.careerTimeline)}${monthsBlockText(timing.months)}
 
 ## 이 사람 정보
 이름: ${person.name || '(익명)'} / 성별: ${person.gender || '(미상)'} / 현재 ${timing.currentAge}세 / 일간 ${engineResult.ilgan.char}(${engineResult.ilgan.ko}) / 용신 ${timing.yongshinMain} / 격국 ${engineResult.kyukguk.name}
@@ -123,9 +154,9 @@ ${timingBlockText(timing)}${careerBlockText(timing.careerTimeline)}
 - 항목 5개. 각 항목은 한 줄, 위 흐름에서 나온 근거에 실제로 대응하는 행동. "긍정적으로 생각하기" 같은 뻔한 말 금지.
 
 ### 피할 것
-- 항목 5개. 같은 기준.
+- 항목 5개. 같은 기준.${monthSection}
 
-세 소제목("### 흐름", "### 지금 할 것", "### 피할 것")을 정확히 이 표기로 쓰고, 그 밖의 제목이나 머리말은 쓰지 마세요.`;
+${headingRule}, 그 밖의 제목이나 머리말은 쓰지 마세요.`;
 }
 
 function parseTimingText(text) {
@@ -137,8 +168,21 @@ function parseTimingText(text) {
   const flow = grab('흐름');
   const dos = bullets(grab('지금 할 것'));
   const donts = bullets(grab('피할 것'));
+  // "- 10월: 한 줄" 형식만 인정한다. 월 숫자가 1~12가 아니거나 중복이면 건너뛰고, 못 찾으면 빈 배열 — 그래프만 보여주면 된다.
+  const monthNotes = [];
+  try {
+    const seen = new Set();
+    for (const line of grab('월별 한 줄').split('\n')) {
+      const m = /^\s*(?:[-•*]\s*)?(\d{1,2})\s*월\s*[:：]\s*(.+?)\s*$/.exec(line);
+      if (!m) continue;
+      const month = Number(m[1]);
+      if (month < 1 || month > 12 || seen.has(month)) continue;
+      seen.add(month);
+      monthNotes.push({ month, note: m[2] });
+    }
+  } catch (e) { monthNotes.length = 0; }
   // 형식이 무너져도 본문은 버리지 않는다 — 소제목을 못 찾으면 전체를 흐름으로 쓴다.
-  return { flow: flow || text.trim(), dos, donts };
+  return { flow: flow || text.trim(), dos, donts, monthNotes };
 }
 
 /**
@@ -172,7 +216,7 @@ async function generateDeepReading(engineResult, person, topicKey) {
     if (paras.length) priorSummaries.push(paras[paras.length - 1].slice(0, 300));
   }
 
-  const timingData = buildTimingData(engineResult);
+  const timingData = buildTimingData(engineResult, new Date(), { topicKey, gender: person.gender || engineResult.meta.input.gender });
   if (topicKey === 'career') timingData.careerTimeline = buildCareerTimeline(engineResult);
   const { text: timingText, usage: timingUsage } = await generateText(SYSTEM_PROMPT, buildTimingPrompt(topic, engineResult, person, timingData));
   usages.push(timingUsage);
@@ -187,6 +231,8 @@ function toPlainText(reading) {
   const parts = [];
   for (const ch of reading.chapters) parts.push(`## ${ch.title}\n\n${ch.text}`);
   parts.push(`## 지금 대운, 앞으로 3년\n\n${reading.timing.flow}`);
+  const notes = reading.timing.monthNotes || [];
+  if (notes.length) parts.push(`## 앞으로 12개월\n\n${notes.map((n) => `- ${n.month}월: ${n.note}`).join('\n')}`);
   if (reading.timing.dos.length) parts.push(`## 지금 할 것\n\n${reading.timing.dos.map((d) => '- ' + d).join('\n')}`);
   if (reading.timing.donts.length) parts.push(`## 피할 것\n\n${reading.timing.donts.map((d) => '- ' + d).join('\n')}`);
   return parts.join('\n\n');

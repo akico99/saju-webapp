@@ -31,12 +31,28 @@ ${BASE_RULES}
 
 **방향과 동네 분위기**
 본문 문단이 여기 이어집니다...
-- 전체 2,800~3,400자 분량으로, 같은 말을 반복해서 분량을 채우지 말고 각 소제목마다
+- 전체 3,800~4,400자 분량으로, 같은 말을 반복해서 분량을 채우지 말고 각 소제목마다
   전달받은 사실을 실제로 인용해 구체적으로 채웁니다.`;
 
 function factLine(label, value) {
   return value ? `- ${label}: ${value}` : '';
 }
+
+// 2·3순위(대안) / 피하면 좋은 날 — 라우트가 엔진으로 계산해 넘긴 값만 문장 재료로 쓴다.
+function altFactLines(p) {
+  return (p.alts || []).map((a) => {
+    const when = a.month + '.' + a.day + ' (' + a.weekday + ')' + (a.hour ? ' ' + a.hour + '시' : '');
+    const both = a.scoreA != null ? ' [두 사람 점수 ' + a.scoreA + '/' + a.scoreB + ']' : '';
+    return factLine(a.rank + '순위 후보', when + ' · ' + a.score + '점' + both + ' · 1순위보다 ' + a.gap + '점 ' + (a.gap > 0 ? '낮음' : '같음'));
+  }).filter(Boolean);
+}
+function avoidFactLines(p) {
+  return (p.avoid || []).map((a) => {
+    const both = a.scoreA != null ? ' [두 사람 점수 ' + a.scoreA + '/' + a.scoreB + ']' : '';
+    return factLine('피하면 좋은 날 후보', a.month + '.' + a.day + ' (' + a.weekday + ') · ' + a.score + '점' + both + (a.reason ? ' · 엔진이 본 이유: ' + a.reason : ''));
+  }).filter(Boolean);
+}
+const AVOID_RULE = '"피하면 좋은 날"은 위에 전달된 하위 날짜와 엔진 이유만 사용하고, "피하는 편이 무난해요" 정도의 담백한 톤으로 씁니다. 겁을 주거나 불행·사고를 암시하는 표현은 절대 쓰지 않고, 꼭 그 날이어야 한다면 부담이 크지 않다는 점도 한 줄 덧붙입니다. 전달되지 않은 날짜나 이유는 만들지 않습니다.';
 
 function buildMovingPrompt(p) {
   const b = p.best;
@@ -50,7 +66,7 @@ function buildMovingPrompt(p) {
     p.extras.mood && factLine('어울리는 동네 분위기(은유, 실제 지역 예측 아님)', p.extras.mood),
     p.extras.homeObject && factLine('이사 당일 가장 먼저 들이면 좋은 물건', p.extras.homeObject),
     p.extras.currentAddress && factLine('현재 거주지(참고용, 문장에 자연스럽게 한 번만 언급)', p.extras.currentAddress)
-  ].filter(Boolean).join('\n');
+  ].concat(altFactLines(p), avoidFactLines(p)).filter(Boolean).join('\n');
 
   return `${facts}
 
@@ -58,6 +74,8 @@ function buildMovingPrompt(p) {
 1) "언제가 좋을까" — 추천 날짜·시간과 그 이유
 2) "방향과 동네 분위기" — 추천 방향과 동네 분위기(실제 지역명이나 좌표는 절대 언급하지 말고, 전달받은 은유적 분위기 표현만 사용)
 3) "가장 먼저 들이면 좋은 물건" — 전달받은 물건과 그 물건을 왜 먼저 들이면 좋은지, 추천 시간대와 연결
+4) "2·3순위 날짜는 어떤가요" — 전달된 2·3순위 날짜를 점수·요일·1순위와의 점수 차이로 비교하고, 1순위가 어려울 때 어떻게 고르면 좋은지
+5) "피하면 좋은 날" — ${AVOID_RULE}
 
 목록에 없는 새로운 사실(구체적 동네명, 공간 좌표 등)은 만들어내지 마세요.`;
 }
@@ -73,7 +91,7 @@ function buildOpeningPrompt(p) {
     b && factLine('가장 좋은 개업 날짜·시간', `${b.year}.${b.month}.${b.day} ${b.hour}시 (${b.ganZhiKo}일·${b.hourGanZhiKo}시)`),
     p.extras.business && factLine('어울리는 사업 분야(키워드, 특정 사업 성패 단정 아님)', `${p.extras.business.field} — ${p.extras.business.note}`),
     p.extras.bizObject && factLine('공간에 두면 좋은 소품', p.extras.bizObject)
-  ].filter(Boolean).join('\n');
+  ].concat(altFactLines(p), avoidFactLines(p)).filter(Boolean).join('\n');
 
   return `${facts}
 
@@ -81,6 +99,8 @@ function buildOpeningPrompt(p) {
 1) "언제 문을 열까" — 추천 날짜·시간과 그 이유
 2) "공간에 힘을 더하는 소품" — 전달받은 소품과 어디쯤(포스기 주변, 출입구 등 일반적인 위치 표현은 괜찮되 구체 좌표는 지어내지 말 것) 두면 좋은지
 3) "흔들리지 않는 마음가짐" — 이 사람의 타고난 기질을 근거로, 사업 초반 불안을 다스리는 마인드셋 한두 가지
+4) "2·3순위 날짜는 어떤가요" — 전달된 2·3순위 날짜를 점수·요일·1순위와의 점수 차이로 비교하고, 1순위가 어려울 때 어떻게 고르면 좋은지
+5) "피하면 좋은 날" — ${AVOID_RULE}
 
 목록에 없는 새로운 사실은 만들어내지 마세요.`;
 }
@@ -104,7 +124,7 @@ function buildWeddingPrompt(p) {
     compatLines.length && factLine('두 사람의 실제 궁합 사실', compatLines.join(' ')),
     factLine('신청자에게 어울리는 웨딩 소재/색', `${p.extras.textureA}, ${p.extras.colorA}`),
     factLine('상대방에게 어울리는 웨딩 소재/색', `${p.extras.textureB}, ${p.extras.colorB}`)
-  ].filter(Boolean).join('\n');
+  ].concat(altFactLines(p), avoidFactLines(p)).filter(Boolean).join('\n');
 
   return `${facts}
 
@@ -113,6 +133,8 @@ function buildWeddingPrompt(p) {
 2) "두 사람의 실제 궁합" — 전달받은 궁합 사실을 자연스러운 문장으로 풀어서
 3) "다툴 때 이렇게" — 두 사람의 기질 차이를 근거로, 다퉜을 때 상황을 악화시키지 않는 구체적인 대화 방식 한두 가지(예: 누가 먼저 말을 걸지, 어떤 톤으로)
 4) "웨딩과 신혼집의 무드" — 전달받은 소재·색을 실제로 언급하며 어떤 분위기가 두 사람에게 잘 맞는지
+5) "2·3순위 날짜는 어떤가요" — 전달된 2·3순위 주말을 점수·요일·1순위와의 점수 차이(두 사람 점수 포함)로 비교하고, 1순위가 어려울 때 어떻게 고르면 좋은지
+6) "피하면 좋은 날" — ${AVOID_RULE}
 
 목록에 없는 새로운 사실은 만들어내지 마세요.`;
 }
@@ -125,7 +147,7 @@ function buildBirthPrompt(p) {
     b && factLine('그 순간 아이 사주에 비어있는 기운', p.lackingKo && p.lackingKo.length ? p.lackingKo.join('·') : '없음(다섯 기운이 고루 갖춰짐)'),
     p.temperament && factLine('그 순간 태어나면 강하게 나타나는 기질(태어난 날 기준)', p.temperament),
     p.taste && factLine('산모에게 도움이 될 만한 맛(부족한 기운을 보충하는 음식 맛)', p.taste)
-  ].filter(Boolean).join('\n');
+  ].concat(altFactLines(p)).filter(Boolean).join('\n');
 
   return `${facts}
 
@@ -134,6 +156,7 @@ function buildBirthPrompt(p) {
 2) "이 시기가 좋은 이유" — 추천 날짜·시간과 그 이유
 3) "이 아이는 어떤 기질을 타고날까" — 전달받은 기질을 근거로, 특정 직업을 확정하지 말고 성향·강점 위주로 다정하게
 4) "산모를 위한 작은 챙김" — 전달받은 맛을 활용해 이 시기 산모에게 도움이 될 만한 음식이나 마음가짐
+5) "2·3순위 시각은 어떤가요" — 전달된 2·3순위 날짜·시각을 점수·요일·1순위와의 점수 차이로 비교 (피해야 할 날짜는 따로 다루지 않습니다)
 
 목록에 없는 새로운 사실이나 의학적 조언은 만들어내지 마세요.`;
 }

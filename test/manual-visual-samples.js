@@ -85,9 +85,9 @@ async function one(name, html, label) {
   const topics = (process.argv[3] || 'wealth').split(',');
   for (const topic of topics) {
     const base = fx.deep.wealth;
-    const data = buildTimingData(engine, now);
+    const data = buildTimingData(engine, now, { topicKey: topic, gender: fx.person.gender || fx.birth.gender });
     if (topic === 'career') data.careerTimeline = buildCareerTimeline(engine, now);
-    const reading = { topicKey: topic, title: DEEP_TOPICS[topic].label, chapters: base.chapters.map((c) => ({ ...c, title: DEEP_TOPICS[topic].label })), timing: { ...base.timing, data } };
+    const reading = { topicKey: topic, title: DEEP_TOPICS[topic].label, chapters: base.chapters.map((c) => ({ ...c, title: DEEP_TOPICS[topic].label })), timing: { ...base.timing, monthNotes: topic === 'wealth' ? base.timing.monthNotes : [], data } };
     await one('deep-' + topic, renderDeepHtml(engine, fx.person, reading), reading.title);
   }
   {
