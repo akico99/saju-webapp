@@ -116,3 +116,66 @@ test('웹툰 페이지가 분석 태그와 홈 진입 링크를 유지한다', (
   const home = read('index.html');
   assert.match(home, /<a class="today-fortune-card" href="\/webtoon\/lifetime\.html\?from=home-lifetime-story">/);
 });
+
+const compatPage = () => read('webtoon/compat.html');
+const compatSample = (name) => read('samples/compat/' + name + '-본문.md');
+const visibleText = (html) => html.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+
+test('궁합 소개의 발췌는 공개된 가상 인물 원문과 일치한다', () => {
+  assert.ok(fs.existsSync(path.join(publicDir, 'webtoon/compat.html')), '궁합 웹툰 공개 파일이 필요하다');
+  const html = compatPage();
+  const excerpts = [...html.matchAll(/<[^>]+ data-source="([^"]+)"[^>]*>([\s\S]*?)<\/(?:p|blockquote)>/g)];
+  assert.equal(excerpts.length, 10, '요약 3문장·생활 강조·관계 4개·실천 2개');
+  for (const [, name, excerpt] of excerpts) {
+    assert.ok(compatSample(name).replace(/\*\*/g, '').replace(/==/g, '').includes(visibleText(excerpt)), name + ': 발췌가 원문에서 바뀜');
+  }
+  assert.match(html, /앞 3문장 발췌 · 전체 5문장/);
+  const originalSummary = compatSample('연애').split('### 핵심 요약과 두 사람을 위한 실천 포인트')[1].split('### 지금 할 것')[0].trim().split(/(?<=\.)\s+/);
+  assert.equal(originalSummary.length, 5, '전체 요약 문장 수');
+  const summaryBlock = html.match(/<div class="compat-summary report"[^>]*>([\s\S]*?)<\/div>/)[1];
+  assert.deepEqual([...summaryBlock.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/g)].map(m=>visibleText(m[1])), originalSummary.slice(0,3), '앞 세 문장 순서');
+  const timingRows = html.match(/<table class="timing-values">[\s\S]*?<tbody>([\s\S]*?)<\/tbody>/)[1];
+  assert.deepEqual([...timingRows.matchAll(/<tr>([\s\S]*?)<\/tr>/g)].map(m=>[...m[1].matchAll(/<(?:th|td)[^>]*>(\d+)<\/(?:th|td)>/g)].map(c=>Number(c[1]))), [[2026,69,46,58],[2027,72,58,65],[2028,61,51,56]], '실제 시기 참고 점수');
+  for (const name of ['연애', '부부', '시작전', '재회']) {
+    assert.ok(fs.existsSync(path.join(publicDir, 'samples/compat/' + name + '.html')));
+    assert.match(read('samples/compat/' + name + '.html'), /샘플 · 가상 인물/);
+    assert.match(html, new RegExp('/samples/compat/' + name + '\\.html'));
+    // PDF의 큰 data: TTF가 공개 HTML마다 복제되면 모바일 원문 열기가 느려진다.
+    assert.ok(fs.statSync(path.join(publicDir, 'samples/compat/' + name + '.html')).size < 100 * 1024);
+    assert.doesNotMatch(read('samples/compat/' + name + '.html'), /data:font\//);
+  }
+});
+
+test('궁합 소개는 실제 가격과 상품으로 연결되고 추적 태그를 중복하지 않는다', () => {
+  const html = compatPage();
+  const price = Number(read('compat.html').match(/POINT_NOTICE_PRICE\s*=\s*(\d+)/)[1]);
+  assert.equal(price, 4900);
+  const points = fs.readFileSync(path.join(__dirname, '..', 'src/db/points.js'), 'utf8');
+  assert.equal(Number(points.match(/compat:\s*(\d+)/)[1]), price);
+  assert.match(html, /<span class="cta-price">4,900원<\/span>/);
+  assert.match(html, /href="\/compat\.html\?from=compat-webtoon"/);
+  assert.equal((html.match(/src="\/track\.js"/g) || []).length, 1);
+  assert.equal((html.match(/googletagmanager\.com\/gtag\/js/g) || []).length, 1);
+  assert.doesNotMatch(html, /fbq\(|kakaoPixel\(|990원|구독|한자 없음|3초/);
+  assert.match(fs.readFileSync(path.join(__dirname, '..', 'scripts/injectGA.js'), 'utf8'), /'webtoon\/compat\.html'/);
+  const sections = [...html.matchAll(/<section class="s-(problem|turn|service|close)" aria-labelledby="[^"]+"/g)].map(m => m[1]);
+  assert.deepEqual(sections, ['problem', 'turn', 'service', 'close']);
+});
+
+test('궁합 그림과 서비스 캡처는 크기·대체 텍스트·전송 제한을 지킨다', async () => {
+  const html = compatPage();
+  const images = [...html.matchAll(/<img src="(\/webtoon\/compat\/[^"]+)" width="(\d+)" height="(\d+)" alt="([^"]{8,})"/g)];
+  assert.equal(images.length, 8, '승인 그림 3장과 실물 증거 5장');
+  let total = 0;
+  for (const [, src, width, height] of images) {
+    const file = path.join(publicDir, src.slice(1));
+    const meta = await sharp(file).metadata();
+    assert.equal(meta.width, Number(width), src);
+    assert.equal(meta.height, Number(height), src);
+    assert.equal(meta.format, 'webp');
+    const size = fs.statSync(file).size;
+    assert.ok(size < 300 * 1024, src);
+    total += size;
+  }
+  assert.ok(total < 1024 * 1024, '그림과 증거 합계가 1MB 이상');
+});

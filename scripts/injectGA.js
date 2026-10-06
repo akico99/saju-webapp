@@ -23,7 +23,7 @@ const PAGES = [
   'date-select.html', 'forgot-password.html', 'index.html', 'life-graph.html', 'life-topics.html',
   'lifetime-report.html', 'login.html', 'mypage.html', 'premium.html', 'privacy.html',
   'profiles.html', 'quick.html', 'reset-password.html', 'reunion-check.html', 'signup.html',
-  'terms.html', 'today-fortune.html', 'today-preview.html', 'webtoon/lifetime.html'
+  'terms.html', 'today-fortune.html', 'today-preview.html', 'webtoon/lifetime.html', 'webtoon/compat.html'
 ];
 
 let changed = 0, skipped = 0;

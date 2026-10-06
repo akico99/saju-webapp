@@ -1,0 +1,53 @@
+/* 승인된 02 궁합 대본. 공통 웹툰의 다른 편에는 영향을 주지 않는다. */
+.compat-story .s-problem { padding-top: 22px; }
+.compat-story .compat-thoughts { display:flex; justify-content:space-between; gap:12px; padding:20px 18px 32px; }
+.compat-story .thought { position:relative; inset:auto; box-shadow:none; border-radius:46% 54% 48% 52% / 54% 48% 52% 46%; font-size:24px; padding:12px 14px; }
+.compat-story .compat-thoughts .t2 { transform:rotate(3deg); }
+.compat-story .art-confused img { height:260px; object-position:center 40%; mask-image:linear-gradient(180deg,transparent,#000 8%,#000 86%,transparent); }
+.compat-story .sfx-sigh { top:15%; left:7%; }
+.compat-story .t3 { display:table; margin:0 20px 30px auto; transform:rotate(-2deg); }
+.compat-story .t3::before { left:22%; top:-19px; }
+.compat-story .t3::after { left:13%; top:-30px; }
+.compat-story .caption { white-space:normal; text-align:center; border-radius:0; box-shadow:4px 4px 0 var(--ink); }
+.compat-story .beats { padding-bottom:12px; }
+.compat-story .s-turn { padding-top:64px; background:linear-gradient(180deg,var(--paper),#697080 28px,var(--night) 64px); }
+.compat-story .turn-note { padding:0 20px; margin:14px 0 0; text-align:center; color:#fff9ef; font-size:14px; }
+.compat-story .brand-intro { grid-template-columns:1fr 148px; padding:8px 20px 0; }
+.compat-story .art-hero img { height:190px; object-position:center 61%; }
+.compat-story .guide-name { margin:10px 0; color:#fff9ef; font-size:25px; }
+.compat-story .sfx-twinkle { right:0; top:8%; font-size:25px; }
+.compat-story .s-service { padding-top:60px; }
+.compat-story .perks { padding-top:0; }
+.compat-story .perk:first-of-type { padding-top:22px; }
+.compat-story .evidence-origin { font-size:12px; line-height:1.6; margin:16px 0; }
+.compat-story .compat-summary { padding:18px 20px; margin:16px -4px 0; background:#faf8f4; border-top:2px solid #c7a13a; border-bottom:1px solid #d8d3c8; text-align:left; color:#29394b; }
+.compat-story .compat-summary p { margin:0 0 16px; font-size:16px; line-height:1.8; word-break:normal; }
+.compat-story .compat-summary p:last-child { margin-bottom:0; }
+.compat-story .proof-excerpt { margin:16px 0 0; padding:20px 12px; background:#faf8f4; text-align:left; border-left:3px solid #c7a13a; }
+.compat-story .proof-excerpt blockquote { margin:8px 0; color:#29394b; font-family:var(--f-hanja); font-weight:700; font-size:20px; line-height:1.8; }
+.compat-story .excerpt-label,.compat-story .excerpt-source { margin:0; font-size:12px; color:#5d6776; }
+.compat-story .sample-link { display:inline-block; margin:14px 0; font-size:13px; color:#334966; text-underline-offset:4px; }
+.compat-story .sample-original { margin:10px 0; border-top:1px solid #c8bea9; padding:12px 0; text-align:left; font-size:13px; }
+.compat-story .sample-original summary { cursor:pointer; color:#334966; font-weight:700; }
+.compat-story .capture { margin:14px -4px; }
+.compat-story .capture img { display:block; width:100%; height:auto; }
+.compat-story .art-explain { margin:28px -20px 0; }
+.compat-story .art-explain img { height:230px; object-fit:cover; object-position:center 43%; mask-image:linear-gradient(180deg,transparent,#000 9%,#000 85%,transparent); }
+.compat-story .art-explain .caption { display:table; margin:0 auto; max-width:calc(100% - 36px); font-size:14px; }
+.compat-story .relation-choices { list-style:none; margin:20px 0; padding:0; display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.compat-story .relation-choices li { padding:8px 4px; border:1px solid #a49a89; background:#faf8f4; font-size:14px; }
+.compat-story .relation-excerpts article { border-top:1px solid #c8bea9; padding:16px 0 0; text-align:left; }
+.compat-story h4 { margin:0 0 10px; font-family:var(--f-display); font-weight:400; font-size:20px; }
+.compat-story .relation-excerpts p,.compat-story .practice-excerpts p { font-size:16px; line-height:1.8; margin:0; }
+.compat-story .practice-excerpts { display:grid; grid-template-columns:1fr 1fr; gap:16px; text-align:left; }
+.compat-story .practice-excerpts article { padding:16px 8px 0; border-top:3px solid #438779; }
+.compat-story .practice-excerpts article:last-child { border-color:#c9674b; }
+.compat-story .timing-values { width:100%; border-collapse:collapse; font-size:14px; }
+.compat-story .timing-values caption { font-size:12px; color:#5d6776; margin:8px 0; }
+.compat-story .timing-values th,.compat-story .timing-values td { padding:9px 4px; border-bottom:1px solid #d6ccbb; }
+.compat-story .product { padding-top:30px; }
+.compat-story .s-close { padding-bottom:130px; }
+.compat-story .close-line { font-weight:700; font-size:clamp(20px,6vw,28px); }
+.compat-story .cta { font-size:15px; }
+@media(max-width:370px) { .compat-story .thought { font-size:22px; padding:10px 12px; } .compat-story .brand-intro { grid-template-columns:1fr 132px; } .compat-story .brand-name { font-size:22px; } }
+@media(prefers-reduced-motion:reduce) { .compat-story .hl { transition:none; background-size:100% 100%; } }

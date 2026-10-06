@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta charset="UTF-8">
+<title>홍길동 · 김영희 궁합 리포트</title>
+<link rel="stylesheet" href="/samples/compat/report.css">
+<style>
+.vz-panel { margin: 0 0 6mm; padding: 5mm 6mm; border: 1px solid #e3e1d9; border-radius: 3mm; background: #fff; break-inside: avoid; }
+.vz-panel > .ttl { display: flex; justify-content: space-between; align-items: baseline; margin: 0 0 3mm; color: #24344b; font-size: 10.5pt; font-weight: 700; }
+.vz-panel > .ttl small { color: #7b8691; font-size: 8pt; font-weight: 400; }
+.vz-panel > .cap { margin: 2.5mm 0 0; color: #6d7887; font-size: 8.5pt; line-height: 1.55; }
+.vz-panel > .cap b { color: #24344b; font-weight: 700; }
+.vz-two { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; break-inside: avoid; }
+.vz-two > .vz-panel { margin: 0; }
+.vz-radar { display: block; max-width: 86mm; margin: 0 auto; }
+.vz-curve { display: block; }
+
+.vz-bars { display: grid; gap: 2.2mm; }
+.vz-bar { display: grid; grid-template-columns: 40mm 1fr 22mm; align-items: center; gap: 3mm; padding: 1.6mm 2mm; border-radius: 2mm; }
+.vz-bar.hl { background: #f6efdf; }
+.vz-bar .lbl b { display: block; color: #24344b; font-size: 9.5pt; font-weight: 700; line-height: 1.3; }
+.vz-bar .lbl small { color: #7b8691; font-size: 7.8pt; }
+.vz-bar .track { height: 3.4mm; border-radius: 1.7mm; background: #eeeae1; overflow: hidden; }
+.vz-bar .track i { display: block; height: 100%; border-radius: 1.7mm; }
+.vz-bar .val { text-align: right; line-height: 1.2; }
+.vz-bar .val b { color: #24344b; font-size: 12pt; font-weight: 700; }
+.vz-bar .val small { display: block; color: #6d7887; font-size: 7.8pt; }
+
+.vz-gauges { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3mm; }
+.vz-gauge { padding: 3.2mm 3.5mm; border-radius: 2.5mm; background: #f7f5f0; }
+.vz-gauge .top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: .5mm 2mm; }
+.vz-gauge .top b { color: #24344b; font-size: 9.5pt; font-weight: 700; }
+.vz-gauge .grade { color: #2f6a5e; font-size: 8pt; font-weight: 700; }
+.vz-gauge.empty .grade { color: #b3573f; }
+.vz-gauge .track { height: 2.6mm; margin: 2mm 0 1.6mm; border-radius: 1.3mm; background: #e6e1d6; overflow: hidden; }
+.vz-gauge .track i { display: block; height: 100%; background: #24344b; }
+.vz-gauge.empty .track i { background: #c9674b; }
+.vz-gauge .sub { color: #6d7887; font-size: 7.8pt; line-height: 1.45; }
+
+.vz-badges { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2.5mm; margin-top: 3mm; }
+.vz-badge { display: flex; gap: 2.5mm; align-items: baseline; padding: 2.5mm 3mm; border: 1px solid #eadfc4; border-radius: 2.5mm; background: #fbf7ec; }
+.vz-badge b { flex-shrink: 0; color: #7a5a17; font-size: 9pt; font-weight: 700; }
+.vz-badge span { color: #5d6776; font-size: 8pt; line-height: 1.45; }
+
+.vz-cal-head { margin: 0 0 2.5mm; color: #24344b; font-size: 10pt; font-weight: 700; }
+.vz-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1.4mm; }
+.vz-cal .wd { text-align: center; color: #6d7887; font-size: 8pt; font-weight: 700; padding-bottom: 1mm; }
+.vz-cal .wd.sun { color: #c0533b; } .vz-cal .wd.sat { color: #3f6d9c; }
+.vz-cal .cell { position: relative; min-height: 13mm; padding: 1.4mm 1.8mm; border-radius: 2mm; background: #f3f0e9; }
+.vz-cal .cell.blank { background: transparent; }
+.vz-cal .cell .d { display: block; color: #24344b; font-size: 9pt; font-weight: 700; }
+.vz-cal .cell .s { position: absolute; right: 1.8mm; bottom: 1.2mm; color: rgba(36,52,75,.75); font-size: 7.5pt; }
+.vz-cal .cell.t5 { background: #2f7d6b; } .vz-cal .cell.t5 .d, .vz-cal .cell.t5 .s { color: #fff; }
+.vz-cal .cell.t4 { background: #cfe5da; } .vz-cal .cell.t3 { background: #f1eee6; }
+.vz-cal .cell.t2 { background: #f6ddd1; } .vz-cal .cell.t1 { background: #e9b7a5; }
+.vz-cal .cell.rank { outline: 2px solid #c7a13a; outline-offset: -1px; }
+.vz-cal .cell.rank1 { outline-width: 3px; }
+.vz-cal .cell.avoid { outline: 2px dashed #c0533b; outline-offset: -1px; }
+.vz-cal .cell .av { position: absolute; left: 1.6mm; bottom: 1.1mm; padding: .2mm 1.2mm; border-radius: 1mm; background: #fff; border: .3mm solid #c0533b; color: #c0533b; font-size: 6.8pt; font-weight: 700; }
+.vz-avoid-list { display: grid; gap: 2.2mm; }
+.vz-avoid-list .row { display: grid; grid-template-columns: 24mm 12mm 1fr; gap: 3mm; align-items: baseline; padding: 2.4mm 3mm; border: 1px dashed #d9a79a; border-radius: 2mm; background: #fdf6f3; break-inside: avoid; }
+.vz-avoid-list .dt { color: #24344b; font-size: 9.5pt; font-weight: 700; }
+.vz-avoid-list .sc { color: #c0533b; font-size: 9.5pt; font-weight: 700; }
+.vz-avoid-list .why { color: #55606e; font-size: 8.5pt; line-height: 1.5; }
+.vz-avoid-list .why small { display: block; color: #8a929c; font-size: 7.5pt; }
+.vz-cal .cell .r { position: absolute; left: 1.6mm; bottom: 1.1mm; padding: .2mm 1.2mm; border-radius: 1mm; background: #c7a13a; color: #fff; font-size: 6.8pt; font-weight: 700; }
+.vz-legend { display: flex; flex-wrap: wrap; gap: 1.5mm 4mm; margin-top: 3mm; color: #6d7887; font-size: 7.8pt; }
+.vz-legend i { display: inline-block; width: 3mm; height: 3mm; margin-right: 1.2mm; border-radius: .8mm; vertical-align: -.4mm; }
+
+.vz-hours, .vz-months .grid { display: flex; align-items: flex-end; gap: 2.5mm; height: 44mm; padding-top: 2mm; }
+.vz-hours .col, .vz-months .col { position: relative; flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; }
+.vz-hours .bar, .vz-months .bar { flex: 1; width: 70%; display: flex; align-items: flex-end; border-radius: 1.5mm; background: #f1eee6; overflow: hidden; }
+.vz-hours .bar i, .vz-months .bar i { display: block; width: 100%; border-radius: 1.5mm 1.5mm 0 0; }
+.vz-hours .v, .vz-months .v { color: #24344b; font-size: 8.5pt; font-weight: 700; margin-bottom: 1mm; }
+.vz-hours .h, .vz-months .h { margin-top: 1.2mm; color: #5d6776; font-size: 8pt; }
+.vz-months .d { color: #9aa3ae; font-size: 7pt; }
+.vz-hours .col.best .bar, .vz-months .col.best .bar { outline: 2px solid #c7a13a; outline-offset: 1px; }
+.vz-hours .col.best .h, .vz-months .col.best .h { color: #24344b; font-weight: 700; }
+.vz-hours .tag { position: absolute; top: -4.2mm; padding: .3mm 1.5mm; border-radius: 1mm; background: #c7a13a; color: #fff; font-size: 6.8pt; font-weight: 700; }
+.vz-flow .col { position: relative; }
+.vz-flow .tag { position: absolute; top: -4.2mm; padding: .3mm 1.2mm; border-radius: 1mm; background: #2f7d6b; color: #fff; font-size: 6.5pt; font-weight: 700; white-space: nowrap; }
+.vz-flow .tag.low { background: #c9674b; }
+.vz-flow .grid { gap: 1.6mm; }
+.vz-months { margin-top: 1mm; }
+
+.vz-heat { width: 100%; border-collapse: separate; border-spacing: 1.2mm; font-size: 8pt; }
+.vz-heat th { color: #6d7887; font-weight: 700; font-size: 7.8pt; text-align: center; white-space: nowrap; }
+.vz-heat td { height: 7mm; border-radius: 1.4mm; text-align: center; color: #24344b; font-weight: 700; }
+.vz-heat td.t5 { background: #2f7d6b; color: #fff; } .vz-heat td.t4 { background: #cfe5da; } .vz-heat td.t3 { background: #f1eee6; }
+.vz-heat td.t2 { background: #f6ddd1; } .vz-heat td.t1 { background: #e9b7a5; } .vz-heat td.none { background: transparent; }
+.vz-heat td.best { outline: 3px solid #c7a13a; outline-offset: -1px; }
+
+.vz-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3mm; break-inside: avoid; }
+.vz-card { padding: 4mm; border: 1px solid #e3e1d9; border-radius: 3mm; background: #fff; }
+.vz-card .ic { font-size: 14pt; line-height: 1; margin-bottom: 2mm; }
+.vz-card .t { color: #6d7887; font-size: 8pt; font-weight: 700; letter-spacing: .04em; }
+.vz-card .v { margin-top: 1mm; color: #24344b; font-size: 11pt; font-weight: 700; line-height: 1.4; }
+.vz-card .n { margin-top: 1.5mm; color: #6d7887; font-size: 8pt; line-height: 1.5; }
+
+.vz-swatches { display: grid; grid-template-columns: 1fr 1fr; gap: 3mm; }
+.vz-swatch { display: flex; gap: 3mm; align-items: center; padding: 3mm; border-radius: 2.5mm; background: #f7f5f0; }
+.vz-swatch i { width: 11mm; height: 11mm; border-radius: 2mm; flex-shrink: 0; }
+.vz-swatch b { display: block; color: #24344b; font-size: 9.5pt; font-weight: 700; }
+.vz-swatch span { color: #6d7887; font-size: 8pt; line-height: 1.45; }
+
+.vz-verdict { margin: 0 0 7mm; padding: 6mm 7mm; border-radius: 4mm; background: #fff; border: 1.5px solid #c7a13a; break-inside: avoid; }
+.vz-verdict .k { color: #8a6a1f; font-size: 8.5pt; font-weight: 700; letter-spacing: .08em; }
+.vz-verdict .h { margin: 2mm 0 4mm; color: #1d2c40; font-family: 'ReportMyeongjo','Batang','바탕',serif; font-size: 15pt; font-weight: 700; line-height: 1.5; }
+.vz-verdict .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3mm; }
+.vz-verdict .stat { padding: 3mm 3.5mm; border-radius: 2.5mm; background: #f7f3e8; }
+.vz-verdict .stat small { display: block; color: #6d7887; font-size: 7.8pt; }
+.vz-verdict .stat b { display: block; margin-top: .8mm; color: #1d2c40; font-size: 12.5pt; font-weight: 700; }
+.vz-verdict .stat span { color: #6d7887; font-size: 8pt; }
+.vz-verdict .vd-sub { color: #2f6a5e; font-size: 10pt; font-weight: 700; }
+.vz-verdict .vd-alts { display: flex; flex-wrap: wrap; gap: 2mm; margin-top: 4mm; }
+.vz-verdict .vd-alts span { padding: 1.5mm 3mm; border-radius: 2mm; background: #f7f3e8; color: #5d6776; font-size: 8.5pt; }
+
+.vz-pair { margin-top: 1mm; }
+.vz-pair-legend { display: flex; flex-wrap: wrap; gap: 1.5mm 5mm; margin: 0 0 3mm; color: #5d6776; font-size: 8.5pt; }
+.vz-pair-legend i { display: inline-block; width: 3mm; height: 3mm; margin-right: 1.4mm; border-radius: .8mm; vertical-align: -.4mm; }
+.vz-pair-legend i.a, .vz-pair .col.a i { background: #24344b; }
+.vz-pair-legend i.b, .vz-pair .col.b i { background: #c7a13a; }
+.vz-pair-legend i.c { background: #2f7d6b; border-radius: 50%; }
+.vz-pair-grid { display: flex; align-items: stretch; gap: 3mm; height: 54mm; padding-top: 1mm; }
+.vz-pair .grp { position: relative; flex: 1; display: flex; flex-direction: column; align-items: center; min-width: 0; padding: 0 1mm 1.5mm; border-radius: 2mm; }
+.vz-pair .grp.best { background: #eef6f2; outline: 1.5px solid #2f7d6b; outline-offset: 0; }
+.vz-pair .pair { flex: 1; display: flex; align-items: stretch; gap: 1.2mm; width: 100%; justify-content: center; padding-top: 7mm; }
+.vz-pair .col { flex: 1; max-width: 9mm; display: flex; flex-direction: column; align-items: center; }
+.vz-pair .col .v { color: #24344b; font-size: 8pt; font-weight: 700; margin-bottom: .8mm; }
+.vz-pair .col .bar { flex: 1; width: 100%; display: flex; align-items: flex-end; border-radius: 1.2mm; background: #f1eee6; overflow: hidden; }
+.vz-pair .col .bar i { display: block; width: 100%; border-radius: 1.2mm 1.2mm 0 0; }
+.vz-pair .grp .h { margin-top: 1.2mm; color: #5d6776; font-size: 8pt; white-space: nowrap; }
+.vz-pair .grp.best .h { color: #24344b; font-weight: 700; }
+.vz-pair .grp .avg { margin-top: .6mm; padding: .3mm 2mm; border-radius: 2mm; background: #f1eee6; color: #5d6776; font-size: 7.5pt; white-space: nowrap; }
+.vz-pair .grp .avg b { color: #24344b; font-size: 9pt; }
+.vz-pair .grp.best .avg { background: #2f7d6b; color: #fff; }
+.vz-pair .grp.best .avg b { color: #fff; }
+.vz-pair .tag { position: absolute; top: 1mm; left: 50%; transform: translateX(-50%); padding: .3mm 1.6mm; border-radius: 1mm; background: #2f7d6b; color: #fff; font-size: 6.8pt; font-weight: 700; white-space: nowrap; }
+
+.vz-dd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; break-inside: avoid; margin-top: 6mm; }
+.vz-dd-grid.one { grid-template-columns: 1fr; }
+.vz-dd { padding: 5mm 6mm; border-radius: 3mm; background: #fff; border: 1px solid #e3e1d9; }
+.vz-dd.do { border-top: 3px solid #438779; }
+.vz-dd.dont { border-top: 3px solid #c9674b; }
+.vz-dd .ttl { margin-bottom: 3mm; font-size: 10pt; font-weight: 800; }
+.vz-dd.do .ttl { color: #2f6a5e; }
+.vz-dd.dont .ttl { color: #a3513a; }
+.vz-dd ol { margin: 0; padding-left: 5mm; font-size: 9.5pt; line-height: 1.7; color: #354457; }
+.vz-dd li { margin-bottom: 1.5mm; }
+.vz-dd strong.hl, .vz-dd mark { font-weight: 700; color: #1d2c40; background: linear-gradient(transparent 58%, rgba(199,161,58,.32) 58%); }
+.vz-web .vz-pair-grid { gap: 1.5mm; height: 48mm; }
+.vz-web .vz-pair .col .v { font-size: 7pt; }
+@media (max-width: 560px) {
+  .vz-dd-grid { grid-template-columns: 1fr; }
+  .vz-web .vz-pair .grp { padding: 0 .3mm 1.5mm; }
+  .vz-web .vz-pair .col { max-width: 5mm; }
+  .vz-web .vz-pair .grp .avg { padding: .3mm 1mm; font-size: 6.8pt; }
+}
+
+
+  .compat-report .vz-two .vz-panel .ttl { justify-content: center; }
+  .compat-report .vz-dd-grid { margin-top: 7mm; }
+  .compat-report .vz-intro { margin: 0 0 6mm; color: #5d6776; font-size: 10pt; line-height: 1.7; }
+</style>
+<style>.sample-notice{padding:18px 24px;font:14px/1.8 sans-serif;background:#fff3ca;color:#25344b}.sample-notice a{color:#244e75;text-decoration:underline}@media screen and (max-width:600px){body.compat-report{width:auto;min-width:0;margin:0;padding:0}.compat-report .compat-section,.compat-report .compat-cover{padding:24px 18px}.compat-pair{flex-wrap:wrap}.sample-notice{padding:18px}.compat-report p{overflow-wrap:anywhere}}@media print{.sample-notice{display:none}}</style></head>
+<body class="compat-report"><aside class="sample-notice"><b>샘플 · 가상 인물 · 썸·시작 전</b><br>홍길동(양력 1990-05-15 10:30, 남) · 김영희(양력 1992-09-03 14:00, 여)<br>시기 기준: 2026-10-06 00:00 KST. 실제 고객 후기나 결과 보장이 아닙니다.<br><a href="/samples/compat/연애.html">연애 중</a> · <a href="/samples/compat/부부.html">결혼·부부</a> · <a href="/samples/compat/시작전.html">썸·시작 전</a> · <a href="/samples/compat/재회.html">헤어짐·재회</a><br><a href="/samples/compat/시작전-본문.md" download>생성 원문 다운로드</a> · <a href="/webtoon/compat.html">궁합 소개로 돌아가기</a></aside>
+
+<section class="compat-cover">
+  <div class="eyebrow">緣 分 宮 合</div>
+  <h1>홍길동 · 김영희 님의<br>궁합 리포트</h1>
+  <div class="subtitle">썸·시작 전 · 두 사람의 팔자를 겹쳐, 합·충으로 흐름을 읽습니다</div>
+
+  <div class="compat-pair">
+    <div class="compat-person">
+      <div class="p-name">홍길동</div>
+      <div class="p-row">사주 &nbsp;<b>庚午 辛巳 庚辰 辛巳</b></div>
+      <div class="p-row">일간 &nbsp;<b>庚(경)</b></div>
+      <div class="p-row">격국 &nbsp;<b>건록격</b> · 용신 &nbsp;<b>土</b></div>
+    </div>
+    <div class="compat-vs">與</div>
+    <div class="compat-person">
+      <div class="p-name">김영희</div>
+      <div class="p-row">사주 &nbsp;<b>壬申 戊申 壬午 丁未</b></div>
+      <div class="p-row">일간 &nbsp;<b>壬(임)</b></div>
+      <div class="p-row">격국 &nbsp;<b>건록격</b> · 용신 &nbsp;<b>木</b></div>
+    </div>
+  </div>
+
+  <div class="compat-key-fact">첫 단서 · 일지 관계
+    <strong>특별한 합충 없음</strong>
+  </div>
+  <div class="compat-score-line">관계 데이터 참고 점수 <b>95 / 100</b></div>
+  <div class="compat-score-label">합·삼합·충 관계를 환산한 값이며 관계의 미래를 예측하는 확률이 아닙니다</div>
+
+  <div class="disclaimer-mini">
+    이 리포트는 명리학적 통계 경향에 근거한 참고 자료이며, 관계의 좋고 나쁨을 단정하지 않습니다.
+    관계는 두 사람의 선택과 노력으로 얼마든지 바뀝니다.
+  </div>
+  <div class="imprint">길잡이 여울</div>
+</section>
+
+<section class="compat-section page-break">
+  <h2>두 사람을 겹쳐 보면</h2>
+  <p class="vz-intro">두 명식의 오행 분포와 서로의 용신을 나란히 놓았습니다. 한쪽에 비어 있는 기운을 상대가 가지고 있으면 서로를 채워 주는 관계예요.</p>
+  <div class="vz-cards"><div class="vz-card"><div class="ic">01</div><div class="t">관계 참고 점수</div><div class="v">95 / 100</div><div class="n">합·충 개수를 환산한 참고 수치</div></div><div class="vz-card"><div class="ic">02</div><div class="t">맞물리는 지점</div><div class="v">7곳</div><div class="n">서로 자연스럽게 통하는 자리(육합·삼합)</div></div><div class="vz-card"><div class="ic">03</div><div class="t">부딪히는 지점</div><div class="v">0곳</div><div class="n">의견을 맞추는 노력이 필요한 자리(충)</div></div></div>
+  <div class="vz-two" style="margin-top:5mm;">
+    <div class="vz-panel"><div class="ttl">홍길동 오행</div><svg class="vz-radar" viewBox="0 0 278 202" width="100%" xmlns="http://www.w3.org/2000/svg"><polygon points="139.0,84.8 154.4,96.0 148.5,114.1 129.5,114.1 123.6,96.0" fill="none" stroke="#e2ddd0" stroke-width="1"/><polygon points="139.0,68.7 169.7,91.0 158.0,127.1 120.0,127.1 108.3,91.0" fill="none" stroke="#e2ddd0" stroke-width="1"/><polygon points="139.0,52.5 185.1,86.0 167.5,140.2 110.5,140.2 92.9,86.0" fill="none" stroke="#e2ddd0" stroke-width="1"/><polygon points="139.0,36.4 200.4,81.0 177.0,153.3 101.0,153.3 77.6,81.0" fill="none" stroke="#e2ddd0" stroke-width="1"/><line x1="139" y1="101" x2="139.0" y2="36.4" stroke="#e2ddd0"/><line x1="139" y1="101" x2="200.4" y2="81.0" stroke="#e2ddd0"/><line x1="139" y1="101" x2="177.0" y2="153.3" stroke="#e2ddd0"/><line x1="139" y1="101" x2="101.0" y2="153.3" stroke="#e2ddd0"/><line x1="139" y1="101" x2="77.6" y2="81.0" stroke="#e2ddd0"/><polygon points="139.0,98.4 185.1,86.0 148.5,114.1 101.0,153.3 136.5,100.2" fill="rgba(36,52,75,.16)" stroke="#24344b" stroke-width="2" stroke-linejoin="round"/><circle cx="139.0" cy="98.4" r="3.2" fill="#4f8a63"/><circle cx="185.1" cy="86.0" r="3.2" fill="#c65a45"/><circle cx="148.5" cy="114.1" r="3.2" fill="#c49a34"/><circle cx="101.0" cy="153.3" r="3.2" fill="#8c96a3"/><circle cx="136.5" cy="100.2" r="3.2" fill="#3f6d9c"/><text x="139.0" y="11.4" text-anchor="middle" font-size="12" font-weight="700" fill="#4f8a63">木 목</text><text x="139.0" y="25.4" text-anchor="middle" font-size="10" fill="#c9674b">없음</text><text x="221.4" y="71.2" text-anchor="middle" font-size="12" font-weight="700" fill="#c65a45">火 화</text><text x="221.4" y="85.2" text-anchor="middle" font-size="10" fill="#5c6878">3개 · 표현</text><text x="189.9" y="168.1" text-anchor="middle" font-size="12" font-weight="700" fill="#c49a34">土 토</text><text x="189.9" y="182.1" text-anchor="middle" font-size="10" fill="#5c6878">1개 · 안정</text><text x="88.1" y="168.1" text-anchor="middle" font-size="12" font-weight="700" fill="#8c96a3">金 금</text><text x="88.1" y="182.1" text-anchor="middle" font-size="10" fill="#5c6878">4개 · 결단</text><text x="56.6" y="71.2" text-anchor="middle" font-size="12" font-weight="700" fill="#3f6d9c">水 수</text><text x="56.6" y="85.2" text-anchor="middle" font-size="10" fill="#c9674b">없음</text></svg></div>
+    <div class="vz-panel"><div class="ttl">김영희 오행</div><svg class="vz-radar" viewBox="0 0 278 202" width="100%" xmlns="http://www.w3.org/2000/svg"><polygon points="139.0,84.8 154.4,96.0 148.5,114.1 129.5,114.1 123.6,96.0" fill="none" stroke="#e2ddd0" stroke-width="1"/><polygon points="139.0,68.7 169.7,91.0 158.0,127.1 120.0,127.1 108.3,91.0" fill="none" stroke="#e2ddd0" stroke-width="1"/><polygon points="139.0,52.5 185.1,86.0 167.5,140.2 110.5,140.2 92.9,86.0" fill="none" stroke="#e2ddd0" stroke-width="1"/><polygon points="139.0,36.4 200.4,81.0 177.0,153.3 101.0,153.3 77.6,81.0" fill="none" stroke="#e2ddd0" stroke-width="1"/><line x1="139" y1="101" x2="139.0" y2="36.4" stroke="#e2ddd0"/><line x1="139" y1="101" x2="200.4" y2="81.0" stroke="#e2ddd0"/><line x1="139" y1="101" x2="177.0" y2="153.3" stroke="#e2ddd0"/><line x1="139" y1="101" x2="101.0" y2="153.3" stroke="#e2ddd0"/><line x1="139" y1="101" x2="77.6" y2="81.0" stroke="#e2ddd0"/><polygon points="139.0,98.4 169.7,91.0 158.0,127.1 120.0,127.1 108.3,91.0" fill="rgba(36,52,75,.16)" stroke="#24344b" stroke-width="2" stroke-linejoin="round"/><circle cx="139.0" cy="98.4" r="3.2" fill="#4f8a63"/><circle cx="169.7" cy="91.0" r="3.2" fill="#c65a45"/><circle cx="158.0" cy="127.1" r="3.2" fill="#c49a34"/><circle cx="120.0" cy="127.1" r="3.2" fill="#8c96a3"/><circle cx="108.3" cy="91.0" r="3.2" fill="#3f6d9c"/><text x="139.0" y="11.4" text-anchor="middle" font-size="12" font-weight="700" fill="#4f8a63">木 목</text><text x="139.0" y="25.4" text-anchor="middle" font-size="10" fill="#c9674b">없음</text><text x="221.4" y="71.2" text-anchor="middle" font-size="12" font-weight="700" fill="#c65a45">火 화</text><text x="221.4" y="85.2" text-anchor="middle" font-size="10" fill="#5c6878">2개 · 표현</text><text x="189.9" y="168.1" text-anchor="middle" font-size="12" font-weight="700" fill="#c49a34">土 토</text><text x="189.9" y="182.1" text-anchor="middle" font-size="10" fill="#5c6878">2개 · 안정</text><text x="88.1" y="168.1" text-anchor="middle" font-size="12" font-weight="700" fill="#8c96a3">金 금</text><text x="88.1" y="182.1" text-anchor="middle" font-size="10" fill="#5c6878">2개 · 결단</text><text x="56.6" y="71.2" text-anchor="middle" font-size="12" font-weight="700" fill="#3f6d9c">水 수</text><text x="56.6" y="85.2" text-anchor="middle" font-size="10" fill="#5c6878">2개 · 지혜</text></svg></div>
+  </div>
+  <div class="vz-panel" style="margin-top:5mm;">
+    <div class="ttl">서로의 용신을 얼마나 채워 주는지 <small>용신 = 균형을 잡아 주는 기운</small></div>
+    <div class="vz-gauges"><div class="vz-gauge"><div class="top"><b>김영희 → 홍길동</b><span class="grade">조금 채움</span></div><div class="track"><i style="width:50%"></i></div><div class="sub">홍길동님의 용신 기운(土)이 김영희님 사주에 2개</div></div><div class="vz-gauge empty"><div class="top"><b>홍길동 → 김영희</b><span class="grade">채우지 못함</span></div><div class="track"><i style="width:4%"></i></div><div class="sub">김영희님의 용신 기운(木)이 홍길동님 사주에 0개</div></div></div>
+  </div>
+  <div style="margin-top:5mm;"><div class="vz-panel"><div class="ttl">두 사람의 앞으로 3년 <small>두 사람 평균이 가장 높은 해에 표시</small></div><div class="vz-pair"><div class="vz-pair-legend"><span><i class="a"></i>홍길동</span><span><i class="b"></i>김영희</span><span><i class="c"></i>두 사람 평균</span></div><div class="vz-pair-grid"><div class="grp"><div class="pair"><div class="col a"><span class="v">69</span><div class="bar"><i style="height:69%"></i></div></div><div class="col b"><span class="v">46</span><div class="bar"><i style="height:46%"></i></div></div></div><span class="h">2026년</span><span class="avg">평균 <b>58</b></span></div><div class="grp best"><span class="tag">함께 올라가는 해</span><div class="pair"><div class="col a"><span class="v">72</span><div class="bar"><i style="height:72%"></i></div></div><div class="col b"><span class="v">58</span><div class="bar"><i style="height:58%"></i></div></div></div><span class="h">2027년</span><span class="avg">평균 <b>65</b></span></div><div class="grp"><div class="pair"><div class="col a"><span class="v">61</span><div class="bar"><i style="height:61%"></i></div></div><div class="col b"><span class="v">51</span><div class="bar"><i style="height:51%"></i></div></div></div><span class="h">2028년</span><span class="avg">평균 <b>56</b></span></div></div></div><p class="cap"><b>2027년</b>이 두 사람 평균 65점으로 가장 높아요. 두 사람 모두 직전보다 오르는 해입니다. 점수는 용신 60%와 연애 십신 40%를 합친 참고값이며, 일어날 일을 예언하는 수치가 아닙니다.</p></div></div>
+</section>
+
+
+<section class="compat-section" style="padding-top:8mm;">
+  <h2>둘 사이를 읽는 단서</h2>
+
+  <div class="compat-body"><h3 class="sub">서로에게 어떤 존재로 다가오는지</h3>
+<p>두 분의 관계에서 먼저 눈에 띄는 것은 서로에게 미치는 기운의 방향이 같지 않다는 점입니다. 김영희님이 홍길동님에게 다가오는 기운은 십신<span class="gloss">(사람과 사람 사이에서 서로 어떤 역할로 작용하는지 보는 틀)</span>으로 식신에 해당합니다. 식신은 내가 가진 것을 편하게 풀어내고 상대를 챙기는 기운으로, 애써 꾸미지 않아도 자연스럽게 베풀고 여유를 전하는 쪽에 가깝습니다. 즉 김영희님 쪽에서 홍길동님을 향해 흐르는 기운은 <mark>편안하게 챙겨주는 흐름</mark>으로 읽을 수 있습니다. 대화를 할 때 말이 많지 않아도 상대를 편하게 해주는 분위기, 함께 있을 때 긴장이 풀리는 느낌이 이 자리에서 비롯될 가능성이 있습니다.</p>
+<p>반대로 홍길동님이 김영희님에게 다가오는 기운은 편인에 해당합니다. 편인은 생각을 깊게 짚어주거나 다른 각도에서 바라보게 하는 기운으로, 식신과는 결이 다릅니다. 가볍게 흘러가는 즐거움보다는 한 번 더 생각하게 만드는 말, 혹은 다소 독특하거나 예리한 시선으로 다가가는 모습으로 나타날 수 있습니다. 이는 나쁘다 좋다의 문제가 아니라, 홍길동님이 관계 안에서 자연스럽게 취하게 되는 태도가 '편하게 맞춰주기'보다는 <mark>생각할 거리를 주는 쪽</mark>에 가깝다는 뜻입니다.</p>
+<p>이 두 방향이 비대칭이라는 점이 중요합니다. 한 사람은 베풀고 챙기는 식으로, 다른 한 사람은 짚어주고 거리를 두는 식으로 서로에게 작용하다 보니, 똑같은 다정함을 주고받기보다는 역할이 서로 다르게 나뉘는 관계가 될 가능성이 있습니다. 김영희님은 자신이 주는 편안함이 돌아오지 않는다고 느낄 수 있고, 홍길동님은 자신이 건네는 깊은 말들이 가볍게 받아들여진다고 느낄 수 있습니다. 다만 이는 상대의 속마음을 단정하는 것이 아니라, 명식이 보여주는 기운의 방향일 뿐입니다. 중요한 것은 이 차이를 알고 있다면, 서로 다른 방식으로 애정을 표현하고 있다는 사실을 미리 이해할 수 있다는 점입니다. 아직 시작 전인 두 분에게는 이 비대칭이 오히려 서로를 탐색하는 흥미로운 지점이 될 수 있습니다.</p>
+<h3 class="sub">배우자궁이 말하는 것</h3>
+<p>애정과 친밀함을 들여다볼 때 가장 먼저 보는 자리가 일지<span class="gloss">(각자의 사주에서 배우자 자리로 보는 칸)</span>입니다. 홍길동님의 일지는 辰(진)이고, 김영희님의 일지는 午(오)입니다. 이 두 글자 사이에는 특별한 합도 충도 없는, 담백한 관계로 나타납니다.</p>
+<p>흔히 합이 있으면 한눈에 끌리는 느낌이, 충이 있으면 초반부터 자극적인 긴장감이 있다고 보지만, 이 두 분의 배우자궁은 그 어느 쪽도 아닙니다. 이는 오히려 <mark>처음부터 과하게 휩쓸리지 않는 관계</mark>라는 뜻으로 읽을 수 있습니다. 뜨겁게 타오르며 시작하는 인연도 있지만, 담백하게 서로를 알아가며 천천히 신뢰를 쌓아가는 인연도 있습니다. 홍길동님의 辰과 김영희님의 午 사이에 특별한 작용이 없다는 것은, 서로를 압도하거나 끌어당기는 강한 자석 같은 힘은 없지만 동시에 처음부터 서로를 밀어내는 마찰도 없다는 의미입니다.</p>
+<p>이런 배우자궁을 가진 관계는 보통 만남 초반의 인상이 강렬하지 않을 수 있습니다. 첫눈에 반하는 극적인 끌림보다는, 몇 번 만나고 대화를 나누면서 서서히 편안함이 쌓이는 흐름에 가깝습니다. 이는 단점이 아니라, 오히려 <mark>관계를 스스로 만들어가야 하는 여지가 크다</mark>는 뜻이기도 합니다. 합이 강한 관계는 때로 그 합의 힘에 기대어 서로를 깊이 알지 못한 채 가까워지기도 하지만, 특별한 합충이 없는 배우자궁은 두 사람이 의식적으로 다가가고 대화하고 시간을 들여야 친밀감이 쌓이는 구조입니다. 홍길동님의 辰은 단단하고 묵직한 성질을, 김영희님의 午는 밝고 드러나는 성질을 지니고 있어 겉으로 보이는 결이 다르지만, 서로를 침범하지 않는 거리감이 오히려 초반의 편안함으로 작용할 수 있습니다. 이 담백함을 심심하다고 여기기보다는, 급하게 타오르지 않아도 되는 여유로 받아들이면 좋을 자리입니다.</p>
+<h3 class="sub">먼저 다가가도 될까</h3>
+<p>앞서 본 것처럼 김영희님이 홍길동님에게는 식신으로, 홍길동님이 김영희님에게는 편인으로 작용합니다. 이 방향성만 놓고 보면 베풀고 챙기는 기운을 가진 김영희님 쪽이 먼저 편하게 다가가는 몸짓을 보이기에 자연스러운 자리에 있다고 볼 수 있습니다. 식신은 말을 걸고, 챙기고, 먼저 안부를 묻는 데 부담이 적은 기운이기 때문입니다.</p>
+<p>다만 행동의 실마리는 십신 방향에서만 나오지 않습니다. 교차로 맺어지는 합의 자리도 함께 보아야 합니다. 두 분 사이에는 홍길동님의 일지 辰과 김영희님의 월지 申이 만나 水(수)의 기운으로 이어지는 자리가 있습니다. 이는 일지라는, 각자에게 가까운 자리에서 비롯된 연결이라는 점에서 의미가 있습니다. 이런 자리가 있으면 말이 아니라 분위기나 자연스러운 흐름 속에서 거리가 좁혀지는 경우가 많습니다. 억지로 애를 쓰지 않아도 함께 있는 시간이 쌓이면 서로에게 스며드는 결이 생길 수 있다는 뜻입니다.</p>
+<p>이 두 가지를 겹쳐 보면, 먼저 말을 걸고 자리를 만드는 쪽은 김영희님이 움직이기에 조금 더 수월할 수 있고, 홍길동님은 그 흐름에 조용히 반응하며 깊어지는 쪽에 가까울 수 있습니다. 그렇다고 홍길동님이 먼저 다가가지 말라는 뜻은 아닙니다. 다만 홍길동님이 먼저 움직일 때는 가볍게 말을 건네기보다 한 가지 주제를 깊이 나누는 방식이 더 잘 맞을 가능성이 있습니다. 누가 먼저 움직이든, 중요한 것은 이 관계가 극적인 계기보다 <mark>자연스러운 흐름 속에서 가까워질 여지가 있다</mark>는 점입니다.</p>
+<h3 class="sub">가까워질수록 드러날 것</h3>
+<p>두 분 사이에는 교차로 부딪히는 충이 보이지 않습니다. 그래서 가까워질수록 드러나는 것은 특정한 자리의 충돌이 아니라, 두 일간<span class="gloss">(사주의 하루를 대표하는 글자, 그 사람의 본질적인 기질)</span>의 성정 차이에서 비롯되는 결입니다. 홍길동님의 일간은 庚(경)으로, 단단하고 결단력 있는 쇠의 기운을 지니고 있으며 건록격<span class="gloss">(자신의 기운이 뿌리내린 자리를 타고나 스스로 서는 힘이 강한 구조)</span>에 중화<span class="gloss">(강하지도 약하지도 않은 균형)</span>를 이루고 있습니다. 김영희님의 일간은 壬(임)으로, 유연하게 흐르며 넓게 품는 물의 기운을 지녔고 역시 건록격에 중화를 이루고 있습니다.</p>
+<p>같은 건록격이라는 점에서 두 분 모두 스스로 중심을 잡는 힘이 있다는 공통점이 있지만, 庚의 단단함과 壬의 유연함은 가까워질수록 기대하는 방식이 다르게 드러날 수 있습니다. 홍길동님은 명확하고 분명한 태도를 중요하게 여기는 반면, 김영희님은 상황에 따라 유연하게 흘러가는 방식을 편하게 느낄 수 있습니다. 이는 갈등이라기보다, 서로가 관계에서 기대하는 속도와 방식의 차이에 가깝습니다. 충이 없다는 것은 격렬한 부딪힘의 소지가 적다는 뜻이지만, 그렇다고 두 사람이 모든 면에서 같은 리듬을 가졌다는 뜻은 아닙니다. 이 차이를 미리 알아둔다면, 가까워지는 과정에서 생기는 작은 엇갈림을 큰 문제로 오해하지 않을 수 있습니다.</p>
+<h3 class="sub">두 사람의 앞으로 3년</h3>
+<p>앞으로 3년의 흐름을 참고로 짚어보면, 홍길동님은 2026년 병오년<span class="gloss">(천간으로는 편관, 지지로는 정관의 기운이 들어오는 해)</span>에 69점, 2027년 정미년<span class="gloss">(천간으로는 정관, 지지로는 정인의 기운)</span>에 72점, 2028년 무신년<span class="gloss">(천간으로는 편인, 지지로는 비견의 기운)</span>에 61점을 보입니다. 홍길동님은 세 해 모두 비교적 안정적으로 높은 흐름을 유지하다가 2027년에 가장 좋은 때를 맞이하는 모습입니다.</p>
+<p>김영희님은 2026년 46점, 2027년 58점, 2028년 51점으로, 2027년에 뚜렷하게 점수가 올라가는 흐름을 보입니다. 2027년은 김영희님에게 천간으로 정재, 지지로 정관의 기운이 들어오는 해로, 세 해 중 가장 오름폭이 큰 시기입니다.</p>
+<p>두 사람의 평균을 보면 2026년 58점, 2027년 65점, 2028년 56점으로, <mark>2027년이 평균이 가장 높은 해</mark>이면서 동시에 두 사람 모두 직전 해보다 점수가 오르는 유일한 해이기도 합니다. 이는 각자의 흐름이 다르게 움직이다가 한 해만큼은 같은 방향으로 함께 올라간다는 뜻으로 읽을 수 있습니다. 반면 2026년과 2028년은 두 사람의 점수 차이가 비교적 크게 벌어지는 해로, 한쪽은 괜찮은 흐름이지만 다른 한쪽은 상대적으로 무거운 흐름일 수 있습니다. 다만 이 점수는 각자의 쓰임이 되는 기운<span class="gloss">(용신)</span>과 연애와 관련된 십신의 작용을 함께 계산한 참고값일 뿐, 그 해에 반드시 어떤 일이 일어난다는 예언이 아니라는 점을 분명히 해두어야 합니다.</p>
+<h3 class="sub">다가가기 좋은 때와 기다릴 때</h3>
+<p>앞서 짚은 흐름을 놓고 보면, 평균이 가장 높고 두 사람이 함께 오르는 해에는 마음을 표현하는 속도를 조금 더 자연스럽게 가져가도 괜찮은 시기라고 볼 수 있습니다. 두 사람 모두의 기운이 같은 방향으로 움직이는 때이니, 이 시기에는 평소보다 솔직한 대화나 한 걸음 더 다가서는 행동이 받아들여질 여지가 상대적으로 넉넉할 수 있습니다.</p>
+<p>반대로 두 사람의 점수 차이가 크게 벌어지는 해에는, 한쪽은 적극적으로 다가가고 싶어도 다른 한쪽은 자신의 흐름을 추스르는 데 더 마음을 쓰고 있을 가능성이 있습니다. 이런 시기에는 관계를 급하게 밀어붙이기보다, 상대의 속도를 지켜보며 기다려주는 태도가 서로에게 더 편안할 수 있습니다. 특히 점수가 상대적으로 낮게 나타나는 해에는 큰 결단이나 고백보다는, 작은 안부와 꾸준한 관심으로 관계의 온도를 유지하는 쪽이 자연스러울 수 있습니다.</p>
+<p>다만 이 모든 것은 정해진 날짜를 못 박는 것이 아니라, 마음을 표현하는 방식과 속도를 조율하는 데 참고할 수 있는 흐름일 뿐입니다. 두 사람이 함께 오르는 해를 하나의 기회로 여기되, 그 전후의 시기도 관계를 쌓아가는 과정으로 자연스럽게 이어가면 좋을 것입니다.</p>
+<h3 class="sub">점수가 말하는 것과 말하지 않는 것</h3>
+<p>두 분의 궁합을 수치로 환산하면 최종 <mark>95점</mark>입니다. 이 점수는 기본 바탕 점수에 두 분 사이에 나타난 교차 육합의 개수와 교차 삼합 두 지지의 개수를 더하고, 충이 없어 감산이 없었던 점, 그리고 배우자궁인 일지끼리는 특별한 합충이 없어 추가 보정이 없었던 점까지 반영해 범위 안에서 산출된 값입니다.</p>
+<p>이 숫자가 높다는 것은 두 분 사이에 교차로 이어지는 합의 자리가 여러 곳에서 발견되었다는 사실을 보여줄 뿐입니다. 95점이라는 숫자 자체가 관계의 성공이나 행복을 보장하는 것은 아닙니다. 점수는 명식 구조상의 연결고리를 계량한 참고 지표이고, 실제 관계는 두 분이 어떻게 대화하고 서로를 이해하려 노력하는지에 따라 전혀 다르게 흘러갈 수 있습니다. 숫자는 출발선의 여건을 보여줄 뿐, 그 길을 걸어가는 것은 두 분의 선택에 달려 있습니다.</p>
+<h3 class="sub">핵심 요약과 두 사람을 위한 실천 포인트</h3>
+<p>두 분은 김영희님이 홍길동님에게 식신으로, 홍길동님이 김영희님에게 편인으로 작용하는 비대칭적인 관계이며, 배우자궁인 일지<span class="gloss">(辰과 午)</span>에는 특별한 합충이 없어 담백하게 시작해 천천히 쌓아가는 유형에 가깝습니다. 먼저 다가가는 움직임은 김영희님 쪽이 조금 더 자연스러울 수 있으며, 일지와 월지 사이의 水 기운으로 이어지는 자리는 자연스러운 끌림의 통로가 될 수 있습니다. 충이 없는 대신 庚과 壬이라는 서로 다른 기질의 차이가 가까워질수록 드러날 수 있으며, 앞으로 3년 중에는 2027년이 두 사람 모두에게 함께 오르는 흐름으로 참고할 만합니다. 전체 궁합 점수는 95점으로 높게 나타나지만, 이는 명식 구조의 참고값일 뿐 관계의 결과를 정하지 않습니다.</p></div>
+  <div class="vz-dd-grid"><div class="vz-dd do"><div class="ttl">지금 할 것</div><ol><li>김영희님이 먼저 가볍게 안부를 건네는 식으로 다가가 보면 자연스러운 흐름을 만들 수 있습니다.</li><li>홍길동님은 짧은 말보다 한 가지 주제로 깊이 대화하는 방식으로 다가가면 더 편안하게 받아들여질 수 있습니다.</li><li>함께 있는 시간을 자연스럽게 늘리며 일지와 월지 사이의 연결된 분위기를 느껴보는 것도 좋습니다.</li><li>2027년 즈음 두 사람 모두 흐름이 함께 오르는 시기이니, 그때를 관계 진전의 자연스러운 계기로 염두에 두어도 좋습니다.</li><li>서로의 반응 속도가 다를 수 있음을 염두에 두고, 식신과 편인이라는 서로 다른 표현 방식을 있는 그대로 받아들여 보십시오.</li></ol></div><div class="vz-dd dont"><div class="ttl">피할 것</div><ol><li>김영희님의 편안한 챙김을 당연하게 여기거나, 돌아오는 반응이 없다고 서운해하며 서둘러 결론 내리지 않습니다.</li><li>홍길동님의 깊은 말들을 가볍게 흘려듣지 말고, 그 안에 담긴 관심의 방식임을 성급히 오해하지 않습니다.</li><li>2026년이나 2028년처럼 두 사람의 흐름 차이가 큰 시기에 한쪽이 급하게 관계를 밀어붙이지 않습니다.</li><li>담백한 배우자궁의 관계를 심심하다고 여겨 억지로 자극적인 전개를 만들려 하지 않습니다.</li><li>庚과 壬의 기질 차이를 성격 결함으로 단정하며 성급히 관계를 재단하지 않습니다.</li></ol></div></div>
+</section>
+
+<section class="compat-section" style="padding-top:8mm; break-inside: avoid;">
+  <h2>근거가 된 관계 데이터</h2>
+  <p class="compat-data-intro">아래 값은 두 명식의 관계를 계산한 단서입니다. 한 항목만으로 두 사람의 관계를 판단하지 않습니다.</p>
+  <ul class="compat-rel-list">
+    <li>일지-일지(배우자궁) 관계: <b>특별한 합충 없음</b></li>
+    <li>김영희님의 일간은 홍길동님에게 <b>식신(食神)</b>, 홍길동님의 일간은 김영희님에게 <b>편인(偏印)</b>에 해당</li>
+    <li>교차 육합 <b>5</b>건 · 교차 삼합 <b>2</b>건 · 교차 충 <b>0</b>건</li>
+  </ul>
+  <div class="disclaimer">
+    본 궁합 리포트는 참고 자료이며 의학적·법적·재정적 조언을 대체하지 않습니다.
+  </div>
+</section>
+
+<script>window.__chartsReady = true;</script>
+</body>
+</html>
