@@ -12,6 +12,72 @@ const engineA = computeSaju({ year: 1990, month: 5, day: 15, hour: 10, minute: 3
 const engineB = computeSaju({ year: 1992, month: 9, day: 3, hour: 14, minute: 0, gender: '여' });
 const compat = analyzeCompatibility(engineA, engineB);
 
+function requestFacts(a, b, pa, pb, result = analyzeCompatibility(a, b)) {
+  const prompt = buildCompatPrompt(a, b, pa, pb, result, 'dating', null);
+  const match = prompt.match(/## 궁합 확정 근거[^\n]*\n([\s\S]*?)\n\n## 시기 점수/);
+  assert.ok(match, '생성 요청에 한국어 확정 근거가 있어야 한다');
+  return JSON.parse(match[1]);
+}
+
+test('생성 요청은 비대칭 십신을 작용자와 받는 사람 이름으로 전달하고 순서를 바꿔도 유지한다', () => {
+  const facts = requestFacts(engineA, engineB, { name: '홍길동' }, { name: '김영희' });
+  assert.deepStrictEqual(facts.십신방향, [
+    { 작용자: '김영희', 받는사람: '홍길동', 십신: '식신' },
+    { 작용자: '홍길동', 받는사람: '김영희', 십신: '편인' }
+  ]);
+  const swapped = requestFacts(engineB, engineA, { name: '김영희' }, { name: '홍길동' });
+  assert.deepStrictEqual(swapped.십신방향, [...facts.십신방향].reverse());
+});
+
+test('생성 요청은 양쪽 궁을 보존하고 없는 충과 배우자궁 관계를 분명히 전달한다', () => {
+  const facts = requestFacts(engineA, engineB, { name: '홍길동' }, { name: '김영희' });
+  assert.deepStrictEqual(facts.교차육합[0], {
+    본인: '홍길동', 본인궁: '연지', 본인지지: '午', 상대: '김영희', 상대궁: '시지', 상대지지: '未', 합화오행: null
+  });
+  assert.strictEqual(facts.교차육합.length, 5);
+  assert.strictEqual(facts.교차삼합두지지.length, 2);
+  assert.deepStrictEqual(facts.교차충, []);
+  assert.deepStrictEqual(facts.배우자궁, { 본인: '홍길동', 본인일지: '辰', 상대: '김영희', 상대일지: '午', 관계: '특별한 합충 없음' });
+});
+
+test('생성 요청은 표면 오행의 0개와 용신 상보의 두 방향을 계산값으로 전달한다', () => {
+  const facts = requestFacts(engineA, engineB, { name: '홍길동' }, { name: '김영희' });
+  assert.deepStrictEqual(facts.표면오행, [
+    { 이름: '홍길동', 개수: { 木: 0, 火: 3, 土: 1, 金: 4, 水: 0 } },
+    { 이름: '김영희', 개수: { 木: 0, 火: 2, 土: 2, 金: 2, 水: 2 } }
+  ]);
+  assert.deepStrictEqual(facts.용신상보, [
+    { 용신주인: '홍길동', 용신: '土', 제공자: '김영희', 제공자표면개수: 2 },
+    { 용신주인: '김영희', 용신: '木', 제공자: '홍길동', 제공자표면개수: 0 }
+  ]);
+});
+
+test('네 관계 생성 요청의 충 선택 지시는 빈 목록 처리 조건을 함께 전달한다', () => {
+  for (const relation of Object.keys(RELATIONS)) {
+    const prompt = buildCompatPrompt(engineA, engineB, { name: '홍길동' }, { name: '김영희' }, compat, relation, null);
+    const instructions = prompt.split('\n').filter((line) => /^   /.test(line) && /교차충|충 구조/.test(line));
+    assert.strictEqual(instructions.length, { dating: 1, married: 2, crush: 1, ex: 2 }[relation], `${relation}: 충 관련 골격 지시 누락`);
+    for (const line of instructions) assert.match(line, /없|비어/, `${relation}: 충이 없는 경우의 처리 누락`);
+  }
+});
+
+test('궁합 점수 내역은 실제 가산·감산·상한과 일지 보정을 보존한다', () => {
+  assert.deepStrictEqual(compat.scoreBasis, {
+    base: 55, yukhap: 40, samhap: 20, chung: 0, day: 0, raw: 115, min: 5, max: 95
+  });
+  const fixture = (branch) => ({ ...engineA, palja: Object.fromEntries(['year','month','day','hour'].map((key) => [key + 'Pillar', { stem: '甲', branch }])) });
+  for (const [a, b, expectedRaw, expectedDay, expectedScore] of [
+    ['子', '丑', 195, 12, 95], ['子', '午', -120, -15, 5], ['申', '子', 227, 12, 95], ['子', '子', 55, 0, 55]
+  ]) {
+    const result = analyzeCompatibility(fixture(a), fixture(b));
+    assert.strictEqual(result.scoreBasis.raw, expectedRaw);
+    assert.strictEqual(result.scoreBasis.day, expectedDay);
+    assert.strictEqual(result.score, expectedScore);
+  }
+  const facts = requestFacts(engineA, engineB, { name: '홍길동' }, { name: '김영희' });
+  assert.deepStrictEqual(facts.점수산출, { 기본: 55, 육합가산: 40, 삼합가산: 20, 충감산: 0, 일지보정: 0, 범위보정전: 115, 하한: 5, 상한: 95, 최종: 95, 산식제외: ['십신', '용신', '오행 상보', '시기 점수'] });
+});
+
 test('관계 유형마다 골격 분량 합이 목표와 같고 소제목이 겹치지 않는다', () => {
   for (const key of Object.keys(RELATIONS)) {
     const outline = getCompatOutline(key);

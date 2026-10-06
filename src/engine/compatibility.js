@@ -77,19 +77,22 @@ function analyzeCompatibility(engineA, engineB) {
   const shipsinAtoBKo = shipsinAtoB ? SHIPSIN_KO[shipsinAtoB] : null;
   const shipsinBtoAKo = shipsinBtoA ? SHIPSIN_KO[shipsinBtoA] : null;
 
-  // 종합 점수(0~100, 참고용) — 합 1개당 +8, 삼합 +10, 충 1개당 -10, 일지 관계는 가중치 2배, 기본값 55
-  let score = 55;
-  score += crossYukhap.length * 8;
-  score += crossSamhap.length * 10;
-  score -= crossChung.length * 10;
-  if (dayRelation?.type === 'yukhap' || dayRelation?.type === 'samhap') score += 12;
-  if (dayRelation?.type === 'chung') score -= 15;
-  score = Math.max(5, Math.min(95, Math.round(score)));
+  // 참고 점수 — 교차 목록에는 일지끼리도 포함하고, 그 관계에 +12/-15를 추가한다.
+  // 산식 내역을 같은 계산에서 반환해 생성 설명이 십신·용신을 산식에 덧붙이지 않게 한다.
+  const scoreBasis = {
+    base: 55, yukhap: crossYukhap.length * 8, samhap: crossSamhap.length * 10,
+    chung: 0 - crossChung.length * 10,
+    day: dayRelation?.type === 'chung' ? -15 :
+      (dayRelation?.type === 'yukhap' || dayRelation?.type === 'samhap') ? 12 : 0,
+    raw: 0, min: 5, max: 95
+  };
+  scoreBasis.raw = scoreBasis.base + scoreBasis.yukhap + scoreBasis.samhap + scoreBasis.chung + scoreBasis.day;
+  const score = Math.max(scoreBasis.min, Math.min(scoreBasis.max, Math.round(scoreBasis.raw)));
 
   return {
     crossYukhap, crossChung, crossSamhap,
     dayRelation, shipsinAtoB, shipsinBtoA, shipsinAtoBKo, shipsinBtoAKo,
-    score
+    score, scoreBasis
   };
 }
 
