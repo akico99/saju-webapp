@@ -2,6 +2,7 @@
 const express = require('express');
 const fs = require('fs');
 const orders = require('../../db/orders');
+const { DEEP_TOPICS } = require('../../llm/deepReading');
 
 const router = express.Router();
 
@@ -36,21 +37,27 @@ router.get('/download/:jobId', (req, res) => {
   res.download(order.result_path, NAME_BY_PRODUCT[order.product_key] || '길잡이여울_리포트.pdf');
 });
 
+/* 요약 카드 파일명 — 심층 리딩은 주제 이름을 넣는다. */
+function cardFileName(productKey) {
+  const m = /^deep_(.+)$/.exec(productKey || '');
+  const topic = m && DEEP_TOPICS[m[1]];
+  return topic ? '사주보는수달_' + topic.label + '-공유카드.png' : '길잡이여울_평생사주-요약카드.png';
+}
+
 router.get('/download-card/:jobId', (req, res) => {
   const order = orders.findByJobId(req.params.jobId);
   if (!order) return res.status(404).json({ error: 'job을 찾을 수 없습니다.' });
   if (!req.session || !req.session.userId || req.session.userId !== order.user_id) {
     return res.status(401).json({ error: '로그인이 필요합니다.' });
   }
-  // 카드는 본편보다 먼저 만들어진다. 완료를 기다리지 않고 내려받게 한다 — 기다리는 동안
-  // 볼 것을 주는 게 이 카드의 목적이다.
+  // 예전 주문이거나 카드 렌더링이 실패한 경우에는 PDF만 제공한다.
   if (!order.card_path) {
     return res.status(409).json({ error: '아직 요약 카드가 준비되지 않았습니다.' });
   }
   if (!fs.existsSync(order.card_path)) {
     return res.status(410).json({ error: '이전에 완료된 요약 카드를 서버에서 찾을 수 없습니다. 문의: sooky2001@gmail.com', code: 'file_missing' });
   }
-  res.download(order.card_path, '길잡이여울_평생사주-요약카드.png');
+  res.download(order.card_path, cardFileName(order.product_key));
 });
 
 module.exports = router;

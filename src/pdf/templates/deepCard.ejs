@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>심층 리딩 공유 카드</title>
+<style><%- fontFaceCss %></style>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  html, body { width: 1080px; height: 1920px; background: #faf8f4; overflow: hidden; }
+  body {
+    font-family: 'ReportGothic', '맑은 고딕', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+    color: #24344b;
+    padding: 110px 84px 96px;
+    display: flex; flex-direction: column;
+    position: relative;
+  }
+  body::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 14px; background: #24344b; }
+  body::after { content: ''; position: absolute; left: 0; right: 0; top: 14px; height: 4px; background: #c7a13a; }
+
+  .brand { font-size: 30px; letter-spacing: 0.22em; color: #c7a13a; font-weight: 700; }
+  .brand small { font-size: 26px; letter-spacing: 0.1em; color: #8a6d1c; font-weight: 400; margin-left: 12px; }
+  .who { margin-top: 26px; font-size: 38px; color: #5b6878; display: flex; white-space: nowrap; }
+  .who b { color: #24344b; overflow: hidden; text-overflow: ellipsis; min-width: 0; margin-right: 10px; }
+  .topic { margin-top: 10px; font-family: 'ReportMyeongjo', 'Batang', '바탕', serif; font-weight: 700; line-height: 1.2; color: #24344b; white-space: nowrap; overflow: hidden; }
+
+  .verdict { margin-top: 44px; background: #24344b; color: #faf8f4; border-radius: 28px; padding: 48px 52px; border-left: 12px solid #c7a13a; }
+  .verdict .k { font-size: 26px; letter-spacing: 0.14em; color: #c7a13a; margin-bottom: 20px; }
+  .verdict .t { font-family: 'ReportMyeongjo', 'Batang', '바탕', serif; line-height: 1.5; word-break: keep-all; overflow-wrap: anywhere;
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden; }
+
+  .stats { margin-top: 40px; display: flex; gap: 28px; }
+  .stat { flex: 1; background: #fff; border: 2px solid #e6dfcd; border-radius: 24px; padding: 34px 20px 30px; text-align: center; min-width: 0; }
+  .stat .l { font-size: 28px; color: #6d7887; margin-bottom: 10px; }
+  .stat .n { font-size: 112px; font-weight: 700; color: #c7a13a; line-height: 1.05; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .stat .n small { font-size: 44px; color: #8a6d1c; margin-left: 4px; }
+  .stat .s { font-size: 26px; color: #6d7887; margin-top: 12px; white-space: nowrap; }
+
+  .chart { margin-top: 40px; flex: 1; min-height: 0; background: #fff; border: 2px solid #e6dfcd; border-radius: 28px; padding: 36px 30px 26px; display: flex; flex-direction: column; }
+  .chart .ttl { font-size: 30px; font-weight: 700; color: #24344b; margin-bottom: 4px; }
+  .chart .sub { font-size: 23px; color: #8a93a0; margin-bottom: 8px; }
+  .cols { flex: 1; min-height: 0; display: flex; gap: 8px; align-items: stretch; }
+  .col { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; }
+  .col .v { font-style: normal; position: absolute; left: -10px; right: -10px; bottom: 100%; margin-bottom: 8px; text-align: center; font-size: 25px; color: #5b6878; font-variant-numeric: tabular-nums; line-height: 30px; }
+  .col.best .v { color: #8a6d1c; font-weight: 700; }
+  .col .bar { flex: 1; min-height: 0; width: 100%; display: flex; align-items: flex-end; justify-content: center; padding-top: 80px; }
+  .col .bar i { display: block; position: relative; width: 100%; border-radius: 10px 10px 4px 4px; }
+  .col.best .bar i { box-shadow: 0 0 0 4px #c7a13a; }
+  .col .h { margin-top: 12px; font-size: 25px; color: #24344b; font-weight: 700; }
+  .col.best .h { color: #8a6d1c; }
+  .col .y { font-size: 20px; color: #9aa3ae; height: 26px; line-height: 26px; }
+  .tag { font-style: normal; position: absolute; left: 50%; transform: translateX(-50%); bottom: 100%; margin-bottom: 42px; white-space: nowrap; font-size: 20px; color: #fff; background: #c7a13a; border-radius: 10px; padding: 0 8px; height: 30px; line-height: 30px; }
+
+  .footer { margin-top: 36px; text-align: center; font-size: 30px; color: #8a6d1c; letter-spacing: 0.06em; }
+  .footer span { display: block; font-size: 22px; color: #9aa3ae; margin-top: 6px; letter-spacing: 0; }
+</style>
+</head>
+<body>
+  <div class="brand">사주보는 수달<small>· 심층 리딩</small></div>
+  <div class="who"><b><%= name %></b><span>님의</span></div>
+  <div class="topic" style="font-size: <%= topicSize %>px"><%= topicLabel %></div>
+
+  <% if (verdict) { %>
+  <div class="verdict">
+    <div class="k">한 줄 결론</div>
+    <div class="t" style="font-size: <%= verdictSize %>px"><%= verdict %></div>
+  </div>
+  <% } %>
+
+  <div class="stats">
+    <% stats.forEach(function(s) { %>
+    <div class="stat"><div class="l"><%= s.k %></div><div class="n"><%- s.v %></div><div class="s"><%= s.s %></div></div>
+    <% }) %>
+  </div>
+
+  <% if (barsHtml) { %>
+  <div class="chart">
+    <div class="ttl">앞으로 12개월 흐름</div>
+    <div class="sub">용신과 이 주제의 십신을 함께 본 점수</div>
+    <div class="cols"><%- barsHtml %></div>
+  </div>
+  <% } else { %><div style="flex:1"></div><% } %>
+
+  <div class="footer">sajuotter.com<span>사주 해석은 선택을 돕는 참고 자료예요</span></div>
+  <script>
+    (async function () {
+      try { await document.fonts.ready; } catch (e) {}
+      window.__chartReady = true;
+    })();
+  </script>
+</body>
+</html>
+

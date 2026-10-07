@@ -125,6 +125,10 @@ const downloadBlock = document.getElementById('downloadBlock');
 const downloadLink = document.getElementById('downloadLink');
 const errorBlock = document.getElementById('errorBlock');
 const shareBtn = document.getElementById('shareBtn');
+const cardLink = document.getElementById('cardLink');
+const cardPreview = document.getElementById('cardPreview');
+const cardImg = document.getElementById('cardImg');
+let currentCardUrl = null; // 공유 카드가 있는 완료 주문일 때만 값이 있다
 const crossSellChips = document.getElementById('crossSellChips');
 
 const TOPIC_LABELS = {
@@ -178,7 +182,25 @@ async function shareOrCopy(shareData) {
   }
 }
 
-shareBtn.addEventListener('click', () => shareOrCopy({
+// 공유 카드가 있고 브라우저가 파일 공유를 지원하면 카드 이미지를 같이 보낸다. 아니면 기존처럼 링크만 공유한다.
+async function shareWithCard(shareData) {
+  if (currentCardUrl && navigator.canShare) {
+    try {
+      const blob = await (await fetch(currentCardUrl)).blob();
+      const file = new File([blob], '사주보는수달-공유카드.png', { type: 'image/png' });
+      if (navigator.canShare({ files: [file] })) {
+        await navigator.share({ ...shareData, files: [file] });
+        return;
+      }
+    } catch (e) {
+      if (e.name === 'AbortError') return; // 사용자가 공유창에서 취소함
+      // 그 외 실패는 링크 공유로 이어간다
+    }
+  }
+  return shareOrCopy(shareData);
+}
+
+shareBtn.addEventListener('click', () => shareWithCard({
   title: '사주보는 수달 — 주제별 심층 리딩',
   text: '내 사주 한 주제를 깊게 읽어봤어, 궁금하면 너도 한번 봐봐',
   url: location.origin + '/'
@@ -209,6 +231,10 @@ async function poll(jobId, topic) {
       progressBlock.classList.add('hidden');
       downloadBlock.classList.remove('hidden');
       downloadLink.href = `/api/download/${jobId}`;
+      currentCardUrl = data.hasCard ? `/api/download-card/${jobId}` : null;
+      cardLink.classList.toggle('hidden', !currentCardUrl);
+      cardPreview.classList.toggle('hidden', !currentCardUrl);
+      if (currentCardUrl) { cardLink.href = currentCardUrl; cardImg.src = currentCardUrl; }
       showReading(data.report, topic, data.visual);
       renderCrossSell(topic);
       setFormBusy(false);

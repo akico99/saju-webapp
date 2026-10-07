@@ -142,7 +142,6 @@ function hourBarsHtml(hours, bestHour) {
   }).join('') + '</div>';
 }
 
-/* 한 해 12개월 — 달마다 가장 좋은 주말 점수. months: [{month, score, day}] */
 /* 월별 흐름 막대 — 리딩의 "앞으로 12개월", 신년운세의 1~12월. months: [{year, month, score, note?}]
    가장 높은 달과 가장 낮은 달에 표시를 단다. note는 막대 아래 한 줄(선택). */
 function monthFlowHtml(months, opts = {}) {
@@ -155,6 +154,19 @@ function monthFlowHtml(months, opts = {}) {
     const yearMark = m.month === 1 || m === months[0] ? '<span class="d">' + m.year + '</span>' : '<span class="d">&nbsp;</span>';
     return '<div class="col' + (m === hi ? ' best' : '') + '">' + tag + '<span class="v">' + m.score + '</span><div class="bar"><i style="height:' + clamp(m.score, 4, 100) + '%;background:' + TIER_COLOR[t.key] + '"></i></div><span class="h">' + m.month + '월</span>' + yearMark + '</div>';
   }).join('') + '</div></div>';
+}
+
+/* 작은 12개월 막대(스파크라인) — 주제 카드에 붙는다. months: [{month, score}], 가장 좋은 달·조심할 달에 윗점을 단다.
+   막대 높이·색은 monthFlowHtml과 같은 점수 기준이고 숫자는 막대 위에 쓰지 않는다(카드 헤더에 최고·주의 달만 숫자로). */
+function sparklineHtml(months, opts = {}) {
+  if (!months || !months.length) return '';
+  const hi = opts.best != null ? opts.best : months.reduce((a, b) => (b.score > a.score ? b : a)).month;
+  const lo = opts.caution != null ? opts.caution : null;
+  return '<div class="vz-spark">' + months.map((m) => {
+    const t = scoreTier(m.score);
+    const cls = m.month === hi ? ' best' : m.month === lo ? ' low' : '';
+    return '<div class="c' + cls + '"><div class="bar"><i style="height:' + clamp(m.score, 6, 100) + '%;background:' + TIER_COLOR[t.key] + '"></i></div><span>' + m.month + '</span></div>';
+  }).join('') + '</div>';
 }
 
 function yearMonthsHtml(year, months, bestMonth) {
@@ -396,7 +408,7 @@ module.exports = {
   OH, OH_LABEL, OH_COLOR, OH_MEANING, esc, scoreTier, TIER_COLOR,
   ohaengRadarSvg, lifeCurveSvg, scoreBarsHtml, gaugesHtml, badgesHtml,
   monthCalendarHtml, hourBarsHtml, yearMonthsHtml, monthFlowHtml, heatmapHtml, infoCardsHtml, swatchHtml, legendHtml,
-  pairBarsHtml, ddCardsHtml,
+  pairBarsHtml, ddCardsHtml, sparklineHtml,
   VISUAL_CSS, WEB_VISUAL_CSS
 };
 

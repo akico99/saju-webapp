@@ -12,6 +12,7 @@ const { costUsd } = require('../../llm/client');
 const { renderDeepHtml } = require('../../pdf/renderDeepHtml');
 const { buildDeepVisuals, deepWebHtml } = require('../../pdf/deepVisuals');
 const { renderPdf } = require('../../pdf/renderPdf');
+const { renderDeepCard } = require('../../pdf/renderDeepCard');
 const points = require('../../db/points');
 const { refundPurchase } = require('../refundPurchase');
 const orders = require('../../db/orders');
@@ -105,7 +106,16 @@ async function startDeep(userId, body) {
       // 그래프 조각도 함께 보관해 웹 결과 화면이 PDF와 같은 그래프를 보여준다.
       let resultVisual = null;
       try { resultVisual = deepWebHtml(buildDeepVisuals(engineResult, reading, person.gender || engineResult.meta.input.gender)); } catch (e) { resultVisual = null; }
-      orders.markDone(jobId, { resultPath: pdfPath, llmCostUsd: costUsd(reading.usage), resultText: toPlainText(reading), resultVisual });
+      // 공유 카드(1080x1920 PNG) — 완성된 리딩에서 AI 호출 없이 만든다(약 2~3초). 실패해도 주문은 성공시킨다.
+      let cardPath = null;
+      try {
+        const candidate = path.join(jobDir, 'deep-card.png');
+        await renderDeepCard(person, reading, candidate);
+        if (fs.existsSync(candidate)) cardPath = candidate;
+      } catch (e) {
+        console.error('[quick] 공유 카드 생성 실패(주문은 계속):', e.message);
+      }
+      orders.markDone(jobId, { resultPath: pdfPath, cardPath, llmCostUsd: costUsd(reading.usage), resultText: toPlainText(reading), resultVisual });
     })
     .catch((e) => {
       orders.markError(jobId, e.message);
