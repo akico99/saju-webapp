@@ -25,6 +25,9 @@ const OG_IMAGE = SITE + '/og-cover.jpg';
 const FORTUNE_YEAR = 2026;
 const ROOT = path.join(__dirname, '..');
 const PUBLIC_DIR = path.join(ROOT, 'public');
+// 서버와 같은 설정을 읽는다. 공개 전 상품은 사이트맵에 넣지 않는다.
+require('dotenv').config({ path: path.join(ROOT, '.env') });
+const newYear = require('../src/config/newYear');
 
 const Y = FORTUNE_YEAR;
 
@@ -33,6 +36,15 @@ const Y = FORTUNE_YEAR;
    sitemap: true인 페이지만 사이트맵에 들어간다. manageHead: false면 <head>는 손대지 않고
    사이트맵에만 넣는다(웹툰은 제목·설명을 직접 관리한다). */
 const PAGES = [
+  {
+    file: 'new-year.html', sitemap: newYear.enabled, crumb: newYear.year + '년 신년운세',
+    robots: newYear.enabled ? null : 'noindex, follow',
+    title: newYear.year + '년 신년운세 리포트 | ' + SITE_NAME,
+    description: newYear.year + '년 총운과 12개월 흐름, 재물·일·애정·건강 풀이를 담은 AI 신년운세 리포트. 웹 결과와 PDF, 공유 카드를 제공합니다.' +
+      (newYear.enabled ? ' ' + newYear.priceKrw.toLocaleString('ko-KR') + '원.' : ' 상품 준비 중입니다.'),
+    keywords: [newYear.year + '년 신년운세', '신년운세', '월별 운세'],
+    service: newYear.enabled ? { name: newYear.year + '년 신년운세 리포트', serviceType: '사주 풀이', price: newYear.priceKrw } : null
+  },
   {
     file: 'index.html', sitemap: true, crumb: '홈',
     title: '사주 풀이·' + Y + '년 신년운세·사주 궁합 | ' + SITE_NAME,
@@ -125,6 +137,7 @@ const PAGES = [
     service: { name: '평생사주 100페이지 리포트', serviceType: '사주 풀이', price: 14900 }
   },
   { file: 'webtoon/lifetime.html', sitemap: true, manageHead: false },
+  { file: 'webtoon/compat.html', sitemap: true, manageHead: false },
   {
     file: 'consult.html', sitemap: false, crumb: '상담 안내',
     title: '사주보는 수달 | 정갈한 사주 심층 분석 리포트',
@@ -250,6 +263,7 @@ function headBlock(page) {
     '<meta name="twitter:description" content="' + esc(page.description) + '">',
     '<meta name="twitter:image" content="' + OG_IMAGE + '">'
   ];
+  if (page.robots) lines.push('<meta name="robots" content="' + esc(page.robots) + '">');
   if (page.keywords || page.service) {
     lines.push('<script type="application/ld+json">\n' + jsonLdFor(page) + '\n</script>');
   }
@@ -317,7 +331,12 @@ function main() {
     const filePath = path.join(PUBLIC_DIR, page.file);
     if (!fs.existsSync(filePath)) { console.log('없음(건너뜀):', page.file); continue; }
     const html = fs.readFileSync(filePath, 'utf8');
-    if (write(page.file, rewriteHead(html, page.title, headBlock(page)))) changed.push(page.file);
+    let rendered = rewriteHead(html, page.title, headBlock(page));
+    if (page.file === 'new-year.html') {
+      rendered = rendered.replace(/(<strong id="newYearPrice">)[\s\S]*?(<\/strong>)/,
+        (_, open, close) => open + (newYear.enabled ? newYear.priceKrw.toLocaleString('ko-KR') + '원' : '준비 중') + close);
+    }
+    if (write(page.file, rendered)) changed.push(page.file);
   }
   for (const [file, target] of Object.entries(REDIRECT_STUBS)) {
     const filePath = path.join(PUBLIC_DIR, file);
@@ -330,9 +349,18 @@ function main() {
   // 사이트맵의 lastmod는 위에서 고친 파일의 상태를 보고 정하므로 HTML을 먼저 쓴다.
   if (write('sitemap.xml', buildSitemap())) changed.push('sitemap.xml');
   if (write('robots.txt', buildRobots())) changed.push('robots.txt');
+  // llms.txt에도 판매 중인 상품만 표시한다. 본문 가격과 같은 설정이 원장이다.
+  const llmsPath = path.join(PUBLIC_DIR, 'llms.txt');
+  if (fs.existsSync(llmsPath)) {
+    let llms = fs.readFileSync(llmsPath, 'utf8').replace(/^.*\]\(https:\/\/sajuotter\.com\/new-year\.html\).*\r?\n/gm, '');
+    if (newYear.enabled) {
+      llms = llms.replace(/(## 유료 리포트\r?\n)/, '$1- [' + newYear.year + '년 신년운세](https://sajuotter.com/new-year.html): 총운·12개월 흐름·재물·일·애정·건강 풀이. 웹 결과·PDF·공유 카드 제공. ' + newYear.priceKrw.toLocaleString('ko-KR') + '원.\n');
+    }
+    if (write('llms.txt', llms)) changed.push('llms.txt');
+  }
   console.log(changed.length ? '바뀐 파일:\n  ' + changed.join('\n  ') : '바뀐 파일 없음');
 }
 
 if (require.main === module) main();
 
-module.exports = { PAGES, REDIRECT_STUBS, ROBOTS_DISALLOW, FORTUNE_YEAR, urlOf, jsonLdFor };
+module.exports = { PAGES, REDIRECT_STUBS, ROBOTS_DISALLOW, FORTUNE_YEAR, urlOf, jsonLdFor, headBlock, buildSitemap };
