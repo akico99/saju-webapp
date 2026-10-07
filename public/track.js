@@ -1,7 +1,7 @@
 /* 사주보는 수달 공용 추적 — 모든 공개 페이지가 GA 태그 바로 뒤에 불러온다.
 
    1) 광고 유입값 저장: URL의 utm_* · fbclid · gclid를 localStorage에 "처음 유입"과 "마지막 유입"으로
-      나눠 저장한다. 결제 준비(PayFlow.checkout) 때 서버로 넘겨 주문에 붙이므로, 관리자 화면에서
+      나눠 저장한다(서버가 시행일 이후임을 확인한 뒤에만). 결제 준비(PayFlow.checkout) 때 서버로 넘겨 주문에 붙이므로, 관리자 화면에서
       캠페인별 매출을 볼 수 있다.
    2) 픽셀: /api/tracking-config가 메타·카카오 픽셀 ID를 주면 그때만 불러온다(ID가 없거나 개인정보
       처리방침 시행일 전이면 서버가 null을 준다).
@@ -13,11 +13,12 @@
   var ATTR_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'fbclid', 'gclid'];
   var LS = {
     get: function (k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } },
-    set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+    set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+    remove: function (k) { try { localStorage.removeItem(k); } catch (e) {} }
   };
 
   // ---- 1) 유입값 ----
-  (function captureAttribution() {
+  function captureAttribution() {
     var q = new URLSearchParams(location.search);
     var hit = {};
     ATTR_KEYS.forEach(function (k) { var v = q.get(k); if (v) hit[k] = v.slice(0, 120); });
@@ -32,9 +33,10 @@
     hit.at = new Date().toISOString();
     if (!LS.get('so_attr_first')) LS.set('so_attr_first', hit);
     LS.set('so_attr_last', hit);
-  })();
+  }
 
   function attribution() {
+    if (!cfg || cfg.attributionEnabled !== true) return null;
     var first = LS.get('so_attr_first'), last = LS.get('so_attr_last');
     return first || last ? { first: first, last: last } : null;
   }
@@ -66,6 +68,9 @@
 
   fetch('/api/tracking-config', { credentials: 'same-origin' }).then(function (r) { return r.json(); }).then(function (c) {
     cfg = c || {};
+    // 브라우저 시계 대신 서버의 기존 TRACKING_START 판단을 따른다. 설정 실패 시에도 저장하지 않는다.
+    if (cfg.attributionEnabled === true) captureAttribution();
+    else { LS.remove('so_attr_first'); LS.remove('so_attr_last'); }
     if (cfg.metaPixelId) loadMeta(cfg.metaPixelId);
     if (cfg.kakaoPixelId) loadKakao(cfg.kakaoPixelId, function () { flush(); autoViewItem(); });
     else { flush(); autoViewItem(); }

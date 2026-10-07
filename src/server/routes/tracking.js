@@ -34,7 +34,8 @@ function pixelId(v) {
 
 router.get('/tracking-config', (req, res) => {
   const pixelsOn = trackingOn();
-  res.set('Cache-Control', 'public, max-age=300').json({
+  res.set('Cache-Control', 'private, no-store').json({
+    attributionEnabled: pixelsOn,
     metaPixelId: pixelsOn ? pixelId(process.env.META_PIXEL_ID) : null,
     kakaoPixelId: pixelsOn ? pixelId(process.env.KAKAO_PIXEL_ID) : null,
     products: productCatalog()
