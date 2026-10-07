@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <title><%= reading.year %>년 신년운세</title>
+  <style><%- reportCss %></style>
+  <style><%- visualCss %>
+    .ny-cover { min-height: 270mm; display: flex; flex-direction: column; justify-content: center; padding: 26mm 22mm; color: #f8f6f0; background: #24344b; border-top: 4mm solid #c7a13a; }
+    .ny-cover .eyebrow { color: #e2c27a; font-size: 12pt; letter-spacing: .18em; font-weight: 700; }
+    .ny-cover h1 { margin: 18mm 0 4mm; font-size: 34pt; line-height: 1.3; }
+    .ny-cover .name { color: #e2c27a; font-size: 20pt; }
+    .ny-cover .meta { margin-top: 4mm; color: #d7dce2; font-size: 11pt; line-height: 1.8; }
+    .ny-cover .score { display: inline-block; margin-top: 18mm; padding: 5mm 7mm; border: 1px solid #c7a13a; border-radius: 3mm; color: #f8f6f0; font-size: 14pt; }
+    .ny-section { padding: 14mm 16mm 18mm; background: #fff; color: #29394b; break-inside: auto; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+    .ny-section-months, .ny-section-topics, .ny-section-quarters { page-break-before: always; }
+    .ny-section-overall { padding-bottom: 4mm; }
+    .ny-section-months { padding-top: 14mm; }
+    .ny-section h2 { margin: 0 0 4mm; color: #24344b; font-size: 20pt; }
+    .ny-section h3 { margin: 6mm 0 2mm; color: #24344b; font-size: 13pt; }
+    .ny-section .lead { color: #687789; font-size: 9.5pt; margin: -3mm 0 4mm; }
+    .ny-topic-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; break-inside: avoid; }
+    .ny-topic { padding: 4mm; border: 1px solid #e6dfcd; border-radius: 3mm; break-inside: avoid; }
+    .ny-topic-head { display: flex; align-items: baseline; justify-content: space-between; }
+    .ny-topic-head h3 { margin: 0; }
+    .ny-topic-head b { color: #8a6d1c; font-size: 16pt; }
+    .ny-topic-head small { margin-left: 1mm; font-size: 8pt; }
+    .ny-topic p { margin: 2mm 0 3mm; color: #687789; font-size: 8pt; }
+    .ny-topic p strong { color: #24344b; }
+    .ny-quarter-head, .ny-quarter-row { display: grid; grid-template-columns: 25mm 1fr 1fr; gap: 3mm; }
+    .ny-quarter-head { padding: 0 0 2mm; color: #7b8691; font-size: 8pt; font-weight: 700; }
+    .ny-quarter-row { align-items: start; padding: 3.4mm 0; border-bottom: 1px solid #e6e1d6; break-inside: avoid; }
+    .ny-quarter-label b { display: block; color: #24344b; font-size: 10pt; }
+    .ny-quarter-label small { display: block; margin-top: .8mm; color: #6d7887; font-size: 7.5pt; }
+    .ny-quarter-label i { display: block; height: 2mm; margin-top: 1.5mm; border-radius: 1mm; background: #eeeae1; overflow: hidden; }
+    .ny-quarter-label i em { display: block; height: 100%; }
+    .ny-quarter-cell { font-size: 8.5pt; line-height: 1.6; }
+    .ny-quarter-cell p { margin: 0; }
+    .ny-actions { margin-top: 7mm; break-inside: avoid; }
+    .ny-actions h3 { margin-bottom: 3mm; }
+    .ny-disclaimer { margin-top: 8mm; padding: 4mm; border-radius: 2mm; background: #f7f5f0; color: #6d7887; font-size: 8pt; line-height: 1.6; }
+    .ny-prose p { margin: 0 0 4mm; line-height: 1.8; font-size: 10pt; }
+    .ny-section mark { background: linear-gradient(transparent 56%, #f3d78a 56%); color: #14233a; font-weight: 700; padding: 0 .4mm; }
+    .ny-prose ul { margin: 2mm 0 4mm; padding-left: 6mm; }
+    .ny-prose li { margin: 1.5mm 0; line-height: 1.7; font-size: 9.5pt; }
+    .ny-section-months .vz-months .grid { height: 44mm; }
+    .ny-section-months .ny-prose ul { margin: 1mm 0 0; }
+    .ny-section-months .ny-prose li { margin: .6mm 0; line-height: 1.42; font-size: 9pt; }
+    .vz-spark { display: flex; align-items: stretch; gap: 1mm; height: 18mm; margin-top: 3mm; }
+    .vz-spark .c { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; }
+    .vz-spark .bar { flex: 1; width: 100%; display: flex; align-items: flex-end; background: #f1eee6; border-radius: 1mm; overflow: hidden; }
+    .vz-spark .bar i { display: block; width: 100%; border-radius: 1mm 1mm 0 0; }
+    .vz-spark .c span { margin-top: 1mm; color: #6d7887; font-size: 7pt; }
+    .vz-spark .c.best .bar { outline: 1px solid #c7a13a; }
+    .vz-spark .c.low .bar i { background: #d98b71 !important; }
+  </style>
+  <script>window.__chartsReady = false;</script>
+</head>
+<body>
+  <section class="ny-cover">
+    <div class="eyebrow">SAJUOTTER · NEW YEAR REPORT</div>
+    <h1><%= reading.year %>년 신년운세</h1>
+    <div class="name"><%= person.name || '고객' %> 님</div>
+    <div class="meta"><%= person.birthDisplay %><br>일간 <%= engine.ilgan.char %>(<%= engine.ilgan.ko %>) · 용신 <%= engine.yongshin.final.main %></div>
+    <div class="score"><%= reading.year %>년 총운 <b><%= reading.data.overall.score %>점</b> · <%= tier(reading.data.overall.score) %></div>
+  </section>
+
+  <section class="ny-section ny-section-overall">
+    <h2><%= reading.year %>년 총운</h2>
+    <p class="lead">일간·용신과 해당 연도 세운의 십신을 함께 살펴봅니다.</p>
+    <div class="ny-prose"><%- renderBody(reading.overall || '총운 풀이가 준비되지 않았습니다.') %></div>
+    <div class="ny-disclaimer">점수와 흐름은 선택을 돕는 참고 자료이며, 미래를 확정하지 않습니다.</div>
+  </section>
+
+  <section class="ny-section ny-section-months">
+    <h2><%= reading.year %>년 월별 흐름</h2>
+    <p class="lead">월별 점수는 절기 기준으로 계산했습니다. 1월은 전년도 축월 기운이 일부 이어질 수 있습니다.</p>
+    <%- visuals.overallMonthsHtml %>
+    <div class="ny-prose" style="margin-top:8mm"><%- renderBody((reading.monthNotes || []).map((x) => '- ' + x.month + '월: ' + x.note).join('\n')) %></div>
+  </section>
+
+  <section class="ny-section ny-section-topics">
+    <h2>주제별 <%= reading.year %>년 흐름</h2>
+    <p class="lead">연간 점수와 각 주제의 월별 기복, 풀이를 함께 제공합니다.</p>
+    <%- visuals.topicBarsHtml %>
+    <div class="ny-topic-grid" style="margin-top:6mm"><%- visuals.topicCardsHtml.replace(/^<div class="ny-topic-grid">|<\/div>$/g, '') %></div>
+    <% (reading.data.topics || []).forEach((topic) => { %>
+      <div class="ny-actions">
+        <h3><%= topic.label %></h3>
+        <div class="ny-prose"><%- renderBody((reading.topics && reading.topics[topic.key]) || '이 주제의 풀이를 준비하지 못했습니다.') %></div>
+      </div>
+    <% }) %>
+  </section>
+
+  <section class="ny-section ny-section-quarters">
+    <h2>분기별로 움직이는 법</h2>
+    <p class="lead">분기 평균 점수는 해당 분기 3개월 흐름을 요약한 값입니다.</p>
+    <div class="ny-quarter-head"><span>분기 평균</span><span>할 것</span><span>피할 것</span></div>
+    <% visuals.quarters.forEach((q) => { const doItem = (reading.quarterDos || []).find((x) => x.quarter === q.q); const dontItem = (reading.quarterDonts || []).find((x) => x.quarter === q.q); %>
+      <div class="ny-quarter-row">
+        <div class="ny-quarter-label"><b><%= q.label %></b><small><%= q.avg %>점 · <%= q.range %></small><i><em style="width:<%= q.avg %>%;background:<%= q.color %>"></em></i></div>
+        <div class="ny-quarter-cell"><%- renderBody(doItem ? doItem.text : '') %></div>
+        <div class="ny-quarter-cell"><%- renderBody(dontItem ? dontItem.text : '') %></div>
+      </div>
+    <% }) %>
+    <div class="ny-disclaimer">건강운은 생활 리듬과 컨디션 관리 관점으로만 풀이합니다. 사주 해석은 참고 자료이며 중요한 결정은 현실의 정보와 함께 살펴보세요.</div>
+  </section>
+  <script>window.__chartsReady = true;</script>
+</body>
+</html>

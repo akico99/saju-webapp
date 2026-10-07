@@ -128,6 +128,7 @@
     else if (path === '/compat.html') key = 'compat';
     else if (path === '/date-select.html') key = 'date_select_' + (q.get('occasion') || 'moving');
     else if (path === '/lifetime-report.html') key = 'full';
+    else if (path === '/new-year.html') key = 'new_year_2027';
     var p = key && cfg.products[key];
     if (p) viewItem({ productKey: key, name: p.name, value: p.price });
   }

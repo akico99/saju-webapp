@@ -8,9 +8,11 @@ const generate = require('./routes/generate');
 const quick = require('./routes/quick');
 const compat = require('./routes/compat');
 const dateSelect = require('./routes/dateSelect');
+const newYear = require('./routes/newYear');
+const newYearConfig = require('../config/newYear');
 
 /**
- * @param {string} product - 클라이언트가 보내는 상품 종류: full | deep | compat | date_select
+ * @param {string} product - 클라이언트가 보내는 상품 종류: full | deep | compat | date_select | newyear
  * @param {object} form - 상품 폼 본문(start()에 그대로 넘긴다)
  * @returns {{ productKey, price, label, page, start }} 또는 알 수 없으면 null
  */
@@ -29,6 +31,12 @@ function resolveProduct(product, form) {
     const occ = dateSelect.OCCASIONS[form.occasion];
     if (!occ) return null;
     productKey = occ.productKey; label = `${occ.label} 리포트`; page = `/date-select.html?occasion=${form.occasion}`; start = dateSelect.start;
+  } else if (product === 'newyear') {
+    if (!newYearConfig.enabled) return null;
+    productKey = newYearConfig.productKey;
+    label = newYearConfig.year + '년 신년운세';
+    page = '/new-year.html';
+    start = newYear.start;
   } else {
     return null;
   }

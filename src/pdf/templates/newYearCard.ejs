@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title><%= year %>년 신년운세 공유 카드</title>
+<style><%- fontFaceCss %></style>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  html, body { width: 1080px; height: 1920px; background: #faf8f4; overflow: hidden; }
+  body { font-family: 'ReportGothic', '맑은 고딕', 'Malgun Gothic', sans-serif; color: #24344b; padding: 110px 84px 84px; display: flex; flex-direction: column; position: relative; }
+  body::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 14px; background: #24344b; }
+  body::after { content: ''; position: absolute; left: 0; right: 0; top: 14px; height: 4px; background: #c7a13a; }
+  .brand { color: #8a6d1c; font-size: 29px; letter-spacing: .18em; font-weight: 700; }
+  .who { margin-top: 25px; color: #5b6878; font-size: 38px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .who b { color: #24344b; }
+  h1 { margin-top: 14px; font-family: 'ReportMyeongjo', 'Batang', serif; font-size: 88px; line-height: 1.18; letter-spacing: -.04em; }
+  .verdict { margin-top: 40px; padding: 42px 48px; border-left: 12px solid #c7a13a; border-radius: 26px; background: #24344b; color: #faf8f4; }
+  .verdict .k { margin-bottom: 18px; color: #e2c27a; font-size: 26px; letter-spacing: .12em; }
+  .verdict .t { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden; font-family: 'ReportMyeongjo', 'Batang', serif; line-height: 1.48; overflow-wrap: anywhere; }
+  .stats { display: flex; gap: 24px; margin-top: 34px; }
+  .stat { flex: 1; min-width: 0; padding: 28px 18px; text-align: center; border: 2px solid #e6dfcd; border-radius: 22px; background: #fff; }
+  .stat .l { color: #6d7887; font-size: 26px; }
+  .stat .n { margin-top: 8px; color: #a47f21; font-size: 86px; line-height: 1.1; font-weight: 700; }
+  .stat .n small { margin-left: 3px; font-size: 36px; }
+  .stat .s { margin-top: 8px; color: #6d7887; font-size: 23px; }
+  .chart { display: flex; flex: 1; min-height: 0; flex-direction: column; margin-top: 34px; padding: 30px 24px 22px; border: 2px solid #e6dfcd; border-radius: 24px; background: #fff; }
+  .chart h2 { margin-bottom: 6px; font-size: 28px; }
+  .chart .sub { color: #8a93a0; font-size: 20px; }
+  .months { display: flex; flex: 1; min-height: 0; gap: 7px; margin-top: 26px; align-items: stretch; }
+  .month { display: flex; flex: 1; min-width: 0; flex-direction: column; align-items: center; }
+  .bar { display: flex; flex: 1; width: 100%; min-height: 0; align-items: flex-end; justify-content: center; padding-top: 55px; }
+  .bar i { position: relative; display: block; width: 100%; min-height: 18px; border-radius: 9px 9px 4px 4px; }
+  .month.best .bar i { outline: 4px solid #c7a13a; }
+  .value { position: absolute; bottom: calc(100% + 8px); left: -8px; right: -8px; text-align: center; color: #5b6878; font-style: normal; font-size: 23px; }
+  .month.best .value { color: #8a6d1c; font-weight: 700; }
+  .month .label { margin-top: 10px; font-size: 22px; font-weight: 700; white-space: nowrap; }
+  .topics { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 20px; margin-top: 24px; padding: 18px 22px; border-radius: 20px; background: #fff; border: 2px solid #e6dfcd; }
+  .topic { display: flex; justify-content: space-between; gap: 10px; color: #5b6878; font-size: 23px; }
+  .topic b { color: #24344b; }
+  .footer { margin-top: 24px; text-align: center; color: #8a6d1c; font-size: 27px; letter-spacing: .06em; }
+  .footer span { display: block; margin-top: 6px; color: #9aa3ae; font-size: 20px; letter-spacing: 0; }
+</style>
+</head>
+<body>
+  <div class="brand">사주보는 수달 · 2027</div>
+  <div class="who"><b><%= name %></b> 님의</div>
+  <h1><%= year %>년<br>신년운세</h1>
+  <section class="verdict"><div class="k">한 줄 결론</div><div class="t" style="font-size:<%= verdictSize %>px"><%= verdict %></div></section>
+  <div class="stats">
+    <div class="stat"><div class="l"><%= year %>년 총운</div><div class="n"><%= overallScore %><small>점</small></div><div class="s"><%= overallTier %></div></div>
+    <div class="stat"><div class="l">가장 좋은 달</div><div class="n"><%= bestMonth %><small>월</small></div><div class="s"><%= bestScore %>점 · 2027년</div></div>
+  </div>
+  <section class="chart"><h2><%= year %>년 월별 흐름</h2><div class="sub">점수와 명식 근거를 함께 본 월별 풀이</div>
+    <div class="months"><% months.forEach(function(m) { %>
+      <div class="month<%= m.month === bestMonth ? ' best' : '' %>"><div class="bar"><i style="height:<%= Math.max(5,m.score) %>%;background:<%= m.color %>"><em class="value"><%= m.score %></em></i></div><span class="label"><%= m.month %>월</span></div>
+    <% }) %></div>
+  </section>
+  <div class="topics"><% topicScores.forEach(function(t) { %><div class="topic"><span><%= t.label %></span><b><%= t.score %>점</b></div><% }) %></div>
+  <div class="footer">sajuotter.com<span>사주 해석은 선택을 돕는 참고 자료예요</span></div>
+  <script>window.__chartReady = true;</script>
+</body>
+</html>

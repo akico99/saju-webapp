@@ -21,6 +21,8 @@ const lifeGraphRouter = require('./routes/lifeGraph');
 const profilesRouter = require('./routes/profiles');
 const dateSelectRouter = require('./routes/dateSelect');
 const payRouter = require('./routes/pay');
+const newYearRouter = require('./routes/newYear');
+const newYearConfig = require('../config/newYear');
 
 const app = express();
 
@@ -30,6 +32,15 @@ const app = express();
 app.set('trust proxy', 1);
 
 app.use(express.json());
+
+// 신년운세는 카드사 승인 전까지 외부에서 보이지 않는다. 환경변수로 켰을 때만
+// 페이지·정적 JS·API가 함께 열린다. 결제 준비 단계도 products.js에서 별도로 확인한다.
+app.use((req, res, next) => {
+  if (!newYearConfig.enabled && (/^\/new-year(?:\.html|-app\.js)?$/.test(req.path) || req.path === '/api/newyear')) {
+    return res.sendStatus(404);
+  }
+  next();
+});
 
 app.use(session({
   store: new SqliteStore({ client: db, expired: { clear: true, intervalMs: 15 * 60 * 1000 } }),
@@ -69,6 +80,7 @@ app.use('/api', lifeGraphRouter);
 app.use('/api', profilesRouter);
 app.use('/api', dateSelectRouter);
 app.use('/api', payRouter);
+app.use('/api', newYearRouter);
 app.use('/api', require('./routes/tracking'));
 
 module.exports = app;

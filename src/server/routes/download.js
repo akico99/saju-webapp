@@ -3,6 +3,7 @@ const express = require('express');
 const fs = require('fs');
 const orders = require('../../db/orders');
 const { DEEP_TOPICS } = require('../../llm/deepReading');
+const newYearConfig = require('../../config/newYear');
 
 const router = express.Router();
 
@@ -16,7 +17,8 @@ const NAME_BY_PRODUCT = {
   date_select_birth: '길잡이여울_임신출산리포트.pdf',
   life_topic_compat: '길잡이여울_궁합운리포트.pdf',
   life_topic_wealth: '길잡이여울_재물운리포트.pdf',
-  life_topic_health: '길잡이여울_건강운리포트.pdf'
+  life_topic_health: '길잡이여울_건강운리포트.pdf',
+  new_year_2027: '사주보는수달_2027년신년운세.pdf'
 };
 
 router.get('/download/:jobId', (req, res) => {
@@ -37,8 +39,9 @@ router.get('/download/:jobId', (req, res) => {
   res.download(order.result_path, NAME_BY_PRODUCT[order.product_key] || '길잡이여울_리포트.pdf');
 });
 
-/* 요약 카드 파일명 — 심층 리딩은 주제 이름을 넣는다. */
+/* 요약 카드 파일명 — 평생사주는 기존 이름 그대로, 심층 리딩(deep_<주제>)은 주제 이름을 넣는다. */
 function cardFileName(productKey) {
+  if (productKey === newYearConfig.productKey) return '사주보는수달_2027년신년운세-공유카드.png';
   const m = /^deep_(.+)$/.exec(productKey || '');
   const topic = m && DEEP_TOPICS[m[1]];
   return topic ? '사주보는수달_' + topic.label + '-공유카드.png' : '길잡이여울_평생사주-요약카드.png';
