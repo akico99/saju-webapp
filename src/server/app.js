@@ -36,7 +36,10 @@ app.use(express.json());
 // 신년운세는 카드사 승인 전까지 외부에서 보이지 않는다. 환경변수로 켰을 때만
 // 페이지·정적 JS·API가 함께 열린다. 결제 준비 단계도 products.js에서 별도로 확인한다.
 app.use((req, res, next) => {
-  if (!newYearConfig.enabled && (/^\/new-year(?:\.html|-app\.js)?$/.test(req.path) || req.path === '/api/newyear')) {
+  // 정적 미들웨어도 URL을 디코딩하므로 같은 경로로 검사한다.
+  let requestPath;
+  try { requestPath = decodeURIComponent(req.path); } catch (e) { return res.sendStatus(400); }
+  if (!newYearConfig.enabled && (/^\/new-year(?:\.html|-app\.js)?\/?$/i.test(requestPath) || /^\/api\/newyear(?:\/|$)/i.test(requestPath))) {
     return res.sendStatus(404);
   }
   next();
