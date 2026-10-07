@@ -22,6 +22,12 @@ const { execFileSync } = require('child_process');
 const SITE = 'https://sajuotter.com';
 const SITE_NAME = '사주보는 수달';
 const OG_IMAGE = SITE + '/og-cover.jpg';
+/* 검색 도구 소유확인 메타 태그 — 홈페이지(index.html)에만 넣는다. 값은 각 도구가 계정마다 발급한 공개 확인 코드다.
+   네이버 서치어드바이저·빙 웹마스터에서 소유확인을 마친 뒤에도 지우지 않는다(지우면 확인이 풀린다). */
+const SITE_VERIFICATIONS = [
+  ['naver-site-verification', 'ed84adb40cf4f84527c089c3814c6ad4210dfe58'],
+  ['msvalidate.01', 'D97B39B64591387DC152B012FD1F7A43']
+];
 const FORTUNE_YEAR = 2026;
 const ROOT = path.join(__dirname, '..');
 const PUBLIC_DIR = path.join(ROOT, 'public');
@@ -265,13 +271,16 @@ function headBlock(page) {
     '<meta name="twitter:image" content="' + OG_IMAGE + '">'
   ];
   if (page.robots) lines.push('<meta name="robots" content="' + esc(page.robots) + '">');
+  if (page.file === 'index.html') {
+    for (const [name, content] of SITE_VERIFICATIONS) lines.push('<meta name="' + name + '" content="' + content + '">');
+  }
   if (page.keywords || page.service) {
     lines.push('<script type="application/ld+json">\n' + jsonLdFor(page) + '\n</script>');
   }
   return lines.join('\n');
 }
 
-const MANAGED_LINE = /^\s*(<meta name="description"|<link rel="canonical"|<meta property="og:|<meta name="twitter:|<meta name="robots")/;
+const MANAGED_LINE = /^\s*(<meta name="description"|<link rel="canonical"|<meta property="og:|<meta name="twitter:|<meta name="robots"|<meta name="naver-site-verification"|<meta name="msvalidate\.01")/;
 
 /* <head> 안에서 이 스크립트가 관리하는 줄과 JSON-LD를 지우고, <title> 바로 뒤에 새 블록을 넣는다. */
 function rewriteHead(html, title, block) {
