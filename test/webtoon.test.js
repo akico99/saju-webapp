@@ -72,6 +72,69 @@ test('구매·무료 링크가 실제 경로를 가리킨다', () => {
   assert.match(read('services.html'), /<section id="free">/);
 });
 
+test('직업·적성운 웹툰은 승인된 4구간과 실물 증거를 순서대로 제공한다', () => {
+  const html = read('webtoon/career.html');
+  const main = html.slice(html.indexOf('<main>'));
+  const markers = [
+    '열심히는 하는데,', '요약부터', '요약 세 문장부터',
+    '조직과 독립', '할 것과 피할 것', '5년 타임라인', '내가 일하는 모습을',
+  ].map((marker) => {
+    const index = main.indexOf(marker);
+    assert.ok(index >= 0, marker + ': missing');
+    return index;
+  });
+  markers.reduce((prev, index) => { assert.ok(index > prev, 'career story beats out of order'); return index; }, -1);
+  assert.match(html, /핵심 요약 첫 문단 3문장 발췌/);
+  assert.match(html, /새로운 일을 시작하는 추진력/);
+  assert.match(html, /2027년 정미년에는 이직보다 지금 자리에서 자격증·전문성 쌓는 데 집중하기 \(인성 기운, 커리어 점수 60\)/);
+  assert.match(html, /2027년에 섣불리 이직을 추진해 다지기의 시기를 건너뛰기 \(커리어 점수 60, 인성 기운\)/);
+  assert.match(html, /2026년부터 2030년까지/);
+  assert.match(html, /취업·이직·승진의 성공 확률은 아니에요/);
+  assert.doesNotMatch(html, /3년 그래프|공유 카드/);
+});
+
+test('직업·적성운 웹툰의 상품·추적·샘플 링크가 서비스와 일치한다', () => {
+  const html = read('webtoon/career.html');
+  const points = fs.readFileSync(path.join(__dirname, '..', 'src/db/points.js'), 'utf8');
+  const quick = read('quick.html');
+  assert.match(points, /deep_career/);
+  assert.match(points, /deep_career[^\n]*3900|3900[^\n]*deep_career/);
+  assert.match(quick, /topic=career/);
+  assert.match(html, /<strong class="ticket-price">3,900<small>원<\/small><\/strong>/);
+  assert.match(html, /<span class="cta-price">3,900원<\/span>/);
+  assert.match(html, /href="\/quick\.html\?topic=career&amp;from=career-webtoon"/);
+  assert.equal((html.match(/googletagmanager\.com\/gtag\/js/g) || []).length, 1);
+  assert.equal((html.match(/<script src="\/track\.js"><\/script>/g) || []).length, 1);
+  assert.doesNotMatch(html, /fbq\(|kakaoPixel|META_PIXEL_ID|KAKAO_PIXEL_ID/);
+  assert.match(html, /href="\/samples\/career\/"/);
+  assert.ok(fs.existsSync(path.join(publicDir, 'samples/career/index.html')));
+});
+
+test('직업·적성운 웹툰 그림과 실제 원문 캡처는 크기·용량 계약을 지킨다', async () => {
+  const html = read('webtoon/career.html');
+  const images = [...html.matchAll(/<img[^>]+src="([^"]+)"[^>]*>/g)].map((match) => match[0]);
+  assert.ok(images.length >= 10);
+  images.forEach((tag) => {
+    assert.match(tag, /width="\d+"/);
+    assert.match(tag, /height="\d+"/);
+    assert.match(tag, /alt="[^"]{8,}"/);
+  });
+  const files = fs.readdirSync(path.join(publicDir, 'webtoon/career')).filter((name) => name.endsWith('.webp'));
+  assert.equal(files.length, 9, '그림 4장과 실물 증거 캡처 5개');
+  let total = 0;
+  for (const name of files) {
+    const file = path.join(publicDir, 'webtoon/career', name);
+    const { width, height } = await sharp(file).metadata();
+    const bytes = fs.statSync(file).size;
+    total += bytes;
+    assert.ok(width >= 600 && height >= 100, name + ': image dimensions');
+    if (/^0[1-4]-/.test(name)) assert.ok(bytes < 300 * 1024, name + ': art image exceeds 300KB');
+  }
+  assert.ok(total < 1024 * 1024, 'all career images <1MB: ' + total);
+  const seo = fs.readFileSync(path.join(__dirname, '..', 'scripts/buildSeo.js'), 'utf8');
+  assert.match(seo, /file: 'webtoon\/career\.html', sitemap: true, manageHead: false/);
+});
+
 // 웹툰이 내세우는 리포트 장점은 실제 생성 코드가 하는 일이어야 한다.
 test('웹툰이 내세우는 리포트 장점 4가지가 실제 리포트 생성 코드에 있다', () => {
   const html = page();

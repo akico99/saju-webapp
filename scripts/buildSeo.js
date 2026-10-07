@@ -138,6 +138,7 @@ const PAGES = [
   },
   { file: 'webtoon/lifetime.html', sitemap: true, manageHead: false },
   { file: 'webtoon/compat.html', sitemap: true, manageHead: false },
+  { file: 'webtoon/career.html', sitemap: true, manageHead: false },
   {
     file: 'consult.html', sitemap: false, crumb: '상담 안내',
     title: '사주보는 수달 | 정갈한 사주 심층 분석 리포트',
