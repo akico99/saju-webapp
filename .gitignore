@@ -15,3 +15,6 @@ data/.persist-check.json
 data/uploads/
 .worktrees/
 .superpowers/
+# SEO 정기 점검이 매일 만드는 보고서(로그). 폴더만 남기고 결과 파일은 커밋하지 않는다.
+docs/seo-reports/*
+!docs/seo-reports/.gitkeep

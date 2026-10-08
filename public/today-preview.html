@@ -149,6 +149,7 @@
     background: linear-gradient(180deg, rgba(15,26,43,0.18) 0%, rgba(15,26,43,0) 28%, rgba(15,26,43,0.25) 60%, rgba(15,26,43,0.6) 100%); }
 
   .stage-top { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; padding: max(14px, env(safe-area-inset-top)) 16px 0; }
+  .stage-title { position: absolute; z-index: 2; top: clamp(68px, 10vh, 98px); left: 20px; right: 20px; margin: 0; color: #fff; font-family: var(--font-serif); font-size: clamp(23px, 6vw, 30px); line-height: 1.35; text-align: center; text-shadow: 0 2px 16px rgba(0,0,0,.55); word-break: keep-all; }
   .stage-top button, .stage-top a { width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.28); background: rgba(15,26,43,0.35); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; backdrop-filter: blur(6px); text-decoration: none; padding: 0; margin: 0; font-family: inherit; }
   .stage-top button[disabled] { opacity: 0; pointer-events: none; }
   .stage-dots { display: flex; gap: 6px; }
@@ -197,13 +198,18 @@
   .result-wrap { padding: 20px; }
   .lg-folded { padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); font-size: 12.5px; color: var(--muted); margin-bottom: 16px; }
   .lg-folded button { flex: 0 0 auto; width: auto; margin: 0; padding: 7px 12px; font-size: 12px; font-weight: 700; background: var(--paper); color: var(--ink); border: 1px solid var(--line); border-radius: var(--radius-btn); box-shadow: none; cursor: pointer; font-family: inherit; min-height: 0; }
+  .today-guide { max-width: 760px; margin: 0 auto; padding: 34px 22px 52px; background: var(--bg); color: var(--ink); line-height: 1.8; }
+  .today-guide h2 { margin: 0 0 14px; font-family: var(--font-serif); font-size: 21px; line-height: 1.45; }
+  .today-guide h3 { margin: 20px 0 6px; font-size: 15px; }
+  .today-guide p { margin: 8px 0; color: var(--muted); font-size: 13px; word-break: keep-all; }
+  .today-guide a { color: var(--ink); font-weight: 700; }
 </style>
 </head>
 <body class="otter-stage editorial-result-page">
 <div class="app">
 
   <section class="stage" id="stage">
-    <h1 class="sr-only">오늘의 운세 무료 보기</h1>
+    <h1 class="stage-title">오늘의 운세와 7일 흐름</h1>
     <picture class="stage-art">
       <source media="(min-width:640px)" srcset="/hero/otter-hero-desktop.jpg">
       <img src="/hero/otter-hero-mobile.jpg" alt="">
@@ -270,6 +276,15 @@
     </div>
   </div>
 </div>
+<section class="today-guide" aria-labelledby="todayGuideTitle">
+  <h2 id="todayGuideTitle">오늘의 운세와 7일 흐름을 함께 읽어요</h2>
+  <p>무료 미리보기는 로그인 없이 오늘의 운세와 앞으로 7일의 흐름을 확인하는 서비스입니다. 생년월일, 양력·음력 구분과 성별을 입력해 명식을 계산하며, 태어난 시각을 모르면 ‘시각 모름’을 선택할 수 있어요.</p>
+  <h3>결과에는 무엇이 나오나요?</h3>
+  <p>오늘의 핵심 요약과 하루를 보내며 참고할 행동, 하면 좋은 것과 피할 점을 보여드립니다. 이어지는 7일 영역에서는 날짜별 흐름과 한 주를 살펴볼 때 참고할 시점을 확인할 수 있습니다. 결과는 입력한 명식을 오늘의 흐름과 대조해 읽기 쉽게 정리한 것입니다.</p>
+  <h3>참고 자료로 활용해 주세요</h3>
+  <p>운세는 전통 명리학 해석을 바탕으로 한 참고 정보이며, 특정 사건이나 선택의 결과를 확정하지 않습니다. 점수와 날씨 표현도 실제 성공 확률이 아니라 흐름을 요약하는 화면 지표입니다. 건강·계약·관계처럼 중요한 결정은 현실의 조건과 필요한 전문 정보를 함께 살펴보세요.</p>
+  <p>오늘 결과는 이미지로 저장하거나 공유할 수 있습니다. 내 오행 분포와 대운이 궁금하다면 <a href="/field-guide.html">무료 사주 도감</a>도 살펴보세요.</p>
+</section>
 <div class="toast" id="todayToast"></div>
 
 <script>

@@ -152,6 +152,9 @@
     background: var(--paper); border: 1px dashed var(--line); border-radius: var(--radius-card);
     padding: 12px 16px; margin-bottom: 16px; font-size: 12.5px; color: var(--muted); line-height: 1.6;
   }
+  .ds-guide { margin: 8px 0 18px; padding: 16px; border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--paper); }
+  .ds-guide h2 { margin: 0 0 8px; font-size: 16px; }
+  .ds-guide p { margin: 8px 0 0; color: var(--muted); font-size: 12.5px; line-height: 1.75; }
 </style>
 </head>
 <body class="reading-page paid-flow">
@@ -167,6 +170,12 @@
     <p class="lead" id="dsLead"></p>
     <div class="paid-steps" aria-label="진행 순서"><span class="active">01 · 정보 입력</span><span>02 · 날짜 분석</span><span>03 · 결과 확인</span></div>
     <div class="ds-disclaimer hidden" id="dsDisclaimer"></div>
+    <section class="ds-guide" aria-labelledby="dsGuideTitle">
+      <h2 id="dsGuideTitle">목적에 맞는 날짜 리포트</h2>
+      <p>이사·개업·결혼·임신·출산 리포트는 목적에 따라 입력 항목과 설명이 달라집니다. 목표 기간과 당사자 정보를 입력하면 만세력 기준으로 비교한 날짜 후보와 주제별로 참고할 점을 확인할 수 있어요.</p>
+      <p>태어난 시각을 모르면 ‘시각 모름’을 선택할 수 있으며, 이때는 화면 안내처럼 정오를 기준으로 계산합니다. 날짜 선택은 명리학 풀이를 참고하는 방법으로, 실제 일정과 계약 조건, 당사자의 상황도 함께 고려해 주세요.</p>
+      <p>임신·출산 리포트는 배란일이나 가임기 같은 의학적 예측이 아니며 병원 상담을 대신하지 않습니다. 건강과 관련한 계획은 의료진과 상의해 주세요.</p>
+    </section>
 
     <div class="point-notice" id="pointNotice">가격 확인 중...</div>
 

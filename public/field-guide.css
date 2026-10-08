@@ -18,6 +18,10 @@
 .fg-intro-kicker { color: var(--gold); font-size: 11px; font-weight: 700; letter-spacing: .08em; }
 .fg-intro h1 { margin: 5px 0; font-family: var(--font-serif); font-size: clamp(23px, 4vw, 32px); line-height: 1.35; }
 .fg-intro p { margin: 0; color: var(--muted); font-size: 13px; }
+.fg-guide { width: min(100%, 680px); margin: 0 auto 16px; padding: 16px 20px; border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--paper); }
+.fg-guide h2 { margin: 0 0 8px; font-family: var(--font-serif); font-size: 16px; }
+.fg-guide p { margin: 8px 0 0; color: var(--muted); font-size: 12px; line-height: 1.75; }
+.fg-guide a { color: var(--ink); font-weight: 700; }
 .fg-input-card { width: min(100%, 620px); margin: 0 auto 18px; padding: 20px; border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--paper); box-shadow: var(--shadow-1); }
 .fg-input-card .field:last-of-type { margin-bottom: 9px; }
 .fg-optional { margin-left: 4px; color: var(--muted); font-size: 10px; font-weight: 400; }
