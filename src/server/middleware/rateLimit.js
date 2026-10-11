@@ -11,17 +11,28 @@
 const buckets = new Map(); // key -> { count, resetAt }
 
 function makeLimiter({ max, windowMs, keyFn, message }) {
+  return makeCombinedLimiter({
+    limits: [{ max, windowMs, keyFn }],
+    message
+  });
+}
+
+function makeCombinedLimiter({ limits, message }) {
   return function rateLimit(req, res, next) {
-    const key = keyFn(req);
     const now = Date.now();
-    let bucket = buckets.get(key);
-    if (!bucket || bucket.resetAt <= now) {
-      bucket = { count: 0, resetAt: now + windowMs };
-      buckets.set(key, bucket);
+    const exceeded = [];
+    for (const limit of limits) {
+      const key = limit.keyFn(req);
+      let bucket = buckets.get(key);
+      if (!bucket || bucket.resetAt <= now) {
+        bucket = { count: 0, resetAt: now + limit.windowMs };
+        buckets.set(key, bucket);
+      }
+      bucket.count++;
+      if (bucket.count > limit.max) exceeded.push(bucket.resetAt);
     }
-    bucket.count++;
-    if (bucket.count > max) {
-      const retryAfterSec = Math.ceil((bucket.resetAt - now) / 1000);
+    if (exceeded.length) {
+      const retryAfterSec = Math.max(1, Math.ceil((Math.max(...exceeded) - now) / 1000));
       res.set('Retry-After', String(retryAfterSec));
       return res.status(429).json({ error: message || '시도가 너무 많습니다. 잠시 후 다시 시도해주세요.' });
     }
@@ -64,6 +75,25 @@ const forgotPasswordLimiter = makeLimiter({
   message: '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.'
 });
 
+// 결제 준비는 사용자별 15분 10회, 소스 IP별 15분 30회로 제한한다.
+// 공유 IP의 정상 고객은 다른 계정 제한의 영향을 받지 않지만, 계정을 바꾸는 자동화는 IP 한도에 걸린다.
+const paymentPrepareLimiter = makeCombinedLimiter({
+  limits: [
+    { max: 10, windowMs: 15 * 60 * 1000, keyFn: (req) => 'pay-prepare:user:' + req.session.userId },
+    { max: 30, windowMs: 15 * 60 * 1000, keyFn: (req) => 'pay-prepare:ip:' + req.ip }
+  ],
+  message: '결제 요청이 너무 많습니다. 15분 후 다시 시도해주세요.'
+});
+
+// 인증 메일은 계정별 시간당 5회, 소스 IP별 시간당 30회로 제한한다.
+const resendVerificationLimiter = makeCombinedLimiter({
+  limits: [
+    { max: 5, windowMs: 60 * 60 * 1000, keyFn: (req) => 'verification-resend:user:' + req.session.userId },
+    { max: 30, windowMs: 60 * 60 * 1000, keyFn: (req) => 'verification-resend:ip:' + req.ip }
+  ],
+  message: '인증 메일 요청이 너무 많습니다. 잠시 후 다시 시도해주세요.'
+});
+
 // 계정 탈퇴 확인 메일은 로그인한 회원 기준으로 시간당 5번, 확인(비밀번호·코드 입력)은 15분에 15번까지.
 // 코드 자체의 오답 횟수 제한(5회)은 DB에서 따로 건다.
 const accountDeletionRequestLimiter = makeLimiter({
@@ -80,5 +110,6 @@ const accountDeletionConfirmLimiter = makeLimiter({
 
 module.exports = {
   adminLoginLimiter, userLoginLimiter, signupLimiter, forgotPasswordLimiter,
-  accountDeletionRequestLimiter, accountDeletionConfirmLimiter
+  accountDeletionRequestLimiter, accountDeletionConfirmLimiter,
+  paymentPrepareLimiter, resendVerificationLimiter
 };

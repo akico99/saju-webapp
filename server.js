@@ -1,5 +1,13 @@
 'use strict';
 require('dotenv').config();
+const { validateRuntimeConfig } = require('./src/config/validateRuntimeConfig');
+try {
+  validateRuntimeConfig();
+} catch (error) {
+  // The validator reports setting names only; never print secret values.
+  console.error(`[설정 오류] ${error.message}`);
+  process.exit(1);
+}
 const app = require('./src/server/app');
 const { recoverPendingOrders, recoverPaidPayments } = require('./src/jobs/recoverPendingOrders');
 const { backupDbToEmail } = require('./src/jobs/backupDb');

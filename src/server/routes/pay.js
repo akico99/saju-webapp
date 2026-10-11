@@ -17,6 +17,7 @@ const consents = require('../../db/consents');
 const { resolveProduct } = require('../products');
 const { HttpError } = require('../httpError');
 const { requireAuth } = require('../middleware/auth');
+const { paymentPrepareLimiter } = require('../middleware/rateLimit');
 const { CLIENT_KEY, SECRET_KEY, TEST_MODE, confirmPayment, lookupPayment, cancelPayment } = require('../tossPayments');
 const newYearConfig = require('../../config/newYear');
 
@@ -32,7 +33,7 @@ router.get('/pay/config', requireAuth, (req, res) => {
 });
 
 // 결제창을 열기 전에 주문을 만든다 — 상품과 폼 입력을 보관하고 가격은 서버(points.PRICES)가 정한다.
-router.post('/pay/prepare', requireAuth, (req, res) => {
+router.post('/pay/prepare', requireAuth, paymentPrepareLimiter, (req, res) => {
   const { product, form, attribution } = req.body || {};
   const resolved = resolveProduct(product, form);
   if (!resolved) return res.status(400).json({ error: '알 수 없는 상품입니다.' });

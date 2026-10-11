@@ -12,7 +12,7 @@ const { sendEmail } = require('../../email/resend');
 const resend = require('../../email/resend');
 const { passwordResetEmail, verifyEmailEmail, accountDeletionCodeEmail } = require('../../email/templates');
 const { requireAuth } = require('../middleware/auth');
-const { userLoginLimiter, signupLimiter, forgotPasswordLimiter, accountDeletionRequestLimiter, accountDeletionConfirmLimiter } = require('../middleware/rateLimit');
+const { userLoginLimiter, signupLimiter, forgotPasswordLimiter, accountDeletionRequestLimiter, accountDeletionConfirmLimiter, resendVerificationLimiter } = require('../middleware/rateLimit');
 
 const router = express.Router();
 
@@ -191,7 +191,7 @@ router.get('/auth/verify-email', (req, res) => {
   res.redirect('/mypage.html?verified=1');
 });
 
-router.post('/auth/resend-verification', requireAuth, async (req, res) => {
+router.post('/auth/resend-verification', requireAuth, resendVerificationLimiter, async (req, res) => {
   const user = users.findById(req.session.userId);
   if (user.email_verified) return res.json({ ok: true, alreadyVerified: true });
   try {
