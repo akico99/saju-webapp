@@ -35,10 +35,20 @@ const stmts = {
   findById: db.prepare('SELECT * FROM card_payments WHERE id = ?'),
   listRecoverable: db.prepare("SELECT * FROM card_payments WHERE status IN ('confirming','canceling') OR (status='paid' AND job_id IS NULL) ORDER BY id LIMIT 100"),
   expireReady: db.prepare("UPDATE card_payments SET status='failed', error='결제 입력 시간이 만료되었습니다.', form_json=NULL, attribution=NULL WHERE status='ready' AND created_at < datetime('now','-30 minutes')"),
-  reconnectJob: db.prepare("UPDATE card_payments SET job_id=?, form_json=NULL, attribution=NULL WHERE id=? AND status='paid' AND job_id IS NULL"),
-  claimStart: db.prepare("UPDATE card_payments SET start_claimed=1 WHERE id=? AND status='paid' AND job_id IS NULL AND start_claimed=0"),
+  reconnectJob: db.prepare(`
+    UPDATE card_payments SET job_id=?, form_json=NULL, attribution=NULL
+    WHERE id=? AND status='paid' AND job_id IS NULL AND start_claimed=1 AND start_order_watermark=?
+      AND EXISTS (SELECT 1 FROM orders WHERE job_id=? AND id > ?)
+  `),
+  claimStart: db.prepare(`
+    UPDATE card_payments SET start_claimed=1, start_claimed_at=datetime('now'),
+      start_order_watermark=COALESCE((SELECT MAX(id) FROM orders WHERE user_id=@userId AND product_key=@productKey), 0)
+    WHERE id=@id AND status='paid' AND job_id IS NULL
+      AND (start_claimed=0 OR start_claimed_at <= datetime('now','-5 minutes'))
+  `),
   markCanceling: db.prepare("UPDATE card_payments SET status='canceling', cancel_idempotency_key=COALESCE(cancel_idempotency_key, ?) WHERE id=? AND status IN ('paid','cancel_failed')"),
   cancellationFinished: db.prepare("UPDATE card_payments SET status=?, error=? WHERE id=? AND status='canceling'"),
+  partialCancellationFinished: db.prepare("UPDATE card_payments SET status='cancel_failed', error=? WHERE id=? AND status IN ('cancel_failed','canceling')"),
   checkedCancellationFinished: db.prepare("UPDATE card_payments SET status='canceled', error=? WHERE id=? AND status IN ('cancel_failed','canceling')"),
   insertTx: db.prepare(`
     INSERT INTO point_transactions (user_id, delta, reason, ref_type, ref_id)
@@ -112,12 +122,16 @@ function releaseConfirmation(row, error) { return stmts.releaseConfirmation.run(
 function expireReady() { return stmts.expireReady.run().changes; }
 function listRecoverable() { return stmts.listRecoverable.all(); }
 function recoverPaidWithoutJob(row, orders) {
-  if (!row || row.status !== 'paid' || row.job_id) return row;
+  if (!row || row.status !== 'paid' || row.job_id || !row.start_claimed) return row;
   const active = orders.findPendingByUserAndProduct(row.user_id, row.product_key);
-  if (active) stmts.reconnectJob.run(active.job_id, row.id);
+  if (active && active.id > (row.start_order_watermark || 0)) {
+    stmts.reconnectJob.run(active.job_id, row.id, row.start_order_watermark || 0, active.job_id, row.start_order_watermark || 0);
+  }
   return stmts.findById.get(row.id);
 }
-function claimPaidStart(row) { return stmts.claimStart.run(row.id).changes === 1; }
+function claimPaidStart(row) {
+  return stmts.claimStart.run({ id: row.id, userId: row.user_id, productKey: row.product_key }).changes === 1;
+}
 function claimCancellation(row) {
   const key = row.cancel_idempotency_key || `card-payment-cancel-${row.id}`;
   return stmts.markCanceling.run(key, row.id).changes === 1 ? { ...stmts.findById.get(row.id), cancel_idempotency_key: key } : null;
@@ -127,6 +141,10 @@ function finishRefund(row, ok, detail) {
 }
 function finishCheckedCancellation(row, detail) {
   stmts.checkedCancellationFinished.run(String(detail || '').slice(0, 300), row.id);
+}
+function finishPartialCancellation(row, balanceAmount) {
+  const detail = `부분 취소 확인: 미취소 잔액 ${Number.isFinite(Number(balanceAmount)) ? Number(balanceAmount) : '확인 필요'}원 — 토스페이먼츠에서 잔액을 확인해 주세요.`;
+  stmts.partialCancellationFinished.run(detail.slice(0, 300), row.id);
 }
 
 /** 생성 실패 환불용으로 카드 결제 행 하나를 선점한다(paid → refunding). 없거나 이미 다른 곳이
@@ -147,6 +165,6 @@ function listAll() { return stmts.listAll.all(); }
 
 module.exports = {
   create, findByOrderId, findById, markPaidAndCredit, revertCredit, setJob, markFailed, countPaidTest, listByUser, listAll,
-  claimForRefund, finishRefund, finishCheckedCancellation, cleanAttribution, claimConfirmation, releaseConfirmation, expireReady,
+  claimForRefund, finishRefund, finishCheckedCancellation, finishPartialCancellation, cleanAttribution, claimConfirmation, releaseConfirmation, expireReady,
   recoverPaidWithoutJob, claimCancellation, claimPaidStart, listRecoverable
 };

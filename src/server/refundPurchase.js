@@ -41,7 +41,11 @@ async function retryCancellation(row) {
   if (!row || !['cancel_failed', 'canceling'].includes(row.status)) return { ok: false, error: '결제 취소 재시도 대상이 아닙니다.' };
   const current = await lookupPayment(row.order_id);
   if (!current.ok) return { ok: false, error: '토스 결제 상태를 확인하지 못했습니다.' };
-  if (current.data.status === 'CANCELED' || current.data.status === 'PARTIAL_CANCELED') {
+  if (current.data.status === 'PARTIAL_CANCELED') {
+    cardPayments.finishPartialCancellation(row, current.data.balanceAmount);
+    return { ok: false, error: `부분 취소 상태입니다. 미취소 잔액 ${current.data.balanceAmount ?? '확인 필요'}원을 확인해 주세요.` };
+  }
+  if (current.data.status === 'CANCELED') {
     cardPayments.finishCheckedCancellation(row, '토스 결제 조회 결과 이미 취소됨');
     return { ok: true, alreadyCanceled: true };
   }

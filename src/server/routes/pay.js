@@ -125,11 +125,6 @@ router.post('/pay/confirm', requireAuth, async (req, res) => {
   const resolved = resolveProduct(productOf(row.product_key), form);
   try {
     if (!resolved) throw new HttpError(400, { error: '알 수 없는 상품입니다.' });
-    const activeOrder = require('../../db/orders').findPendingByUserAndProduct(row.user_id, row.product_key);
-    if (activeOrder) {
-      cardPayments.setJob(paid, activeOrder.job_id);
-      return res.json({ payment: summarize(cardPayments.findById(paid.id)), jobId: activeOrder.job_id, page: resolved.page, alreadyConfirmed: true });
-    }
     if (!cardPayments.claimPaidStart(paid)) return res.status(202).json({ error: '결제는 확인됐고 리포트 시작을 확인하고 있어요. 마이페이지에서 잠시 후 확인해 주세요.', code: 'start_pending', retry: true });
     const payload = await resolved.start(row.user_id, form);
     cardPayments.setJob(paid, payload.jobId);

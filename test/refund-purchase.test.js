@@ -145,6 +145,23 @@ test('administrator can retry only after checking provider cancellation state', 
   } finally { global.fetch = oldFetch; }
 });
 
+test('partial provider cancellation remains visible for outstanding balance review', async () => {
+  const userId = newUser();
+  const { orderId } = cardPurchase(userId);
+  const row = cardPayments.findByOrderId(orderId);
+  db.prepare("UPDATE card_payments SET status='cancel_failed' WHERE id=?").run(row.id);
+  const oldFetch = global.fetch;
+  global.fetch = async (url) => ({ ok: true, status: 200, json: async () => String(url).includes('/orders/') ? { status: 'PARTIAL_CANCELED', balanceAmount: 1800 } : {} });
+  try {
+    const { retryCancellation } = require('../src/server/refundPurchase');
+    const result = await retryCancellation(cardPayments.findByOrderId(orderId));
+
+    assert.equal(result.ok, false);
+    assert.equal(cardPayments.findByOrderId(orderId).status, 'cancel_failed');
+    assert.match(cardPayments.findByOrderId(orderId).error, /부분 취소.*1800/);
+  } finally { global.fetch = oldFetch; }
+});
+
 test('an order paid without a card is returned to the ledger as before', async () => {
   const userId = newUser();
   users.adjustPointBalance(userId, PRICE);

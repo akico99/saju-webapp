@@ -226,6 +226,8 @@ if (!cpColumns.includes('attribution')) db.exec('ALTER TABLE card_payments ADD C
 if (!cpColumns.includes('confirmation_started_at')) db.exec('ALTER TABLE card_payments ADD COLUMN confirmation_started_at TEXT');
 if (!cpColumns.includes('cancel_idempotency_key')) db.exec('ALTER TABLE card_payments ADD COLUMN cancel_idempotency_key TEXT');
 if (!cpColumns.includes('start_claimed')) db.exec('ALTER TABLE card_payments ADD COLUMN start_claimed INTEGER NOT NULL DEFAULT 0');
+if (!cpColumns.includes('start_claimed_at')) db.exec('ALTER TABLE card_payments ADD COLUMN start_claimed_at TEXT');
+if (!cpColumns.includes('start_order_watermark')) db.exec('ALTER TABLE card_payments ADD COLUMN start_order_watermark INTEGER');
 
 /* 2026-09-28 잔액 회수 — 사이트는 더 이상 잔액을 보관하지 않는다(약관 제6조). 예전 무통장입금·테스트로
    남은 잔액을 한 번만 0으로 돌리고 원장에 기록한다. user_version으로 한 번만 실행한다. */

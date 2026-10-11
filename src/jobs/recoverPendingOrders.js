@@ -47,12 +47,14 @@ function paymentProduct(productKey) {
   return null;
 }
 
-async function recoverPaidPayments() {
-  for (let row of cardPayments.listRecoverable()) {
+async function recoverPaidPayments(startProduct = resolveProduct, recoverablePayments = cardPayments.listRecoverable()) {
+  for (let row of recoverablePayments) {
     if (row.status === 'canceling') {
       const check = await lookupPayment(row.order_id);
       if (!check.ok) continue;
-      if (check.data.status === 'CANCELED' || check.data.status === 'PARTIAL_CANCELED') {
+      if (check.data.status === 'PARTIAL_CANCELED') {
+        cardPayments.finishPartialCancellation(row, check.data.balanceAmount);
+      } else if (check.data.status === 'CANCELED') {
         cardPayments.finishRefund(row, true, '토스 결제 조회 결과 이미 취소됨');
       } else if (check.data.status === 'DONE') {
         const result = await cancelPayment(row.payment_key, row.error || '재시작 후 결제 취소 복구', row.cancel_idempotency_key);
@@ -75,7 +77,7 @@ async function recoverPaidPayments() {
     if (!cardPayments.claimPaidStart(row)) continue;
     try {
       const form = JSON.parse(row.form_json || '{}');
-      const product = resolveProduct(paymentProduct(row.product_key), form);
+      const product = startProduct(paymentProduct(row.product_key), form);
       if (!product) throw new Error('상품을 찾을 수 없습니다.');
       const started = await product.start(row.user_id, form);
       cardPayments.setJob(row, started.jobId);
