@@ -281,7 +281,7 @@ router.get('/date-select/occasions', (req, res) => {
 });
 
 /** 택일 리포트 시작 — 라우트(/api/date-select)와 카드 결제 승인(pay.js)이 같은 함수를 쓴다. */
-async function startDateSelect(userId, body) {
+async function startDateSelect(userId, body, { cardPaymentId } = {}) {
   const occasionKey = body.occasion;
   const occasion = OCCASIONS[occasionKey];
   if (!occasion) throw new HttpError(400, { error: '알 수 없는 종류입니다.' });
@@ -388,7 +388,7 @@ async function runMonthSearch(userId, body, occasionKey, occasion) {
   const jobId = crypto.randomUUID();
   const orderLabel = `${occasion.label} 리포트${personName ? ' — ' + personName : ''}`;
   try {
-    points.chargeForProductAndCreateOrder(userId, occasion.productKey, { label: orderLabel, jobId });
+    points.chargeForProductAndCreateOrder(userId, occasion.productKey, { label: orderLabel, jobId, cardPaymentId });
   } catch (e) {
     if (e.code === 'insufficient_points') {
       throw new HttpError(402, { error: e.message, code: e.code, required: e.required, balance: e.balance });
@@ -506,7 +506,7 @@ async function runWeddingSearch(userId, body, occasionKey, occasion) {
   const coupleName = [basicsA.personName, basicsB.personName].filter(Boolean).join(' · ');
   const orderLabel = `${occasion.label} 리포트${coupleName ? ' — ' + coupleName : ''}`;
   try {
-    points.chargeForProductAndCreateOrder(userId, occasion.productKey, { label: orderLabel, jobId });
+    points.chargeForProductAndCreateOrder(userId, occasion.productKey, { label: orderLabel, jobId, cardPaymentId });
   } catch (e) {
     if (e.code === 'insufficient_points') {
       throw new HttpError(402, { error: e.message, code: e.code, required: e.required, balance: e.balance });
@@ -694,7 +694,7 @@ async function runBirthSearch(userId, body, occasionKey, occasion) {
   const parentDisplayName = parentNames.join(' · ');
   const orderLabel = `${occasion.label} 리포트${parentDisplayName ? ' — ' + parentDisplayName : ''}`;
   try {
-    points.chargeForProductAndCreateOrder(userId, occasion.productKey, { label: orderLabel, jobId });
+    points.chargeForProductAndCreateOrder(userId, occasion.productKey, { label: orderLabel, jobId, cardPaymentId });
   } catch (e) {
     if (e.code === 'insufficient_points') {
       throw new HttpError(402, { error: e.message, code: e.code, required: e.required, balance: e.balance });

@@ -75,11 +75,11 @@ function chargeForProduct(userId, productKey, refId) {
 /** 포인트 차감 + 주문 생성을 하나의 트랜잭션으로 묶는다 — 둘 중 하나라도 실패하면(디스크
     오류 등) 전부 롤백되어 "차감만 되고 주문 기록이 없는" 반쪽 상태 자체가 생기지 않는다.
     그래서 이 함수가 실패하면 별도로 환불할 필요가 없다 — 애초에 차감이 커밋되지 않았다. */
-function chargeForProductAndCreateOrder(userId, productKey, { label, jobId }) {
+function chargeForProductAndCreateOrder(userId, productKey, { label, jobId, cardPaymentId }) {
   let price;
   const tx = db.transaction(() => {
     price = chargeForProduct(userId, productKey, jobId);
-    orders.createOrder({ userId, productKey, label, jobId });
+    orders.createOrder({ userId, productKey, cardPaymentId, label, jobId });
   });
   tx();
   return price;

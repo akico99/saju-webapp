@@ -79,7 +79,7 @@ async function recoverPaidPayments(startProduct = resolveProduct, recoverablePay
       const form = JSON.parse(row.form_json || '{}');
       const product = startProduct(paymentProduct(row.product_key), form);
       if (!product) throw new Error('상품을 찾을 수 없습니다.');
-      const started = await product.start(row.user_id, form);
+      const started = await product.start(row.user_id, form, { cardPaymentId: row.id });
       cardPayments.setJob(row, started.jobId);
     } catch (err) {
       const detail = `결제 복구 중 상품 시작 실패: ${err.message}`;

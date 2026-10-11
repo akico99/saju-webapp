@@ -36,9 +36,9 @@ const stmts = {
   listRecoverable: db.prepare("SELECT * FROM card_payments WHERE status IN ('confirming','canceling') OR (status='paid' AND job_id IS NULL) ORDER BY id LIMIT 100"),
   expireReady: db.prepare("UPDATE card_payments SET status='failed', error='결제 입력 시간이 만료되었습니다.', form_json=NULL, attribution=NULL WHERE status='ready' AND created_at < datetime('now','-30 minutes')"),
   reconnectJob: db.prepare(`
-    UPDATE card_payments SET job_id=?, form_json=NULL, attribution=NULL
-    WHERE id=? AND status='paid' AND job_id IS NULL AND start_claimed=1 AND start_order_watermark=?
-      AND EXISTS (SELECT 1 FROM orders WHERE job_id=? AND id > ?)
+    UPDATE card_payments SET job_id=(SELECT job_id FROM orders WHERE card_payment_id=card_payments.id), form_json=NULL, attribution=NULL
+    WHERE id=? AND status='paid' AND job_id IS NULL AND start_claimed=1
+      AND EXISTS (SELECT 1 FROM orders WHERE card_payment_id=card_payments.id)
   `),
   claimStart: db.prepare(`
     UPDATE card_payments SET start_claimed=1, start_claimed_at=datetime('now'),
@@ -121,12 +121,9 @@ function claimConfirmation(row, paymentKey) { return stmts.claimConfirmation.run
 function releaseConfirmation(row, error) { return stmts.releaseConfirmation.run(String(error || '').slice(0, 300), row.id).changes === 1; }
 function expireReady() { return stmts.expireReady.run().changes; }
 function listRecoverable() { return stmts.listRecoverable.all(); }
-function recoverPaidWithoutJob(row, orders) {
+function recoverPaidWithoutJob(row) {
   if (!row || row.status !== 'paid' || row.job_id || !row.start_claimed) return row;
-  const active = orders.findPendingByUserAndProduct(row.user_id, row.product_key);
-  if (active && active.id > (row.start_order_watermark || 0)) {
-    stmts.reconnectJob.run(active.job_id, row.id, row.start_order_watermark || 0, active.job_id, row.start_order_watermark || 0);
-  }
+  stmts.reconnectJob.run(row.id);
   return stmts.findById.get(row.id);
 }
 function claimPaidStart(row) {

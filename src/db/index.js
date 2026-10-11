@@ -60,6 +60,7 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL REFERENCES users(id),
     product_key TEXT NOT NULL,
+    card_payment_id INTEGER,
     label TEXT,
     job_id TEXT NOT NULL UNIQUE,
     result_path TEXT,
@@ -228,6 +229,9 @@ if (!cpColumns.includes('cancel_idempotency_key')) db.exec('ALTER TABLE card_pay
 if (!cpColumns.includes('start_claimed')) db.exec('ALTER TABLE card_payments ADD COLUMN start_claimed INTEGER NOT NULL DEFAULT 0');
 if (!cpColumns.includes('start_claimed_at')) db.exec('ALTER TABLE card_payments ADD COLUMN start_claimed_at TEXT');
 if (!cpColumns.includes('start_order_watermark')) db.exec('ALTER TABLE card_payments ADD COLUMN start_order_watermark INTEGER');
+const refreshedOrderColumns = db.prepare('PRAGMA table_info(orders)').all().map((c) => c.name);
+if (!refreshedOrderColumns.includes('card_payment_id')) db.exec('ALTER TABLE orders ADD COLUMN card_payment_id INTEGER');
+db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_card_payment_id ON orders(card_payment_id) WHERE card_payment_id IS NOT NULL');
 
 /* 2026-09-28 잔액 회수 — 사이트는 더 이상 잔액을 보관하지 않는다(약관 제6조). 예전 무통장입금·테스트로
    남은 잔액을 한 번만 0으로 돌리고 원장에 기록한다. user_version으로 한 번만 실행한다. */

@@ -69,7 +69,7 @@ test('paid payment without job link reconnects to existing active order', async 
   const paid = payments.markPaidAndCredit(row, { paymentKey: 'pk-reconnect' });
   assert.equal(payments.claimPaidStart(paid), true);
   const jobId = `reconnect-${row.id}`;
-  points.chargeForProductAndCreateOrder(user.id, row.product_key, { label: 'existing', jobId });
+  points.chargeForProductAndCreateOrder(user.id, row.product_key, { label: 'existing', jobId, cardPaymentId: paid.id });
   assert.equal(typeof payments.recoverPaidWithoutJob, 'function');
   const result = await payments.recoverPaidWithoutJob(payments.findByOrderId(row.order_id), orders);
   assert.equal(result.job_id, jobId);
@@ -89,6 +89,17 @@ test('paid payment does not reconnect an unrelated active order', () => {
   assert.equal(payments.findByOrderId(duplicate.row.order_id).job_id, null);
 });
 
+test('paid payment does not reconnect an unrelated order created after its start watermark', () => {
+  const first = createPayment();
+  const paid = payments.markPaidAndCredit(first.row, { paymentKey: 'pk-after-watermark' });
+  assert.equal(payments.claimPaidStart(paid), true);
+  const jobId = `concurrent-route-${first.row.id}`;
+  points.chargeForProductAndCreateOrder(first.user.id, first.row.product_key, { label: 'concurrent route', jobId });
+  const result = payments.recoverPaidWithoutJob(payments.findByOrderId(first.row.order_id), orders);
+  assert.equal(result.job_id, null);
+  assert.equal(payments.findByOrderId(first.row.order_id).job_id, null);
+});
+
 test('startup recovers a start claim left behind before order creation', async () => {
   const { user, row } = createPayment();
   const paid = payments.markPaidAndCredit(row, { paymentKey: 'pk-crash' });
@@ -96,10 +107,10 @@ test('startup recovers a start claim left behind before order creation', async (
   db.prepare("UPDATE card_payments SET start_claimed_at=datetime('now','-6 minutes') WHERE id=?").run(row.id);
   let starts = 0;
   const { recoverPaidPayments } = require('../src/jobs/recoverPendingOrders');
-  await recoverPaidPayments(() => ({ start: async (userId, form) => {
+  await recoverPaidPayments(() => ({ start: async (userId, form, { cardPaymentId }) => {
     starts++;
     const jobId = `recovered-${row.id}`;
-    points.chargeForProductAndCreateOrder(userId, row.product_key, { label: 'recovered', jobId });
+    points.chargeForProductAndCreateOrder(userId, row.product_key, { label: 'recovered', jobId, cardPaymentId });
     return { jobId };
   } }), [payments.findByOrderId(row.order_id)]);
   assert.equal(starts, 1);

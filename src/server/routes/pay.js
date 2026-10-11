@@ -126,7 +126,7 @@ router.post('/pay/confirm', requireAuth, async (req, res) => {
   try {
     if (!resolved) throw new HttpError(400, { error: '알 수 없는 상품입니다.' });
     if (!cardPayments.claimPaidStart(paid)) return res.status(202).json({ error: '결제는 확인됐고 리포트 시작을 확인하고 있어요. 마이페이지에서 잠시 후 확인해 주세요.', code: 'start_pending', retry: true });
-    const payload = await resolved.start(row.user_id, form);
+    const payload = await resolved.start(row.user_id, form, { cardPaymentId: paid.id });
     cardPayments.setJob(paid, payload.jobId);
     return res.json({ payment: summarize(paid), jobId: payload.jobId, page: resolved.page, payload });
   } catch (e) {

@@ -37,7 +37,7 @@ function parseBody(body) {
 
 /** 평생사주 생성 시작 — 포인트 차감 + 주문 생성 후 비동기 생성을 걸고 응답 본문을 돌려준다.
     라우트(/api/generate)와 카드 결제 승인(pay.js)이 같은 함수를 쓴다. 실패는 HttpError로. */
-async function startFull(userId, body) {
+async function startFull(userId, body, { cardPaymentId } = {}) {
   let input;
   try {
     input = parseBody(body);
@@ -69,7 +69,7 @@ async function startFull(userId, body) {
   // 별도 환불이 필요 없다.
   let price;
   try {
-    price = points.chargeForProductAndCreateOrder(userId, 'full', { label, jobId });
+    price = points.chargeForProductAndCreateOrder(userId, 'full', { label, jobId, cardPaymentId });
   } catch (e) {
     if (e.code === 'insufficient_points') {
       throw new HttpError(402, { error: e.message, code: e.code, required: e.required, balance: e.balance });
