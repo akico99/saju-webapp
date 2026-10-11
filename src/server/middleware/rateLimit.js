@@ -64,4 +64,21 @@ const forgotPasswordLimiter = makeLimiter({
   message: '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.'
 });
 
-module.exports = { adminLoginLimiter, userLoginLimiter, signupLimiter, forgotPasswordLimiter };
+// 계정 탈퇴 확인 메일은 로그인한 회원 기준으로 시간당 5번, 확인(비밀번호·코드 입력)은 15분에 15번까지.
+// 코드 자체의 오답 횟수 제한(5회)은 DB에서 따로 건다.
+const accountDeletionRequestLimiter = makeLimiter({
+  max: 5, windowMs: 60 * 60 * 1000,
+  keyFn: (req) => 'acct-del-request:' + (req.session && req.session.userId),
+  message: '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.'
+});
+
+const accountDeletionConfirmLimiter = makeLimiter({
+  max: 15, windowMs: 15 * 60 * 1000,
+  keyFn: (req) => 'acct-del-confirm:' + (req.session && req.session.userId),
+  message: '시도가 너무 많습니다. 15분 후 다시 시도해주세요.'
+});
+
+module.exports = {
+  adminLoginLimiter, userLoginLimiter, signupLimiter, forgotPasswordLimiter,
+  accountDeletionRequestLimiter, accountDeletionConfirmLimiter
+};

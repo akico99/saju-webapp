@@ -258,4 +258,50 @@ if (db.pragma('user_version', { simple: true }) < 2) {
   })();
 }
 
+/* 계정 탈퇴 — 아래 세 표는 users를 참조하지 않는다(탈퇴해도 남아야 하거나 계정과 무관해야 하는 데이터).
+
+   retained_transactions: 전자상거래법 시행령 제6조의 "계약 또는 청약철회 등에 관한 기록"과
+   "대금결제 및 재화 등의 공급에 관한 기록"(각 5년)에 해당하는 최소 사실만 담는다. 계정·이메일·이름·
+   생년월일·입력 폼·결과물·원본 결제키(digest만)·작업 번호가 없다. retention_until이 지나면 자동 삭제된다.
+   서비스가 갖고 있지 않은 "소비자 불만 또는 분쟁처리 기록"(3년)은 이 표에 없다.
+
+   file_purge_queue: DB 커밋 뒤 파일 삭제가 실패하거나 프로세스가 죽어도 생성 파일이 남지 않게, 삭제할 폴더 이름만
+   (OUTPUT_ROOT 바로 아래 한 단계, 계정 정보 없음) 같은 트랜잭션에서 적어 두고 시작 시와 정기 점검에서 다시 지운다.
+
+   account_deletion_codes는 소셜 계정이 탈퇴할 때 메일로 받는 1회용 확인 코드의 해시를 담는다(user_id는 탈퇴 때 함께 삭제). */
+db.exec(`
+  CREATE TABLE IF NOT EXISTS retained_transactions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_ref TEXT NOT NULL UNIQUE,
+    product_key TEXT,
+    amount_krw INTEGER NOT NULL,
+    payment_status TEXT NOT NULL,
+    supply_status TEXT,
+    payment_ref_digest TEXT,
+    transaction_at TEXT NOT NULL,
+    approved_at TEXT,
+    retained_at TEXT NOT NULL DEFAULT (datetime('now')),
+    retention_until TEXT NOT NULL,
+    retention_basis TEXT NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_retained_transactions_until ON retained_transactions(retention_until);
+
+  CREATE TABLE IF NOT EXISTS file_purge_queue (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    rel_dir TEXT NOT NULL UNIQUE,
+    queued_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS account_deletion_codes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    code_hash TEXT NOT NULL,
+    salt TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    attempts INTEGER NOT NULL DEFAULT 0,
+    used_at TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+`);
+
 module.exports = db;
