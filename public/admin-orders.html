@@ -59,6 +59,14 @@
     if (n < 1024 * 1024) return (n / 1024).toFixed(0) + 'KB';
     return (n / 1024 / 1024).toFixed(1) + 'MB';
   }
+  function addText(parent, tag, value, className, style) {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (style) node.setAttribute('style', style);
+    node.textContent = value == null ? '' : String(value);
+    parent.appendChild(node);
+    return node;
+  }
 
   async function loadSummary() {
     const res = await fetch('/api/admin/orders/cost-summary');
@@ -72,13 +80,18 @@
       const marginPct = margin != null && s.priceKrw ? Math.round((margin / s.priceKrw) * 100) : null;
       const box = document.createElement('div');
       box.className = 'stat-box';
-      box.innerHTML = `
-        <div class="ttl">${s.productKey} <span style="font-weight:400;color:var(--muted);">(${s.count}건)</span></div>
-        <div class="row"><span>판매가</span><b>${fmtKrw(s.priceKrw)}</b></div>
-        <div class="row"><span>평균 원가</span><b>${fmtUsd(s.avgCostUsd)} (약 ${fmtKrw(avgCostKrw)})</b></div>
-        <div class="row"><span>마진(참고)</span><b class="margin ${margin != null && margin >= 0 ? 'good' : 'bad'}">${fmtKrw(margin)}${marginPct != null ? ` · ${marginPct}%` : ''}</b></div>
-        <div class="row"><span>누적 원가</span><b>${fmtUsd(s.totalCostUsd)}</b></div>
-      `;
+      const title = addText(box, 'div', '', 'ttl');
+      title.appendChild(document.createTextNode(String(s.productKey || '')));
+      addText(title, 'span', `(${String(s.count)}건)`, '', 'font-weight:400;color:var(--muted);');
+      const summaryRow = (label, value, className) => {
+        const line = addText(box, 'div', '', 'row');
+        addText(line, 'span', label);
+        addText(line, 'b', value, className);
+      };
+      summaryRow('판매가', fmtKrw(s.priceKrw));
+      summaryRow('평균 원가', `${fmtUsd(s.avgCostUsd)} (약 ${fmtKrw(avgCostKrw)})`);
+      summaryRow('마진(참고)', `${fmtKrw(margin)}${marginPct != null ? ` · ${marginPct}%` : ''}`, `margin ${margin != null && margin >= 0 ? 'good' : 'bad'}`);
+      summaryRow('누적 원가', fmtUsd(s.totalCostUsd));
       row.appendChild(box);
     });
   }
@@ -87,23 +100,28 @@
     const tr = document.createElement('tr');
     const costKrw = o.llmCostUsd != null ? o.llmCostUsd * FX_KRW_PER_USD : null;
     const margin = o.priceKrw != null && costKrw != null ? o.priceKrw - costKrw : null;
-    const fileCell = o.fileExists
-      ? `<span style="color:var(--success);">있음</span> <span style="color:var(--muted);font-size:11px;">${fmtBytes(o.fileSizeBytes)}</span>
-         <div class="actions" style="margin-top:4px;">
-           <button type="button" class="approve-btn" data-action="dl" data-job="${o.jobId}">받기</button>
-           <button type="button" class="reject-btn" data-action="del" data-job="${o.jobId}">삭제</button>
-         </div>`
-      : `<span style="color:var(--danger);">없음</span>`;
-    tr.innerHTML = `
-      <td>#${o.id}</td>
-      <td>${o.createdAt.slice(0, 16).replace('T', ' ')}</td>
-      <td>${o.label || o.productKey}</td>
-      <td style="color:var(--muted);font-size:11px;">${o.userEmail}</td>
-      <td>${fmtKrw(o.priceKrw)}</td>
-      <td>${fmtUsd(o.llmCostUsd)}</td>
-      <td class="margin ${margin != null && margin >= 0 ? 'good' : 'bad'}">${fmtKrw(margin)}</td>
-      <td>${fileCell}</td>
-    `;
+    addText(tr, 'td', `#${String(o.id)}`);
+    addText(tr, 'td', String(o.createdAt || '').slice(0, 16).replace('T', ' '));
+    addText(tr, 'td', o.label || o.productKey || '');
+    addText(tr, 'td', o.userEmail, '', 'color:var(--muted);font-size:11px;');
+    addText(tr, 'td', fmtKrw(o.priceKrw));
+    addText(tr, 'td', fmtUsd(o.llmCostUsd));
+    addText(tr, 'td', fmtKrw(margin), `margin ${margin != null && margin >= 0 ? 'good' : 'bad'}`);
+    const fileCell = document.createElement('td');
+    if (o.fileExists) {
+      addText(fileCell, 'span', '있음', '', 'color:var(--success);');
+      addText(fileCell, 'span', fmtBytes(o.fileSizeBytes), '', 'color:var(--muted);font-size:11px;');
+      const actions = addText(fileCell, 'div', '', 'actions', 'margin-top:4px;');
+      for (const [action, label, className] of [['dl', '받기', 'approve-btn'], ['del', '삭제', 'reject-btn']]) {
+        const button = addText(actions, 'button', label, className);
+        button.type = 'button';
+        button.setAttribute('data-action', action);
+        button.setAttribute('data-job', String(o.jobId));
+      }
+    } else {
+      addText(fileCell, 'span', '없음', '', 'color:var(--danger);');
+    }
+    tr.appendChild(fileCell);
     return tr;
   }
 
@@ -123,12 +141,12 @@
     if (!btn) return;
     const jobId = btn.dataset.job;
     if (btn.dataset.action === 'dl') {
-      location.href = `/api/admin/download/${jobId}`;
+      location.href = `/api/admin/download/${encodeURIComponent(jobId)}`;
       return;
     }
     if (btn.dataset.action === 'del') {
       if (!confirm('이 주문의 결과 파일을 서버에서 삭제할까요? 주문 기록 자체는 남지만, 파일은 복구할 수 없어요.')) return;
-      const res = await fetch(`/api/admin/orders/${jobId}/file`, { method: 'DELETE' });
+      const res = await fetch(`/api/admin/orders/${encodeURIComponent(jobId)}/file`, { method: 'DELETE' });
       const data = await res.json();
       if (!res.ok) { alert(data.error || '삭제 실패'); return; }
       loadOrders();

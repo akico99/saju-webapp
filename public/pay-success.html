@@ -1,6 +1,20 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+<meta name="referrer" content="no-referrer">
+<script>
+  const confirmationParams = (() => {
+    const params = new URLSearchParams(location.search);
+    const values = {
+      paymentKey: params.get('paymentKey'),
+      orderId: params.get('orderId'),
+      amount: params.get('amount'),
+      done: params.get('done')
+    };
+    history.replaceState(null, '', location.pathname + location.hash);
+    return Object.freeze(values);
+  })();
+</script>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-THWHBPH5WR"></script>
 <script>
@@ -67,13 +81,12 @@
 <script src="/pay-flow.js"></script>
 <script>
   async function run() {
-    const params = new URLSearchParams(location.search);
-    const paymentKey = params.get('paymentKey'), orderId = params.get('orderId'), amount = params.get('amount');
+    const { paymentKey, orderId, amount } = confirmationParams;
     const ttl = document.getElementById('ttl'), desc = document.getElementById('desc'), errorBox = document.getElementById('errorBox');
     const show = (id) => document.getElementById(id).classList.remove('hidden');
 
     // pay.html이 이미 승인된 주문으로 되돌아온 경우 — 내 결제 목록에서 읽어 보여준다.
-    if (params.get('done') && orderId) {
+    if (confirmationParams.done && orderId) {
       const mine = await fetch('/api/pay/mine').then((r) => r.json()).catch(() => ({ payments: [] }));
       const p = (mine.payments || []).find((x) => x.orderId === orderId);
       if (p) return render(p, { jobId: p.jobId, page: '/mypage.html' });

@@ -54,8 +54,9 @@ async function sendVerificationEmail(user) {
 
 router.post('/auth/signup', signupLimiter, async (req, res) => {
   try {
-    const { email, password, name } = req.body;
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    const { password, name } = req.body;
+    const email = String(req.body.email || '').trim();
+    if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return res.status(400).json({ error: '이메일 형식이 올바르지 않습니다.' });
     }
     if (!password || String(password).length < 8) {
