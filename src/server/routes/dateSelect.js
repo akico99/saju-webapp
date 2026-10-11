@@ -286,9 +286,9 @@ async function startDateSelect(userId, body, { cardPaymentId } = {}) {
   const occasion = OCCASIONS[occasionKey];
   if (!occasion) throw new HttpError(400, { error: '알 수 없는 종류입니다.' });
 
-  if (occasion.mode === 'month') return runMonthSearch(userId, body, occasionKey, occasion);
-  if (occasion.mode === 'couple') return runWeddingSearch(userId, body, occasionKey, occasion);
-  return runBirthSearch(userId, body, occasionKey, occasion);
+  if (occasion.mode === 'month') return runMonthSearch(userId, body, occasionKey, occasion, cardPaymentId);
+  if (occasion.mode === 'couple') return runWeddingSearch(userId, body, occasionKey, occasion, cardPaymentId);
+  return runBirthSearch(userId, body, occasionKey, occasion, cardPaymentId);
 }
 router.post('/date-select', requireAuth, handle(startDateSelect));
 
@@ -366,7 +366,7 @@ function bestHourOf(date, ctx) {
 }
 
 // 달 단위 모드 — 이사/개업. 목표 연월 안에서 가장 좋은 날짜·시간 하나를 찾는다.
-async function runMonthSearch(userId, body, occasionKey, occasion) {
+async function runMonthSearch(userId, body, occasionKey, occasion, cardPaymentId) {
   const targetYear = Number(body.targetYear), targetMonth = Number(body.targetMonth);
   const nowYear = new Date().getFullYear();
   if (!targetYear || !targetMonth || targetMonth < 1 || targetMonth > 12 || targetYear < nowYear || targetYear > nowYear + 5) {
@@ -482,7 +482,7 @@ async function runMonthSearch(userId, body, occasionKey, occasion) {
 }
 
 // 두 사람 모드 — 결혼. 목표 연도의 주말 중 두 사람 모두에게 좋은 날을 찾고, 실제 궁합도 함께 담는다.
-async function runWeddingSearch(userId, body, occasionKey, occasion) {
+async function runWeddingSearch(userId, body, occasionKey, occasion, cardPaymentId) {
   const targetYear = Number(body.targetYear);
   const nowYear = new Date().getFullYear();
   if (!targetYear || targetYear < nowYear || targetYear > nowYear + 5) {
@@ -655,7 +655,7 @@ async function runWeddingSearch(userId, body, occasionKey, occasion) {
 }
 
 // 부모 모드 — 임신·출산. 예정일 범위 안에서 오행이 골고루 갖춰지는 날짜·시간을 찾는다.
-async function runBirthSearch(userId, body, occasionKey, occasion) {
+async function runBirthSearch(userId, body, occasionKey, occasion, cardPaymentId) {
   const { baseYear, baseMonth, baseDay } = body;
   const by = Number(baseYear), bm = Number(baseMonth), bd = Number(baseDay);
   if (!by || !bm || !bd || by < 1900 || by > 2100 || bm < 1 || bm > 12 || bd < 1 || bd > 31) {
