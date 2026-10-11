@@ -163,6 +163,9 @@ test('social account deletion requires an unexpired one-time verified-email toke
 const BLOCKING = [
   { name: 'an active report order', seed: { orderStatus: 'active' }, setup: () => {}, status: 'generating', type: 'order',
     fix: (a) => m.orders.markDone(a.jobId, { resultPath: a.resultPath, cardPath: a.cardPath, resultText: 'x' }) },
+  { name: 'an order in an unrecognized state', seed: { orderStatus: 'active' }, status: 'queued_unknown', type: 'order',
+    setup: (a) => m.db.prepare('UPDATE orders SET status = ? WHERE job_id = ?').run('queued_unknown', a.jobId),
+    fix: (a) => m.orders.markDone(a.jobId, { resultPath: a.resultPath, cardPath: a.cardPath, resultText: 'x' }) },
   ...['confirming', 'reconcile_pending', 'refunding', 'canceling', 'cancel_failed'].map((s) => ({
     name: 'a ' + s + ' payment', seed: {}, type: 'payment', status: s,
     setup: (a) => m.db.prepare('UPDATE card_payments SET status = ? WHERE id = ?').run(s, a.paymentId),
@@ -236,7 +239,7 @@ test('successful deletion removes all account-linked data and report files', asy
   assert.equal((await call('POST', CONFIRM, { password: acct.password })).status, 401, 'the session cannot be reused');
 });
 
-const RETAINED_COLUMNS = ['amount_krw', 'approved_at', 'id', 'order_ref', 'payment_ref_digest', 'payment_status', 'product_key',
+const RETAINED_COLUMNS = ['amount_krw', 'approved_at', 'canceled_at', 'id', 'order_ref', 'payment_ref_digest', 'payment_status', 'product_key',
   'retained_at', 'retention_basis', 'retention_until', 'supply_status', 'transaction_at'];
 const utc = (d) => d.toISOString().slice(0, 19).replace('T', ' ');
 const plusYears = (s, y) => { const d = new Date(s.replace(' ', 'T') + 'Z'); d.setUTCFullYear(d.getUTCFullYear() + y); return utc(d); };
@@ -248,6 +251,8 @@ test('retained payment facts contain no direct account or report data', async ()
   const second = fx.seedPurchase(m, acct.user, { tag: acct.tag, suffix: 'b', approvedAt: '2026-04-01T10:00:00+09:00' });
   const testPay = fx.seedPurchase(m, acct.user, { tag: acct.tag, suffix: 't', testMode: true });
   const canceled = fx.seedCanceledPayment(m, acct.user, acct.tag);
+  assert.ok(canceled.canceled_at, 'finishing a refund records when the cancellation happened');
+  m.db.prepare('UPDATE card_payments SET canceled_at = ? WHERE id = ?').run('2026-06-07 08:09:10', canceled.id);
   const revenue = m.users.adminStats().totalRevenue;
 
   const call = await loginAs(acct);
@@ -270,9 +275,9 @@ test('retained payment facts contain no direct account or report data', async ()
   assert.ok(rows.find((r) => r.order_ref === second.payment.order_id && r.retention_until === plusYears('2026-04-01 01:00:00', 5)));
   const canc = rows.find((r) => r.order_ref === canceled.order_id);
   assert.equal(canc.payment_status, 'canceled');
-  // 취소 시각이 따로 없어 삭제 시점과 거래 시각 중 늦은 쪽부터 5년을 센다 — 거래 시각 기준보다 짧아질 수 없다.
-  assert.ok(canc.retention_until >= plusYears('2026-05-05 22:08:09', 5));
-  assert.ok(canc.retention_until >= plusYears(utc(new Date(Date.now() - 60000)), 5));
+  // 청약철회 기록은 취소 확정 시각부터 5년이다(결제 승인 시각이 아니다).
+  assert.equal(canc.canceled_at, '2026-06-07 08:09:10');
+  assert.equal(canc.retention_until, '2031-06-07 08:09:10');
   assert.ok(!rows.some((r) => r.order_ref === testPay.payment.order_id), 'test-mode charges move no money and are not kept');
   assert.ok(rows.every((r) => r.retention_basis === 'ecommerce_decree_art6_payment_supply_5y'), 'no 3-year complaint record exists, so none is claimed');
 
@@ -313,5 +318,49 @@ test('a failure inside the deletion transaction rolls everything back', async ()
   }
   assert.equal(JSON.stringify(fx.dumpDb(m.db)), before, 'no retained row, queue entry, or deleted record remains');
   assert.ok(fs.existsSync(acct.jobDir));
+});
+
+test('password attempts are rate limited per account, even for the correct password', async () => {
+  const acct = fx.seedAccount(m);
+  const call = await loginAs(acct);
+  for (let i = 0; i < 15; i += 1) {
+    assert.equal((await call('POST', CONFIRM, { password: 'wrong-' + i })).status, 403);
+  }
+  const before = JSON.stringify(fx.dumpDb(m.db));
+  const limited = await call('POST', CONFIRM, { password: acct.password });
+  assert.equal(limited.status, 429);
+  assert.equal(userExists(acct.user.id), true);
+  assert.equal(JSON.stringify(fx.dumpDb(m.db)), before);
+});
+
+test('deletion code requests are rate limited per account', async () => {
+  const acct = fx.seedAccount(m, { provider: 'kakao' });
+  const call = await loginAs(acct);
+  const mailsBefore = sentMails.length;
+  for (let i = 0; i < 5; i += 1) assert.equal((await call('POST', REQUEST, {})).status, 200);
+  assert.equal((await call('POST', REQUEST, {})).status, 429);
+  assert.equal(sentMails.length - mailsBefore, 5, 'no sixth mail is sent');
+  assert.equal(userExists(acct.user.id), true);
+});
+
+test('the response does not claim every file is gone when some cannot be removed automatically', async () => {
+  const acct = fx.seedAccount(m);
+  m.db.prepare('UPDATE orders SET result_path = ? WHERE job_id = ?').run(tmpDir + '/elsewhere/report.pdf', acct.jobId);
+  const exceptionsBefore = m.db.prepare('SELECT COUNT(*) AS n FROM file_purge_exceptions').get().n;
+  const call = await loginAs(acct);
+  let res;
+  const logs = await captureConsole(async () => { res = await call('POST', CONFIRM, { password: acct.password }); });
+  assert.equal(res.status, 200);
+  assert.ok(res.data.filesNeedReview >= 1);
+  assert.doesNotMatch(res.data.message, /생성한 리포트는 삭제했습니다/);
+  assert.match(res.data.message, /운영자/);
+  assert.ok(m.db.prepare('SELECT COUNT(*) AS n FROM file_purge_exceptions').get().n > exceptionsBefore, 'the exception is visible to the operator');
+  assert.match(logs, /운영자 확인/);
+  assert.ok(!logs.includes(acct.email) && !logs.includes('elsewhere'), 'the log carries a count only');
+  assert.equal(fs.existsSync(acct.jobDir), false, 'the safe job directory is still removed');
+});
+
+test('deleted rows are overwritten (secure_delete is on)', () => {
+  assert.equal(m.db.pragma('secure_delete', { simple: true }), 1);
 });
 

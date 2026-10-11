@@ -484,12 +484,21 @@ router.post('/auth/account/delete/confirm', requireAuth, accountDeletionConfirmL
     if (result.code === 'invalid_code') return res.status(403).json({ error: '확인 코드가 올바르지 않거나 이미 사용되었어요. 코드를 다시 받아 주세요.', code: 'invalid_code' });
     return res.status(404).json({ error: '계정을 찾을 수 없습니다.', code: result.code });
   }
+  // 계정 데이터는 이미 지워졌다. 생성 파일이 아직 남았다면 "모두 삭제했다"고 말하지 않는다.
+  const filesPending = result.files ? result.files.pending : 0;
+  const filesNeedReview = result.rejected || 0;
+  if (filesNeedReview > 0) console.error('[탈퇴] 자동 삭제할 수 없는 생성 파일 ' + filesNeedReview + '건 — 운영자 확인 필요');
+  let message = '탈퇴가 완료되었어요. 계정 정보와 생성한 리포트는 삭제했습니다.';
+  if (filesNeedReview > 0) message = '계정 정보는 삭제했어요. 다만 생성 파일 일부는 자동으로 지울 수 없어 운영자가 확인해 삭제합니다.';
+  else if (filesPending > 0) message = '계정 정보는 삭제했어요. 생성 파일 일부는 잠시 후 자동으로 삭제됩니다.';
   req.session.destroy(() => {
     res.clearCookie('connect.sid');
     res.json({
       ok: true,
       keptTransactionRecords: result.retained,
-      message: '탈퇴가 완료되었어요. 계정 정보와 생성한 리포트는 삭제했습니다.'
+      filesPending,
+      filesNeedReview,
+      message
     });
   });
 });

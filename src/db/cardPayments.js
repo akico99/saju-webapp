@@ -20,7 +20,7 @@ const stmts = {
   `),
   setJob: db.prepare('UPDATE card_payments SET job_id=@jobId, form_json=NULL, attribution=NULL WHERE id=@id AND job_id IS NULL'),
   markFailed: db.prepare("UPDATE card_payments SET status='failed', error=@error WHERE id=@id"),
-  markCanceled: db.prepare("UPDATE card_payments SET status='canceled', error=@error WHERE id=@id"),
+  markCanceled: db.prepare("UPDATE card_payments SET status='canceled', error=@error, canceled_at=datetime('now') WHERE id=@id"),
   // 생성 실패 환불 — 이 주문(jobId)을 결제한 카드 행을 찾는다. 상품 시작 도중(주문 번호가 카드 행에
   // 적히기 전) 실패한 경우를 위해, 아직 job_id가 없는 같은 상품의 결제 완료 행도 본다. 같은 상품은
   // 동시에 하나만 생성할 수 있으므로(already_pending) 이 조건으로 한 건만 걸린다.
@@ -47,9 +47,9 @@ const stmts = {
       AND (start_claimed=0 OR start_claimed_at <= datetime('now','-5 minutes'))
   `),
   markCanceling: db.prepare("UPDATE card_payments SET status='canceling', cancel_idempotency_key=COALESCE(cancel_idempotency_key, ?) WHERE id=? AND status IN ('paid','cancel_failed')"),
-  cancellationFinished: db.prepare("UPDATE card_payments SET status=?, error=? WHERE id=? AND status='canceling'"),
+  cancellationFinished: db.prepare("UPDATE card_payments SET status=?, error=?, canceled_at=CASE WHEN ?='canceled' THEN datetime('now') ELSE canceled_at END WHERE id=? AND status='canceling'"),
   partialCancellationFinished: db.prepare("UPDATE card_payments SET status='cancel_failed', error=? WHERE id=? AND status IN ('cancel_failed','canceling')"),
-  checkedCancellationFinished: db.prepare("UPDATE card_payments SET status='canceled', error=? WHERE id=? AND status IN ('cancel_failed','canceling')"),
+  checkedCancellationFinished: db.prepare("UPDATE card_payments SET status='canceled', error=?, canceled_at=datetime('now') WHERE id=? AND status IN ('cancel_failed','canceling')"),
   insertTx: db.prepare(`
     INSERT INTO point_transactions (user_id, delta, reason, ref_type, ref_id)
     VALUES (@userId, @delta, @reason, 'card_payment', @refId)
@@ -134,7 +134,8 @@ function claimCancellation(row) {
   return stmts.markCanceling.run(key, row.id).changes === 1 ? { ...stmts.findById.get(row.id), cancel_idempotency_key: key } : null;
 }
 function finishRefund(row, ok, detail) {
-  stmts.cancellationFinished.run(ok ? 'canceled' : 'cancel_failed', String(detail || '').slice(0, 300), row.id);
+  const status = ok ? 'canceled' : 'cancel_failed';
+  stmts.cancellationFinished.run(status, String(detail || '').slice(0, 300), status, row.id);
 }
 function finishCheckedCancellation(row, detail) {
   stmts.checkedCancellationFinished.run(String(detail || '').slice(0, 300), row.id);

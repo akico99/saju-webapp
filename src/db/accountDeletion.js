@@ -6,6 +6,10 @@
    "DB 커밋과 함께 삭제 큐(폴더 이름만, 계정 정보 없음)를 적고, 커밋 뒤에 지우되 실패하면 시작 시·정기 점검에서
    다시 지운다"로 정했다. 커밋 직후 프로세스가 죽어도 큐가 남아 있으므로 사용자 연결 파일이 무기한 남지 않는다.
 
+   큐 처리 규칙: 일시 실패(no_root·unreadable·삭제 중 오류)는 항목을 남겨 다시 시도한다. 확정된 안전 위반(invalid_name·
+   outside_root·symlink·not_directory)은 지우지 않고 큐에서 버리되, 사유만 file_purge_exceptions에 남겨 운영자가 볼 수 있게 한다.
+   (경로·계정 정보는 남기지 않는다.)
+
    로그에는 토큰·비밀번호·이메일·입력·결과 내용을 쓰지 않는다. */
 const crypto = require('crypto');
 const fs = require('fs');
@@ -32,9 +36,9 @@ function parseTime(value) {
   const d = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(s) ? new Date(s.replace(' ', 'T') + 'Z') : new Date(s);
   return Number.isNaN(d.getTime()) ? null : d;
 }
-/** 거래 시각에서 법정 보존 5년 뒤(UTC 문자열). */
-function retentionUntil(transactionTime) {
-  const d = parseTime(transactionTime);
+/** 기산 시각에서 법정 보존 5년 뒤(UTC 문자열). */
+function retentionUntil(startTime) {
+  const d = parseTime(startTime);
   if (!d) throw new Error('거래 시각을 해석할 수 없습니다.');
   d.setUTCFullYear(d.getUTCFullYear() + RETENTION_YEARS);
   return toUtcString(d);
@@ -43,6 +47,8 @@ function retentionUntil(transactionTime) {
 /* ---------- 생성 파일 경로 안전 ---------- */
 const SAFE_NAME = /^[A-Za-z0-9][A-Za-z0-9_-]{0,99}$/;
 const sameFile = (a, b) => (process.platform === 'win32' ? a.toLowerCase() === b.toLowerCase() : a === b);
+// 디스크가 잠시 안 보이거나 읽기 오류인 경우 — 나중에 다시 시도하면 되는 사유
+const TRANSIENT_REASONS = new Set(['no_root', 'unreadable']);
 
 /** OUTPUT_ROOT 바로 아래 작업 폴더 이름 하나를 검증해 실제 경로를 돌려준다. 이름 하나만 허용하므로 '..'·구분자·
     절대경로는 모두 거절되고, 폴더가 링크(symlink/junction)이거나 실제 경로가 root 바로 아래가 아니면 거절한다. */
@@ -54,7 +60,7 @@ function resolveGeneratedDir(name, root = OUTPUT_ROOT) {
   if (!sameFile(path.dirname(dir), realRoot)) return { ok: false, reason: 'outside_root' };
   let stat;
   try { stat = fs.lstatSync(dir); } catch (e) {
-    if (e.code === 'ENOENT') return { ok: true, dir, exists: false };
+    if (e.code === 'ENOENT') return { ok: true, dir, exists: false }; // root는 있고 폴더만 없음 — 이미 지워진 것
     return { ok: false, reason: 'unreadable' };
   }
   if (stat.isSymbolicLink()) return { ok: false, reason: 'symlink' };
@@ -79,21 +85,42 @@ function defaultRemoveDir(dir) {
   fs.rmSync(dir, { recursive: true, force: true }); // 폴더 안의 링크는 따라가지 않고 링크만 지운다
 }
 
-/** 삭제 큐를 처리한다. 항목마다 경로를 다시 검증하므로 큐를 손으로 고쳐도 root 밖은 지우지 않는다. */
+/** 자동으로 지울 수 없는 생성 파일이 있다는 사실만 남긴다(사유 코드와 시각, 경로·계정 정보 없음). */
+function recordException(reason) {
+  db.prepare('INSERT INTO file_purge_exceptions (reason) VALUES (?)').run(String(reason).slice(0, 40));
+}
+
+/** 삭제 큐를 처리한다. 항목마다 경로를 다시 검증하므로 큐를 손으로 고쳐도 root 밖은 지우지 않는다.
+    failed = 일시 실패로 큐에 남겨 다음 점검에서 다시 시도하는 항목, rejected = 확정 위반으로 버린 항목. */
 function processPurgeQueue({ removeDir = defaultRemoveDir } = {}) {
   const out = { removed: 0, rejected: 0, failed: 0 };
   const rows = db.prepare('SELECT id, rel_dir FROM file_purge_queue ORDER BY id').all();
   const drop = db.prepare('DELETE FROM file_purge_queue WHERE id = ?');
   for (const row of rows) {
     const target = resolveGeneratedDir(row.rel_dir);
-    if (!target.ok) { out.rejected += 1; drop.run(row.id); continue; }
+    if (!target.ok) {
+      if (TRANSIENT_REASONS.has(target.reason)) { out.failed += 1; continue; }
+      out.rejected += 1;
+      recordException(target.reason);
+      drop.run(row.id);
+      continue;
+    }
     if (target.exists) {
-      try { removeDir(target.dir); } catch (e) { out.failed += 1; continue; } // 남겨 두고 다음 점검에서 다시 시도
+      try { removeDir(target.dir); } catch (e) { out.failed += 1; continue; }
     }
     out.removed += 1;
     drop.run(row.id);
   }
   return out;
+}
+
+/** 운영자가 볼 수 있는 현황: 대기 중인 삭제, 하루 넘게 못 지운 삭제, 자동 삭제 불가로 기록된 건수. */
+function purgeStatus() {
+  return {
+    pending: db.prepare('SELECT COUNT(*) AS n FROM file_purge_queue').get().n,
+    stale: db.prepare("SELECT COUNT(*) AS n FROM file_purge_queue WHERE queued_at <= datetime('now', '-1 day')").get().n,
+    exceptions: db.prepare('SELECT COUNT(*) AS n FROM file_purge_exceptions').get().n
+  };
 }
 
 /* ---------- 1회용 확인 코드(소셜 계정) ---------- */
@@ -130,14 +157,14 @@ function verifyDeletionCode(userId, code) {
 }
 
 /* ---------- 차단 조건 ---------- */
-const ACTIVE_ORDER_STATUSES = ['pending', 'generating', 'rendering', 'recovering'];
+const FINISHED_ORDER_STATUSES = ['done', 'error']; // 이 둘만 끝난 주문 — 그 밖의 상태는 새 상태여도 기본으로 막는다
 const SETTLED_PAYMENT_STATUSES = ['failed', 'canceled']; // paid·ready는 아래에서 따로 본다
 
 /** 탈퇴 전에 끝나야 하는 주문·결제 목록. 비어 있으면 탈퇴할 수 있다. 읽기만 한다. */
 function findBlockers(userId) {
   const blockers = [];
   for (const o of db.prepare('SELECT id, status FROM orders WHERE user_id = ?').all(userId)) {
-    if (ACTIVE_ORDER_STATUSES.includes(o.status)) blockers.push({ type: 'order', status: o.status, ref: '#' + o.id });
+    if (!FINISHED_ORDER_STATUSES.includes(o.status)) blockers.push({ type: 'order', status: o.status, ref: '#' + o.id });
   }
   const payments = db.prepare("SELECT id, order_id, status, job_id, (created_at >= datetime('now', ?)) AS recent FROM card_payments WHERE user_id = ?")
     .all('-' + READY_WINDOW_MINUTES + ' minutes', userId);
@@ -150,7 +177,7 @@ function findBlockers(userId) {
     if (p.status === 'paid') {
       const order = p.job_id ? db.prepare('SELECT status FROM orders WHERE job_id = ?').get(p.job_id) : null;
       if (!order || order.status === 'error') blockers.push({ type: 'payment', status: 'paid', ref: p.order_id });
-      continue; // 진행 중인 주문은 위에서 이미 잡았고, done이면 보내도 된다
+      continue; // 끝나지 않은 주문은 위에서 이미 잡았고, done이면 보내도 된다
     }
     blockers.push({ type: 'payment', status: p.status, ref: p.order_id });
   }
@@ -163,9 +190,13 @@ function findBlockers(userId) {
 /* ---------- 트랜잭션 파기 ---------- */
 const INSERT_RETAINED_SQL =
   'INSERT OR IGNORE INTO retained_transactions ' +
-  '(order_ref, product_key, amount_krw, payment_status, supply_status, payment_ref_digest, transaction_at, approved_at, retention_until, retention_basis) ' +
-  'VALUES (@orderRef, @productKey, @amountKrw, @paymentStatus, @supplyStatus, @digest, @transactionAt, @approvedAt, @retentionUntil, @basis)';
+  '(order_ref, product_key, amount_krw, payment_status, supply_status, payment_ref_digest, transaction_at, approved_at, canceled_at, retention_until, retention_basis) ' +
+  'VALUES (@orderRef, @productKey, @amountKrw, @paymentStatus, @supplyStatus, @digest, @transactionAt, @approvedAt, @canceledAt, @retentionUntil, @basis)';
 
+/* 보존 기산점(명시적 선택):
+   - paid: 승인 시각(approved_at, 없으면 created_at)부터 5년 — 계약·대금결제·공급 기록.
+   - canceled: 취소 시각(card_payments.canceled_at)부터 5년 — 청약철회 기록. 취소 시각은 승인 시각보다 이를 수 없다.
+     canceled_at 열이 생기기 전에 취소된 예전 건은 취소 시각을 알 수 없으므로 삭제 시점부터 센다(보존이 모자라지 않는 쪽). */
 function retainTransactions(userId, now) {
   const insert = db.prepare(INSERT_RETAINED_SQL);
   let kept = 0;
@@ -176,14 +207,19 @@ function retainTransactions(userId, now) {
     const base = approved || parseTime(p.created_at);
     if (!base) throw new Error('거래 시각을 해석할 수 없습니다.');
     const transactionAt = toUtcString(base);
+    const canceled = p.status === 'canceled' ? parseTime(p.canceled_at) : null;
+    const canceledAt = canceled ? toUtcString(canceled) : null;
+    let clockStart = transactionAt;
+    if (p.status === 'canceled') {
+      const cancelClock = canceledAt || nowText;
+      clockStart = cancelClock > transactionAt ? cancelClock : transactionAt;
+    }
     const order = db.prepare('SELECT status FROM orders WHERE card_payment_id = ? OR (job_id IS NOT NULL AND job_id = ?)').get(p.id, p.job_id || '');
-    // 취소 시각은 따로 적어 두지 않아, 취소 기록의 5년이 모자라지 않도록 삭제 시점과 비교해 늦은 쪽부터 센다.
-    const clockStart = p.status === 'canceled' && nowText > transactionAt ? nowText : transactionAt;
     kept += insert.run({
       orderRef: p.order_id, productKey: p.product_key || null, amountKrw: p.amount_krw, paymentStatus: p.status,
       supplyStatus: order ? (order.status === 'done' ? 'delivered' : 'failed') : 'none',
       digest: p.payment_key ? crypto.createHash('sha256').update(p.payment_key).digest('hex') : null,
-      transactionAt, approvedAt: approved ? transactionAt : null,
+      transactionAt, approvedAt: approved ? transactionAt : null, canceledAt,
       retentionUntil: retentionUntil(clockStart), basis: RETENTION_BASIS
     }).changes;
   }
@@ -193,40 +229,54 @@ function retainTransactions(userId, now) {
     if (!base) throw new Error('거래 시각을 해석할 수 없습니다.');
     kept += insert.run({
       orderRef: 'bank_' + r.id, productKey: null, amountKrw: r.amount_krw, paymentStatus: 'approved', supplyStatus: 'none', digest: null,
-      transactionAt: toUtcString(base), approvedAt: toUtcString(base), retentionUntil: retentionUntil(toUtcString(base)), basis: RETENTION_BASIS
+      transactionAt: toUtcString(base), approvedAt: toUtcString(base), canceledAt: null,
+      retentionUntil: retentionUntil(toUtcString(base)), basis: RETENTION_BASIS
     }).changes;
   }
   return kept;
 }
 
-/** 이 계정의 생성 파일 폴더를 모아 검증하고 삭제 큐에 적는다. 검증을 통과한 폴더 이름만 큐에 들어간다. */
+/** 이 계정의 생성 파일 폴더를 모아 검증하고 삭제 큐에 적는다.
+    확정 위반(root 밖 경로, 링크 등)은 큐에 넣지 않고 사유만 기록하며 rejected로 센다.
+    일시 실패(디스크가 잠시 안 보임 등)는 이름이 안전하면 큐에 넣어 나중에 다시 시도한다(deferred). */
 function queueGeneratedFiles(userId) {
   const names = new Set();
-  const rejectedInputs = new Set();
+  let rejected = 0;
   for (const o of db.prepare('SELECT job_id, result_path, card_path FROM orders WHERE user_id = ?').all(userId)) {
     names.add(o.job_id);
+    const seen = new Set();
     for (const stored of [o.result_path, o.card_path]) {
-      if (!stored) continue;
+      if (!stored || seen.has(stored)) continue;
+      seen.add(stored);
       const name = jobNameOfStoredPath(stored);
-      if (name === null) rejectedInputs.add('path:' + stored); else names.add(name);
+      if (name === null) { rejected += 1; recordException('stored_path_outside_root'); } else names.add(name);
     }
   }
   for (const p of db.prepare('SELECT job_id FROM card_payments WHERE user_id = ? AND job_id IS NOT NULL').all(userId)) names.add(p.job_id);
 
   const enqueue = db.prepare('INSERT OR IGNORE INTO file_purge_queue (rel_dir) VALUES (?)');
   let queued = 0;
+  let deferred = 0;
   for (const name of names) {
     const target = resolveGeneratedDir(name);
-    if (!target.ok) { rejectedInputs.add('dir:' + name); continue; }
-    if (target.exists) queued += enqueue.run(name).changes;
+    if (target.ok) {
+      if (target.exists) queued += enqueue.run(name).changes;
+    } else if (TRANSIENT_REASONS.has(target.reason)) {
+      queued += enqueue.run(name).changes;
+      deferred += 1;
+    } else {
+      rejected += 1;
+      recordException(target.reason);
+    }
   }
-  return { queued, rejected: rejectedInputs.size };
+  return { queued, deferred, rejected };
 }
 
 const hasTable = (name) => !!db.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?").get(name);
 
 /** 계정을 지운다. 진행 중 거래가 있으면 아무것도 바꾸지 않고 { ok:false, code:'deletion_blocked', blockers }를 돌려준다.
-    codeId를 주면(소셜 계정) 같은 트랜잭션 안에서 코드를 소모한다 — 차단되면 코드는 그대로 남는다. */
+    codeId를 주면(소셜 계정) 같은 트랜잭션 안에서 코드를 소모한다 — 차단되면 코드는 그대로 남는다.
+    성공하면 files.pending(재시도 대기 중인 폴더)과 rejected(자동 삭제할 수 없어 운영자 확인이 필요한 대상)를 함께 알려준다. */
 function deleteAccount(userId, { codeId = null, removeDir, now = new Date() } = {}) {
   const outcome = db.transaction(() => {
     if (!db.prepare('SELECT 1 FROM users WHERE id = ?').get(userId)) return { ok: false, code: 'user_not_found' };
@@ -263,6 +313,6 @@ function purgeExpiredCodes() {
 
 module.exports = {
   RETENTION_YEARS, RETENTION_BASIS, CODE_TTL_MINUTES, MAX_CODE_ATTEMPTS,
-  retentionUntil, resolveGeneratedDir, jobNameOfStoredPath, processPurgeQueue,
+  retentionUntil, resolveGeneratedDir, jobNameOfStoredPath, processPurgeQueue, purgeStatus,
   issueDeletionCode, revokeDeletionCodes, verifyDeletionCode, findBlockers, deleteAccount, expireRetained, purgeExpiredCodes
 };

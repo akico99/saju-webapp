@@ -123,3 +123,64 @@ test('a hand-edited purge queue entry is re-validated and dropped without deleti
   assert.equal(m.db.prepare('SELECT COUNT(*) AS n FROM file_purge_queue').get().n, 0);
 });
 
+test('a temporarily unreadable output root keeps the queue entry and retries later', () => {
+  const acct = fx.seedAccount(m);
+  const exceptionsBefore = m.db.prepare('SELECT COUNT(*) AS n FROM file_purge_exceptions').get().n;
+  const away = m.OUTPUT_ROOT + '-away';
+  fs.renameSync(m.OUTPUT_ROOT, away);
+  try {
+    const result = accountDeletion.deleteAccount(acct.user.id);
+    assert.equal(result.ok, true, JSON.stringify(result));
+    assert.equal(result.rejected, 0, 'a disk that is briefly missing is not a safety violation');
+    assert.equal(result.files.pending, 1, 'the folder is waiting for a retry');
+    assert.equal(m.db.prepare('SELECT COUNT(*) AS n FROM file_purge_queue').get().n, 1);
+    assert.equal(accountDeletion.processPurgeQueue().failed, 1, 'a later sweep still cannot reach it and keeps the entry');
+    assert.equal(m.db.prepare('SELECT COUNT(*) AS n FROM file_purge_queue').get().n, 1);
+  } finally {
+    fs.renameSync(away, m.OUTPUT_ROOT);
+  }
+  assert.equal(m.db.prepare('SELECT COUNT(*) AS n FROM file_purge_exceptions').get().n, exceptionsBefore, 'no exception was recorded');
+  const swept = accountDeletion.processPurgeQueue();
+  assert.equal(swept.removed, 1);
+  assert.equal(fs.existsSync(acct.jobDir), false);
+  assert.equal(m.db.prepare('SELECT COUNT(*) AS n FROM file_purge_queue').get().n, 0);
+});
+
+test('a safety violation in the queue is dropped and recorded as a bare reason without paths or accounts', () => {
+  const outside = path.join(tmpDir, 'outside5');
+  fs.mkdirSync(outside, { recursive: true });
+  fs.writeFileSync(path.join(outside, 'keep.txt'), 'keep');
+  fs.symlinkSync(outside, path.join(m.OUTPUT_ROOT, 'queued-link'), 'junction');
+  m.db.exec('DELETE FROM file_purge_exceptions');
+  m.db.prepare('INSERT INTO file_purge_queue (rel_dir) VALUES (?)').run('../outside5');
+  m.db.prepare('INSERT INTO file_purge_queue (rel_dir) VALUES (?)').run('queued-link');
+  const swept = accountDeletion.processPurgeQueue();
+  assert.equal(swept.rejected, 2);
+  assert.equal(fs.readFileSync(path.join(outside, 'keep.txt'), 'utf8'), 'keep');
+  const rows = m.db.prepare('SELECT * FROM file_purge_exceptions ORDER BY id').all();
+  assert.deepEqual(rows.map((r) => r.reason), ['invalid_name', 'symlink']);
+  assert.deepEqual(Object.keys(rows[0]).sort(), ['id', 'noted_at', 'reason']);
+  assert.equal(accountDeletion.purgeStatus().exceptions, 2);
+  fs.rmSync(path.join(m.OUTPUT_ROOT, 'queued-link'), { force: true, recursive: true });
+});
+
+test('retention clock: paid counts from approval, canceled from the cancellation, legacy cancellations from deletion', () => {
+  m.db.exec('DELETE FROM retained_transactions');
+  const acct = fx.seedAccount(m, { noPayment: true });
+  const legacy = fx.seedCanceledPayment(m, acct.user, 'legacy');
+  assert.ok(legacy.canceled_at, 'a normal cancellation records its own timestamp');
+  m.db.prepare('UPDATE card_payments SET canceled_at = NULL WHERE id = ?').run(legacy.id);
+  const fresh = fx.seedCanceledPayment(m, acct.user, 'fresh');
+  m.db.prepare('UPDATE card_payments SET canceled_at = ? WHERE id = ?').run('2026-08-09 10:11:12', fresh.id);
+  const paid = fx.seedPurchase(m, acct.user, { approvedAt: '2026-02-03T04:05:06Z' });
+
+  const result = accountDeletion.deleteAccount(acct.user.id, { now: new Date('2027-01-02T03:04:05Z') });
+  assert.equal(result.ok, true);
+  const row = (ref) => m.db.prepare('SELECT * FROM retained_transactions WHERE order_ref = ?').get(ref);
+  assert.equal(row(paid.payment.order_id).retention_until, '2031-02-03 04:05:06');
+  assert.equal(row(fresh.order_id).retention_until, '2031-08-09 10:11:12');
+  assert.equal(row(fresh.order_id).canceled_at, '2026-08-09 10:11:12');
+  assert.equal(row(legacy.order_id).canceled_at, null);
+  assert.equal(row(legacy.order_id).retention_until, '2032-01-02 03:04:05', 'unknown cancellation time: five years from deletion');
+});
+

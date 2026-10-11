@@ -14,6 +14,8 @@ fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
 const db = new Database(DB_PATH);
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
+// 삭제한 행의 내용이 빈 페이지에 그대로 남지 않도록 지울 때 덮어쓴다(회원 탈퇴 시 복구 불가 처리). WAL 파일은 체크포인트 때 정리된다.
+db.pragma('secure_delete = ON');
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
@@ -229,6 +231,8 @@ if (!cpColumns.includes('cancel_idempotency_key')) db.exec('ALTER TABLE card_pay
 if (!cpColumns.includes('start_claimed')) db.exec('ALTER TABLE card_payments ADD COLUMN start_claimed INTEGER NOT NULL DEFAULT 0');
 if (!cpColumns.includes('start_claimed_at')) db.exec('ALTER TABLE card_payments ADD COLUMN start_claimed_at TEXT');
 if (!cpColumns.includes('start_order_watermark')) db.exec('ALTER TABLE card_payments ADD COLUMN start_order_watermark INTEGER');
+// 취소가 확정된 시각 — 탈퇴 후 보존하는 청약철회 기록의 5년 기산점. 이 열이 생기기 전에 취소된 건은 NULL이다.
+if (!cpColumns.includes('canceled_at')) db.exec('ALTER TABLE card_payments ADD COLUMN canceled_at TEXT');
 const refreshedOrderColumns = db.prepare('PRAGMA table_info(orders)').all().map((c) => c.name);
 if (!refreshedOrderColumns.includes('card_payment_id')) db.exec('ALTER TABLE orders ADD COLUMN card_payment_id INTEGER');
 db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_card_payment_id ON orders(card_payment_id) WHERE card_payment_id IS NOT NULL');
@@ -280,6 +284,7 @@ db.exec(`
     payment_ref_digest TEXT,
     transaction_at TEXT NOT NULL,
     approved_at TEXT,
+    canceled_at TEXT,
     retained_at TEXT NOT NULL DEFAULT (datetime('now')),
     retention_until TEXT NOT NULL,
     retention_basis TEXT NOT NULL
@@ -302,6 +307,16 @@ db.exec(`
     used_at TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
+
+  CREATE TABLE IF NOT EXISTS file_purge_exceptions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    reason TEXT NOT NULL,
+    noted_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
 `);
+// 이 커밋 이전에 만들어진 개발용 DB에 취소 시각 열이 없으면 더한다(아직 배포되지 않았지만 로컬 DB를 깨뜨리지 않기 위해).
+if (!db.prepare('PRAGMA table_info(retained_transactions)').all().some((c) => c.name === 'canceled_at')) {
+  db.exec('ALTER TABLE retained_transactions ADD COLUMN canceled_at TEXT');
+}
 
 module.exports = db;
