@@ -172,6 +172,14 @@ router.get('/admin/card-payments', requireAdmin, (req, res) => {
   res.json({ payments: cardPayments.listAll() });
 });
 
+router.post('/admin/card-payments/:id/retry-cancel', requireAdmin, async (req, res) => {
+  const row = cardPayments.findById(Number(req.params.id));
+  if (!row || !['cancel_failed', 'canceling'].includes(row.status)) return res.status(409).json({ error: '재취소 대상이 아닙니다.' });
+  const { retryCancellation } = require('../refundPurchase');
+  const result = await retryCancellation(row);
+  res.status(result.ok ? 200 : 409).json(result);
+});
+
 router.get('/admin/orders/cost-summary', requireAdmin, (req, res) => {
   const rows = orders.costSummaryByProduct().map((r) => ({
     productKey: r.product_key, count: r.count,

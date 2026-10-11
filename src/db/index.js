@@ -223,6 +223,9 @@ if (!cpColumns.includes('form_json')) db.exec('ALTER TABLE card_payments ADD COL
 if (!cpColumns.includes('job_id')) db.exec('ALTER TABLE card_payments ADD COLUMN job_id TEXT');
 // 광고 유입 경로(utm·fbclid·gclid, 처음/마지막 유입) — 캠페인별 매출 집계용. public/track.js가 모은다.
 if (!cpColumns.includes('attribution')) db.exec('ALTER TABLE card_payments ADD COLUMN attribution TEXT');
+if (!cpColumns.includes('confirmation_started_at')) db.exec('ALTER TABLE card_payments ADD COLUMN confirmation_started_at TEXT');
+if (!cpColumns.includes('cancel_idempotency_key')) db.exec('ALTER TABLE card_payments ADD COLUMN cancel_idempotency_key TEXT');
+if (!cpColumns.includes('start_claimed')) db.exec('ALTER TABLE card_payments ADD COLUMN start_claimed INTEGER NOT NULL DEFAULT 0');
 
 /* 2026-09-28 잔액 회수 — 사이트는 더 이상 잔액을 보관하지 않는다(약관 제6조). 예전 무통장입금·테스트로
    남은 잔액을 한 번만 0으로 돌리고 원장에 기록한다. user_version으로 한 번만 실행한다. */

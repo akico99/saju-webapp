@@ -59,6 +59,7 @@
     <div class="error-box hidden" id="errorBox" style="margin-top:16px;"></div>
     <div class="actions hidden" id="actions">
       <a class="primary hidden" id="goReport" href="#">리포트 생성 진행 보기</a>
+      <button class="ghost hidden" id="retryConfirm" type="button">같은 주문 결제 다시 확인</button>
       <a class="ghost" href="/mypage.html">마이페이지에서 보기</a>
     </div>
   </main>
@@ -83,13 +84,23 @@
       show('actions');
       return;
     }
-    try {
+
+
+    async function confirmOrder() {
+      try {
       const res = await fetch('/api/pay/confirm', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ paymentKey, orderId, amount })
       });
       const data = await res.json();
       if (!res.ok) {
+        if (data.code === 'confirmation_pending' || data.code === 'start_pending') {
+          ttl.textContent = '결제 확인이 진행 중이에요';
+          desc.textContent = '아직 결제 성공 여부를 확정하지 못했어요. 같은 주문으로 다시 확인할 수 있습니다.';
+          document.getElementById('retryConfirm').classList.remove('hidden');
+          show('actions');
+          return;
+        }
         ttl.textContent = data.canceled === false ? '결제는 됐지만 리포트를 시작하지 못했어요' : '결제가 완료되지 않았어요';
         desc.textContent = data.error || '알 수 없는 오류';
         if (data.code) { errorBox.textContent = `오류 코드: ${data.code}`; show('errorBox'); }
@@ -104,7 +115,12 @@
       ttl.textContent = '결제 확인 중 오류가 났어요';
       desc.textContent = e.message;
       show('actions');
+      document.getElementById('retryConfirm').classList.remove('hidden');
     }
+    }
+
+    document.getElementById('retryConfirm').addEventListener('click', confirmOrder);
+    await confirmOrder();
 
     function render(p, data) {
       ttl.textContent = data.alreadyConfirmed ? '이미 결제가 완료된 주문이에요' : '결제가 완료됐어요';

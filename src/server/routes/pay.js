@@ -17,12 +17,15 @@ const consents = require('../../db/consents');
 const { resolveProduct } = require('../products');
 const { HttpError } = require('../httpError');
 const { requireAuth } = require('../middleware/auth');
-const { CLIENT_KEY, SECRET_KEY, TEST_MODE, confirmPayment, cancelPayment } = require('../tossPayments');
+const { CLIENT_KEY, SECRET_KEY, TEST_MODE, confirmPayment, lookupPayment, cancelPayment } = require('../tossPayments');
 const newYearConfig = require('../../config/newYear');
 
 const router = express.Router();
 
 const TEST_LIMIT_PER_USER = Number(process.env.TEST_LIMIT_PER_DAY) || 3;
+function matchesConfirmedPayment(row, paymentKey, data) {
+  return !!data && data.status === 'DONE' && data.orderId === row.order_id && Number(data.totalAmount) === row.amount_krw && data.paymentKey === paymentKey;
+}
 
 router.get('/pay/config', requireAuth, (req, res) => {
   res.json({ clientKey: CLIENT_KEY, testMode: TEST_MODE });
@@ -67,8 +70,9 @@ router.post('/pay/confirm', requireAuth, async (req, res) => {
 
   const row = cardPayments.findByOrderId(orderId);
   if (!row || row.user_id !== req.session.userId) return res.status(404).json({ error: '주문을 찾을 수 없습니다.' });
-  // 새로고침 등으로 두 번 와도 두 번 시작하지 않는다.
+  // 새로고침/동시 요청은 같은 주문 한 번만 승인하고 시작한다.
   if (row.status === 'paid') return res.json({ payment: summarize(row), jobId: row.job_id, page: pageOf(row), alreadyConfirmed: true });
+  if (row.status === 'confirming') return res.status(202).json({ error: '결제 확인이 진행 중입니다. 같은 주문으로 다시 확인해 주세요.', code: 'confirmation_pending', retry: true });
   if (row.status !== 'ready') return res.status(409).json({ error: '이미 처리된 주문입니다.', code: row.status });
   // 가입 동의·주문 동의 기록이 없는 결제는 승인하지 않는다(토스 승인 전이라 청구되지 않는다).
   if (!consents.hasSignupConsent(row.user_id) || !consents.hasOrderConsent(row.user_id, orderId)) {
@@ -85,25 +89,48 @@ router.post('/pay/confirm', requireAuth, async (req, res) => {
     return res.status(429).json({ error: `테스트 모드에서는 계정당 24시간에 ${TEST_LIMIT_PER_USER}건까지만 결제할 수 있어요. 내일 다시 시도해 주세요.` });
   }
 
+  // 한 요청만 토스 승인을 시도한다.
+  const claimed = cardPayments.claimConfirmation(row, paymentKey);
+  if (!claimed) return res.status(202).json({ error: '결제 확인이 진행 중입니다. 같은 주문으로 다시 확인해 주세요.', code: 'confirmation_pending', retry: true });
+
   // 1) 토스 승인
   let approved;
   try {
     approved = await confirmPayment({ paymentKey, orderId, amount: row.amount_krw });
   } catch (e) {
-    cardPayments.markFailed(row, e.message);
-    return res.status(500).json({ error: '결제 승인 서버 호출 중 오류: ' + e.message });
+    approved = { ok: false, status: 0, data: { message: e.message } };
+  }
+  if (!approved.ok && (approved.status === 0 || approved.status >= 500 || approved.status === 409)) {
+    const checked = await lookupPayment(orderId);
+    const d = checked.data || {};
+    if (checked.ok && matchesConfirmedPayment(row, paymentKey, d)) {
+      approved = { ok: true, data: d };
+    } else {
+      cardPayments.releaseConfirmation(row, '승인 결과 미확인');
+      return res.status(202).json({ error: '결제 확인이 아직 진행 중입니다. 잠시 후 같은 주문으로 다시 확인해 주세요.', code: 'confirmation_pending', retry: true });
+    }
   }
   if (!approved.ok) {
-    cardPayments.markFailed(row, `${approved.data.code || approved.status} ${approved.data.message || ''}`);
+    cardPayments.releaseConfirmation(row, `${approved.data.code || approved.status} ${approved.data.message || ''}`);
     return res.status(approved.status).json({ error: approved.data.message || '결제 승인에 실패했습니다.', code: approved.data.code });
   }
 
   // 2) 결제 금액만큼 크레딧 → 3) 즉시 상품 시작(같은 금액 차감). 정상이면 잔액 변동 0.
   const paid = cardPayments.markPaidAndCredit(row, { paymentKey, method: approved.data.method, approvedAt: approved.data.approvedAt });
+  if (!paid) {
+    const current = cardPayments.findByOrderId(orderId);
+    return res.json({ payment: summarize(current), jobId: current.job_id, page: pageOf(current), alreadyConfirmed: true });
+  }
   const form = JSON.parse(row.form_json || '{}');
   const resolved = resolveProduct(productOf(row.product_key), form);
   try {
     if (!resolved) throw new HttpError(400, { error: '알 수 없는 상품입니다.' });
+    const activeOrder = require('../../db/orders').findPendingByUserAndProduct(row.user_id, row.product_key);
+    if (activeOrder) {
+      cardPayments.setJob(paid, activeOrder.job_id);
+      return res.json({ payment: summarize(cardPayments.findById(paid.id)), jobId: activeOrder.job_id, page: resolved.page, alreadyConfirmed: true });
+    }
+    if (!cardPayments.claimPaidStart(paid)) return res.status(202).json({ error: '결제는 확인됐고 리포트 시작을 확인하고 있어요. 마이페이지에서 잠시 후 확인해 주세요.', code: 'start_pending', retry: true });
     const payload = await resolved.start(row.user_id, form);
     cardPayments.setJob(paid, payload.jobId);
     return res.json({ payment: summarize(paid), jobId: payload.jobId, page: resolved.page, payload });
@@ -118,7 +145,9 @@ router.post('/pay/confirm', requireAuth, async (req, res) => {
     }
     // 차감 전에 실패했다 — 크레딧 회수 + 토스 결제 취소. 사용자에겐 이유를 그대로 보여준다.
     cardPayments.revertCredit(paid, reason);
-    const cancel = await cancelPayment(paymentKey, reason);
+    const cancelClaim = cardPayments.claimCancellation(cardPayments.findById(paid.id));
+    const cancel = cancelClaim ? await cancelPayment(paymentKey, reason, cancelClaim.cancel_idempotency_key) : { ok: false, data: { message: '취소 진행 중' } };
+    if (cancelClaim) cardPayments.finishRefund(cancelClaim, cancel.ok, cancel.data && cancel.data.message || reason);
     if (!cancel.ok) console.error('[pay] 결제 취소 실패 — 수동 취소 필요:', orderId, cancel.data);
     return res.status(status).json({
       error: `${reason} 결제는 ${cancel.ok ? '자동으로 취소되었습니다' : '취소 요청 중 문제가 생겨 운영자가 확인 후 환불합니다'}.`,
@@ -153,3 +182,4 @@ function summarize(row) {
 }
 
 module.exports = router;
+module.exports.matchesConfirmedPayment = matchesConfirmedPayment;

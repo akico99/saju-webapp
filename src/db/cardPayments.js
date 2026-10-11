@@ -12,11 +12,13 @@ const stmts = {
     VALUES (@userId, @orderId, @orderName, @amountKrw, @testMode, @productKey, @formJson, @attribution)
   `),
   findByOrderId: db.prepare('SELECT * FROM card_payments WHERE order_id = ?'),
+  claimConfirmation: db.prepare("UPDATE card_payments SET status='confirming', payment_key=?, confirmation_started_at=datetime('now') WHERE id=? AND status='ready'"),
+  releaseConfirmation: db.prepare("UPDATE card_payments SET status='ready', error=? WHERE id=? AND status='confirming'"),
   markPaid: db.prepare(`
     UPDATE card_payments SET status='paid', payment_key=@paymentKey, method=@method, approved_at=@approvedAt
-    WHERE id=@id
+    WHERE id=@id AND status IN ('ready','confirming')
   `),
-  setJob: db.prepare('UPDATE card_payments SET job_id=@jobId WHERE id=@id'),
+  setJob: db.prepare('UPDATE card_payments SET job_id=@jobId, form_json=NULL, attribution=NULL WHERE id=@id AND job_id IS NULL'),
   markFailed: db.prepare("UPDATE card_payments SET status='failed', error=@error WHERE id=@id"),
   markCanceled: db.prepare("UPDATE card_payments SET status='canceled', error=@error WHERE id=@id"),
   // 생성 실패 환불 — 이 주문(jobId)을 결제한 카드 행을 찾는다. 상품 시작 도중(주문 번호가 카드 행에
@@ -28,9 +30,16 @@ const stmts = {
       AND (job_id = @jobId OR (job_id IS NULL AND product_key = @productKey))
     ORDER BY (job_id = @jobId) DESC, id DESC LIMIT 1
   `),
-  claimForRefund: db.prepare("UPDATE card_payments SET status='refunding', job_id=COALESCE(job_id, @jobId) WHERE id=@id AND status='paid'"),
+  claimForRefund: db.prepare("UPDATE card_payments SET status='canceling', cancel_idempotency_key=COALESCE(cancel_idempotency_key, 'card-payment-cancel-' || id), job_id=COALESCE(job_id, @jobId) WHERE id=@id AND status='paid'"),
   finishRefund: db.prepare('UPDATE card_payments SET status=@status, error=@error WHERE id=@id'),
   findById: db.prepare('SELECT * FROM card_payments WHERE id = ?'),
+  listRecoverable: db.prepare("SELECT * FROM card_payments WHERE status IN ('confirming','canceling') OR (status='paid' AND job_id IS NULL) ORDER BY id LIMIT 100"),
+  expireReady: db.prepare("UPDATE card_payments SET status='failed', error='결제 입력 시간이 만료되었습니다.', form_json=NULL, attribution=NULL WHERE status='ready' AND created_at < datetime('now','-30 minutes')"),
+  reconnectJob: db.prepare("UPDATE card_payments SET job_id=?, form_json=NULL, attribution=NULL WHERE id=? AND status='paid' AND job_id IS NULL"),
+  claimStart: db.prepare("UPDATE card_payments SET start_claimed=1 WHERE id=? AND status='paid' AND job_id IS NULL AND start_claimed=0"),
+  markCanceling: db.prepare("UPDATE card_payments SET status='canceling', cancel_idempotency_key=COALESCE(cancel_idempotency_key, ?) WHERE id=? AND status IN ('paid','cancel_failed')"),
+  cancellationFinished: db.prepare("UPDATE card_payments SET status=?, error=? WHERE id=? AND status='canceling'"),
+  checkedCancellationFinished: db.prepare("UPDATE card_payments SET status='canceled', error=? WHERE id=? AND status IN ('cancel_failed','canceling')"),
   insertTx: db.prepare(`
     INSERT INTO point_transactions (user_id, delta, reason, ref_type, ref_id)
     VALUES (@userId, @delta, @reason, 'card_payment', @refId)
@@ -80,12 +89,12 @@ function findByOrderId(orderId) { return stmts.findByOrderId.get(orderId); }
     차감하므로 정상 흐름에서는 잔액이 남지 않는다 — "충전"이 아니라 결제 1건을 포인트 원장으로 통과시키는 것. */
 function markPaidAndCredit(row, { paymentKey, method, approvedAt }) {
   const tx = db.transaction(() => {
-    stmts.markPaid.run({ id: row.id, paymentKey, method: method || null, approvedAt: approvedAt || null });
+    if (stmts.markPaid.run({ id: row.id, paymentKey, method: method || null, approvedAt: approvedAt || null }).changes !== 1) return false;
     stmts.insertTx.run({ userId: row.user_id, delta: row.amount_krw, reason: `${row.test_mode ? '테스트 결제' : '카드 결제'}: ${row.order_name}`, refId: row.id });
     adjustPointBalance(row.user_id, row.amount_krw);
+    return true;
   });
-  tx();
-  return stmts.findByOrderId.get(row.order_id);
+  return tx() ? stmts.findByOrderId.get(row.order_id) : null;
 }
 
 /** 승인은 됐지만 상품을 시작하지 못했을 때 — 올렸던 크레딧을 되돌린다(결제 취소는 pay.js가 토스에 요청). */
@@ -93,12 +102,32 @@ function revertCredit(row, reason) {
   const tx = db.transaction(() => {
     stmts.insertTx.run({ userId: row.user_id, delta: -row.amount_krw, reason: `결제 취소 회수: ${reason}`.slice(0, 200), refId: row.id });
     adjustPointBalance(row.user_id, -row.amount_krw);
-    stmts.markCanceled.run({ id: row.id, error: String(reason || '').slice(0, 300) });
   });
   tx();
 }
 
-function setJob(row, jobId) { stmts.setJob.run({ id: row.id, jobId }); }
+function setJob(row, jobId) { stmts.setJob.run({ id: row.id, jobId }); return stmts.findById.get(row.id); }
+function claimConfirmation(row, paymentKey) { return stmts.claimConfirmation.run(paymentKey, row.id).changes === 1 ? stmts.findById.get(row.id) : null; }
+function releaseConfirmation(row, error) { return stmts.releaseConfirmation.run(String(error || '').slice(0, 300), row.id).changes === 1; }
+function expireReady() { return stmts.expireReady.run().changes; }
+function listRecoverable() { return stmts.listRecoverable.all(); }
+function recoverPaidWithoutJob(row, orders) {
+  if (!row || row.status !== 'paid' || row.job_id) return row;
+  const active = orders.findPendingByUserAndProduct(row.user_id, row.product_key);
+  if (active) stmts.reconnectJob.run(active.job_id, row.id);
+  return stmts.findById.get(row.id);
+}
+function claimPaidStart(row) { return stmts.claimStart.run(row.id).changes === 1; }
+function claimCancellation(row) {
+  const key = row.cancel_idempotency_key || `card-payment-cancel-${row.id}`;
+  return stmts.markCanceling.run(key, row.id).changes === 1 ? { ...stmts.findById.get(row.id), cancel_idempotency_key: key } : null;
+}
+function finishRefund(row, ok, detail) {
+  stmts.cancellationFinished.run(ok ? 'canceled' : 'cancel_failed', String(detail || '').slice(0, 300), row.id);
+}
+function finishCheckedCancellation(row, detail) {
+  stmts.checkedCancellationFinished.run(String(detail || '').slice(0, 300), row.id);
+}
 
 /** 생성 실패 환불용으로 카드 결제 행 하나를 선점한다(paid → refunding). 없거나 이미 다른 곳이
     처리 중이면 null. 선점은 원자적이라 같은 결제를 두 번 취소하지 않는다. */
@@ -110,10 +139,6 @@ function claimForRefund({ userId, jobId, productKey }) {
 }
 
 /** 토스 취소 결과를 적는다. 실패하면 'cancel_failed'로 남겨 관리자 화면에서 수동 환불 대상을 찾게 한다. */
-function finishRefund(row, ok, detail) {
-  stmts.finishRefund.run({ id: row.id, status: ok ? 'canceled' : 'cancel_failed', error: String(detail || '').slice(0, 300) });
-}
-
 function findById(id) { return stmts.findById.get(id); }
 function markFailed(row, error) { stmts.markFailed.run({ id: row.id, error: String(error || '').slice(0, 300) }); }
 function countPaidTest(userId) { return stmts.countPaidTest.get(userId).n; }
@@ -122,5 +147,6 @@ function listAll() { return stmts.listAll.all(); }
 
 module.exports = {
   create, findByOrderId, findById, markPaidAndCredit, revertCredit, setJob, markFailed, countPaidTest, listByUser, listAll,
-  claimForRefund, finishRefund, cleanAttribution
+  claimForRefund, finishRefund, finishCheckedCancellation, cleanAttribution, claimConfirmation, releaseConfirmation, expireReady,
+  recoverPaidWithoutJob, claimCancellation, claimPaidStart, listRecoverable
 };

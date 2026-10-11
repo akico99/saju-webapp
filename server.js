@@ -1,11 +1,12 @@
 'use strict';
 require('dotenv').config();
 const app = require('./src/server/app');
-const { recoverPendingOrders } = require('./src/jobs/recoverPendingOrders');
+const { recoverPendingOrders, recoverPaidPayments } = require('./src/jobs/recoverPendingOrders');
 const { backupDbToEmail } = require('./src/jobs/backupDb');
 
 // 새 요청을 받기 전에 먼저 실행 — 재시작 전 끝내지 못한 작업을 환불 처리한다.
 recoverPendingOrders();
+recoverPaidPayments().catch((e) => console.error('[결제 복구] 실패:', e.message));
 
 // DB 외부(관리자 메일함) 백업 — 부팅 2분 후 1회, 이후 24시간마다 반복. 배포가 잦은
 // 시기엔 배포할 때마다 최신 백업이 하나씩 쌓이고, 안정화된 뒤에는 하루 한 번씩 쌓인다.
