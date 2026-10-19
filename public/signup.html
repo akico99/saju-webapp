@@ -147,9 +147,28 @@
   const signupSubmit = document.getElementById('signupSubmit');
   const consent = ConsentBlock.mount(document.getElementById('consentBlock'), (ok) => { signupSubmit.disabled = !ok; });
   const params = new URLSearchParams(location.search);
-  const redirect = params.get('redirect') || '/mypage.html';
+  // 로그인 뒤 돌아갈 곳은 이 사이트 안의 경로만 받는다(//example.com 같은 외부 주소 차단).
+  function safeNext(raw) {
+    const s = typeof raw === 'string' ? raw : '';
+    return s.startsWith('/') && !s.startsWith('//') && !s.includes('\\') ? s : null;
+  }
+  const wanted = safeNext(params.get('redirect'));
+  const checkout = params.get('reason') === 'checkout';
+  // 간편 로그인도 원래 보던 상품 페이지로 돌아오게 한다.
+  if (wanted) {
+    document.querySelectorAll('.social-btn').forEach((a) => {
+      a.href = a.getAttribute('href') + '?redirect=' + encodeURIComponent(wanted);
+    });
+  }
+  // 결제하려다 넘어온 사람에게 입력이 사라지지 않았다고 먼저 알려준다.
+  if (checkout) {
+    document.querySelector('main h1').textContent = '가입하고 이어서 결제해요';
+    document.querySelector('main .lead').textContent = '로그인하면 보던 화면으로 바로 돌아가요. 입력하신 내용도 그대로 남아 있어요.';
+  }
+  const reasonQs = checkout ? '&reason=checkout' : '';
+  const redirect = wanted || '/mypage.html';
   const switchToLogin = document.getElementById('switchToLogin');
-  if (switchToLogin) switchToLogin.href = '/login.html?redirect=' + encodeURIComponent(redirect);
+  if (switchToLogin) switchToLogin.href = '/login.html?redirect=' + encodeURIComponent(redirect) + reasonQs;
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();

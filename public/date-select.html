@@ -569,7 +569,7 @@
           return;
         }
         setFormBusy(false);
-        if (res.status === 401) { location.href = '/login.html?redirect=' + encodeURIComponent(location.pathname + location.search); return; }
+        if (res.status === 401) { PayFlow.toLogin(form); return; }
         if (res.status === 402) { PayFlow.onInsufficient('date_select', body, data, (m) => { errorBox.textContent = m; errorBox.classList.remove('hidden'); }); return; }
         errorBox.textContent = data.error || '요청 실패';
         errorBox.classList.remove('hidden');

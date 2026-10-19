@@ -7,6 +7,7 @@ const passwordResets = require('../../db/passwordResets');
 const emailVerifications = require('../../db/emailVerifications');
 const consents = require('../../db/consents');
 const { resolveSocialUser } = require('../socialAccounts');
+const { safeNext } = require('../loginReturn');
 const { sendEmail } = require('../../email/resend');
 const { passwordResetEmail, verifyEmailEmail } = require('../../email/templates');
 const { requireAuth } = require('../middleware/auth');
@@ -16,10 +17,25 @@ const router = express.Router();
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:4500';
 
-/** 소셜 로그인 뒤 갈 곳 — 현재 약관에 동의하지 않았으면(처음 가입했거나 약관이 바뀐 경우) 동의 페이지가 먼저다. */
-function afterSocialLogin(user) {
-  const next = user.birth_year ? '/' : '/mypage.html';
+/** 소셜 로그인 뒤 갈 곳 — 상품 페이지에서 넘어왔으면 그 페이지로 돌려보낸다(입력값은 브라우저가 복원한다).
+   현재 약관에 동의하지 않았으면(처음 가입했거나 약관이 바뀐 경우) 동의 페이지가 먼저다. */
+function afterSocialLogin(user, wanted) {
+  const next = wanted || (user.birth_year ? '/' : '/mypage.html');
   return consents.hasSignupConsent(user.id) ? next : '/consent.html?next=' + encodeURIComponent(next);
+}
+
+/** 소셜 로그인 시작 시 돌아갈 곳을 세션에 적어둔다. 제공사를 다녀오는 동안 쿼리는 사라지기 때문이다. */
+function rememberNext(req) {
+  const next = safeNext(req.query.redirect);
+  if (next) req.session.oauthNext = next;
+  else delete req.session.oauthNext;
+}
+
+/** 세션을 새로 만들기 전에 꺼낸다 — regenerate 뒤에는 남아 있지 않다. */
+function takeNext(req) {
+  const next = safeNext(req.session.oauthNext);
+  delete req.session.oauthNext;
+  return next;
 }
 
 function withConsent(row) {
@@ -206,6 +222,7 @@ router.get('/auth/naver/start', (req, res) => {
   }
   const state = crypto.randomBytes(16).toString('hex');
   req.session.naverOAuthState = state;
+  rememberNext(req);
 
   const url = new URL('https://nid.naver.com/oauth2.0/authorize');
   url.searchParams.set('response_type', 'code');
@@ -257,10 +274,11 @@ router.get('/auth/naver/callback', async (req, res) => {
       return res.redirect('/login.html?error=' + encodeURIComponent('이용이 제한된 계정입니다. 문의: sooky2001@gmail.com'));
     }
 
+    const wanted = takeNext(req);
     req.session.regenerate((err) => {
       if (err) return res.redirect('/login.html?error=' + encodeURIComponent('로그인 처리 중 오류가 발생했어요.'));
       req.session.userId = user.id;
-      res.redirect(afterSocialLogin(user));
+      res.redirect(afterSocialLogin(user, wanted));
     });
     return;
   } catch (e) {
@@ -275,6 +293,7 @@ router.get('/auth/google/start', (req, res) => {
   }
   const state = crypto.randomBytes(16).toString('hex');
   req.session.googleOAuthState = state;
+  rememberNext(req);
 
   const url = new URL('https://accounts.google.com/o/oauth2/v2/auth');
   url.searchParams.set('response_type', 'code');
@@ -327,10 +346,11 @@ router.get('/auth/google/callback', async (req, res) => {
       return res.redirect('/login.html?error=' + encodeURIComponent('이용이 제한된 계정입니다. 문의: sooky2001@gmail.com'));
     }
 
+    const wanted = takeNext(req);
     req.session.regenerate((err) => {
       if (err) return res.redirect('/login.html?error=' + encodeURIComponent('로그인 처리 중 오류가 발생했어요.'));
       req.session.userId = user.id;
-      res.redirect(afterSocialLogin(user));
+      res.redirect(afterSocialLogin(user, wanted));
     });
     return;
   } catch (e) {
@@ -345,6 +365,7 @@ router.get('/auth/kakao/start', (req, res) => {
   }
   const state = crypto.randomBytes(16).toString('hex');
   req.session.kakaoOAuthState = state;
+  rememberNext(req);
 
   const url = new URL('https://kauth.kakao.com/oauth/authorize');
   url.searchParams.set('response_type', 'code');
@@ -398,10 +419,11 @@ router.get('/auth/kakao/callback', async (req, res) => {
       return res.redirect('/login.html?error=' + encodeURIComponent('이용이 제한된 계정입니다. 문의: sooky2001@gmail.com'));
     }
 
+    const wanted = takeNext(req);
     req.session.regenerate((err) => {
       if (err) return res.redirect('/login.html?error=' + encodeURIComponent('로그인 처리 중 오류가 발생했어요.'));
       req.session.userId = user.id;
-      res.redirect(afterSocialLogin(user));
+      res.redirect(afterSocialLogin(user, wanted));
     });
     return;
   } catch (e) {

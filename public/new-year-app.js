@@ -135,7 +135,7 @@ form.addEventListener('submit', async (event) => {
     const data = await response.json();
     if (!response.ok) {
       if (data.code === 'already_pending' && data.jobId) { poll(data.jobId); return; }
-      if (response.status === 401) { location.href = '/login.html?redirect=' + encodeURIComponent(location.pathname + location.search); return; }
+      if (response.status === 401) { PayFlow.toLogin(form); return; }
       if (response.status === 402) { progress.classList.add('hidden'); busy(false); await PayFlow.onInsufficient('newyear', body, data, showError); return; }
       throw new Error(data.error || '리포트를 시작하지 못했습니다.');
     }

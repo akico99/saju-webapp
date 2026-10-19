@@ -290,7 +290,7 @@ form.addEventListener('submit', async (e) => {
       }
       progressBlock.classList.add('hidden');
       setFormBusy(false);
-      if (res.status === 401) { location.href = '/login.html?redirect=' + encodeURIComponent(location.pathname + location.search); return; }
+      if (res.status === 401) { PayFlow.toLogin(form); return; }
       if (res.status === 402) { progressBlock.classList.add('hidden'); PayFlow.onInsufficient('deep', body, data, showError); return; }
       showError(data.error || '요청 실패');
       return;
