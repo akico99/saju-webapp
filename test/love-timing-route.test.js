@@ -29,12 +29,17 @@ const result = JSON.parse(execFileSync(process.execPath, ['-e', `
       const ok = await post('/api/love/preview', form);
       const noGender = await post('/api/love/preview', { ...form, gender: '' });
       const badDate = await post('/api/love/preview', { ...form, year: '' });
+      const invalid = {};
+      for (const [k, v, extra] of [['month', '13'], ['day', '31', { month: '2' }], ['hour', '25'], ['minute', '99'], ['day', '5.5'], ['situation', '__proto__'], ['situation', 'toString']]) {
+        invalid[k + '=' + v] = (await post('/api/love/preview', { ...form, [k]: v, ...(extra || {}) })).status;
+      }
       const anon = await post('/api/love', form);
       const users = require('./src/db/users');
       const u = users.createUser({ email: 'love@test.local', passwordHash: 'x', name: '수달' });
       let started = null;
       try { await require('./src/server/routes/love').start(u.id, form); } catch (e) { started = { status: e.status, code: e.body && e.body.code }; }
-      console.log(JSON.stringify({ ok, noGender, badDate, anon, started }));
+      const parsedName = require('./src/server/routes/love').parseBody({ ...form, name: '<b>x</b>\\n#수달' }).name;
+      console.log(JSON.stringify({ ok, noGender, badDate, invalid, anon, started, parsedName }));
       // 열린 연결을 먼저 닫고 나간다 — 바로 exit하면 Windows에서 libuv 핸들 정리 중 비정상 종료한다.
       server.closeAllConnections();
       server.close();
@@ -56,6 +61,20 @@ test('무료 첫 장은 성별·생년월일이 없으면 400과 안내를 준�
   assert.match(result.noGender.body.error, /성별/);
   assert.equal(result.badDate.status, 400);
   assert.match(result.badDate.body.error, /생년월일/);
+});
+
+test('없는 날짜·범위 밖 시각·소수·기본 속성 이름 상황은 400이다', () => {
+  for (const [k, status] of Object.entries(result.invalid)) assert.equal(status, 400, k);
+});
+
+test('무료 첫 장은 유료 12개월을 고정할 시작 달과 약속하지 않는 계절 문구를 준다', () => {
+  assert.match(result.ok.body.reading.startYm, /^\d{4}-\d{1,2}$/);
+  assert.match(result.ok.body.reading.seasonLead, /이 계절 밖에 있을 수도/);
+});
+
+test('이름에서 태그 기호·줄바꿈·# 을 걸러 주문 이름에 넣는다', () => {
+  assert.doesNotMatch(result.parsedName, /[<>\n#]/);
+  assert.match(result.parsedName, /수달/);
 });
 
 test('유료 생성은 로그인이 필요하고, 잔액이 없으면 카드 결제로 넘기는 402를 준다', () => {

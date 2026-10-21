@@ -53,6 +53,8 @@
   }
 
   function fmtUsd(v) { return v == null ? '-' : '$' + v.toFixed(3); }
+  // 주문 이름·이메일은 사용자 입력이다 — 관리자 화면에서 스크립트로 실행되지 않게 이스케이프한다.
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   function fmtKrw(v) { return v == null ? '-' : Math.round(v).toLocaleString('ko-KR') + '원'; }
   function fmtBytes(n) {
     if (n == null) return '';
@@ -97,8 +99,8 @@
     tr.innerHTML = `
       <td>#${o.id}</td>
       <td>${o.createdAt.slice(0, 16).replace('T', ' ')}</td>
-      <td>${o.label || o.productKey}</td>
-      <td style="color:var(--muted);font-size:11px;">${o.userEmail}</td>
+      <td>${esc(o.label || o.productKey)}</td>
+      <td style="color:var(--muted);font-size:11px;">${esc(o.userEmail)}</td>
       <td>${fmtKrw(o.priceKrw)}</td>
       <td>${fmtUsd(o.llmCostUsd)}</td>
       <td class="margin ${margin != null && margin >= 0 ? 'good' : 'bad'}">${fmtKrw(margin)}</td>

@@ -33,9 +33,26 @@ test('연애 시기 화면 스크립트는 문법 오류가 없고 결제 흐름
   assert.doesNotMatch(js, /innerHTML\s*=\s*[^'"`;]*(name|reading\.)/); // 사용자·응답 문자열을 innerHTML로 넣지 않는다
 });
 
+test('화면은 서버의 계절 문구를 그대로 쓰고, 무료 첫 장의 시작 달을 결제 요청에 싣는다', () => {
+  const js = read('love-app.js');
+  assert.match(js, /r\.seasonLead/);
+  assert.doesNotMatch(js, /그 안에서 정확히/);
+  assert.match(js, /startYm/);
+});
+
 test('마이페이지는 PDF가 없는 연애 시기 리포트에 보기 링크를 준다', () => {
   const html = read('mypage.html');
   assert.match(html, /love_timing/);
   assert.match(html, /\/love\.html\?jobId=/);
+  // 다운로드 처리기(.download-link)가 보기 링크까지 잡아 /api/download/undefined 를 부르지 않게 클래스를 나눈다.
+  assert.match(html, /class="view-link" href="\/love\.html\?jobId=/);
+});
+
+test('주문 이름(사용자 입력 포함)은 마이페이지와 관리자 주문 화면에서 이스케이프된다', () => {
+  for (const f of ['mypage.html', 'admin-orders.html']) {
+    const html = read(f);
+    assert.doesNotMatch(html, /\$\{o\.label \|\| o\.productKey\}/, f);
+    assert.match(html, /esc\(o\.label \|\| o\.productKey\)/, f);
+  }
 });
 

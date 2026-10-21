@@ -136,6 +136,8 @@
   };
 
   let ordersPollTimer = null;
+  // 주문 이름에는 사용자가 적은 이름이 들어간다 — innerHTML에 넣기 전에 이스케이프한다.
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
   async function loadOrders() {
     clearTimeout(ordersPollTimer);
@@ -153,13 +155,13 @@
       const tr = document.createElement('tr');
       // 연애 시기 리포트(love_timing)는 PDF 없이 웹 화면으로만 준다 — 다운로드 대신 결과 화면으로 연결한다.
       const action = (o.status === 'done' && o.productKey === 'love_timing')
-        ? `<a class="download-link" href="/love.html?jobId=${encodeURIComponent(o.jobId)}">보기</a>`
+        ? `<a class="view-link" href="/love.html?jobId=${encodeURIComponent(o.jobId)}">보기</a>`
         : (o.status === 'done' && o.hasFile)
           ? `<button type="button" class="download-link" data-job-id="${o.jobId}">다운로드</button>`
           : (o.inProgress ? '생성 중...' : '-');
       tr.innerHTML = `
         <td>#${o.orderNo}</td>
-        <td>${o.label || o.productKey}</td>
+        <td>${esc(o.label || o.productKey)}</td>
         <td>${o.createdAt.slice(0, 16).replace('T', ' ')}</td>
         <td><span class="status ${ORDER_STATUS_CLASS[o.status] || ''}">${o.statusLabel}</span></td>
         <td>${action}</td>

@@ -17,6 +17,7 @@
   const errorBlock = document.getElementById('errorBlock');
   const SITUATION_LABEL = { single: '솔로', some: '썸', dating: '연애 중', breakup: '이별 후' };
   let step = 0;
+  let startYm = null; // 무료 첫 장의 12개월 시작 달 — 결제 요청에 실어 같은 12개월로 풀이를 받는다
 
   const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
   const field = (name) => form.elements[name];
@@ -38,13 +39,19 @@
   function validate(i) {
     if (i === 0 && !field('situation').value) return '지금 상황을 하나 골라 주세요.';
     if (i === 1 && !field('gender').value) return '성별을 골라 주세요. 연애운 계산에 쓰여요.';
+    const intIn = (v, lo, hi) => /^\d+$/.test(String(v).trim()) && Number(v) >= lo && Number(v) <= hi;
     if (i === 2) {
-      const y = Number(field('year').value), m = Number(field('month').value), d = Number(field('day').value);
-      if (!(y >= 1920 && y <= 2015) || !(m >= 1 && m <= 12) || !(d >= 1 && d <= 31)) return '태어난 해·달·날을 숫자로 적어 주세요.';
+      const yv = field('year').value, mv = field('month').value, dv = field('day').value;
+      if (!intIn(yv, 1900, new Date().getFullYear()) || !intIn(mv, 1, 12) || !intIn(dv, 1, 31)) return '태어난 해·달·날을 숫자로 적어 주세요.';
+      if (field('calendar').value !== '음력') {
+        const d = new Date(Date.UTC(Number(yv), Number(mv) - 1, Number(dv)));
+        if (d.getUTCMonth() !== Number(mv) - 1) return `${mv}월에는 ${dv}일이 없어요. 날짜를 다시 확인해 주세요.`;
+      }
     }
     if (i === 3 && !field('hourUnknown').checked) {
-      const h = field('hour').value;
-      if (h === '' || Number(h) < 0 || Number(h) > 23) return '태어난 시(0~23)를 적거나 "시각을 몰라요"를 골라 주세요.';
+      if (!intIn(field('hour').value, 0, 23)) return '태어난 시(0~23)를 적거나 "시각을 몰라요"를 골라 주세요.';
+      const mi = field('minute').value;
+      if (mi !== '' && !intIn(mi, 0, 59)) return '태어난 분은 0~59로 적어 주세요. 모르면 비워 두세요.';
     }
     return null;
   }
@@ -93,7 +100,8 @@
       isLeap: field('isLeap').checked,
       year: field('year').value, month: field('month').value, day: field('day').value,
       hour: field('hour').value, minute: field('minute').value,
-      hourUnknown: field('hourUnknown').checked
+      hourUnknown: field('hourUnknown').checked,
+      startYm
     };
   }
 
@@ -138,8 +146,8 @@
       bars.appendChild(row);
     });
 
-    const best = r.seasons.reduce((a, s) => (s.avg > a.avg ? s : a), r.seasons[0]);
-    document.getElementById('seasonLead').textContent = `계절로 묶어 보면 ${best.label}의 흐름이 가장 좋아요. 그 안에서 정확히 어느 달인지가 전체 풀이의 첫 장이에요.`;
+    startYm = r.startYm || null;
+    document.getElementById('seasonLead').textContent = r.seasonLead;
     const seasons = document.getElementById('seasons');
     seasons.replaceChildren();
     r.seasons.forEach((s) => {

@@ -16,9 +16,21 @@ function probe(enabled) {
           statuses[route] = (await fetch(base + route, { method: route.startsWith('/api/') ? 'POST' : 'GET', headers: { 'Content-Type': 'application/json' }, body: route.startsWith('/api/') ? '{}' : undefined })).status;
         }
         const { resolveProduct } = require('./src/server/products');
+        // fetch는 /./ 와 .. 를 미리 정리해 버리므로 원래 경로를 그대로 보내 정적 파일 처리기의 정규화 우회를 확인한다.
+        const http = require('http');
+        const raw = (p, method) => new Promise((resolve) => {
+          const req = http.request({ host: '127.0.0.1', port: server.address().port, path: p, method: method || 'GET', headers: { 'Content-Type': 'application/json', Connection: 'close' } }, (res) => { res.resume(); resolve(res.statusCode); });
+          req.on('error', () => resolve(-1));
+          if (method === 'POST') req.write('{"situation":"single","gender":"여","year":"1995","month":"5","day":"15"}');
+          req.end();
+        });
+        const rawStatuses = {};
+        for (const p of ['//love.html', '/./love.html', '/x/../love.html', '/%2e/love.html', '/./love-app.js', '//love.css', '/.//love.html', '/./new-year.html', '//new-year-app.js']) rawStatuses[p] = await raw(p);
+        for (const p of ['/api//love/preview', '/api/./love/preview', '//api/love/preview', '/api//love']) rawStatuses['POST ' + p] = await raw(p, 'POST');
         const r = resolveProduct('love', { name: '수달' });
         console.log(JSON.stringify({
           statuses,
+          rawStatuses,
           sellable: require('./src/db/points').SELLABLE.has('love_timing'),
           price: require('./src/db/points').PRICES.love_timing,
           catalog: require('./src/server/routes/tracking').productCatalog().love_timing || null,
@@ -40,6 +52,7 @@ test('꺼진 연애 시기 리포트는 페이지·정적 파일·API와 인코�
 });
 
 test('꺼진 연애 시기 리포트는 판매·결제 준비·추적 카탈로그에서 빠진다', () => {
+  for (const [route, status] of Object.entries(off.rawStatuses)) assert.equal(status, 404, '꺼짐 우회 경로 ' + route);
   assert.equal(off.sellable, false);
   assert.equal(off.catalog, null);
   assert.equal(off.resolved, null);

@@ -6,7 +6,7 @@
 const express = require('express');
 const crypto = require('crypto');
 const { computeSaju } = require('../../engine/index');
-const { buildLovePreview, situationOf } = require('../../engine/loveTiming');
+const { buildLovePreview, situationOf, validateBirth } = require('../../engine/loveTiming');
 const { generateLoveReading, toPlainText } = require('../../llm/loveTimingReading');
 const { loveWebHtml } = require('../../pdf/loveVisual');
 const { costUsd } = require('../../llm/client');
@@ -19,23 +19,33 @@ const loveTimingConfig = require('../../config/loveTiming');
 
 const router = express.Router();
 
+// 꺼져 있으면 이 라우터의 모든 경로가 404다. app.js 게이트를 어떤 경로 변형으로 비켜 와도 여기서 한 번 더 막는다.
+router.use('/love', (req, res, next) => (loveTimingConfig.enabled ? next() : res.sendStatus(404)));
+
+// 숫자 칸 — 빈 값은 NaN으로 두고 검사(validateBirth)가 거른다. "5.5"는 소수로 남아 정수 검사에 걸린다.
+const num = (v) => (v === '' || v == null ? NaN : Number(v));
+
 function parseBody(body) {
   body = body || {};
-  const situation = String(body.situation || '');
+  const situation = typeof body.situation === 'string' ? body.situation : '';
   situationOf(situation);
-  const year = Number(body.year), month = Number(body.month), day = Number(body.day);
+  const year = num(body.year), month = num(body.month), day = num(body.day);
   if (!year || !month || !day) throw new Error('생년월일을 올바르게 입력해주세요.');
   const unknown = body.hourUnknown === true || body.hourUnknown === 'true' || body.hourUnknown === 'on';
-  const hour = !unknown && body.hour !== '' && body.hour != null ? Number(body.hour) : null;
-  const minute = !unknown && body.minute !== '' && body.minute != null ? Number(body.minute) : 0;
+  const hour = !unknown && body.hour !== '' && body.hour != null ? num(body.hour) : null;
+  const minute = hour != null && body.minute !== '' && body.minute != null ? num(body.minute) : 0;
   const gender = body.gender === '여' || body.gender === '남' ? body.gender : null;
   if (!gender) throw new Error('성별을 골라 주세요. 연애운 계산에 쓰여요.');
-  return {
+  const parsed = {
     situation,
-    name: String(body.name || '').slice(0, 30),
+    // 이름은 주문 이름·화면 표시·프롬프트에 들어간다. 태그 기호·제어문자·줄바꿈·마크다운 기호를 뺀다.
+    name: String(body.name || '').replace(/[\u0000-\u001f\u007f<>#*`]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 20),
     gender,
-    birth: { year, month, day, hour, minute, gender, isLunar: body.calendar === '음력', isLeap: !!body.isLeap }
+    startYm: typeof body.startYm === 'string' ? body.startYm.slice(0, 7) : null,
+    birth: { year, month, day, hour, minute, gender, isLunar: body.calendar === '음력', isLeap: body.isLeap === true || body.isLeap === 'on' || body.isLeap === 'true' }
   };
+  validateBirth(parsed.birth);
+  return parsed;
 }
 
 router.post('/love/preview', (req, res) => {
@@ -75,7 +85,7 @@ async function startLove(userId, body) {
   }
 
   orders.updateStatus(jobId, 'generating');
-  generateLoveReading(engineResult, person, parsed.situation)
+  generateLoveReading(engineResult, person, parsed.situation, new Date(), { startYm: parsed.startYm })
     .then((reading) => {
       orders.markDone(jobId, {
         resultPath: null, cardPath: null, llmCostUsd: costUsd(reading.usage),
@@ -93,3 +103,4 @@ router.post('/love', requireAuth, handle(startLove));
 
 module.exports = router;
 module.exports.start = startLove;
+module.exports.parseBody = parseBody;

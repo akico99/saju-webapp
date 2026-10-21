@@ -40,6 +40,9 @@ app.use((req, res, next) => {
   // 정적 미들웨어도 URL을 디코딩하므로 같은 경로로 검사한다.
   let requestPath;
   try { requestPath = decodeURIComponent(req.path); } catch (e) { return res.sendStatus(400); }
+  // 정적 파일 처리기는 //, /./, /x/../ 를 정리한 뒤 파일을 찾는다. 같은 기준으로 정리한 경로를 검사해야
+  // "/./love.html" 같은 주소로 게이트를 돌아가지 못한다.
+  requestPath = path.posix.normalize(requestPath.replace(/\\/g, '/').replace(/\/{2,}/g, '/'));
   if (!newYearConfig.enabled && (/^\/new-year(?:\.html|-app\.js)?\/?$/i.test(requestPath) || /^\/api\/newyear(?:\/|$)/i.test(requestPath))) {
     return res.sendStatus(404);
   }
