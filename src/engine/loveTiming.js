@@ -22,9 +22,17 @@ const SITUATIONS = {
 const STRONG = 65;
 
 function seoulYearMonth(now) {
-  const parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul', year: 'numeric', month: 'numeric' }).formatToParts(now);
+  const parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul', year: 'numeric', month: 'numeric', day: 'numeric' }).formatToParts(now);
   const pick = (type) => Number(parts.find((p) => p.type === type).value);
-  return { year: pick('year'), month: pick('month') };
+  return { year: pick('year'), month: pick('month'), day: pick('day') };
+}
+
+/* 12개월의 첫 달. 달의 절반이 지났으면 다음 달부터 센다 — "가장 강한 달은 이번 달"이라는 답이
+   남은 열흘짜리 달을 가리키면 산 사람이 쓸 수 없다. */
+function firstMonth(now) {
+  const { year, month, day } = seoulYearMonth(now);
+  if (day <= 15) return { year, month };
+  return month === 12 ? { year: year + 1, month: 1 } : { year, month: month + 1 };
 }
 
 function rangeLabel(a, b) {
@@ -38,7 +46,7 @@ function levelOf(avg) {
 }
 
 function buildLoveTiming(engine, gender, now = new Date()) {
-  const { year, month } = seoulYearMonth(now);
+  const { year, month } = firstMonth(now);
   const months = monthlyFlow(engine, { fromYear: year, fromMonth: month, count: 12, topic: 'love', gender });
   const top3 = months
     .map((m, index) => ({ ...m, index }))
@@ -95,4 +103,4 @@ function buildLovePreview(birth, situationKey, now = new Date()) {
   };
 }
 
-module.exports = { SITUATIONS, STRONG, buildLoveTiming, buildLovePreview, situationOf, seoulYearMonth };
+module.exports = { SITUATIONS, STRONG, buildLoveTiming, buildLovePreview, situationOf, seoulYearMonth, levelOf };
