@@ -84,13 +84,19 @@ body.otter-stage.done .app { background: var(--bg); padding-bottom: 40px; }
 .love-season b { display: block; margin-top: 8px; font-size: 12.5px; color: var(--ink); }
 .love-season small { display: block; font-size: 11px; line-height: 1.35; color: var(--muted-2); word-break: keep-all; }
 .love-teaser { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 18px; padding: 14px 16px; border-radius: 14px; background: #111d31; color: #fff; font-size: 13.5px; }
-.love-teaser b { font-family: var(--font-serif); font-size: 18px; letter-spacing: .06em; filter: blur(3px); user-select: none; }
+.love-teaser span { flex: 1 1 auto; min-width: 0; word-break: keep-all; }
+.love-teaser b { flex: 0 0 auto; white-space: nowrap; font-family: var(--font-serif); font-size: 17px; letter-spacing: .04em; filter: blur(3px); user-select: none; }
 
 .love-locked-list { margin: 14px 0 0; padding: 0; list-style: none; counter-reset: lk; }
 .love-locked-list li { position: relative; padding: 12px 0 12px 34px; border-top: 1px solid var(--fr-rule); font-size: 15px; font-weight: 700; color: var(--ink); word-break: keep-all; }
 .love-locked-list li::before { content: ''; position: absolute; left: 4px; top: 14px; width: 16px; height: 16px; background: no-repeat center/16px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a6412' stroke-width='2' stroke-linecap='round'%3E%3Crect x='5' y='11' width='14' height='9' rx='2'/%3E%3Cpath d='M8 11V8a4 4 0 0 1 8 0v3'/%3E%3C/svg%3E"); }
 
-.love-unlock { position: sticky; bottom: 0; z-index: 5; margin: 18px -20px 0; padding: 18px 20px max(18px, env(safe-area-inset-bottom)); background: #111d31; color: #fff; border-radius: 22px 22px 0 0; box-shadow: 0 -10px 30px rgba(17,29,49,.18); }
+.love-page .fr-verdict { max-width: none; font-size: clamp(27px, 7.6vw, 36px); }
+.love-unlock { margin: 18px 0 0; padding: 20px 20px 18px; background: #111d31; color: #fff; border-radius: 22px; scroll-margin-bottom: 90px; }
+/* 스크롤 내내 보이는 한 줄짜리 버튼 — 누르면 아래 결제 안내로 내려간다. 안내 상자가 보이면 숨긴다. */
+.love-sticky { position: sticky; bottom: 0; z-index: 5; margin: 0 -20px; padding: 10px 16px max(12px, env(safe-area-inset-bottom)); background: linear-gradient(180deg, rgba(255,249,239,0), var(--bg) 30%); transition: opacity .2s; }
+.love-sticky.away { opacity: 0; pointer-events: none; }
+.love-sticky button { width: 100%; height: 54px; margin: 0; border: 0; border-radius: 14px; background: #111d31; color: #fff; font-size: 15.5px; font-weight: 800; font-family: inherit; cursor: pointer; box-shadow: 0 8px 22px rgba(17,29,49,.22); }
 .love-unlock-kicker { margin: 0; color: #e2c27a; font-size: 11.5px; font-weight: 800; letter-spacing: .14em; }
 .love-unlock-title { margin: 6px 0 12px; font-family: var(--font-serif); font-size: 20px; line-height: 1.4; word-break: keep-all; }
 .love-unlock .point-notice { margin: 0 0 8px; background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.14); color: rgba(255,255,255,.86); }

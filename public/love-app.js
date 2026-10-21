@@ -198,6 +198,20 @@
     errorBlock.textContent = msg;
     errorBlock.classList.remove('hidden');
   }
+  // 한 줄 고정 버튼은 결제 안내 상자로 데려가기만 한다. 안내 상자가 화면에 들어오면 숨긴다.
+  const unlockBox = document.querySelector('.love-unlock');
+  const stickyBar = document.getElementById('stickyBar');
+  document.getElementById('stickyUnlock').addEventListener('click', () => unlockBox.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver((entries) => entries.forEach((en) => stickyBar.classList.toggle('away', en.isIntersecting)), { threshold: 0.2 }).observe(unlockBox);
+  }
+  // 가격 안내(point-notice.js)의 "로그인하고 계속하기" 링크도 입력값을 저장하고 넘어가게 한다.
+  document.getElementById('pointNotice').addEventListener('click', (e) => {
+    const a = e.target.closest('a[href^="/login.html"]');
+    if (!a) return;
+    e.preventDefault();
+    PayFlow.toLogin(form);
+  });
   unlockBtn.addEventListener('click', async () => {
     errorBlock.classList.add('hidden');
     const b = body();
@@ -312,18 +326,24 @@
     startPaid(resumed.jobId);
   } else {
     show(0);
-    // pay-flow.js가 load 직후 입력값을 복원한다. 그 뒤에 값이 다 차 있으면 로그인하고 돌아온 것 —
-    // 단계를 다시 묻지 않고 무료 첫 장을 바로 다시 연다.
-    window.addEventListener('load', () => setTimeout(async () => {
-      const b = body();
-      if (!b.situation || !b.gender || !b.year) return;
+    // 새로고침 때 브라우저가 되살린 값도 버튼 선택 상태에 맞춰 둔다.
+    const syncButtons = (b) => {
       situationBtns.forEach((x) => x.classList.toggle('on', x.dataset.situation === b.situation));
       genderBtns.forEach((x) => x.classList.toggle('on', x.dataset.gender === b.gender));
       setCalendar(b.calendar || '양력');
-      if (await preview(b)) {
-        document.getElementById('resumeNote').classList.remove('hidden');
-        unlockBtn.scrollIntoView({ block: 'center' });
-      }
+    };
+    syncButtons(body());
+    // 로그인하고 돌아오면 pay-flow.js가 load 직후 입력값을 복원하고 폼 안에 안내문(.form-resume-note)을
+    // 남긴다. 그 표시가 있을 때만 단계를 다시 묻지 않고 무료 첫 장을 바로 연다.
+    window.addEventListener('load', () => setTimeout(async () => {
+      const restoredNote = form.querySelector('.form-resume-note');
+      if (!restoredNote) return;
+      restoredNote.remove();
+      const b = body();
+      if (!b.situation || !b.gender || !b.year) return;
+      syncButtons(b);
+      // 맨 위의 안내문부터 보이게 둔다. 결제 안내로는 아래 고정 버튼이 데려간다.
+      if (await preview(b)) document.getElementById('resumeNote').classList.remove('hidden');
     }, 60));
   }
 })();
