@@ -22,7 +22,7 @@ function analyze(input, lib) {
 
   let solar;
   if (isLunar) {
-    const lunar = Lunar.fromYmdHms(year, month, day, hour, minute, 0);
+    const lunar = Lunar.fromYmdHms(year, isLeap ? -month : month, day, hour, minute, 0); // 윤달은 음수 월
     solar = lunar.getSolar();
   } else {
     solar = Solar.fromYmdHms(year, month, day, hour, minute, 0);

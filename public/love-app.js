@@ -46,6 +46,7 @@
       if (field('calendar').value !== '음력') {
         const d = new Date(Date.UTC(Number(yv), Number(mv) - 1, Number(dv)));
         if (d.getUTCMonth() !== Number(mv) - 1) return `${mv}월에는 ${dv}일이 없어요. 날짜를 다시 확인해 주세요.`;
+        if (d.getTime() > Date.now()) return '아직 오지 않은 날짜예요. 생년월일을 다시 확인해 주세요.';
       }
     }
     if (i === 3 && !field('hourUnknown').checked) {

@@ -83,20 +83,27 @@ function situationOf(key) {
 /* 서버 쪽 입력 검사 — 엔진은 13월·2월 31일·25시를 다음 달·날로 굴려 계산해 버린다. 그대로 두면
    "2월 30일"을 넣은 사람이 3월 2일 사주로 리포트를 받는다. 정수·범위·실제로 있는 날짜(음력은 윤달
    포함)를 확인하고 한국어로 알려 준다. */
-function validateBirth(b) {
+function validateBirth(b, now = new Date()) {
   const isInt = (v) => Number.isInteger(v);
-  const thisYear = seoulYearMonth(new Date()).year;
+  const today = seoulYearMonth(now);
+  const thisYear = today.year;
   const { year, month, day, hour, minute } = b;
   if (!isInt(year) || year < 1900 || year > thisYear) throw new Error('태어난 해를 다시 확인해 주세요.');
   if (!isInt(month) || month < 1 || month > 12 || !isInt(day) || day < 1 || day > 31) throw new Error('태어난 날짜를 다시 확인해 주세요.');
+  let solar = { year, month, day };
   if (b.isLunar) {
-    try { Lunar.fromYmd(year, b.isLeap ? -month : month, day); } catch (e) {
+    try {
+      const s = Lunar.fromYmd(year, b.isLeap ? -month : month, day).getSolar();
+      solar = { year: s.getYear(), month: s.getMonth(), day: s.getDay() };
+    } catch (e) {
       throw new Error('음력 날짜를 다시 확인해 주세요. 그해에 없는 날짜이거나 윤달이 없는 달이에요.');
     }
   } else {
     const d = new Date(Date.UTC(year, month - 1, day));
     if (d.getUTCMonth() !== month - 1 || d.getUTCDate() !== day) throw new Error('태어난 날짜를 다시 확인해 주세요. 그 달에 없는 날이에요.');
   }
+  const key = (x) => x.year * 10000 + x.month * 100 + x.day;
+  if (key(solar) > key(today)) throw new Error('아직 오지 않은 날짜예요. 생년월일을 다시 확인해 주세요.');
   if (hour != null && (!isInt(hour) || hour < 0 || hour > 23)) throw new Error('태어난 시각은 0~23시로 적어 주세요.');
   if (!isInt(minute) || minute < 0 || minute > 59) throw new Error('태어난 분은 0~59분으로 적어 주세요.');
 }

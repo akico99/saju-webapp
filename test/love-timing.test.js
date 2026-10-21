@@ -102,6 +102,14 @@ test('서버는 없는 날짜·범위 밖 시각·정수가 아닌 값을 거른
   assert.doesNotThrow(() => validateBirth({ ...ok, isLunar: true, isLeap: true, year: 2023, month: 2, day: 10 }));
 });
 
+test('아직 오지 않은 생년월일은 거른다(음력은 양력으로 바꾼 날짜 기준)', () => {
+  const now = new Date('2026-10-22T03:00:00Z');
+  assert.throws(() => validateBirth({ year: 2026, month: 12, day: 31, hour: null, minute: 0, isLunar: false }, now), /오지 않은/);
+  assert.throws(() => validateBirth({ year: 2026, month: 12, day: 29, hour: null, minute: 0, isLunar: true }, now), /오지 않은/);
+  assert.doesNotThrow(() => validateBirth({ year: 2026, month: 10, day: 22, hour: null, minute: 0, isLunar: false }, now));
+  assert.doesNotThrow(() => validateBirth({ year: 2026, month: 9, day: 1, hour: null, minute: 0, isLunar: true }, now)); // 양력 10월 11일
+});
+
 test('무료 첫 장에서 받은 시작 달로 유료 12개월을 고정하되, 허용된 두 달 밖의 값은 무시한다', () => {
   const p = buildLovePreview(birth, 'single', LATE_OCT);
   assert.equal(p.startYm, '2026-11');

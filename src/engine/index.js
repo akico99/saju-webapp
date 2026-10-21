@@ -58,7 +58,8 @@ function computeSaju(input) {
 
     let sy = year, sm = month, sd = day, sh = resolvedHour, smin = resolvedMinute;
     if (isLunar) {
-      const s = Lunar.fromYmdHms(year, month, day, resolvedHour, resolvedMinute, 0).getSolar();
+      // lunar-javascript는 윤달을 음수 월로 받는다. 예전엔 isLeap을 넘기지 않아 윤달 생일이 평달로 계산됐다.
+      const s = Lunar.fromYmdHms(year, isLeap ? -month : month, day, resolvedHour, resolvedMinute, 0).getSolar();
       sy = s.getYear(); sm = s.getMonth(); sd = s.getDay(); sh = s.getHour(); smin = s.getMinute();
     }
     const off = applyOffset({ year: sy, month: sm, day: sd, hour: sh, minute: smin }, lon);
