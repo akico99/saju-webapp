@@ -233,4 +233,4 @@ function readFree(kind, birth) {
   return fn(r);
 }
 
-module.exports = { readFree, KINDS: Object.keys(KINDS), hasBatchim, pillarsOf };
+module.exports = { readFree, KINDS: Object.keys(KINDS), hasBatchim, pillarsOf, readBalance, readCharm };
