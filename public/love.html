@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-THWHBPH5WR"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-THWHBPH5WR');
+</script>
+<script src="/track.js"></script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" type="image/png" href="/favicon.png">
+<title>연애 시기 리포트 | 인연 신호가 가장 강한 세 달 - 사주보는 수달</title>
+<meta name="description" content="생년월일과 지금 연애 상황을 알려 주면 내 사주표·오행·타고난 매력과 앞으로 12개월 연애 흐름을 무료로 보여 드려요. 전체 풀이에서는 인연 신호가 가장 강한 세 달과 끌리는 사람, 만남의 자리, 상황별 할 일을 알려 드립니다.">
+<link rel="canonical" href="https://sajuotter.com/love.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="사주보는 수달">
+<meta property="og:title" content="연애 시기 리포트 — 사주보는 수달">
+<meta property="og:description" content="앞으로 12개월, 인연 신호가 가장 강한 세 달은 언제일까요? 내 연애 첫 장은 무료로 먼저 봐요.">
+<meta property="og:url" content="https://sajuotter.com/love.html">
+<meta property="og:image" content="https://sajuotter.com/og-cover.jpg">
+<meta property="og:locale" content="ko_KR">
+<link rel="stylesheet" href="/theme.css">
+<link rel="stylesheet" href="/fortune-result.css">
+<link rel="stylesheet" href="/love.css">
+</head>
+<body class="otter-stage love-page">
+<div class="app">
+
+  <section class="stage" id="stage">
+    <h1 class="stage-title">앞으로 12개월,<br>내 연애는 언제 열릴까요?</h1>
+    <picture class="stage-art">
+      <source media="(min-width:640px)" srcset="/hero/otter-hero-desktop.jpg">
+      <img src="/hero/otter-hero-mobile.jpg" alt="">
+    </picture>
+    <div class="stage-top">
+      <button type="button" id="backBtn" aria-label="이전" disabled>‹</button>
+      <div class="stage-dots" id="dots" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i></div>
+      <a href="/" aria-label="홈으로">×</a>
+    </div>
+
+    <form id="loveForm" class="stage-body" novalidate>
+      <input type="hidden" name="situation" value="">
+      <input type="hidden" name="gender" value="">
+      <input type="hidden" name="calendar" value="양력">
+
+      <fieldset class="stage-step" data-step="0">
+        <p class="bubble"><span class="q">요즘 연애, 어떤 상황이에요?</span><small>상황에 맞춰 풀이 마지막 장이 달라져요</small></p>
+        <div class="answer">
+          <button type="button" class="choice" data-situation="single">솔로예요<small>새 인연이 언제 올지 궁금해요</small></button>
+          <button type="button" class="choice" data-situation="some">썸 타는 중이에요<small>이 흐름이 연애로 이어질지 궁금해요</small></button>
+          <button type="button" class="choice" data-situation="dating">연애 중이에요<small>관계가 언제 깊어질지 궁금해요</small></button>
+          <button type="button" class="choice" data-situation="breakup">이별했어요<small>마음이 언제 정리되고 다시 시작될지 궁금해요</small></button>
+        </div>
+      </fieldset>
+
+      <fieldset class="stage-step" data-step="1" hidden>
+        <p class="bubble"><span class="q">뭐라고 불러 드릴까요?</span><small>이름은 풀이에 표시할 때만 써요. 비워 둬도 괜찮아요</small></p>
+        <div class="answer">
+          <input type="text" name="name" maxlength="20" placeholder="이름 또는 별명" autocomplete="nickname">
+          <div class="seg" role="group" aria-label="성별">
+            <button type="button" data-gender="여">여자</button>
+            <button type="button" data-gender="남">남자</button>
+          </div>
+          <button type="button" class="go" data-next>다음</button>
+        </div>
+      </fieldset>
+
+      <fieldset class="stage-step" data-step="2" hidden>
+        <p class="bubble"><span class="q">태어난 날을 알려 주세요</span></p>
+        <div class="answer">
+          <div class="seg" role="group" aria-label="양력 음력">
+            <button type="button" data-calendar="양력" class="on">양력</button>
+            <button type="button" data-calendar="음력">음력</button>
+          </div>
+          <div class="row">
+            <input type="number" name="year" inputmode="numeric" placeholder="1995" min="1920" max="2015" aria-label="태어난 해">
+            <input type="number" name="month" inputmode="numeric" placeholder="5월" min="1" max="12" aria-label="태어난 달">
+            <input type="number" name="day" inputmode="numeric" placeholder="15일" min="1" max="31" aria-label="태어난 날">
+          </div>
+          <label class="leap-row" hidden><input type="checkbox" name="isLeap"> 윤달이에요</label>
+          <button type="button" class="go" data-next>다음</button>
+        </div>
+      </fieldset>
+
+      <fieldset class="stage-step" data-step="3" hidden>
+        <p class="bubble"><span class="q">태어난 시각도 아세요?</span><small>모르면 시각 없이 계산해요</small></p>
+        <div class="answer">
+          <div class="row">
+            <input type="number" name="hour" inputmode="numeric" placeholder="14시" min="0" max="23" aria-label="태어난 시">
+            <input type="number" name="minute" inputmode="numeric" placeholder="30분" min="0" max="59" aria-label="태어난 분">
+          </div>
+          <label class="unknown-row"><input type="checkbox" name="hourUnknown"> 시각을 몰라요</label>
+          <button type="submit" class="go" id="previewBtn">내 연애 첫 장 보기</button>
+        </div>
+      </fieldset>
+      <p class="bubble err" id="stageError" hidden><span class="q"></span></p>
+    </form>
+  </section>
+
+  <div class="love-result hidden" id="freeResult">
+    <div class="lg-folded">
+      <span id="foldedText"></span>
+      <button type="button" id="redoBtn">다시 입력</button>
+    </div>
+    <p class="love-resume hidden" id="resumeNote" role="status">로그인 전에 보던 첫 장을 다시 열었어요. 아래에서 이어서 결제할 수 있어요.</p>
+
+    <article class="fortune-result">
+      <section class="fr-cover">
+        <p class="fr-eyebrow">연애 시기 리포트 · 무료 첫 장</p>
+        <h2 class="fr-verdict" id="freeTitle"></h2>
+        <p class="fr-lead-inv" id="freeLead"></p>
+      </section>
+
+      <section class="fr-section">
+        <h3 class="fr-h">내 사주표</h3>
+        <div class="love-pillars" id="pillars"></div>
+        <p class="love-small" id="pillarNote"></p>
+      </section>
+
+      <section class="fr-section">
+        <h3 class="fr-h">타고난 매력</h3>
+        <p class="love-strong" id="charmHeadline"></p>
+        <p class="love-text" id="charmBase"></p>
+        <ul class="love-charms" id="charmList"></ul>
+      </section>
+
+      <section class="fr-section">
+        <h3 class="fr-h">다섯 기운의 균형</h3>
+        <p class="love-text" id="balanceLead"></p>
+        <div class="love-ohaeng" id="balanceBars"></div>
+      </section>
+
+      <section class="fr-section">
+        <h3 class="fr-h">앞으로 12개월 연애 흐름</h3>
+        <p class="love-text" id="seasonLead"></p>
+        <div class="love-seasons" id="seasons"></div>
+        <div class="love-teaser" aria-label="잠긴 내용">
+          <span>인연 신호가 가장 강한 달</span>
+          <b aria-hidden="true">●●●●년 ●●월</b>
+        </div>
+      </section>
+
+      <section class="fr-section love-locked">
+        <h3 class="fr-h">전체 풀이에서 열리는 장</h3>
+        <ol class="love-locked-list" id="lockedList"></ol>
+      </section>
+    </article>
+
+    <div class="love-unlock">
+      <p class="love-unlock-kicker">전체 풀이</p>
+      <p class="love-unlock-title">가장 강한 세 달과 그때 할 일까지</p>
+      <div class="point-notice" id="pointNotice">가격 확인 중...</div>
+      <button type="button" id="unlockBtn">19,900원으로 전체 풀이 열기</button>
+      <p class="love-small">생성에 실패하면 결제는 자동으로 취소돼요. 사주 해석은 선택을 돕는 참고 자료이며 미래를 확정하지 않습니다.</p>
+    </div>
+    <div class="error-box hidden" id="errorBlock" role="alert"></div>
+  </div>
+
+  <div class="love-result hidden" id="paidResult">
+    <div class="love-progress" id="progressBlock">
+      <p class="love-strong">수달이 앞으로 12개월을 읽고 있어요</p>
+      <p class="love-small">보통 1~2분이면 끝나요. 이 화면을 닫아도 마이페이지에서 다시 볼 수 있어요.</p>
+    </div>
+    <article class="fortune-result hidden" id="paidReading">
+      <section class="fr-cover">
+        <p class="fr-eyebrow">연애 시기 리포트</p>
+        <h2 class="fr-verdict" id="paidTitle">한 줄 답부터 드릴게요</h2>
+        <p class="fr-lead-inv" id="paidAnswer"></p>
+      </section>
+      <div id="loveVisual"></div>
+      <div id="loveSections"></div>
+      <section class="fr-section hidden" id="monthsSection">
+        <h3 class="fr-h">앞으로 12개월, 달마다 한 줄</h3>
+        <ul class="love-months" id="monthList"></ul>
+      </section>
+      <p class="fr-note">사주 해석은 선택을 돕는 참고 자료이며, 미래를 확정하지 않습니다.</p>
+    </article>
+    <div class="love-after hidden" id="paidActions">
+      <a href="/mypage.html">마이페이지에서 다시 보기</a>
+    </div>
+    <div class="error-box hidden" id="paidError" role="alert"></div>
+  </div>
+</div>
+
+<section class="love-guide" aria-labelledby="loveGuideTitle">
+  <h2 id="loveGuideTitle">연애 시기 리포트는 이렇게 읽어요</h2>
+  <p>생년월일과 태어난 시각으로 만세력을 계산하고, 앞으로 12개월의 달마다 연애에 들어오는 기운을 같은 기준으로 비교합니다. 무료 첫 장에서는 내 사주표와 타고난 매력, 다섯 기운의 균형, 계절별 연애 흐름을 볼 수 있어요.</p>
+  <p>전체 풀이(19,900원, 단건 결제)에서는 인연 신호가 가장 강한 세 달과 그 달에 할 일, 나에게 끌리는 사람과 내가 끌리는 사람, 만남이 생기기 쉬운 자리, 되풀이되기 쉬운 연애 패턴, 조심할 신호, 지금 상황에 맞춘 행동, 달마다 한 줄 조언을 알려 드려요. 결제 후 자동으로 만들어져 약 2분 안에 이 화면에서 읽을 수 있습니다.</p>
+</section>
+
+<script>window.POINT_NOTICE_PRICE = 19900; window.POINT_NOTICE_LABEL = '연애 시기 리포트 전체 풀이'; window.POINT_NOTICE_DELIVERY = '결제 후 자동 생성되어 약 2분 안에 웹 화면으로 제공됩니다';</script>
+<script src="/point-notice.js"></script>
+<script src="/pay-flow.js"></script>
+<script src="/love-app.js"></script>
+</body>
+</html>

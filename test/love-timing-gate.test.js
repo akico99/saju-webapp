@@ -24,7 +24,9 @@ function probe(enabled) {
           catalog: require('./src/server/routes/tracking').productCatalog().love_timing || null,
           resolved: r && { productKey: r.productKey, price: r.price, label: r.label, page: r.page, hasStart: typeof r.start === 'function' }
         }));
-        process.exit(0);
+        server.closeAllConnections();
+        server.close();
+        setTimeout(() => process.exit(0), 100);
       } catch (e) { console.error(e); process.exit(1); }
     });
   `], { cwd: path.join(__dirname, '..'), encoding: 'utf8', timeout: 20000, env: { ...process.env, LOVE_TIMING_ENABLED: enabled ? 'true' : 'false', SAJU_DB_PATH: ':memory:' } }));
@@ -48,5 +50,13 @@ test('켜진 연애 시기 리포트는 19,900원 상품으로 결제 준비된�
   assert.equal(on.sellable, true);
   assert.deepEqual(on.catalog, { name: '연애 시기 리포트', price: 19900 });
   assert.deepEqual(on.resolved, { productKey: 'love_timing', price: 19900, label: '연애 시기 리포트 — 수달', page: '/love.html', hasStart: true });
+});
+
+test('켜진 연애 시기 리포트는 페이지·스크립트·스타일이 열리고 유료 API는 로그인을 요구한다', () => {
+  assert.equal(on.statuses['/love.html'], 200);
+  assert.equal(on.statuses['/love-app.js'], 200);
+  assert.equal(on.statuses['/love.css'], 200);
+  assert.equal(on.statuses['/api/love/preview'], 400); // 빈 입력
+  assert.equal(on.statuses['/api/love'], 401);
 });
 
