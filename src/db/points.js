@@ -6,6 +6,7 @@ const db = require('./index');
 const { adjustPointBalance, findById } = require('./users');
 const orders = require('./orders');
 const newYearConfig = require('../config/newYear');
+const loveTimingConfig = require('../config/loveTiming');
 
 // 상품 가격은 서버가 유일한 기준이다 — 클라이언트가 보내는 price 쿼리파라미터는
 // 화면 표시용일 뿐 절대 신뢰하지 않는다(가격 위조 방지).
@@ -22,6 +23,8 @@ const PRICES = {
   date_select_moving: 3900, date_select_opening: 3900, date_select_wedding: 3900, date_select_birth: 3900,
   // 관계 · 전체
   compat: 4900, full: 14900,
+  // 연애 시기 리포트 — 구조 개편 첫 대표 상품. 공개 전에는 아래에서 SELLABLE에서 뺀다.
+  [loveTimingConfig.productKey]: loveTimingConfig.priceKrw,
   // 가격 조회와 기존 주문 복구를 위해 둔다. 신규 주문은 환경변수 게이트로 따로 제어한다.
   new_year_2027: newYearConfig.priceKrw
 };
@@ -35,6 +38,7 @@ const LEGACY_PRICES = {
 Object.assign(PRICES, LEGACY_PRICES);
 const SELLABLE = new Set(Object.keys(PRICES).filter((k) => !(k in LEGACY_PRICES)));
 if (!newYearConfig.enabled) SELLABLE.delete(newYearConfig.productKey);
+if (!loveTimingConfig.enabled) SELLABLE.delete(loveTimingConfig.productKey);
 
 const stmts = {
   insertTx: db.prepare(`

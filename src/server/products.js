@@ -10,6 +10,8 @@ const compat = require('./routes/compat');
 const dateSelect = require('./routes/dateSelect');
 const newYear = require('./routes/newYear');
 const newYearConfig = require('../config/newYear');
+const love = require('./routes/love');
+const loveTimingConfig = require('../config/loveTiming');
 
 /**
  * @param {string} product - 클라이언트가 보내는 상품 종류: full | deep | compat | date_select | newyear
@@ -37,6 +39,12 @@ function resolveProduct(product, form) {
     label = newYearConfig.year + '년 신년운세';
     page = '/new-year.html';
     start = newYear.start;
+  } else if (product === 'love') {
+    if (!loveTimingConfig.enabled) return null;
+    productKey = loveTimingConfig.productKey;
+    label = loveTimingConfig.label;
+    page = loveTimingConfig.page;
+    start = love.start;
   } else {
     return null;
   }

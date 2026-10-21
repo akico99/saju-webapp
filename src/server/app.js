@@ -23,6 +23,7 @@ const dateSelectRouter = require('./routes/dateSelect');
 const payRouter = require('./routes/pay');
 const newYearRouter = require('./routes/newYear');
 const newYearConfig = require('../config/newYear');
+const loveTimingConfig = require('../config/loveTiming');
 
 const app = express();
 
@@ -40,6 +41,10 @@ app.use((req, res, next) => {
   let requestPath;
   try { requestPath = decodeURIComponent(req.path); } catch (e) { return res.sendStatus(400); }
   if (!newYearConfig.enabled && (/^\/new-year(?:\.html|-app\.js)?\/?$/i.test(requestPath) || /^\/api\/newyear(?:\/|$)/i.test(requestPath))) {
+    return res.sendStatus(404);
+  }
+  // 연애 시기 리포트도 같은 방식으로 판매 전환 전까지 감춘다.
+  if (!loveTimingConfig.enabled && (/^\/love(?:\.html|-app\.js|\.css)?\/?$/i.test(requestPath) || /^\/api\/love(?:\/|$)/i.test(requestPath))) {
     return res.sendStatus(404);
   }
   next();

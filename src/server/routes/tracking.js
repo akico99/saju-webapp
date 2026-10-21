@@ -10,6 +10,7 @@ const { DEEP_TOPICS } = require('../../llm/deepReading');
 const { OCCASIONS } = require('./dateSelect');
 const { trackingOn } = require('../../config/tracking');
 const newYearConfig = require('../../config/newYear');
+const loveTimingConfig = require('../../config/loveTiming');
 
 const router = express.Router();
 
@@ -22,6 +23,7 @@ function productCatalog() {
     else if (key.startsWith('deep_')) name = (DEEP_TOPICS[key.slice(5)] || {}).label && DEEP_TOPICS[key.slice(5)].label + ' 심층 리딩';
     else if (key.startsWith('date_select_')) { const occ = Object.values(OCCASIONS).find((o) => o.productKey === key); name = occ && occ.label + ' 리포트'; }
     else if (key === newYearConfig.productKey) name = newYearConfig.year + '년 신년운세';
+    else if (key === loveTimingConfig.productKey) name = loveTimingConfig.label;
     if (name) out[key] = { name, price: points.PRICES[key] };
   }
   return out;

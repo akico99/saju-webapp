@@ -19,6 +19,7 @@ const { HttpError } = require('../httpError');
 const { requireAuth } = require('../middleware/auth');
 const { CLIENT_KEY, SECRET_KEY, TEST_MODE, confirmPayment, cancelPayment } = require('../tossPayments');
 const newYearConfig = require('../../config/newYear');
+const loveTimingConfig = require('../../config/loveTiming');
 
 const router = express.Router();
 
@@ -138,6 +139,7 @@ function productOf(productKey) {
   if (productKey.startsWith('deep_')) return 'deep';
   if (productKey.startsWith('date_select_')) return 'date_select';
   if (productKey === newYearConfig.productKey) return 'newyear';
+  if (productKey === loveTimingConfig.productKey) return 'love';
   return null;
 }
 function pageOf(row) {
