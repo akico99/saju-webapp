@@ -12,7 +12,7 @@ function probe(enabled) {
       try {
         const base = 'http://127.0.0.1:' + server.address().port;
         const statuses = {};
-        for (const route of ['/love.html', '/love-app.js', '/love.css', '/love%2Ehtml', '/LOVE.html', '/api/love/preview', '/api/love', '/api/LOVE/preview']) {
+        for (const route of ['/love.html', '/love-app.js', '/love.css', '/love-brand.js', '/love-reading-model.js', '/love-reading-view.js', '/love-assets/home.html', '/love-assets/product.css', '/love-assets/reading.css', '/love-assets/reading-demo.html', '/love-assets/reading-demo.js', '/love-assets/reading-example.json', '/love-assets/reading/greeting.webp', '/love-assets/yeoul-cover.png', '/love%2Ehtml', '/LOVE.html', '/LOVE-READING-VIEW.js', '/love-assets/READING-DEMO.html', '/api/love/preview', '/api/love', '/api/LOVE/preview']) {
           statuses[route] = (await fetch(base + route, { method: route.startsWith('/api/') ? 'POST' : 'GET', headers: { 'Content-Type': 'application/json' }, body: route.startsWith('/api/') ? '{}' : undefined })).status;
         }
         const { resolveProduct } = require('./src/server/products');
@@ -25,7 +25,7 @@ function probe(enabled) {
           req.end();
         });
         const rawStatuses = {};
-        for (const p of ['//love.html', '/./love.html', '/x/../love.html', '/%2e/love.html', '/./love-app.js', '//love.css', '/.//love.html', '/./new-year.html', '//new-year-app.js']) rawStatuses[p] = await raw(p);
+        for (const p of ['//love.html', '/./love.html', '/x/../love.html', '/%2e/love.html', '/./love-app.js', '//love.css', '/.//love.html', '/./love-reading-model.js', '//love-reading-view.js', '/love-assets/./reading-demo.html', '//love-assets/reading/greeting.webp', '/./new-year.html', '//new-year-app.js']) rawStatuses[p] = await raw(p);
         for (const p of ['/api//love/preview', '/api/./love/preview', '//api/love/preview', '/api//love']) rawStatuses['POST ' + p] = await raw(p, 'POST');
         const r = resolveProduct('love', { name: '수달' });
         console.log(JSON.stringify({
@@ -69,6 +69,7 @@ test('켜진 연애 시기 리포트는 페이지·스크립트·스타일이 �
   assert.equal(on.statuses['/love.html'], 200);
   assert.equal(on.statuses['/love-app.js'], 200);
   assert.equal(on.statuses['/love.css'], 200);
+  for (const route of ['/love-reading-model.js', '/love-reading-view.js', '/love-assets/reading.css', '/love-assets/reading-demo.html', '/love-assets/reading-demo.js', '/love-assets/reading-example.json', '/love-assets/reading/greeting.webp']) assert.equal(on.statuses[route], 200, route);
   assert.equal(on.statuses['/api/love/preview'], 400); // 빈 입력
   assert.equal(on.statuses['/api/love'], 401);
 });

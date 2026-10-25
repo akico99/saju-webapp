@@ -26,6 +26,25 @@
   const brand = window.LoveBrand;
   const landing = document.getElementById('loveLanding');
   const stage = document.getElementById('stage');
+  let disposeFreeReader = null;
+  let disposePaidReader = null;
+  function enhanceReading(targetId, legacyId, buildModel, options) {
+    const target = document.getElementById(targetId);
+    const legacy = document.getElementById(legacyId);
+    try {
+      const model = buildModel();
+      const cleanup = window.LoveReadingView.render(target, model, options);
+      target.classList.remove('hidden');
+      legacy.classList.add('reader-replaced');
+      return cleanup;
+    } catch (error) {
+      target.replaceChildren();
+      target.classList.add('hidden');
+      legacy.classList.remove('reader-replaced');
+      console.warn('결과 화면을 기본 읽기 방식으로 표시합니다.');
+      return null;
+    }
+  }
   const price = brand.product.priceKrw.toLocaleString('ko-KR') + '원';
   document.querySelectorAll('[data-love-price]').forEach((node) => { node.textContent = price; });
   unlockBtn.textContent = price + '으로 전체 풀이 열기';
@@ -49,6 +68,12 @@
   }
   document.getElementById('startLove').addEventListener('click', enterInput);
   document.getElementById('startLoveBottom').addEventListener('click', enterInput);
+  document.getElementById('startLoveDock').addEventListener('click', enterInput);
+  const concern = new URLSearchParams(location.search).get('concern');
+  if (Object.prototype.hasOwnProperty.call(SITUATION_LABEL, concern)) {
+    field('situation').value = concern;
+    form.querySelectorAll('[data-situation]').forEach(b => b.classList.toggle('on', b.dataset.situation === concern));
+  }
   document.getElementById('closeInput').addEventListener('click', () => {
     stage.classList.add('hidden');
     landing.classList.remove('hidden');
@@ -196,6 +221,11 @@
     locked.replaceChildren();
     r.locked.forEach((t) => locked.appendChild(el('li', null, t)));
 
+    if (window.LoveReadingModel && window.LoveReadingView) {
+      if (disposeFreeReader) disposeFreeReader();
+      disposeFreeReader = enhanceReading('freeReader', 'legacyFreeReading', () => window.LoveReadingModel.buildFree(r, b));
+    }
+
     document.body.classList.add('done');
     landing.classList.add('hidden');
     document.getElementById('stage').classList.add('hidden');
@@ -304,12 +334,13 @@
       }
     });
   }
-  function renderPaid(report, visual) {
+  function renderPaid(report, visual, reportId) {
     const sections = parseSections(report);
     const answer = sections.find((s) => s.title === '한 줄 답');
     const months = sections.find((s) => s.title === '앞으로 12개월');
     document.getElementById('paidAnswer').textContent = answer ? answer.text.replace(/\*\*/g, '') : '';
     document.getElementById('loveVisual').innerHTML = visual || ''; // 서버가 엔진 숫자로만 만든 막대
+    document.getElementById('paidTimeline').classList.toggle('hidden', !visual);
     const box = document.getElementById('loveSections');
     box.replaceChildren();
     const contents = document.getElementById('readingContents');
@@ -338,6 +369,10 @@
     document.getElementById('progressBlock').classList.add('hidden');
     document.getElementById('paidReading').classList.remove('hidden');
     document.getElementById('paidActions').classList.remove('hidden');
+    if (window.LoveReadingModel && window.LoveReadingView) {
+      if (disposePaidReader) disposePaidReader();
+      disposePaidReader = enhanceReading('paidReader', 'paidReading', () => window.LoveReadingModel.buildPaid(report), { reportId });
+    }
   }
 
   function paidFail(msg) {
@@ -353,7 +388,7 @@
       const data = await res.json().catch(() => ({}));
       if (res.status === 401) { location.href = '/login.html?redirect=' + encodeURIComponent(location.pathname + location.search); return; }
       if (!res.ok) return paidFail(data.error || '주문을 찾지 못했어요.');
-      if (data.status === 'done') return renderPaid(data.report, data.visual);
+      if (data.status === 'done') return renderPaid(data.report, data.visual, jobId);
       if (data.status === 'error') return paidFail(data.error || '생성 중 문제가 생겼어요. 결제는 자동으로 취소돼요.');
       setTimeout(() => poll(jobId), 2500);
     } catch (e) {

@@ -8,6 +8,6 @@ test('상품 표현과 서버 가격은 동일한 설정을 사용하며 운영 
   assert.equal(brand.operator, '사주보는 수달');
   assert.equal(brand.product.title, '인연의 시기');
   assert.equal(brand.product.priceKrw, config.priceKrw);
-  assert.equal(brand.character.portrait, null);
+  assert.ok(require('node:fs').existsSync(require('node:path').join(__dirname, '../public', brand.character.portrait)));
   assert.ok(brand.product.chapters.length >= 6);
 });

@@ -36,9 +36,23 @@ test('모바일 상품 소개에서 실제 무료 해석, 재입력, 로그인�
     page.on('pageerror', (error) => errors.push(error.message));
     await page.setRequestInterception(true);
     page.on('request', (req) => req.url().startsWith(base) ? req.continue() : req.abort());
+    await page.goto(base + '/love-assets/home.html', { waitUntil: 'networkidle0' });
+    for (const width of [320, 390, 1280]) {
+      await page.setViewport({ width, height: 844 });
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'home overflow at ' + width);
+    }
+    await page.setViewport({ width: 390, height: 844 });
+    await page.screenshot({ path: path.join(os.tmpdir(), 'love-home-mobile.png'), fullPage: true });
+    await page.screenshot({ path: path.join(os.tmpdir(), 'love-home-first-screen.png'), fullPage: false });
+    await Promise.all([page.waitForNavigation(), page.click('a[href="/love.html?concern=some"]')]);
+    assert.equal(await page.$eval('[name=situation]', e => e.value), 'some');
+    await page.click('#startLoveDock');
+    assert.equal(await page.$eval('.landing-dock', e => getComputedStyle(e).display), 'none');
+    await page.click('#closeInput');
     await page.goto(base + '/love.html', { waitUntil: 'networkidle0' });
     assert.equal(await page.$eval('#stage', (e) => getComputedStyle(e).display), 'none');
-    assert.equal(await page.$eval('#characterPortrait', (e) => e.hidden), true);
+    await page.waitForFunction(() => !document.querySelector('#characterPortrait').hidden);
+    assert.ok(await page.$eval('#characterPortrait', (e) => e.naturalWidth > 0));
     await page.screenshot({ path: path.join(os.tmpdir(), 'love-brand-mobile.png'), fullPage: true });
     for (const width of [320, 390, 1280]) {
       await page.setViewport({ width, height: 844 });
@@ -59,6 +73,14 @@ test('모바일 상품 소개에서 실제 무료 해석, 재입력, 로그인�
     await page.click('#previewBtn');
     await page.waitForFunction(() => !document.getElementById('freeResult').classList.contains('hidden'));
     assert.match(await page.$eval('#freeTitle', (e) => e.textContent), /테스트/);
+    await page.waitForSelector('#freeReader .lr-reader', { visible: true });
+    assert.equal(await page.$eval('#legacyFreeReading', e => getComputedStyle(e).display), 'none');
+    assert.ok(await page.$$eval('#freeReader .lr-chapter', es => es.length) >= 5);
+    for (const width of [320, 390, 1280]) {
+      await page.setViewport({ width, height: 844 });
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'free result overflow at ' + width);
+    }
+    await page.setViewport({ width: 390, height: 844 });
     assert.equal(await page.$eval('#loveLanding', (e) => getComputedStyle(e).display), 'none');
     await page.screenshot({ path: path.join(os.tmpdir(), 'love-brand-result.png'), fullPage: true });
     await page.click('#redoBtn');

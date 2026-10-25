@@ -7,8 +7,8 @@
       name: '여울',
       role: '관계의 흐름을 읽는 이야기 안내자',
       disclosure: '여울은 사주 풀이를 안내하는 창작 캐릭터입니다. 만세력 계산을 바탕으로 AI가 해석을 작성하며, 상담사의 대면 상담은 제공하지 않습니다.',
-      // 원본 승인 뒤 /love-assets/yeoul.webp 등 동일 사이트 경로로 교체.
-      portrait: null
+      // 이번 비공개 미리보기용 신규 원화. 별도 세션의 사용자 캐릭터 원본과는 구분한다.
+      portrait: '/love-assets/yeoul-cover.png'
     },
     product: {
       title: '인연의 시기',
