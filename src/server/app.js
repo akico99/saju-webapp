@@ -24,6 +24,7 @@ const payRouter = require('./routes/pay');
 const newYearRouter = require('./routes/newYear');
 const newYearConfig = require('../config/newYear');
 const loveTimingConfig = require('../config/loveTiming');
+const sceneReaderConfig = require('../config/sceneReader');
 
 const app = express();
 
@@ -50,7 +51,15 @@ app.use((req, res, next) => {
   if (!loveTimingConfig.enabled && (/^\/love(?:\.html|-app\.js|-brand\.js|-reading-(?:model|view)\.js|\.css)?\/?$/i.test(requestPath) || /^\/love-assets(?:\/|$)/i.test(requestPath) || /^\/api\/love(?:\/|$)/i.test(requestPath))) {
     return res.sendStatus(404);
   }
+  // 장면형 읽기 화면 파일은 켜기 전까지 404다. 궁합 페이지는 /api/scene-reader로 켜짐을 확인한 뒤에만 불러온다.
+  if (!sceneReaderConfig.enabled && (/^\/reading-(?:view\.(?:js|css)|model-[a-z0-9-]+\.js)$/i.test(requestPath) || /^\/reading-assets(?:\/|$)/i.test(requestPath))) {
+    return res.sendStatus(404);
+  }
   next();
+});
+
+app.get('/api/scene-reader', (req, res) => {
+  res.set('Cache-Control', 'no-store').json({ enabled: sceneReaderConfig.enabled });
 });
 
 app.use(session({

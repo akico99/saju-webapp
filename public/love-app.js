@@ -89,7 +89,8 @@
     backBtn.disabled = i === 0;
     stageError.hidden = true;
     const first = steps[i].querySelector('input:not([type=hidden]):not([type=checkbox])');
-    if (first && i > 0) setTimeout(() => first.focus({ preventScroll: true }), 50);
+    // 잠깐 뒤에 첫 칸으로 옮기되, 그사이 사용자가 이 단계의 다른 칸을 눌렀으면 그대로 둔다.
+    if (first && i > 0) setTimeout(() => { if (step === i && !steps[i].contains(document.activeElement)) first.focus({ preventScroll: true }); }, 50);
   }
   function stageFail(msg) {
     stageError.querySelector('.q').textContent = msg;

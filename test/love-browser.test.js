@@ -65,10 +65,12 @@ test('모바일 상품 소개에서 실제 무료 해석, 재입력, 로그인�
     await page.type('[name="name"]', '테스트');
     await page.click('[data-gender="여"]');
     await page.click('[data-step="1"] [data-next]');
+    await page.waitForSelector('[name="year"]', { visible: true });
     await page.type('[name="year"]', '1995');
     await page.type('[name="month"]', '5');
     await page.type('[name="day"]', '15');
     await page.click('[data-step="2"] [data-next]');
+    await page.waitForSelector('[name="hourUnknown"]', { visible: true });
     await page.click('[name="hourUnknown"]');
     await page.click('#previewBtn');
     await page.waitForFunction(() => !document.getElementById('freeResult').classList.contains('hidden'));
