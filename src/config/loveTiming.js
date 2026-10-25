@@ -4,4 +4,5 @@
    열린다(app.js 게이트, points.SELLABLE, products.resolveProduct). */
 const enabled = /^(1|true|yes|on)$/i.test(String(process.env.LOVE_TIMING_ENABLED || '').trim());
 
-module.exports = { enabled, productKey: 'love_timing', priceKrw: 19900, label: '연애 시기 리포트', page: '/love.html' };
+const brand = require('../../public/love-brand');
+module.exports = { enabled, productKey: 'love_timing', priceKrw: brand.product.priceKrw, label: '연애 시기 리포트', page: '/love.html' };

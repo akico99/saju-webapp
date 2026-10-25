@@ -14,12 +14,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="icon" type="image/png" href="/favicon.png">
-<title>연애 시기 리포트 | 인연 신호가 가장 강한 세 달 - 사주보는 수달</title>
+<title>인연의 시기 | 나의 연애 패턴과 앞으로 12개월 — 사주보는 수달</title>
 <meta name="description" content="생년월일과 지금 연애 상황을 알려 주면 내 사주표·오행·타고난 매력과 앞으로 12개월 연애 흐름을 무료로 보여 드려요. 전체 풀이에서는 인연 신호가 가장 강한 세 달과 끌리는 사람, 만남의 자리, 상황별 할 일을 알려 드립니다.">
 <link rel="canonical" href="https://sajuotter.com/love.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="사주보는 수달">
-<meta property="og:title" content="연애 시기 리포트 — 사주보는 수달">
+<meta property="og:title" content="인연의 시기 — 사주보는 수달">
 <meta property="og:description" content="앞으로 12개월, 인연 신호가 가장 강한 세 달은 언제일까요? 내 연애 첫 장은 무료로 먼저 봐요.">
 <meta property="og:url" content="https://sajuotter.com/love.html">
 <meta property="og:image" content="https://sajuotter.com/og-cover.jpg">
@@ -30,17 +30,53 @@
 </head>
 <body class="otter-stage love-page">
 <div class="app">
+  <header class="love-header">
+    <a href="/" class="love-wordmark">사주보는 수달<span>관계의 흐름을 읽다</span></a>
+    <a href="/mypage.html">결과 보관함</a>
+  </header>
+  <section id="loveLanding" class="love-landing" aria-labelledby="productTitle">
+    <div class="love-editorial">
+      <p class="love-eyebrow">여울의 관계 이야기 · 연애 시기 리포트</p>
+      <h1 id="productTitle">인연의 시기</h1>
+      <p class="love-subtitle">나의 연애 패턴과 앞으로 12개월</p>
+      <div class="love-portrait-wrap" id="portraitWrap">
+        <div class="love-water" aria-hidden="true"><span>緣</span><i></i><i></i><i></i></div>
+        <img id="characterPortrait" hidden alt="관계의 흐름을 안내하는 창작 캐릭터 여울">
+        <p class="love-cover-caption">흘러가는 인연 속에서<br>나의 모습을 먼저 읽습니다.</p>
+      </div>
+      <p class="love-intro">왜 비슷한 관계를 반복할까요?<br>나의 끌림과 관계의 패턴을 살피고,<br>앞으로의 흐름을 함께 읽어 보세요.</p>
+      <button type="button" class="love-primary" id="startLove">내 연애 첫 장 무료로 읽기 <span aria-hidden="true">↗</span></button>
+      <p class="love-meta">무료 첫 장은 가입 없이 · 전체 풀이 <span data-love-price>19,900원</span></p>
+    </div>
+    <section class="love-detail" aria-labelledby="loveContentsTitle">
+      <p class="love-eyebrow">WHAT YOU WILL READ</p>
+      <h2 id="loveContentsTitle">궁금했던 관계를<br>한 장씩 풀어갑니다.</h2>
+      <ol class="love-chapter-preview" id="productChapters"></ol>
+    </section>
+    <section class="love-sample love-detail" aria-labelledby="sampleTitle">
+      <p class="love-eyebrow">읽는 방식 예시 · 개인 분석 결과가 아닙니다</p>
+      <h2 id="sampleTitle">해석 다음에는,<br>내가 해볼 수 있는 일.</h2>
+      <blockquote>가까워지고 싶을수록 상대의 반응을 먼저 기다리고 있지는 않나요?</blockquote>
+      <p>각 장은 핵심 해석을 먼저 짚고, 사주에서 읽은 근거와 일상에서 살펴볼 장면을 이어 설명합니다.</p>
+      <div class="love-sample-action"><b>행동 제안 예시</b><p>막연히 기다리기보다, 함께 하고 싶은 일을 한 가지 제안해 보세요. 상대의 답과 자신의 마음을 함께 살펴보세요.</p></div>
+    </section>
+    <section class="love-detail love-faq" aria-labelledby="faqTitle">
+      <h2 id="faqTitle">시작하기 전에</h2>
+      <details><summary>무료로 어디까지 볼 수 있나요?</summary><p>내 사주표, 타고난 매력, 오행의 균형과 계절별 연애 흐름을 볼 수 있습니다. 전체 풀이에서는 월별 흐름과 관계 패턴, 상황별 행동 제안을 이어 읽습니다.</p></details>
+      <details><summary>태어난 시각을 몰라도 되나요?</summary><p>시각 모름을 선택하면 세 기둥으로 계산합니다. 시각을 알 때보다 해석 범위에 제한이 있으며 결과에 안내합니다.</p></details>
+      <details><summary>재회나 상대의 마음도 알 수 있나요?</summary><p>이 상품은 본인 한 사람의 사주를 풀이합니다. 상대의 마음이나 재회 여부를 확정하지 않으며, 이별 후에는 자신의 관계 패턴과 앞으로의 흐름을 다룹니다.</p></details>
+      <details><summary>누가 풀이하고 어떻게 받나요?</summary><p id="characterDisclosure"></p><p>전체 풀이는 단건 결제 후 자동 생성되는 모바일 웹 리포트입니다. 생성 시간은 상황에 따라 달라질 수 있으며 마이페이지에서 다시 열 수 있습니다. 결제에는 현재 로그인이 필요합니다.</p></details>
+      <p class="love-small">흐름과 점수는 명리 해석을 위한 비교값이며 실제 연애 성공 확률이 아닙니다. 미래의 사건을 보장하지 않습니다.</p>
+      <button type="button" class="love-primary" id="startLoveBottom">내 연애 첫 장 무료로 읽기</button>
+    </section>
+  </section>
 
-  <section class="stage" id="stage">
-    <h1 class="stage-title">앞으로 12개월,<br>내 연애는 언제 열릴까요?</h1>
-    <picture class="stage-art">
-      <source media="(min-width:640px)" srcset="/hero/otter-hero-desktop.jpg">
-      <img src="/hero/otter-hero-mobile.jpg" alt="">
-    </picture>
+  <section class="stage hidden" id="stage" aria-labelledby="inputTitle">
+    <h2 class="stage-title" id="inputTitle">인연의 시기<br><small>당신의 이야기부터 들려주세요.</small></h2>
     <div class="stage-top">
       <button type="button" id="backBtn" aria-label="이전" disabled>‹</button>
       <div class="stage-dots" id="dots" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i></div>
-      <a href="/" aria-label="홈으로">×</a>
+      <button type="button" id="closeInput" aria-label="상품 소개로 돌아가기">×</button>
     </div>
 
     <form id="loveForm" class="stage-body" novalidate>
@@ -111,7 +147,7 @@
 
     <article class="fortune-result">
       <section class="fr-cover">
-        <p class="fr-eyebrow">연애 시기 리포트 · 무료 첫 장</p>
+        <p class="fr-eyebrow">인연의 시기 · 연애 시기 리포트 · 무료 첫 장</p>
         <h2 class="fr-verdict" id="freeTitle"></h2>
         <p class="fr-lead-inv" id="freeLead"></p>
       </section>
@@ -156,7 +192,7 @@
       <p class="love-unlock-title">가장 강한 세 달과 그때 할 일까지</p>
       <div class="point-notice" id="pointNotice">가격 확인 중...</div>
       <button type="button" id="unlockBtn">19,900원으로 전체 풀이 열기</button>
-      <p class="love-small">생성에 실패하면 결제는 자동으로 취소돼요. 사주 해석은 선택을 돕는 참고 자료이며 미래를 확정하지 않습니다.</p>
+      <p class="love-small">판매처: 사주보는 수달 · 연애 시기 리포트 · 단건 결제<br>생성에 실패하면 결제는 자동으로 취소돼요. 사주 해석은 선택을 돕는 참고 자료이며 미래를 확정하지 않습니다.</p>
     </div>
     <div class="error-box hidden" id="errorBlock" role="alert"></div>
     <div class="love-sticky" id="stickyBar">
@@ -166,15 +202,16 @@
 
   <div class="love-result hidden" id="paidResult">
     <div class="love-progress" id="progressBlock">
-      <p class="love-strong">수달이 앞으로 12개월을 읽고 있어요</p>
-      <p class="love-small">보통 1~2분이면 끝나요. 이 화면을 닫아도 마이페이지에서 다시 볼 수 있어요.</p>
+      <p class="love-strong">당신의 관계와 앞으로 12개월을 읽고 있어요</p>
+      <p class="love-small">생성 시간은 상황에 따라 달라질 수 있어요. 이 화면을 닫아도 마이페이지에서 다시 볼 수 있어요.</p>
     </div>
     <article class="fortune-result hidden" id="paidReading">
       <section class="fr-cover">
-        <p class="fr-eyebrow">연애 시기 리포트</p>
+        <p class="fr-eyebrow">인연의 시기 · 연애 시기 리포트</p>
         <h2 class="fr-verdict" id="paidTitle">한 줄 답부터 드릴게요</h2>
         <p class="fr-lead-inv" id="paidAnswer"></p>
       </section>
+      <nav id="readingContents" class="love-reading-contents" aria-label="풀이 목차"></nav>
       <div id="loveVisual"></div>
       <div id="loveSections"></div>
       <section class="fr-section hidden" id="monthsSection">
@@ -191,12 +228,13 @@
 </div>
 
 <section class="love-guide" aria-labelledby="loveGuideTitle">
-  <h2 id="loveGuideTitle">연애 시기 리포트는 이렇게 읽어요</h2>
+  <h2 id="loveGuideTitle">인연의 시기(연애 시기 리포트)는 이렇게 읽어요</h2>
   <p>생년월일과 태어난 시각으로 만세력을 계산하고, 앞으로 12개월의 달마다 연애에 들어오는 기운을 같은 기준으로 비교합니다. 무료 첫 장에서는 내 사주표와 타고난 매력, 다섯 기운의 균형, 계절별 연애 흐름을 볼 수 있어요.</p>
-  <p>전체 풀이(19,900원, 단건 결제)에서는 인연 신호가 가장 강한 세 달과 그 달에 할 일, 나에게 끌리는 사람과 내가 끌리는 사람, 만남이 생기기 쉬운 자리, 되풀이되기 쉬운 연애 패턴, 조심할 신호, 지금 상황에 맞춘 행동, 달마다 한 줄 조언을 알려 드려요. 결제 후 자동으로 만들어져 약 2분 안에 이 화면에서 읽을 수 있습니다.</p>
+  <p>전체 풀이(<span data-love-price>19,900원</span>, 단건 결제)에서는 인연 신호가 가장 강한 세 달과 그 달에 할 일, 나에게 끌리는 사람과 내가 끌리는 사람, 만남이 생기기 쉬운 자리, 되풀이되기 쉬운 연애 패턴, 조심할 신호, 지금 상황에 맞춘 행동, 달마다 한 줄 조언을 알려 드려요. 결제 후 자동으로 만들어져 이 화면과 마이페이지에서 읽을 수 있습니다. 판매처는 사주보는 수달입니다.</p>
 </section>
 
-<script>window.POINT_NOTICE_PRICE = 19900; window.POINT_NOTICE_LABEL = '연애 시기 리포트 전체 풀이'; window.POINT_NOTICE_DELIVERY = '결제 후 자동 생성되어 약 2분 안에 웹 화면으로 제공됩니다';</script>
+<script src="/love-brand.js"></script>
+<script>window.POINT_NOTICE_PRICE = 19900; window.POINT_NOTICE_PRICE = window.LoveBrand.product.priceKrw; window.POINT_NOTICE_LABEL = '인연의 시기 · 연애 시기 리포트 전체 풀이'; window.POINT_NOTICE_DELIVERY = '결제 후 자동 생성되어 웹 화면으로 제공됩니다. 생성 시간은 상황에 따라 달라질 수 있습니다';</script>
 <script src="/point-notice.js"></script>
 <script src="/pay-flow.js"></script>
 <script src="/love-app.js"></script>

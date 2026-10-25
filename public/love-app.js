@@ -21,6 +21,40 @@
 
   const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
   const field = (name) => form.elements[name];
+  // 화면 전환 때는 부드러운 스크롤 없이 바로 맨 위로 옮긴다. 긴 소개 아래에서 시작해도 첫 질문이 바로 보인다.
+  const toTop = () => window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  const brand = window.LoveBrand;
+  const landing = document.getElementById('loveLanding');
+  const stage = document.getElementById('stage');
+  const price = brand.product.priceKrw.toLocaleString('ko-KR') + '원';
+  document.querySelectorAll('[data-love-price]').forEach((node) => { node.textContent = price; });
+  unlockBtn.textContent = price + '으로 전체 풀이 열기';
+  document.getElementById('stickyUnlock').textContent = '전체 풀이 확인 · ' + price;
+  document.getElementById('characterDisclosure').textContent = brand.character.disclosure;
+  brand.product.chapters.forEach((title) => document.getElementById('productChapters').appendChild(el('li', null, title)));
+  const portrait = document.getElementById('characterPortrait');
+  // 캐릭터 원본이 없거나 로드 실패하면 장식 표지를 유지한다. 외부 이미지 추적 URL은 받지 않는다.
+  if (typeof brand.character.portrait === 'string' && /^\/love-assets\/[a-zA-Z0-9/_-]+\.(webp|png|jpg)$/.test(brand.character.portrait)) {
+    portrait.addEventListener('load', () => { portrait.hidden = false; document.getElementById('portraitWrap').classList.add('has-portrait'); });
+    portrait.addEventListener('error', () => { portrait.hidden = true; document.getElementById('portraitWrap').classList.remove('has-portrait'); });
+    portrait.src = brand.character.portrait;
+  }
+  function enterInput() {
+    landing.classList.add('hidden');
+    stage.classList.remove('hidden');
+    show(step);
+    toTop();
+    const first = steps[step].querySelector('button, input:not([type=hidden])');
+    if (first) first.focus({ preventScroll: true });
+  }
+  document.getElementById('startLove').addEventListener('click', enterInput);
+  document.getElementById('startLoveBottom').addEventListener('click', enterInput);
+  document.getElementById('closeInput').addEventListener('click', () => {
+    stage.classList.add('hidden');
+    landing.classList.remove('hidden');
+    document.getElementById('startLove').focus();
+    toTop();
+  });
 
   /* ---------- 입력 무대 ---------- */
   function show(i) {
@@ -163,9 +197,10 @@
     r.locked.forEach((t) => locked.appendChild(el('li', null, t)));
 
     document.body.classList.add('done');
+    landing.classList.add('hidden');
     document.getElementById('stage').classList.add('hidden');
     freeResult.classList.remove('hidden');
-    window.scrollTo(0, 0);
+    toTop();
   }
 
   async function preview(b) {
@@ -199,7 +234,7 @@
     freeResult.classList.add('hidden');
     document.getElementById('stage').classList.remove('hidden');
     show(0);
-    window.scrollTo(0, 0);
+    toTop();
   });
 
   /* ---------- 잠금 해제(결제) ---------- */
@@ -277,8 +312,14 @@
     document.getElementById('loveVisual').innerHTML = visual || ''; // 서버가 엔진 숫자로만 만든 막대
     const box = document.getElementById('loveSections');
     box.replaceChildren();
-    sections.filter((s) => s !== answer && s !== months).forEach((s) => {
+    const contents = document.getElementById('readingContents');
+    contents.replaceChildren(el('p', 'love-eyebrow', '나의 풀이 목차'));
+    sections.filter((s) => s !== answer && s !== months).forEach((s, index) => {
       const sec = el('section', 'fr-section fr-prose');
+      sec.id = 'reading-chapter-' + index;
+      const link = el('a', null, s.title);
+      link.href = '#' + sec.id;
+      contents.appendChild(link);
       sec.appendChild(el('h3', 'fr-h', s.title));
       renderBlock(s.text, sec);
       box.appendChild(sec);
@@ -322,10 +363,11 @@
 
   function startPaid(jobId) {
     document.body.classList.add('done');
+    landing.classList.add('hidden');
     document.getElementById('stage').classList.add('hidden');
     freeResult.classList.add('hidden');
     paidResult.classList.remove('hidden');
-    window.scrollTo(0, 0);
+    toTop();
     poll(jobId);
   }
 

@@ -47,7 +47,7 @@ app.use((req, res, next) => {
     return res.sendStatus(404);
   }
   // 연애 시기 리포트도 같은 방식으로 판매 전환 전까지 감춘다.
-  if (!loveTimingConfig.enabled && (/^\/love(?:\.html|-app\.js|\.css)?\/?$/i.test(requestPath) || /^\/api\/love(?:\/|$)/i.test(requestPath))) {
+  if (!loveTimingConfig.enabled && (/^\/love(?:\.html|-app\.js|-brand\.js|\.css)?\/?$/i.test(requestPath) || /^\/love-assets(?:\/|$)/i.test(requestPath) || /^\/api\/love(?:\/|$)/i.test(requestPath))) {
     return res.sendStatus(404);
   }
   next();

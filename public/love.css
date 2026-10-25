@@ -130,3 +130,87 @@ body.otter-stage.done .app { background: var(--bg); padding-bottom: 40px; }
 .love-guide h2 { margin: 0 0 14px; font-family: var(--font-serif); font-size: 21px; line-height: 1.45; }
 .love-guide p { margin: 8px 0; color: var(--muted); font-size: 13px; word-break: keep-all; }
 
+
+/* 인연의 시기: 운영 브랜드와 상품의 독립적인 표현 */
+body.love-page { --bg: #f8f5ed; --bg-outer: #e9eee9; --ink: #203e3b; --accent: #285c55; --gold: #a78850; --gold-soft: #eee8d9; --line: #deded2; --muted: #626d65; --muted-2: #626d65; background: var(--bg-outer); }
+body.love-page .app { max-width: 760px; background: var(--bg); margin: 0 auto; }
+.love-page .hidden, .love-page [hidden] { display: none !important; }
+.love-header { display:flex; justify-content:space-between; align-items:center; padding:22px 24px; border-bottom:1px solid var(--line); gap:16px; background:var(--bg); }
+.love-header a { color:var(--ink); text-decoration:none; font-size:12px; }
+.love-header .love-wordmark { font-family:var(--font-serif); font-size:17px; font-weight:700; }
+.love-wordmark span { display:block; margin-top:5px; font:10px sans-serif; letter-spacing:.13em; color:var(--muted); }
+.love-editorial { padding:42px 24px 34px; text-align:center; }
+.love-eyebrow { font-size:11px; letter-spacing:.14em; line-height:1.7; color:#69735f; font-weight:600; margin:0 0 18px; }
+.love-editorial h1 { margin:0; font-family:var(--font-serif); font-size:clamp(42px,10vw,66px); font-weight:500; letter-spacing:-.06em; color:var(--ink); }
+.love-subtitle { margin:16px 0 28px; font-size:14px; letter-spacing:.04em; color:var(--muted); }
+.love-portrait-wrap { position:relative; height:340px; max-width:460px; margin:0 auto; overflow:hidden; border-radius:180px 180px 4px 4px; background:radial-gradient(ellipse at 50% 20%,#4e8173,#214b45 65%,#193d38); }
+.love-water { position:absolute; inset:0; color:#e3d9b5; }
+.love-water span { display:block; margin-top:48px; font-family:var(--font-serif); font-size:90px; font-weight:400; opacity:.8; }
+.love-water i { position:absolute; width:420px; height:130px; border:1px solid #b6c7ab55; border-radius:50%; left:50%; transform:translateX(-50%) rotate(-12deg); bottom:10px; }
+.love-water i:nth-of-type(2) { bottom:-15px; width:520px; }
+.love-water i:nth-of-type(3) { bottom:-40px; width:620px; }
+#characterPortrait { width:100%; height:100%; object-fit:contain; object-position:bottom; position:relative; }
+.has-portrait .love-water { opacity:.22; }
+.has-portrait .love-cover-caption { display:none; }
+.love-cover-caption { position:absolute; bottom:32px; left:12px; right:12px; color:#f3eddc; font-family:var(--font-serif); font-size:17px; line-height:1.8; }
+.love-intro { font-size:16px; line-height:1.95; margin:26px 0; color:var(--ink); word-break:keep-all; }
+.love-page .love-primary { width:100%; max-width:460px; padding:18px; border:0; border-radius:6px; background:#285c55; color:#fff; cursor:pointer; font:600 16px/1.5 inherit; box-shadow:none; margin:0 auto; display:block; }
+.love-primary span { margin-left:12px; }
+.love-meta { font-size:12px; line-height:1.6; color:var(--muted); margin:12px 0 0; }
+.love-detail { padding:36px 28px; border-top:1px solid var(--line); }
+.love-detail h2 { font:500 27px/1.55 var(--font-serif); letter-spacing:-.04em; margin:0 0 24px; color:var(--ink); }
+.love-chapter-preview { list-style:none; counter-reset:chapter; margin:0; padding:0; }
+.love-chapter-preview li { counter-increment:chapter; padding:17px 0; border-bottom:1px solid var(--line); display:flex; gap:18px; font-size:14px; line-height:1.6; }
+.love-chapter-preview li::before { content:'0' counter(chapter); color:#967949; font-family:var(--font-serif); }
+.love-sample { background:#efefe4; }
+.love-sample blockquote { margin:0 0 20px; padding-left:18px; border-left:2px solid #a78850; font:500 21px/1.8 var(--font-serif); }
+.love-sample p, .love-faq p { font-size:14px; line-height:1.85; color:var(--muted); }
+.love-sample-action { margin-top:22px; padding:20px; background:var(--bg); border-radius:4px; }
+.love-sample-action b { font-size:12px; letter-spacing:.05em; }
+.love-faq details { border-bottom:1px solid var(--line); padding:18px 0; }
+.love-faq summary { cursor:pointer; font-size:15px; line-height:1.6; }
+.love-faq .love-primary { margin-top:24px; }
+.love-page .stage { min-height:calc(100svh - 92px); background:linear-gradient(160deg,#f8f5ed,#e5eee5); }
+.love-page .stage-top { order:-1; padding:18px 20px; }
+.love-page .stage-top button { background:transparent; border-color:#becdc3; color:var(--ink); backdrop-filter:none; }
+.love-page .stage-dots i { background:#becdc3; }
+.love-page .stage-dots i.on { background:#285c55; }
+.love-page .stage-title { position:static; color:var(--ink); text-shadow:none; margin:28px 20px 38px; font-size:32px; }
+.love-page .stage-title small { font:14px/2.4 sans-serif; color:var(--muted); }
+.love-page .stage-body { margin:0; padding:12px 24px 36px; background:none; }
+.love-page .bubble { color:var(--ink); text-shadow:none; font-size:21px; }
+.love-page .bubble small { color:var(--muted); opacity:1; }
+.love-page .bubble .q::before, .love-page .bubble .q::after { content:none; }
+.love-page .seg button, .love-page .choice { background:#fffdf7; color:var(--ink); border:1px solid #becdc3; border-radius:7px; backdrop-filter:none; }
+.love-page .choice { padding:15px 16px; min-height:70px; }
+.love-page .choice small { opacity:1; color:var(--muted); }
+.love-page .seg button.on, .love-page .choice.on { border-color:#285c55; background:#dce9df; }
+.love-page .go, .love-page .stage-body button[type=submit].go { background:#285c55; color:#fff; border-radius:7px; box-shadow:none; }
+.love-page .answer input[type=number], .love-page .answer input[type=text] { border-color:#becdc3; border-radius:7px; }
+.love-page .leap-row, .love-page .unknown-row { color:var(--ink); }
+.love-page .bubble.err .q { color:#9c3227; }
+.love-page :focus-visible { outline:3px solid #a78850; outline-offset:4px; }
+.love-reading-contents { padding:24px 0; border-bottom:1px solid var(--line); }
+.love-reading-contents a { display:block; padding:10px 0; color:var(--ink); text-decoration:underline; text-underline-offset:4px; font-size:14px; line-height:1.5; }
+.love-page .love-bar.is-top i { background:linear-gradient(#77a18d,#285c55); }
+.love-page .love-rank { color:#285c55; }
+.love-page .fr-section { scroll-margin-top:20px; }
+@media(min-width:640px) { .love-editorial { padding-top:56px; } .love-detail { padding:44px 64px; } .love-page .stage-body { max-width:500px; width:100%; align-self:center; } }
+@media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } .love-page *, .love-page *::after { animation:none !important; transition:none !important; } }
+
+/* 무료·유료 결과도 상품 소개와 같은 청록 톤으로 맞춘다 */
+.love-page .fortune-result { --fr-gold: #e3d9b5; }
+.love-page .fr-cover { background: radial-gradient(ellipse at 80% 0%, #4e8173, #214b45 62%, #193d38); border-radius: 6px; }
+.love-page .fr-cover::after { border-color: rgba(227,217,181,.3); }
+.love-page .fr-verdict { font-weight: 500; }
+.love-page .love-pillar.day { border-color: #285c55; background: #dce9df; }
+.love-page .love-season i { background: linear-gradient(180deg, #77a18d, #285c55); }
+.love-page .love-season.lv-보통 i { background: linear-gradient(180deg, #b9cfc0, #8db09d); }
+.love-page .love-season.lv-잔잔함 i { background: #dcdccf; }
+.love-page .love-teaser, .love-page .love-unlock { background: #203e3b; border-radius: 6px; }
+.love-page .love-unlock-kicker { color: #e3d9b5; }
+.love-page .love-unlock #unlockBtn { background: #e3d9b5; color: #203e3b; border-radius: 6px; }
+.love-page .love-sticky { background: linear-gradient(180deg, rgba(248,245,237,0), var(--bg) 30%); }
+.love-page .love-sticky button { background: #285c55; border-radius: 6px; box-shadow: none; }
+.love-page .love-locked-list li::before { filter: hue-rotate(110deg) saturate(.6); }
+.love-page .lg-folded, .love-page .love-pillar { border-radius: 6px; }
