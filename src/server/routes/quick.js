@@ -38,7 +38,7 @@ function parseBody(body) {
 }
 
 /** 심층 리딩 시작 — 라우트(/api/quick)와 카드 결제 승인(pay.js)이 같은 함수를 쓴다. */
-async function startDeep(userId, body) {
+async function startDeep(userId, body, { cardPaymentId } = {}) {
   let parsed;
   try {
     parsed = parseBody(body);
@@ -74,7 +74,7 @@ async function startDeep(userId, body) {
   // 환불이 필요 없다.
   let price;
   try {
-    price = points.chargeForProductAndCreateOrder(userId, productKey, { label, jobId });
+    price = points.chargeForProductAndCreateOrder(userId, productKey, { label, jobId, cardPaymentId });
   } catch (e) {
     if (e.code === 'insufficient_points') {
       throw new HttpError(402, { error: e.message, code: e.code, required: e.required, balance: e.balance });

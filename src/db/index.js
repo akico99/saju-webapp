@@ -14,6 +14,8 @@ fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
 const db = new Database(DB_PATH);
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
+// 삭제한 행의 내용이 빈 페이지에 그대로 남지 않도록 지울 때 덮어쓴다(회원 탈퇴 시 복구 불가 처리). WAL 파일은 체크포인트 때 정리된다.
+db.pragma('secure_delete = ON');
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
@@ -60,6 +62,7 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL REFERENCES users(id),
     product_key TEXT NOT NULL,
+    card_payment_id INTEGER,
     label TEXT,
     job_id TEXT NOT NULL UNIQUE,
     result_path TEXT,
@@ -223,6 +226,16 @@ if (!cpColumns.includes('form_json')) db.exec('ALTER TABLE card_payments ADD COL
 if (!cpColumns.includes('job_id')) db.exec('ALTER TABLE card_payments ADD COLUMN job_id TEXT');
 // 광고 유입 경로(utm·fbclid·gclid, 처음/마지막 유입) — 캠페인별 매출 집계용. public/track.js가 모은다.
 if (!cpColumns.includes('attribution')) db.exec('ALTER TABLE card_payments ADD COLUMN attribution TEXT');
+if (!cpColumns.includes('confirmation_started_at')) db.exec('ALTER TABLE card_payments ADD COLUMN confirmation_started_at TEXT');
+if (!cpColumns.includes('cancel_idempotency_key')) db.exec('ALTER TABLE card_payments ADD COLUMN cancel_idempotency_key TEXT');
+if (!cpColumns.includes('start_claimed')) db.exec('ALTER TABLE card_payments ADD COLUMN start_claimed INTEGER NOT NULL DEFAULT 0');
+if (!cpColumns.includes('start_claimed_at')) db.exec('ALTER TABLE card_payments ADD COLUMN start_claimed_at TEXT');
+if (!cpColumns.includes('start_order_watermark')) db.exec('ALTER TABLE card_payments ADD COLUMN start_order_watermark INTEGER');
+// 취소가 확정된 시각 — 탈퇴 후 보존하는 청약철회 기록의 5년 기산점. 이 열이 생기기 전에 취소된 건은 NULL이다.
+if (!cpColumns.includes('canceled_at')) db.exec('ALTER TABLE card_payments ADD COLUMN canceled_at TEXT');
+const refreshedOrderColumns = db.prepare('PRAGMA table_info(orders)').all().map((c) => c.name);
+if (!refreshedOrderColumns.includes('card_payment_id')) db.exec('ALTER TABLE orders ADD COLUMN card_payment_id INTEGER');
+db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_card_payment_id ON orders(card_payment_id) WHERE card_payment_id IS NOT NULL');
 
 /* 2026-09-28 잔액 회수 — 사이트는 더 이상 잔액을 보관하지 않는다(약관 제6조). 예전 무통장입금·테스트로
    남은 잔액을 한 번만 0으로 돌리고 원장에 기록한다. user_version으로 한 번만 실행한다. */
@@ -247,6 +260,86 @@ if (db.pragma('user_version', { simple: true }) < 2) {
     db.prepare("UPDATE users SET email_verified = 0 WHERE email LIKE '%@social.sajusudal.local'").run();
     db.pragma('user_version = 2');
   })();
+}
+
+/* 계정 탈퇴 뒤 유지하거나 계정과 분리해 처리하는 데이터.
+
+   retained_transactions: 전자상거래법 시행령 제6조의 "계약 또는 청약철회 등에 관한 기록"과
+   "대금결제 및 재화 등의 공급에 관한 기록"(각 5년)에 해당하는 최소 사실만 담는다. 계정·이메일·이름·
+   생년월일·입력 폼·결과물·원본 결제키(digest만)·작업 번호가 없다. retention_until이 지나면 자동 삭제된다.
+   서비스가 갖고 있지 않은 "소비자 불만 또는 분쟁처리 기록"(3년)은 이 표에 없다.
+
+   file_purge_queue: DB 커밋 뒤 파일 삭제가 실패하거나 프로세스가 죽어도 생성 파일이 남지 않게, 삭제할 폴더 이름만
+   (OUTPUT_ROOT 바로 아래 한 단계, 계정 정보 없음) 같은 트랜잭션에서 적어 두고 시작 시와 정기 점검에서 다시 지운다.
+
+   file_purge_exceptions: 안전 검사에서 거부된 정리를 관리자 화면에서 추적한다. 안전한 폴더명 또는 계정 행이 삭제된 뒤에도
+   남는 안전한 작업 ID와 사유 코드만 저장하고, 절대 경로나 회원 정보를 저장하지 않는다. 위치 미상 구형 예외는 근거 ID가 있어야 종결된다.
+
+   account_deletion_codes는 user_id로 계정과 연결된 표이며, 소셜 계정이 탈퇴할 때 1회용 확인 코드의 해시와 함께 삭제된다. */
+db.exec(`
+  CREATE TABLE IF NOT EXISTS retained_transactions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_ref TEXT NOT NULL UNIQUE,
+    product_key TEXT,
+    amount_krw INTEGER NOT NULL,
+    payment_status TEXT NOT NULL,
+    supply_status TEXT,
+    payment_ref_digest TEXT,
+    transaction_at TEXT NOT NULL,
+    approved_at TEXT,
+    canceled_at TEXT,
+    retained_at TEXT NOT NULL DEFAULT (datetime('now')),
+    retention_until TEXT NOT NULL,
+    retention_basis TEXT NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_retained_transactions_until ON retained_transactions(retention_until);
+
+  CREATE TABLE IF NOT EXISTS file_purge_queue (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    rel_dir TEXT NOT NULL UNIQUE,
+    queued_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS account_deletion_codes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    code_hash TEXT NOT NULL,
+    salt TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    attempts INTEGER NOT NULL DEFAULT 0,
+    used_at TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS file_purge_exceptions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    reason TEXT NOT NULL,
+    noted_at TEXT NOT NULL DEFAULT (datetime('now')),
+    rel_dir TEXT,
+    context_job_id TEXT,
+    attempts INTEGER NOT NULL DEFAULT 0,
+    last_attempt_at TEXT,
+    resolved_at TEXT,
+    resolution_method TEXT,
+    requires_reference INTEGER NOT NULL DEFAULT 0,
+    resolution_reference TEXT
+  );
+`);
+const purgeExceptionColumns = db.prepare('PRAGMA table_info(file_purge_exceptions)').all().map((c) => c.name);
+if (!purgeExceptionColumns.includes('rel_dir')) db.exec('ALTER TABLE file_purge_exceptions ADD COLUMN rel_dir TEXT');
+if (!purgeExceptionColumns.includes('context_job_id')) db.exec('ALTER TABLE file_purge_exceptions ADD COLUMN context_job_id TEXT');
+if (!purgeExceptionColumns.includes('attempts')) db.exec('ALTER TABLE file_purge_exceptions ADD COLUMN attempts INTEGER NOT NULL DEFAULT 0');
+if (!purgeExceptionColumns.includes('last_attempt_at')) db.exec('ALTER TABLE file_purge_exceptions ADD COLUMN last_attempt_at TEXT');
+if (!purgeExceptionColumns.includes('resolved_at')) db.exec('ALTER TABLE file_purge_exceptions ADD COLUMN resolved_at TEXT');
+if (!purgeExceptionColumns.includes('resolution_method')) db.exec('ALTER TABLE file_purge_exceptions ADD COLUMN resolution_method TEXT');
+if (!purgeExceptionColumns.includes('requires_reference')) {
+  db.exec('ALTER TABLE file_purge_exceptions ADD COLUMN requires_reference INTEGER NOT NULL DEFAULT 0');
+  db.exec('UPDATE file_purge_exceptions SET requires_reference=1 WHERE rel_dir IS NULL AND resolved_at IS NULL');
+}
+if (!purgeExceptionColumns.includes('resolution_reference')) db.exec('ALTER TABLE file_purge_exceptions ADD COLUMN resolution_reference TEXT');
+// 이 커밋 이전에 만들어진 개발용 DB에 취소 시각 열이 없으면 더한다(아직 배포되지 않았지만 로컬 DB를 깨뜨리지 않기 위해).
+if (!db.prepare('PRAGMA table_info(retained_transactions)').all().some((c) => c.name === 'canceled_at')) {
+  db.exec('ALTER TABLE retained_transactions ADD COLUMN canceled_at TEXT');
 }
 
 module.exports = db;

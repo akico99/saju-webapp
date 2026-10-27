@@ -52,7 +52,8 @@ test('주문 이름(사용자 입력 포함)은 마이페이지와 관리자 주
   for (const f of ['mypage.html', 'admin-orders.html']) {
     const html = read(f);
     assert.doesNotMatch(html, /\$\{o\.label \|\| o\.productKey\}/, f);
-    assert.match(html, /esc\(o\.label \|\| o\.productKey\)/, f);
+    // 이스케이프하거나(esc) 텍스트 노드로만 넣는다(addText). 어느 쪽이든 마크업으로 해석되지 않는다.
+    assert.match(html, /esc\(o\.label \|\| o\.productKey\)|addText\(tr, 'td', o\.label \|\| o\.productKey/, f);
   }
 });
 

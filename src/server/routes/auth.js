@@ -6,12 +6,14 @@ const users = require('../../db/users');
 const passwordResets = require('../../db/passwordResets');
 const emailVerifications = require('../../db/emailVerifications');
 const consents = require('../../db/consents');
+const accountDeletion = require('../../db/accountDeletion');
 const { resolveSocialUser } = require('../socialAccounts');
 const { safeNext } = require('../loginReturn');
 const { sendEmail } = require('../../email/resend');
-const { passwordResetEmail, verifyEmailEmail } = require('../../email/templates');
+const resend = require('../../email/resend');
+const { passwordResetEmail, verifyEmailEmail, accountDeletionCodeEmail } = require('../../email/templates');
 const { requireAuth } = require('../middleware/auth');
-const { userLoginLimiter, signupLimiter, forgotPasswordLimiter } = require('../middleware/rateLimit');
+const { userLoginLimiter, signupLimiter, forgotPasswordLimiter, accountDeletionRequestLimiter, accountDeletionConfirmLimiter, resendVerificationLimiter } = require('../middleware/rateLimit');
 
 const router = express.Router();
 
@@ -70,8 +72,9 @@ async function sendVerificationEmail(user) {
 
 router.post('/auth/signup', signupLimiter, async (req, res) => {
   try {
-    const { email, password, name } = req.body;
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    const { password, name } = req.body;
+    const email = String(req.body.email || '').trim();
+    if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return res.status(400).json({ error: '이메일 형식이 올바르지 않습니다.' });
     }
     if (!password || String(password).length < 8) {
@@ -204,7 +207,7 @@ router.get('/auth/verify-email', (req, res) => {
   res.redirect('/mypage.html?verified=1');
 });
 
-router.post('/auth/resend-verification', requireAuth, async (req, res) => {
+router.post('/auth/resend-verification', requireAuth, resendVerificationLimiter, async (req, res) => {
   const user = users.findById(req.session.userId);
   if (user.email_verified) return res.json({ ok: true, alreadyVerified: true });
   try {
@@ -429,6 +432,97 @@ router.get('/auth/kakao/callback', async (req, res) => {
   } catch (e) {
     res.redirect('/login.html?error=' + encodeURIComponent('카카오 로그인 중 문제가 발생했어요: ' + e.message));
   }
+});
+
+/* ---------- 회원 탈퇴 ----------
+   본인 확인: 이메일 가입 계정은 현재 비밀번호, 소셜 계정은 인증된 이메일로 받은 1회용 코드(마이페이지에 입력 — URL에 넣지 않는다).
+   진행 중인 주문·결제가 있으면 아무것도 바꾸지 않고 막는다. 비밀번호·코드·이메일은 로그에 남기지 않는다. */
+const DELETION_BLOCKED_MESSAGE = '진행 중인 주문이나 결제가 있어 지금은 탈퇴할 수 없어요. 리포트 생성과 결제·환불 처리가 끝난 뒤 마이페이지에서 다시 시도해 주세요.';
+const isPlaceholderEmail = (email) => /@social\.sajusudal\.local$/i.test(String(email || ''));
+
+function deletionBlocked(res, blockers) {
+  return res.status(409).json({ error: DELETION_BLOCKED_MESSAGE, code: 'deletion_blocked', blockers });
+}
+
+router.post('/auth/account/delete/request', requireAuth, accountDeletionRequestLimiter, async (req, res) => {
+  const user = users.findById(req.session.userId);
+  if (user.provider === 'local') {
+    return res.status(400).json({ error: '이메일 가입 계정은 현재 비밀번호를 입력해 탈퇴할 수 있어요.', code: 'password_required' });
+  }
+  const blockers = accountDeletion.findBlockers(user.id);
+  if (blockers.length) return deletionBlocked(res, blockers);
+  if (!user.email_verified || isPlaceholderEmail(user.email)) {
+    return res.status(409).json({
+      error: '인증된 이메일이 없는 계정은 화면에서 탈퇴할 수 없어요. sooky2001@gmail.com 으로 문의해 주세요.',
+      code: 'email_not_verified'
+    });
+  }
+  const code = accountDeletion.issueDeletionCode(user.id);
+  try {
+    await resend.sendEmail({
+      to: user.email,
+      subject: '[사주보는 수달] 회원 탈퇴 확인 코드',
+      html: accountDeletionCodeEmail({ code, ttlMinutes: accountDeletion.CODE_TTL_MINUTES })
+    });
+  } catch (e) {
+    accountDeletion.revokeDeletionCodes(user.id);
+    console.error('탈퇴 확인 메일 발송 실패');
+    return res.status(502).json({ error: '확인 메일을 보내지 못했어요. 잠시 후 다시 시도해 주세요.', code: 'deletion_email_failed' });
+  }
+  res.json({ ok: true, method: 'email_code', ttlMinutes: accountDeletion.CODE_TTL_MINUTES });
+});
+
+router.post('/auth/account/delete/confirm', requireAuth, accountDeletionConfirmLimiter, async (req, res) => {
+  const user = users.findById(req.session.userId);
+  let codeId = null;
+  if (user.provider === 'local') {
+    const password = typeof req.body.password === 'string' ? req.body.password : '';
+    if (!password) return res.status(400).json({ error: '현재 비밀번호를 입력해 주세요.', code: 'password_required' });
+    if (!(await bcrypt.compare(password, user.password_hash))) {
+      return res.status(403).json({ error: '비밀번호가 올바르지 않습니다.', code: 'invalid_credentials' });
+    }
+  } else {
+    const code = typeof req.body.code === 'string' ? req.body.code.trim() : '';
+    if (!code) return res.status(400).json({ error: '이메일로 받은 확인 코드를 입력해 주세요.', code: 'code_required' });
+    const verified = accountDeletion.verifyDeletionCode(user.id, code);
+    if (!verified.ok) {
+      return res.status(403).json({
+        error: verified.code === 'code_expired' ? '확인 코드가 만료되었어요. 코드를 다시 받아 주세요.' : '확인 코드가 올바르지 않습니다. 코드를 다시 받아 입력해 주세요.',
+        code: verified.code
+      });
+    }
+    codeId = verified.codeId;
+  }
+
+  let result;
+  try {
+    result = accountDeletion.deleteAccount(user.id, { codeId });
+  } catch (e) {
+    console.error('[탈퇴] 처리 실패 (변경 사항 없음):', e && e.code);
+    return res.status(500).json({ error: '탈퇴 처리 중 오류가 발생했어요. 데이터는 그대로 있으니 잠시 후 다시 시도해 주세요.', code: 'deletion_failed' });
+  }
+  if (!result.ok) {
+    if (result.code === 'deletion_blocked') return deletionBlocked(res, result.blockers);
+    if (result.code === 'invalid_code') return res.status(403).json({ error: '확인 코드가 올바르지 않거나 이미 사용되었어요. 코드를 다시 받아 주세요.', code: 'invalid_code' });
+    return res.status(404).json({ error: '계정을 찾을 수 없습니다.', code: result.code });
+  }
+  // 계정 데이터는 이미 지워졌다. 생성 파일이 아직 남았다면 "모두 삭제했다"고 말하지 않는다.
+  const filesPending = result.files ? result.files.pending : 0;
+  const filesNeedReview = result.rejected || 0;
+  if (filesNeedReview > 0) console.error('[탈퇴] 자동 삭제할 수 없는 생성 파일 ' + filesNeedReview + '건 — 운영자 확인 필요');
+  let message = '탈퇴가 완료되었어요. 계정 정보와 생성한 리포트는 삭제했습니다.';
+  if (filesNeedReview > 0) message = '계정 정보는 삭제했어요. 다만 생성 파일 일부는 자동으로 지울 수 없어 운영자가 확인해 삭제합니다.';
+  else if (filesPending > 0) message = '계정 정보는 삭제했어요. 생성 파일 일부는 잠시 후 자동으로 삭제됩니다.';
+  req.session.destroy(() => {
+    res.clearCookie('connect.sid');
+    res.json({
+      ok: true,
+      keptTransactionRecords: result.retained,
+      filesPending,
+      filesNeedReview,
+      message
+    });
+  });
 });
 
 module.exports = router;

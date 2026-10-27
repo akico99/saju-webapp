@@ -8,6 +8,7 @@ const points = require('../../db/points');
 const cardPayments = require('../../db/cardPayments');
 const users = require('../../db/users');
 const orders = require('../../db/orders');
+const accountDeletion = require('../../db/accountDeletion');
 const { requireAdmin } = require('../middleware/auth');
 const { adminLoginLimiter } = require('../middleware/rateLimit');
 
@@ -170,6 +171,50 @@ router.delete('/admin/orders/:jobId/file', requireAdmin, (req, res) => {
 // 카드 결제 원장(토스페이먼츠) — admin-payments.html이 쓴다. 테스트 모드 결제는 test_mode=1로 표시된다.
 router.get('/admin/card-payments', requireAdmin, (req, res) => {
   res.json({ payments: cardPayments.listAll() });
+});
+
+router.post('/admin/card-payments/:id/retry-cancel', requireAdmin, async (req, res) => {
+  const row = cardPayments.findById(Number(req.params.id));
+  if (!row || !['cancel_failed', 'canceling'].includes(row.status)) return res.status(409).json({ error: '재취소 대상이 아닙니다.' });
+  const { retryCancellation } = require('../refundPurchase');
+  const result = await retryCancellation(row);
+  res.status(result.ok ? 200 : 409).json(result);
+});
+
+router.get('/admin/file-purge-exceptions', requireAdmin, (req, res) => {
+  res.json({ exceptions: accountDeletion.listPurgeExceptions() });
+});
+
+router.post('/admin/file-purge-exceptions/:id/retry', requireAdmin, (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isSafeInteger(id) || id < 1) return res.status(400).json({ error: '예외 번호가 올바르지 않습니다.' });
+  const result = accountDeletion.retryPurgeException(id);
+  if (!result.ok) {
+    const status = result.code === 'not_found' ? 404 : 409;
+    const messages = {
+      not_found: '열린 파일 정리 예외를 찾을 수 없습니다.',
+      manual_review_required: '안전한 작업 폴더 이름이 없어 수동 확인이 필요합니다.',
+      unsafe_target: '현재 경로가 안전하지 않아 삭제하지 않았습니다. 저장소 상태를 확인한 뒤 다시 시도해 주세요.'
+    };
+    return res.status(status).json({ error: messages[result.code] || '파일 정리를 재시도할 수 없습니다.', code: result.code });
+  }
+  res.json(result);
+});
+
+router.post('/admin/file-purge-exceptions/:id/resolve', requireAdmin, (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isSafeInteger(id) || id < 1) return res.status(400).json({ error: '예외 번호가 올바르지 않습니다.' });
+  const result = accountDeletion.resolvePurgeExceptionManually(id, req.body && req.body.reference);
+  if (!result.ok) {
+    const status = result.code === 'not_found' ? 404 : 409;
+    const message = result.code === 'retryable_requires_revalidation'
+      ? '이 대상은 경로 재검증 재시도를 먼저 해야 합니다.'
+      : result.code === 'resolution_reference_required'
+        ? '위치를 확인할 수 없는 예외는 운영 티켓 또는 PG 확인 번호가 필요합니다. 허용된 형식으로 입력해 주세요.'
+      : '열린 파일 정리 예외를 찾을 수 없습니다.';
+    return res.status(status).json({ error: message, code: result.code });
+  }
+  res.json(result);
 });
 
 router.get('/admin/orders/cost-summary', requireAdmin, (req, res) => {

@@ -175,40 +175,77 @@
     return `${p.birthYear}.${String(p.birthMonth).padStart(2, '0')}.${String(p.birthDay).padStart(2, '0')} (${cal}) · ${time}${p.gender ? ' · ' + p.gender + '자' : ''}`;
   }
 
+  function createProfileItem(p) {
+    const element = document.createElement('div');
+    element.className = 'profile-item' + (p.isPrimary ? ' is-primary' : '');
+
+    const info = document.createElement('div');
+    info.className = 'info';
+    const labelRow = document.createElement('div');
+    labelRow.className = 'label-row';
+    const label = document.createElement('span');
+    label.className = 'label';
+    label.textContent = `${p.label}${p.name ? ' · ' + p.name : ''}`;
+    labelRow.appendChild(label);
+    if (p.isPrimary) {
+      const badge = document.createElement('span');
+      badge.className = 'primary-badge';
+      badge.textContent = '내 정보 · 오늘의 운세';
+      labelRow.appendChild(badge);
+    }
+    const summary = document.createElement('div');
+    summary.className = 'sub';
+    summary.textContent = summarize(p);
+    info.appendChild(labelRow);
+    info.appendChild(summary);
+
+    const actions = document.createElement('div');
+    actions.className = 'actions';
+    let primaryButton = null;
+    if (!p.isPrimary) {
+      primaryButton = document.createElement('button');
+      primaryButton.type = 'button';
+      primaryButton.setAttribute('data-action', 'primary');
+      primaryButton.className = 'primary-btn';
+      primaryButton.textContent = '내 정보로 설정';
+      actions.appendChild(primaryButton);
+    }
+    const editButton = document.createElement('button');
+    editButton.type = 'button';
+    editButton.setAttribute('data-action', 'edit');
+    editButton.textContent = '수정';
+    const deleteButton = document.createElement('button');
+    deleteButton.type = 'button';
+    deleteButton.setAttribute('data-action', 'del');
+    deleteButton.className = 'del';
+    deleteButton.textContent = '삭제';
+    actions.appendChild(editButton);
+    actions.appendChild(deleteButton);
+
+    element.appendChild(info);
+    element.appendChild(actions);
+    return { element, primaryButton, editButton, deleteButton };
+  }
+
   async function loadList() {
     const res = await fetch('/api/profiles');
     const data = await res.json();
     const list = document.getElementById('profileList');
     const empty = document.getElementById('emptyNote');
-    list.innerHTML = '';
+    list.replaceChildren();
     if (!data.profiles.length) {
       empty.classList.remove('hidden');
       return;
     }
     empty.classList.add('hidden');
     data.profiles.forEach((p) => {
-      const div = document.createElement('div');
-      div.className = 'profile-item' + (p.isPrimary ? ' is-primary' : '');
-      div.innerHTML = `
-        <div class="info">
-          <div class="label-row">
-            <span class="label">${p.label}${p.name ? ' · ' + p.name : ''}</span>
-            ${p.isPrimary ? '<span class="primary-badge">내 정보 · 오늘의 운세</span>' : ''}
-          </div>
-          <div class="sub">${summarize(p)}</div>
-        </div>
-        <div class="actions">
-          ${p.isPrimary ? '' : '<button type="button" data-action="primary" class="primary-btn">내 정보로 설정</button>'}
-          <button type="button" data-action="edit">수정</button>
-          <button type="button" data-action="del" class="del">삭제</button>
-        </div>
-      `;
+      const { element, primaryButton, editButton, deleteButton } = createProfileItem(p);
       if (!p.isPrimary) {
-        div.querySelector('[data-action="primary"]').addEventListener('click', () => setPrimary(p.id));
+        primaryButton.addEventListener('click', () => setPrimary(p.id));
       }
-      div.querySelector('[data-action="edit"]').addEventListener('click', () => startEdit(p));
-      div.querySelector('[data-action="del"]').addEventListener('click', () => removeProfile(p.id));
-      list.appendChild(div);
+      editButton.addEventListener('click', () => startEdit(p));
+      deleteButton.addEventListener('click', () => removeProfile(p.id));
+      list.appendChild(element);
     });
   }
 

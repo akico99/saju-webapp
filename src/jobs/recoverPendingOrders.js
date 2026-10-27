@@ -8,8 +8,13 @@
 const orders = require('../db/orders');
 const points = require('../db/points');
 const { refundPurchase } = require('../server/refundPurchase');
+const cardPayments = require('../db/cardPayments');
+const { lookupPayment, cancelPayment, latestCanceledAt } = require('../server/tossPayments');
+const { resolveProduct } = require('../server/products');
+const newYearConfig = require('../config/newYear');
 
 function recoverPendingOrders() {
+  cardPayments.expireReady();
   const pending = orders.listAllPending();
   if (pending.length === 0) return;
 
@@ -33,4 +38,68 @@ function recoverPendingOrders() {
   console.log(`[재시작 복구] 중단된 주문 ${pending.length}건 발견, ${refunded}건 자동 환불 처리`);
 }
 
-module.exports = { recoverPendingOrders };
+function paymentProduct(productKey) {
+  if (productKey === 'full' || productKey === 'compat') return productKey;
+  if (productKey.startsWith('deep_')) return 'deep';
+  if (productKey.startsWith('date_select_')) return 'date_select';
+  if (productKey === newYearConfig.productKey) return 'newyear';
+  return null;
+}
+
+async function recoverPaidPayments(startProduct = resolveProduct, recoverablePayments = cardPayments.listRecoverable()) {
+  for (let row of recoverablePayments) {
+    if (row.status === 'canceling') {
+      const check = await lookupPayment(row.order_id);
+      if (!check.ok) continue;
+      if (check.data.status === 'PARTIAL_CANCELED') {
+        cardPayments.finishPartialCancellation(row, check.data.balanceAmount);
+      } else if (check.data.status === 'CANCELED') {
+        cardPayments.finishRefund(row, true, '토스 결제 조회 결과 이미 취소됨', latestCanceledAt(check.data));
+      } else if (check.data.status === 'DONE') {
+        const result = await cancelPayment(row.payment_key, row.error || '재시작 후 결제 취소 복구', row.cancel_idempotency_key);
+        cardPayments.finishRefund(row, result.ok, result.ok ? '재시작 후 취소 복구 완료' : (result.data && result.data.message) || result.status, latestCanceledAt(result.data));
+      }
+      continue;
+    }
+    if (row.status === 'confirming' || row.status === 'reconcile_pending') {
+      const claimed = cardPayments.claimConfirmationRecovery(row);
+      if (!claimed) continue;
+      const check = await lookupPayment(row.order_id);
+      const d = check.data || {};
+      const matches = d.orderId === row.order_id && Number(d.totalAmount) === row.amount_krw && d.paymentKey === row.payment_key;
+      if (check.ok && matches && d.status === 'CANCELED') {
+        cardPayments.markUnconfirmedCanceled(claimed, latestCanceledAt(d), '토스 결제 조회 결과 이미 취소됨');
+        continue;
+      }
+      if (check.ok && matches && ['ABORTED', 'EXPIRED'].includes(d.status)) {
+        cardPayments.failConfirmation(claimed, `토스 결제 조회에서 ${d.status} 상태를 확인했습니다.`);
+        continue;
+      }
+      if (!check.ok || !matches || d.status !== 'DONE') {
+        cardPayments.deferConfirmation(claimed, '결제 승인 상태를 아직 확정하지 못했습니다. 다음 자동 점검 때 다시 조회합니다.');
+        continue;
+      }
+      row = cardPayments.markPaidAndCredit(claimed, { paymentKey: row.payment_key, method: d.method, approvedAt: d.approvedAt });
+      if (!row) continue;
+    }
+    row = cardPayments.recoverPaidWithoutJob(row, orders);
+    if (row.job_id) continue;
+    if (!cardPayments.claimPaidStart(row)) continue;
+    try {
+      const form = JSON.parse(row.form_json || '{}');
+      const product = startProduct(paymentProduct(row.product_key), form);
+      if (!product) throw new Error('상품을 찾을 수 없습니다.');
+      const started = await product.start(row.user_id, form, { cardPaymentId: row.id });
+      cardPayments.setJob(row, started.jobId);
+    } catch (err) {
+      const detail = `결제 복구 중 상품 시작 실패: ${err.message}`;
+      const cancel = cardPayments.claimCancellationWithCreditReversal(cardPayments.findById(row.id), detail);
+      if (cancel) {
+        const result = await cancelPayment(cancel.payment_key, detail, cancel.cancel_idempotency_key);
+        cardPayments.finishRefund(cancel, result.ok, result.ok ? detail : `${detail} / ${(result.data && result.data.message) || result.status}`, latestCanceledAt(result.data));
+      }
+    }
+  }
+}
+
+module.exports = { recoverPendingOrders, recoverPaidPayments };

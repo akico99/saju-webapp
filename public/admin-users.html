@@ -58,7 +58,11 @@
 </div>
 
 <script>
-  const PROVIDER_LABEL = { local: '이메일', naver: '네이버' };
+  const PROVIDER_LABEL = { local: '이메일', naver: '네이버', google: '구글', kakao: '카카오' };
+  const STATUS_CONFIG = {
+    active: { label: '활성', className: 'active', actionLabel: '정지', actionClass: 'reject-btn' },
+    suspended: { label: '정지됨', className: 'suspended', actionLabel: '정지 해제', actionClass: 'approve-btn' }
+  };
   let currentPage = 1;
   let currentSearch = '';
 
@@ -79,17 +83,43 @@
 
   function row(u) {
     const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${u.name || '-'}<br><span style="color:var(--muted);font-size:11px;">${u.email}</span></td>
-      <td>${u.createdAt.slice(0, 10)}</td>
-      <td>${PROVIDER_LABEL[u.provider] || u.provider}</td>
-      <td><span class="status-badge ${u.status}">${u.status === 'suspended' ? '정지됨' : '활성'}</span></td>
-      <td class="row-actions">
-        <button type="button" class="${u.status === 'suspended' ? 'approve-btn' : 'reject-btn'}" data-action="toggle-status" data-id="${u.id}" data-current="${u.status}">
-          ${u.status === 'suspended' ? '정지 해제' : '정지'}
-        </button>
-      </td>
-    `;
+    const status = Object.prototype.hasOwnProperty.call(STATUS_CONFIG, u.status)
+      ? STATUS_CONFIG[u.status]
+      : { label: '알 수 없음', className: '', actionLabel: '상태 변경', actionClass: 'reject-btn' };
+    const userCell = document.createElement('td');
+    userCell.append(document.createTextNode(u.name || '-'));
+    userCell.appendChild(document.createElement('br'));
+    const email = document.createElement('span');
+    email.setAttribute('style', 'color:var(--muted);font-size:11px;');
+    email.textContent = u.email == null ? '' : String(u.email);
+    userCell.appendChild(email);
+    tr.appendChild(userCell);
+
+    const dateCell = document.createElement('td');
+    dateCell.textContent = String(u.createdAt || '').slice(0, 10);
+    tr.appendChild(dateCell);
+    const providerCell = document.createElement('td');
+    providerCell.textContent = Object.prototype.hasOwnProperty.call(PROVIDER_LABEL, u.provider)
+      ? PROVIDER_LABEL[u.provider]
+      : String(u.provider || '');
+    tr.appendChild(providerCell);
+    const statusCell = document.createElement('td');
+    const badge = document.createElement('span');
+    badge.className = `status-badge${status.className ? ` ${status.className}` : ''}`;
+    badge.textContent = status.label;
+    statusCell.appendChild(badge);
+    tr.appendChild(statusCell);
+    const actionCell = document.createElement('td');
+    actionCell.className = 'row-actions';
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = status.actionClass;
+    button.setAttribute('data-action', 'toggle-status');
+    button.setAttribute('data-id', String(u.id));
+    button.setAttribute('data-current', u.status === 'suspended' ? 'suspended' : 'active');
+    button.textContent = status.actionLabel;
+    actionCell.appendChild(button);
+    tr.appendChild(actionCell);
     return tr;
   }
 
@@ -129,7 +159,7 @@
     if (btn.dataset.action === 'toggle-status') {
       const next = btn.dataset.current === 'suspended' ? 'active' : 'suspended';
       if (next === 'suspended' && !confirm('이 회원을 정지시키겠습니까? 로그인 및 서비스 이용이 즉시 차단됩니다.')) return;
-      const res = await fetch(`/api/admin/users/${id}/status`, {
+      const res = await fetch(`/api/admin/users/${encodeURIComponent(id)}/status`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: next })
       });

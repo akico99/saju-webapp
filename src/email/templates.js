@@ -59,4 +59,19 @@ function verifyEmailEmail({ verifyUrl, ttlHours }) {
   `);
 }
 
-module.exports = { passwordResetEmail, verifyEmailEmail };
+function accountDeletionCodeEmail({ code, ttlMinutes }) {
+  return wrap(`
+    <h1 style="color:${COLORS.star};font-size:19px;margin:0 0 12px;text-align:center;">회원 탈퇴 확인 코드</h1>
+    <p style="color:${COLORS.muted};font-size:14px;line-height:1.7;margin:0 0 20px;text-align:center;">
+      마이페이지의 탈퇴 화면에 아래 코드를 입력하면 탈퇴가 진행돼요.<br>이 코드는 <b style="color:${COLORS.gold};">${ttlMinutes}분</b> 동안, 한 번만 쓸 수 있어요.
+    </p>
+    <div style="text-align:center;margin-bottom:24px;">
+      <span style="display:inline-block;background:${COLORS.bg};border:1px solid ${COLORS.line};color:${COLORS.gold};font-weight:800;font-size:28px;letter-spacing:6px;padding:14px 24px;border-radius:12px;">${code}</span>
+    </div>
+    <p style="color:${COLORS.muted};font-size:12px;line-height:1.6;text-align:center;margin:0;">
+      본인이 요청하지 않았다면 이 메일은 무시하셔도 괜찮아요. 코드를 알려주지 않으면 탈퇴되지 않아요.
+    </p>
+  `);
+}
+
+module.exports = { passwordResetEmail, verifyEmailEmail, accountDeletionCodeEmail };

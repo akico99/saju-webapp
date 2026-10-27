@@ -8,8 +8,8 @@ const TEST_MODE = !SECRET_KEY.startsWith('live_');
 
 const authHeader = () => `Basic ${Buffer.from(`${SECRET_KEY}:`).toString('base64')}`;
 
-async function tossPost(url, body) {
-  const res = await fetch(url, { method: 'POST', headers: { Authorization: authHeader(), 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+async function tossPost(url, body, extraHeaders = {}) {
+  const res = await fetch(url, { method: 'POST', headers: { Authorization: authHeader(), 'Content-Type': 'application/json', ...extraHeaders }, body: JSON.stringify(body) });
   const data = await res.json().catch(() => ({}));
   return { ok: res.ok, status: res.status, data };
 }
@@ -17,12 +17,35 @@ async function tossPost(url, body) {
 function confirmPayment({ paymentKey, orderId, amount }) {
   return tossPost(`${API}/confirm`, { paymentKey, orderId, amount });
 }
+async function lookupPayment(orderId) {
+  if (!SECRET_KEY) return { ok: false, status: 0, data: { message: 'TOSS_SECRET_KEY 없음' } };
+  try {
+    const res = await fetch(`${API}/orders/${encodeURIComponent(orderId)}`, { headers: { Authorization: authHeader() } });
+    return { ok: res.ok, status: res.status, data: await res.json().catch(() => ({})) };
+  } catch (err) { return { ok: false, status: 0, data: { message: err.message } }; }
+}
+
+function latestCanceledAt(payment) {
+  const cancels = Array.isArray(payment && payment.cancels) ? payment.cancels : [];
+  let latest = null;
+  let latestTime = -Infinity;
+  for (const cancel of cancels) {
+    const value = cancel && cancel.canceledAt;
+    if (typeof value !== 'string') continue;
+    const time = Date.parse(value);
+    if (Number.isFinite(time) && time > latestTime) {
+      latest = value;
+      latestTime = time;
+    }
+  }
+  return latest;
+}
 
 /** 결제 전액 취소. 네트워크 오류도 던지지 않고 { ok:false }로 돌려준다. */
-function cancelPayment(paymentKey, reason) {
+function cancelPayment(paymentKey, reason, idempotencyKey) {
   if (!SECRET_KEY) return Promise.resolve({ ok: false, status: 0, data: { message: 'TOSS_SECRET_KEY 없음' } });
-  return tossPost(`${API}/${encodeURIComponent(paymentKey)}/cancel`, { cancelReason: String(reason || '리포트 생성 실패').slice(0, 200) })
+  return tossPost(`${API}/${encodeURIComponent(paymentKey)}/cancel`, { cancelReason: String(reason || '리포트 생성 실패').slice(0, 200) }, idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {})
     .catch((err) => ({ ok: false, status: 0, data: { message: err.message } }));
 }
 
-module.exports = { CLIENT_KEY, SECRET_KEY, TEST_MODE, confirmPayment, cancelPayment };
+module.exports = { CLIENT_KEY, SECRET_KEY, TEST_MODE, confirmPayment, lookupPayment, cancelPayment, latestCanceledAt };

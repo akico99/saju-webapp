@@ -132,7 +132,11 @@ function adminStats() {
   const totalUsers = db.prepare('SELECT COUNT(*) AS c FROM users').get().c;
   const todaySignups = db.prepare("SELECT COUNT(*) AS c FROM users WHERE date(created_at) = date('now')").get().c;
   // 실제로 결제되고 취소되지 않은 카드 결제만 센다(테스트 결제 제외).
-  const totalRevenue = db.prepare("SELECT COALESCE(SUM(amount_krw), 0) AS s FROM card_payments WHERE status = 'paid' AND test_mode = 0").get().s;
+  // 탈퇴한 회원의 결제는 계정과 분리된 보존 기록(retained_transactions)에 남아 있으므로 함께 센다.
+  const totalRevenue = db.prepare(`
+    SELECT (SELECT COALESCE(SUM(amount_krw), 0) FROM card_payments WHERE status = 'paid' AND test_mode = 0)
+         + (SELECT COALESCE(SUM(amount_krw), 0) FROM retained_transactions WHERE payment_status = 'paid') AS s
+  `).get().s;
   return { totalUsers, todaySignups, totalRevenue };
 }
 
