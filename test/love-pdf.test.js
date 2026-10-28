@@ -32,7 +32,9 @@ test('PDF contains every paid section and all twelve monthly notes in engine ord
     assert.ok(html.includes(`${m.month}월 고유 해설입니다.`));
   });
   assert.match(html, /window\.__chartsReady = true/);
-  assert.match(html, /data:image\/webp;base64,/);
+  assert.match(html, /data:image\/jpeg;base64,/);
+  // 그림은 미리 줄인 JPEG만 넣는다. webp를 넣으면 PDF에서 압축이 풀려 한 건이 수 MB가 된다.
+  assert.doesNotMatch(html, /data:image\/webp/);
   assert.match(html, /태어난 시각 모름/);
 });
 

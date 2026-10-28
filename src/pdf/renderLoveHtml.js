@@ -8,12 +8,13 @@ const { getFontFaceCss } = require('./reportCss');
 const { renderMarkup } = require('./textMarkup');
 const { splitBlocks, monthParts } = require('../../public/love-reading-model');
 
-const ASSETS = path.join(__dirname, '../../public/love-assets/reading');
+// PDF용 그림은 보이는 비율로 미리 자른 JPEG다(scripts/build-love-pdf-art.js). webp는 PDF에서 압축이 풀려 장당 약 1.6MB가 됐다.
+const ASSETS = path.join(__dirname, 'assets', 'love');
 const imageCache = new Map();
 function sharedImage(file) {
   if (!imageCache.has(file)) {
     const p = path.join(ASSETS, file);
-    imageCache.set(file, fs.existsSync(p) ? 'data:image/webp;base64,' + fs.readFileSync(p).toString('base64') : '');
+    imageCache.set(file, fs.existsSync(p) ? 'data:image/jpeg;base64,' + fs.readFileSync(p).toString('base64') : '');
   }
   return imageCache.get(file);
 }
@@ -67,7 +68,7 @@ mark { background:linear-gradient(transparent 52%,#f6d27a 52%); color:#2b1015; f
 .brand { margin:0; color:#e9bac1; font-size:9pt; letter-spacing:.08em; }
 .cover h1 { margin:12mm 0 3mm; font-size:34pt; line-height:1.4; }
 .cover .subtitle { font-size:13pt; margin:0 0 8mm; color:#f0d8d7; }
-.cover-art { display:block; width:100%; height:120mm; object-fit:cover; object-position:center 30%; border-radius:3mm; }
+.cover-art { display:block; width:100%; height:120mm; object-fit:cover; border-radius:3mm; }
 .cover .person { margin:8mm 0 1mm; font-size:15pt; font-weight:700; }
 .cover .meta { font-size:9pt; color:#dfbec4; margin:0; }
 .cover .answer { margin:7mm 0 0; padding:5mm 6mm; border:1px solid #6b2c3b; border-left:3px solid #ef5368; border-radius:2mm; background:#2a1118; font-size:10.5pt; line-height:1.75; color:#fff1eb; }
@@ -109,7 +110,7 @@ mark { background:linear-gradient(transparent 52%,#f6d27a 52%); color:#2b1015; f
 .chapter-head { break-inside:avoid; break-after:avoid; display:flex; gap:5mm; align-items:center; border-bottom:2px solid #4e182b; padding-bottom:2.5mm; margin:0 0 4mm; }
 .chapter-head .no { font-family:ReportMyeongjo,serif; font-size:22pt; color:#c23d5c; line-height:1; }
 .chapter-head h2 { font-size:16.5pt; line-height:1.35; margin:0; color:#3a1420; }
-.chapter-art { width:100%; height:30mm; object-fit:cover; object-position:center 32%; display:block; border-radius:2mm; margin:0 0 4mm; }
+.chapter-art { width:100%; height:30mm; object-fit:cover; display:block; border-radius:2mm; margin:0 0 4mm; }
 .chapter h3 { font-size:10.5pt; line-height:1.5; margin:4.5mm 0 1.5mm; color:#8a2e47; break-after:avoid; }
 .chapter h3::before { content:''; display:inline-block; width:2.2mm; height:2.2mm; background:#c23d5c; border-radius:50%; margin:0 2mm .3mm 0; }
 .chapter p { margin:0 0 3mm; orphans:2; widows:2; }
@@ -137,10 +138,10 @@ function renderLoveHtml(engine, person, reading) {
   const birthLabel = birth.year && birth.month && birth.day
     ? (birth.isLunar ? '음력' : '양력') + ' ' + birth.year + '.' + birth.month + '.' + birth.day + ' · ' + (birth.hour == null ? '태어난 시각 모름' : String(birth.hour).padStart(2,'0') + ':' + String(birth.minute || 0).padStart(2,'0')) : '';
   const title = reading.title || '연애 시기 리포트';
-  const cover = sharedImage('cover-comic.webp');
+  const cover = sharedImage('cover.jpg');
   const answer = sections.find(s => s.key === 'answer');
   const body = sections.filter(s => s !== answer);
-  const sectionArt = { top:'timing-comic.webp', drawn:'thread-comic.webp', pattern:'door-comic.webp' };
+  const sectionArt = { top:'timing.jpg', drawn:'thread.jpg', pattern:'door.jpg' };
   const toc = body.map((s, i) => '<li><span>' + String(i + 1).padStart(2,'0') + '</span>' + escape(s.title) + '</li>').join('') + (notes.length ? '<li><span>12M</span>앞으로 12개월</li>' : '');
   const chapters = body.map((s, i) => {
     const src = sectionArt[s.key] ? sharedImage(sectionArt[s.key]) : '';
