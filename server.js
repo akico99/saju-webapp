@@ -1,11 +1,28 @@
 'use strict';
 require('dotenv').config();
+const { validateRuntimeConfig } = require('./src/config/validateRuntimeConfig');
+try {
+  validateRuntimeConfig();
+} catch (error) {
+  // The validator reports setting names only; never print secret values.
+  console.error(`[설정 오류] ${error.message}`);
+  process.exit(1);
+}
 const app = require('./src/server/app');
-const { recoverPendingOrders } = require('./src/jobs/recoverPendingOrders');
+const { recoverPendingOrders, recoverPaidPayments } = require('./src/jobs/recoverPendingOrders');
 const { backupDbToEmail } = require('./src/jobs/backupDb');
+const { runPrivacyMaintenance } = require('./src/jobs/privacyMaintenance');
 
 // 새 요청을 받기 전에 먼저 실행 — 재시작 전 끝내지 못한 작업을 환불 처리한다.
 recoverPendingOrders();
+// 보존 기한이 지난 거래 기록과 삭제하지 못한 생성 파일을 정리한다 — 아래 60초 타이머에서도 이어서 부른다.
+runPrivacyMaintenance();
+recoverPaidPayments().catch((e) => console.error('[결제 복구] 실패:', e.message));
+const paymentRecoveryTimer = setInterval(() => {
+  recoverPaidPayments().catch((e) => console.error('[결제 복구] 실패:', e.message));
+  runPrivacyMaintenance();
+}, 60 * 1000);
+paymentRecoveryTimer.unref();
 // 완료된 PDF의 발송 큐는 재시작 뒤에도 복구한다. 실패한 메일은 최대 3회, 1분 간격.
 const { deliverPendingLoveReports } = require('./src/jobs/deliverLoveReports');
 const deliverReports = () => deliverPendingLoveReports().catch(() => console.error('[PDF 메일] 발송 큐 처리 실패'));

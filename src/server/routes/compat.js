@@ -37,7 +37,7 @@ function parsePerson(body, prefix) {
 }
 
 /** 궁합 리포트 시작 — 라우트(/api/compat)와 카드 결제 승인(pay.js)이 같은 함수를 쓴다. */
-async function startCompat(userId, body) {
+async function startCompat(userId, body, { cardPaymentId } = {}) {
   let personAInput, personBInput;
   try {
     personAInput = parsePerson(body, 'a');
@@ -75,7 +75,7 @@ async function startCompat(userId, body) {
 
   let price;
   try {
-    price = points.chargeForProductAndCreateOrder(userId, 'compat', { label, jobId });
+    price = points.chargeForProductAndCreateOrder(userId, 'compat', { label, jobId, cardPaymentId });
   } catch (e) {
     if (e.code === 'insufficient_points') {
       throw new HttpError(402, { error: e.message, code: e.code, required: e.required, balance: e.balance });

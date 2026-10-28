@@ -112,6 +112,7 @@ test('전체 풀이 데모: 7개 장, 원문 그대로 보기, 12개월 탭 키�
     for (const m of monthTexts) assert.ok(example.paid.replace(/\*\*/g, '').includes(m), '월 문장이 원문에 없음: ' + m);
     // 무료 데모는 6개 장
     await page.click('[data-mode="free"]');
+    await page.waitForFunction(() => document.querySelectorAll('.lr-chapter').length === 6, { timeout: 5000 });
     assert.equal(await page.$$eval('.lr-chapter', (n) => n.length), 6);
     assert.deepEqual(errors, []);
   } finally {

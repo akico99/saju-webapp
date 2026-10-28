@@ -11,7 +11,7 @@
 const orders = require('../db/orders');
 const points = require('../db/points');
 const cardPayments = require('../db/cardPayments');
-const { cancelPayment } = require('./tossPayments');
+const { cancelPayment, lookupPayment, latestCanceledAt } = require('./tossPayments');
 const { notifyCardCancelFailure } = require('../email/cardCancelAlert');
 
 async function refundPurchase(userId, amount, reason, jobId) {
@@ -23,9 +23,9 @@ async function refundPurchase(userId, amount, reason, jobId) {
       return { method: 'balance' };
     }
     points.recordCardRefund(userId, reason, jobId);
-    const result = await cancelPayment(card.payment_key, reason);
+    const result = await cancelPayment(card.payment_key, reason, card.cancel_idempotency_key);
     const detail = result.ok ? reason : `${reason} / 취소 실패 — 수동 환불 필요: ${(result.data && result.data.message) || result.status}`;
-    cardPayments.finishRefund(card, result.ok, detail);
+    cardPayments.finishRefund(card, result.ok, detail, latestCanceledAt(result.data));
     if (!result.ok) {
       console.error('[환불] 카드 결제 취소 실패 — 수동 환불 필요:', card.order_id, result.data);
       notifyCardCancelFailure(card, detail);
@@ -37,4 +37,24 @@ async function refundPurchase(userId, amount, reason, jobId) {
   }
 }
 
-module.exports = { refundPurchase };
+async function retryCancellation(row) {
+  if (!row || !['cancel_failed', 'canceling'].includes(row.status)) return { ok: false, error: '결제 취소 재시도 대상이 아닙니다.' };
+  const current = await lookupPayment(row.order_id);
+  if (!current.ok) return { ok: false, error: '토스 결제 상태를 확인하지 못했습니다.' };
+  if (current.data.status === 'PARTIAL_CANCELED') {
+    cardPayments.finishPartialCancellation(row, current.data.balanceAmount);
+    return { ok: false, error: `부분 취소 상태입니다. 미취소 잔액 ${current.data.balanceAmount ?? '확인 필요'}원을 확인해 주세요.` };
+  }
+  if (current.data.status === 'CANCELED') {
+    cardPayments.finishCheckedCancellation(row, '토스 결제 조회 결과 이미 취소됨', latestCanceledAt(current.data));
+    return { ok: true, alreadyCanceled: true };
+  }
+  if (current.data.status !== 'DONE') return { ok: false, error: `현재 토스 상태(${current.data.status})에서는 재취소할 수 없습니다.` };
+  const claim = cardPayments.claimCancellation(row);
+  if (!claim) return { ok: false, error: '다른 요청이 취소를 처리 중입니다.' };
+  const result = await cancelPayment(claim.payment_key, row.error || '관리자 재시도', claim.cancel_idempotency_key);
+  cardPayments.finishRefund(claim, result.ok, result.ok ? '관리자 취소 재시도 완료' : (result.data && result.data.message) || result.status, latestCanceledAt(result.data));
+  return { ok: result.ok, error: result.ok ? undefined : '토스 취소 요청에 실패했습니다.' };
+}
+
+module.exports = { refundPurchase, retryCancellation };

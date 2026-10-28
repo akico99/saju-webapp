@@ -21,12 +21,15 @@ const PRODUCT = 'deep_love';
 const PRICE = points.PRICES[PRODUCT];
 let seq = 0;
 let cancelCalls = [];
+let cancelHeaders = [];
 let cancelOk = true;
 const realFetch = global.fetch;
 
 test.before(() => {
-  global.fetch = async (url) => {
+  global.fetch = async (url, options = {}) => {
     cancelCalls.push(String(url));
+    cancelHeaders.push(options.headers || {});
+    if (String(url).includes('/orders/')) return { ok: true, status: 200, json: async () => ({ status: 'DONE' }) };
     return { ok: cancelOk, status: cancelOk ? 200 : 500, json: async () => (cancelOk ? {} : { message: '토스 오류' }) };
   };
 });
@@ -35,7 +38,7 @@ test.after(() => {
   db.close();
   fs.rmSync(tmpDir, { recursive: true, force: true });
 });
-test.beforeEach(() => { cancelCalls = []; cancelOk = true; });
+test.beforeEach(() => { cancelCalls = []; cancelHeaders = []; cancelOk = true; });
 
 function newUser() {
   seq += 1;
@@ -103,6 +106,60 @@ test('a failed Toss cancel is marked for manual refund and still leaves no balan
   assert.equal(row.status, 'cancel_failed');
   assert.match(row.error, /수동 환불 필요/);
   assert.equal(balanceOf(userId), 0);
+});
+
+test('failed cancellation remains cancel_failed and a retry reuses its idempotency key', async () => {
+  const userId = newUser();
+  const { jobId, orderId, paymentKey } = cardPurchase(userId);
+  cancelOk = false;
+  await refundPurchase(userId, PRICE, '생성 실패', jobId);
+  const firstUrl = cancelCalls[0];
+  const firstKey = cancelHeaders[0]['Idempotency-Key'];
+  assert.match(firstUrl, /cancel/);
+  assert.ok(firstKey);
+  assert.equal(cardPayments.findByOrderId(orderId).status, 'cancel_failed');
+  cancelOk = true;
+  const { retryCancellation } = require('../src/server/refundPurchase');
+  const retry = await retryCancellation(cardPayments.findByOrderId(orderId));
+  assert.equal(retry.ok, true);
+  assert.equal(cancelCalls.length, 3); // initial cancel, provider lookup, retry cancel
+  assert.equal(cancelCalls[2], firstUrl);
+  assert.equal(cancelHeaders[2]['Idempotency-Key'], firstKey);
+  assert.equal(cardPayments.findByOrderId(orderId).status, 'canceled');
+  assert.ok(paymentKey);
+});
+
+test('administrator can retry only after checking provider cancellation state', async () => {
+  const toss = require('../src/server/tossPayments');
+  assert.equal(typeof toss.lookupPayment, 'function');
+  const oldFetch = global.fetch;
+  const calls = [];
+  global.fetch = async (url) => {
+    calls.push(String(url));
+    return { ok: true, status: 200, json: async () => ({ status: 'CANCELED' }) };
+  };
+  try {
+    const result = await toss.lookupPayment('admin-order');
+    assert.equal(result.data.status, 'CANCELED');
+    assert.match(calls[0], /admin-order/);
+  } finally { global.fetch = oldFetch; }
+});
+
+test('partial provider cancellation remains visible for outstanding balance review', async () => {
+  const userId = newUser();
+  const { orderId } = cardPurchase(userId);
+  const row = cardPayments.findByOrderId(orderId);
+  db.prepare("UPDATE card_payments SET status='cancel_failed' WHERE id=?").run(row.id);
+  const oldFetch = global.fetch;
+  global.fetch = async (url) => ({ ok: true, status: 200, json: async () => String(url).includes('/orders/') ? { status: 'PARTIAL_CANCELED', balanceAmount: 1800 } : {} });
+  try {
+    const { retryCancellation } = require('../src/server/refundPurchase');
+    const result = await retryCancellation(cardPayments.findByOrderId(orderId));
+
+    assert.equal(result.ok, false);
+    assert.equal(cardPayments.findByOrderId(orderId).status, 'cancel_failed');
+    assert.match(cardPayments.findByOrderId(orderId).error, /부분 취소.*1800/);
+  } finally { global.fetch = oldFetch; }
 });
 
 test('an order paid without a card is returned to the ledger as before', async () => {

@@ -13,6 +13,7 @@ const downloadLink = document.getElementById('downloadLink');
 const errorBlock = document.getElementById('errorBlock');
 const compatReading = document.getElementById('compatReading');
 const compatVisual = document.getElementById('compatVisual');
+const compatReader = document.getElementById('compatReader');
 const compatProse = document.getElementById('compatProse');
 const compatDd = document.getElementById('compatDd');
 
@@ -63,11 +64,55 @@ function ddBox(cls, title, items) {
 }
 
 // 서버가 만든 그래프(visual) → 본문 → 할 것/피할 것 카드. 예전 주문(그래프·본문 없음)이면 미리보기를 숨기고 PDF만 보여 준다.
-function showReading(report, visual) {
+// 장면형 읽기 화면. 모델·렌더러 중 하나라도 실패하면 false를 돌려 아래의 기존 본문 그림으로 되돌린다.
+// 파일은 서버가 켜 둔 경우에만 불러온다(꺼져 있으면 404 요청 자체를 보내지 않는다).
+let sceneLoad = null;
+let sceneReady = false;
+function loadScenes() {
+  if (!sceneLoad) {
+    sceneLoad = (async () => {
+      const cfg = await (await fetch('/api/scene-reader')).json();
+      if (!cfg || cfg.enabled !== true) return false;
+      const css = new Promise((ok, no) => {
+        const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = '/reading-view.css';
+        l.onload = ok; l.onerror = () => no(new Error('css')); document.head.appendChild(l);
+      });
+      const js = (src) => new Promise((ok, no) => {
+        const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => no(new Error(src)); document.head.appendChild(s);
+      });
+      await Promise.all([css, js('/reading-model-compat.js'), js('/reading-view.js')]);
+      // 글꼴은 기다리지 않는다. 못 불러오면 시스템 글꼴로 그려진다.
+      const font = document.createElement('link'); font.rel = 'stylesheet';
+      font.href = 'https://fonts.googleapis.com/css2?family=Gowun+Batang&family=Noto+Sans+KR:wght@400;500;600;700&display=swap';
+      document.head.appendChild(font);
+      sceneReady = !!(window.ReadingModelCompat && window.ReadingView);
+      return sceneReady;
+    })().catch(() => false);
+  }
+  return sceneLoad;
+}
+
+function showScenes(report, jobId) {
+  if (!compatReader || !sceneReady) return false;
+  try {
+    if (!window.ReadingModelCompat || !window.ReadingView) return false;
+    const model = window.ReadingModelCompat.build(report);
+    if (!model) return false;
+    window.ReadingView.render(compatReader, model, { reportId: jobId, storagePrefix: 'compat-reading', ariaLabel: '궁합 리포트 읽기', className: 'lr-compat' });
+    return compatReader.childElementCount > 0;
+  } catch (e) {
+    compatReader.replaceChildren();
+    return false;
+  }
+}
+
+function showReading(report, visual, jobId) {
   compatVisual.innerHTML = visual || '';
   compatProse.replaceChildren(); compatDd.replaceChildren();
+  if (compatReader) compatReader.replaceChildren();
   const parts = splitReport(report);
-  parts.prose.split(/\n\n+/).map((b) => b.trim()).filter(Boolean).forEach((block) => {
+  const scenes = showScenes(report, jobId);
+  (scenes ? '' : parts.prose).split(/\n\n+/).map((b) => b.trim()).filter(Boolean).forEach((block) => {
     if (block.startsWith('### ')) {
       const [first, ...rest] = block.split('\n');
       const h = document.createElement('h4'); h.className = 'fr-sub'; h.textContent = first.replace(/^###\s*/, '');
@@ -90,7 +135,7 @@ function showReading(report, visual) {
     compatDd.appendChild(grid);
   }
   compatProse.hidden = !compatProse.children.length;
-  compatReading.classList.toggle('hidden', !(visual || compatProse.children.length || compatDd.children.length));
+  compatReading.classList.toggle('hidden', !(visual || scenes || compatProse.children.length || compatDd.children.length));
 }
 
 // 생성 중엔 폼 전체를 잠근다 — 버튼 하나만 잠그면 "생성 중..." 화면에서 또 눌러
@@ -109,7 +154,8 @@ async function poll(jobId) {
       progressBlock.classList.add('hidden');
       downloadBlock.classList.remove('hidden');
       downloadLink.href = `/api/download/${jobId}`;
-      showReading(data.report, data.visual);
+      await loadScenes();
+      showReading(data.report, data.visual, jobId);
       setFormBusy(false);
       return;
     }

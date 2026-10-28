@@ -55,7 +55,7 @@ function validateReading(reading) {
   if (missing.length) throw new Error('필수 풀이 항목이 완성되지 않았습니다: ' + missing.join(', '));
 }
 
-async function startNewYear(userId, body) {
+async function startNewYear(userId, body, { cardPaymentId } = {}) {
   if (!config.enabled) throw new HttpError(404, { error: '상품을 준비 중입니다.' });
 
   let parsed;
@@ -80,7 +80,7 @@ async function startNewYear(userId, body) {
   let price;
   try {
     price = points.chargeForProductAndCreateOrder(userId, productKey, {
-      label: '2027년 신년운세' + (person.name ? ' — ' + person.name : ''), jobId
+      label: '2027년 신년운세' + (person.name ? ' — ' + person.name : ''), jobId, cardPaymentId
     });
   } catch (e) {
     if (e.code === 'insufficient_points') {

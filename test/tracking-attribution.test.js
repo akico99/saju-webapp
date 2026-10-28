@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const vm = require('node:vm');
 const fs = require('node:fs');
 const path = require('node:path');
+const http = require('node:http');
 const source = fs.readFileSync(path.join(__dirname, '../public/track.js'), 'utf8');
 function browser({ initial = {}, search = '?utm_source=meta&utm_content=A', referrer = '', clientDate = '2035-01-01' } = {}) {
   const values = new Map(Object.entries(initial).map(([k,v]) => [k, JSON.stringify(v)]));
@@ -58,7 +59,13 @@ test('추적 설정과 주문 저장은 서버의 KST 시작 시각 경계를 �
   const attr={first:{utm_source:'meta'}};
   for (const [now,want] of [[Date.parse('2026-10-07T14:59:59.999Z'),false],[Date.parse('2026-10-07T15:00:00.000Z'),true]]) {
     Date.now=()=>now;
-    const response=await fetch('http://127.0.0.1:'+server.address().port+'/api/tracking-config');
+    // Windows can assign a local port from 1024-15000; Fetch rejects some of these as unsafe ports.
+    const response=await new Promise((resolve,reject)=>http.get({hostname:'127.0.0.1',port:server.address().port,path:'/api/tracking-config'},res=>{
+      let body='';
+      res.setEncoding('utf8');
+      res.on('data',chunk=>body+=chunk);
+      res.on('end',()=>resolve({headers:{get:name=>res.headers[name.toLowerCase()]||null},json:async()=>JSON.parse(body)}));
+    }).on('error',reject));
     const config=await response.json();
     assert.equal(config.attributionEnabled,want);
     assert.equal(config.metaPixelId,want?'test_pixel':null);

@@ -66,15 +66,25 @@
     const prefix = opts.prefix || '';
     loadProfiles().then((profiles) => {
       if (!profiles.length) return; // 로그인 안 했거나 저장된 인물 없음 — 그냥 안 보여줌
-      container.innerHTML = `
-        <label class="profile-picker-label">저장된 정보 불러오기</label>
-        <select class="profile-picker-select">
-          <option value="">${opts.placeholder || '직접 입력'}</option>
-          ${profiles.map((p) => `<option value="${p.id}">${p.label}${p.name ? ' · ' + p.name : ''}</option>`).join('')}
-        </select>
-      `;
+      const label = document.createElement('label');
+      label.className = 'profile-picker-label';
+      label.textContent = '저장된 정보 불러오기';
+
+      const select = document.createElement('select');
+      select.className = 'profile-picker-select';
+      const placeholder = document.createElement('option');
+      placeholder.value = '';
+      placeholder.textContent = opts.placeholder || '직접 입력';
+      select.appendChild(placeholder);
+      profiles.forEach((profile) => {
+        const option = document.createElement('option');
+        option.value = String(profile.id);
+        option.textContent = `${profile.label}${profile.name ? ' · ' + profile.name : ''}`;
+        select.appendChild(option);
+      });
+      container.replaceChildren(label, select);
       container.classList.remove('hidden');
-      container.querySelector('select').addEventListener('change', (e) => {
+      select.addEventListener('change', (e) => {
         const profile = profiles.find((p) => String(p.id) === e.target.value);
         if (profile) applyProfileToForm(form, profile, prefix);
       });

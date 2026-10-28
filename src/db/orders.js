@@ -7,8 +7,8 @@ const db = require('./index');
 
 const stmts = {
   insert: db.prepare(`
-    INSERT INTO orders (user_id, product_key, label, job_id, status)
-    VALUES (@userId, @productKey, @label, @jobId, 'pending')
+    INSERT INTO orders (user_id, product_key, card_payment_id, label, job_id, status)
+    VALUES (@userId, @productKey, @cardPaymentId, @label, @jobId, 'pending')
   `),
   findByJobId: db.prepare('SELECT * FROM orders WHERE job_id = ?'),
   // 요약 카드는 명식 계산만으로 만들어져 LLM을 기다릴 필요가 없다. 완료 전에 먼저 기록해
@@ -55,8 +55,8 @@ const stmts = {
   `)
 };
 
-function createOrder({ userId, productKey, label, jobId }) {
-  stmts.insert.run({ userId, productKey, label: label || null, jobId });
+function createOrder({ userId, productKey, cardPaymentId, label, jobId }) {
+  stmts.insert.run({ userId, productKey, cardPaymentId: cardPaymentId || null, label: label || null, jobId });
 }
 
 function findByJobId(jobId) {
