@@ -26,7 +26,7 @@ test('이메일 형식과 명시적 전달 동의를 서버에서 검사한다',
 });
 test('완료된 주문만 전체 PDF를 보내고 중복 호출은 발송하지 않는다',async()=>{
   order('paid');order('pending',false);let calls=0;
-  const send=async(message)=>{ calls++;assert.equal(message.to,'recipient@example.test');assert.equal(Buffer.from(message.attachments[0].content,'base64').toString(),'%PDF-1.4 test');assert.equal(message.idempotencyKey,'love-report-paid');return {id:'provider-test'}; };
+  const send=async(message)=>{ calls++;assert.equal(message.to,'recipient@example.test');assert.equal(Buffer.from(message.attachments[0].content,'base64').toString(),'%PDF-1.4 test');assert.equal(message.idempotencyKey,'report-paid');return {id:'provider-test'}; };
   assert.equal(await deliverLoveReport('pending',send),false);
   assert.equal(await deliverLoveReport('paid',send),true);
   assert.equal(await deliverLoveReport('paid',send),false);

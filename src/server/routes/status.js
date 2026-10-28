@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const orders = require('../../db/orders');
 const delivery = require('../../db/reportDelivery');
+const { deliverable } = require('../../email/loveReport');
 const { requireAuth } = require('../middleware/auth');
 const { publicJobError } = require('../publicJobError');
 const { OUTPUT_ROOT } = require('../../config/outputDir');
@@ -44,7 +45,7 @@ router.get('/status/:jobId', requireAuth, (req, res) => {
     visual: order.result_visual || null,
     hasCard: !!order.card_path,
     hasPdf: !!order.result_path,
-    delivery: order.product_key === 'love_timing' ? delivery.publicState(order.job_id) : null,
+    delivery: deliverable(order.product_key) ? delivery.publicState(order.job_id) : null,
     chaptersReady: readChapters(req.params.jobId)
       .map((c, i) => (c ? { index: i, id: c.id, title: c.title } : null))
       .filter(Boolean)

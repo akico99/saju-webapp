@@ -40,7 +40,7 @@ function cleanup() {
   db.prepare("DELETE FROM report_delivery WHERE consent_at < datetime('now','-30 days')").run();
   // 카드 승인 대기 중에는 폼 복원에 필요하다. 결제 원장의 사본도 같은 기간 후 제거한다.
   db.prepare(`UPDATE card_payments SET form_json=json_remove(form_json,'$.deliveryEmail','$.deliveryConsent')
-    WHERE product_key='love_timing' AND created_at < datetime('now','-30 days') AND json_valid(form_json)
+    WHERE created_at < datetime('now','-30 days') AND json_valid(form_json)
     AND json_type(form_json,'$.deliveryEmail') IS NOT NULL`).run();
 }
 module.exports = { parseDelivery, get, create, claim, finish, publicState, pendingJobs, cleanup };

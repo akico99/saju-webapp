@@ -49,7 +49,8 @@ router.post('/pay/prepare', requireAuth, paymentPrepareLimiter, (req, res) => {
   const { product, form, attribution } = req.body || {};
   const resolved = resolveProduct(product, form);
   if (!resolved) return res.status(400).json({ error: '알 수 없는 상품입니다.' });
-  if (product === 'love') {
+  // PDF를 이메일로 받는 상품은 결제창을 열기 전에 수신 주소와 동의를 확인한다. 기존 궁합 화면은 이메일 칸이 없어 칸이 있을 때만 본다.
+  if (['love', 'newyear', 'reunion'].includes(product) || (product === 'compat' && form && form.deliveryEmail !== undefined)) {
     try { require('../../db/reportDelivery').parseDelivery(form); }
     catch (e) { return res.status(400).json({ error: e.message }); }
   }
