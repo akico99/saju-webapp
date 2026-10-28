@@ -58,10 +58,10 @@ app.use((req, res, next) => {
   if (!storyOn && (/^\/love(?:-brand\.js|-reading-(?:model|view)\.js|\.css)\/?$/i.test(requestPath) || /^\/love-assets(?:\/|$)/i.test(requestPath))) {
     return res.sendStatus(404);
   }
-  if (!reunionConfig.enabled && (/^\/reunion(?:\.html|-app\.js|-product\.css)?\/?$/i.test(requestPath) || /^\/api\/reunion(?:\/|$)/i.test(requestPath))) {
+  if (!reunionConfig.enabled && (/^\/reunion(?:\.html|-app\.js|-product\.css)?\/?$/i.test(requestPath) || /^\/reunion-assets(?:\/|$)/i.test(requestPath) || /^\/api\/reunion(?:\/|$)/i.test(requestPath))) {
     return res.sendStatus(404);
   }
-  if (!compatV2Config.enabled && (/^\/couple(?:\.html|-app\.(?:js|css))?\/?$/i.test(requestPath) || /^\/api\/couple(?:\/|$)/i.test(requestPath))) {
+  if (!compatV2Config.enabled && (/^\/couple(?:\.html|-app\.(?:js|css))?\/?$/i.test(requestPath) || /^\/couple-assets(?:\/|$)/i.test(requestPath) || /^\/api\/couple(?:\/|$)/i.test(requestPath))) {
     return res.sendStatus(404);
   }
   // 장면형 읽기 화면 파일은 켜기 전까지 404다. 궁합 페이지는 /api/scene-reader로 켜짐을 확인한 뒤에만 불러온다.

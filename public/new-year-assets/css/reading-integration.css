@@ -1,0 +1,15 @@
+/* 자동 생성: scripts/build-product-themes.js — love-assets/reading-integration.css (newyear 색). 직접 고치지 마세요. */
+/* Existing checkout and legacy text stay outside the illustrated reader. */
+.love-page .reader-replaced{display:none!important}
+.love-page .love-result:has(.lr-reader){padding:0}
+.love-page .love-result:has(.lr-reader)>.lg-folded,
+.love-page .love-result:has(.lr-reader)>.love-resume{margin-left:20px;margin-right:20px}
+.love-page .love-result:has(.lr-reader)>.love-unlock,
+.love-page .love-result:has(.lr-reader)>.error-box{margin-left:18px;margin-right:18px}
+.love-page .love-result:has(.lr-reader)>.love-sticky{margin:0}
+.love-page .love-result:has(.lr-reader)>.love-after{padding-bottom:24px}
+#paidTimeline{padding:24px}
+.love-page .love-result:has(.lr-reader){background:#0b0f17;color:#fff5ee}
+.love-page .love-result:has(.lr-reader)>.lg-folded{background:#141a28;color:#fff5ee;border-color:#343d52}
+.love-page .love-result:has(.lr-reader)>.love-unlock{background:#141a28;color:#fff5ee}
+.love-page .love-result:has(.lr-reader) .love-sticky button{background:#c37d47;color:#fff}

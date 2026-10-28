@@ -5,10 +5,12 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { getFontFaceCss } = require('./reportCss');
+const { sajuChartHtml, SAJU_CHART_PDF_CSS } = require('./sajuChart');
+const { themeCss } = require('../productTheme');
 const { renderMarkup } = require('./textMarkup');
 const { splitBlocks, monthParts } = require('../../public/love-reading-model');
 
-const ASSETS = path.join(__dirname, 'assets', 'love');
+const ASSETS = path.join(__dirname, 'assets', 'reunion');
 const imageCache = new Map();
 function sharedImage(file) {
   if (!imageCache.has(file)) {
@@ -48,13 +50,11 @@ function bodyHtml(text) {
     return '<p' + (b.type === 'action' ? ' class="action"' : '') + '>' + renderMarkup(b.text) + '</p>';
   }).join('\n');
 }
+// 여덟 글자 표(천간·지지·십신·지장간·12운성·신살) — 웹과 같은 부품(sajuChart.js)을 밝은 바탕용으로 쓴다.
 function pillarsHtml(engine, label) {
-  const pj = engine && engine.palja;
-  if (!pj) return '';
-  const known = !(engine.meta && (engine.meta.hourGiven === false || engine.meta.input.hour == null));
-  const cell = (l, p, day) => '<div class="pillar' + (day ? ' day' : '') + '"><small>' + l + '</small><b>' + escape(p && p.stem ? p.stem + p.branch : '모름') + '</b></div>';
-  return '<div class="who">' + escape(label) + '</div><div class="pillars">' + (known ? cell('시주', pj.hourPillar) : '<div class="pillar"><small>시주</small><b>모름</b></div>') + cell('일주', pj.dayPillar, true) + cell('월주', pj.monthPillar) + cell('연주', pj.yearPillar) + '</div>';
+  return engine && engine.manse ? sajuChartHtml(engine, { light: true, title: label }) : '';
 }
+
 function chartHtml(timing) {
   const months = timing && Array.isArray(timing.months) ? timing.months : [];
   if (!months.length || months[0].score == null) return '';
@@ -172,15 +172,15 @@ function renderReunionHtml(engineA, engineB, people, reading) {
   const chart = chartHtml(timing);
   const cover = sharedImage('cover.jpg');
   const topTitle = reading.boundary ? '관계의 기운이 크게 움직이는 세 달' : '두 사람의 관계 신호가 강한 세 달';
-  return '<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>' + escape(nameA) + '님의 다시, 우리</title><style>' + getFontFaceCss() + '\n' + CSS + '</style></head><body>'
-    + '<section class="cover"><p class="brand">사주보는 수달 · 여울의 관계 이야기</p><h1>다시, 우리</h1><p class="subtitle">두 사람의 사주로 읽는 재회 리포트</p>' + (cover ? '<img class="cover-art" src="' + cover + '" alt="">' : '') + '<p class="person">' + escape(nameA) + '님과 ' + escape(nameB) + '의 이야기</p>'
+  return '<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>' + escape(nameA) + '님의 다시, 우리</title><style>' + getFontFaceCss() + '\n' + themeCss(CSS + SAJU_CHART_PDF_CSS, 'reunion') + '</style></head><body>'
+    + '<section class="cover"><p class="brand">사주보는 수달 · 달하의 관계 이야기</p><h1>다시, 우리</h1><p class="subtitle">두 사람의 사주로 읽는 재회 리포트</p>' + (cover ? '<img class="cover-art" src="' + cover + '" alt="">' : '') + '<p class="person">' + escape(nameA) + '님과 ' + escape(nameB) + '의 이야기</p>'
     + (answer ? '<div class="answer" data-section-key="answer">' + bodyHtml(answer.text).replace(/<\/?p[^>]*>/g, ' ').trim() + '</div>' : '')
     + '<p class="notice">' + escape(safetyText(reading)) + ' 사주 해석은 선택을 돕는 참고 자료이며 상대의 마음이나 미래를 확정하지 않습니다.</p></section>'
     + '<div class="flow"><section class="summary"><p class="kicker">AT A GLANCE</p><h2>두 사람의 앞으로 12개월, 한눈에</h2>'
     + '<div class="box safety">' + escape(safetyText(reading)) + '</div>'
     + (tops ? '<div class="box"><p class="ttl">' + topTitle + '</p><div class="tops">' + tops + '</div></div>' : '')
     + (chart ? '<div class="box"><p class="ttl">달마다 두 사람의 관계 흐름</p>' + chart + '</div>' : '')
-    + '<div class="two"><div class="box">' + pillarsHtml(engineA, nameA + '님의 네 기둥') + '</div><div class="box">' + pillarsHtml(engineB, nameB + '의 네 기둥') + '</div></div>'
+    + '<div class="two"><div class="box">' + pillarsHtml(engineA, nameA + '님의 여덟 글자') + '</div><div class="box">' + pillarsHtml(engineB, nameB + '의 여덟 글자') + '</div></div>'
     + bondHtml(reading.bond)
     + '<div class="box"><p class="ttl">이 리포트의 구성</p><ol class="toc">' + toc + '</ol></div></section>'
     + chapters

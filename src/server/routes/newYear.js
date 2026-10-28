@@ -3,6 +3,7 @@
    PDF 완성 뒤 결제 전에 받은 수신 주소로 보낸다. 메일 실패는 결과를 유지하고, 인증된 주문 소유자에게만
    재전송(/api/newyear/:jobId/delivery)을 허용한다. 구조는 routes/love.js와 같다. */
 const express = require('express');
+const { sajuChartHtml } = require('../../pdf/sajuChart');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
@@ -59,7 +60,7 @@ router.post('/newyear/preview', (req, res) => {
   let parsed;
   try { parsed = parseBody(req.body); } catch (e) { return res.status(400).json({ error: e.message }); }
   try {
-    res.set('Cache-Control', 'no-store').json({ reading: buildNewYearPreview(parsed.birth) });
+    res.set('Cache-Control', 'no-store').json({ reading: { ...buildNewYearPreview(parsed.birth), chart: sajuChartHtml(computeSaju(parsed.birth)) } });
   } catch (e) {
     res.status(400).json({ error: '명식 계산 실패: ' + e.message });
   }
@@ -113,7 +114,7 @@ async function startNewYear(userId, body, { cardPaymentId } = {}) {
       if (!fs.existsSync(pdfPath)) throw new Error('PDF 생성 확인 실패');
       orders.markDone(jobId, {
         resultPath: pdfPath, cardPath: null, llmCostUsd: costUsd(reading.usage),
-        resultText: toPlainText(reading), resultVisual: newYearWebHtml(reading)
+        resultText: toPlainText(reading), resultVisual: sajuChartHtml(engine) + newYearWebHtml(reading)
       });
       // 발송 실패는 완성된 유료 결과를 오류/환불 상태로 바꾸지 않는다.
       await deliverReport(jobId).catch(() => {});

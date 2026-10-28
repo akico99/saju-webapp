@@ -1,4 +1,6 @@
 'use strict';
+// 이 상품만의 그림(안내 인물·분위기가 연애 상품과 다르다). 공용 읽기 화면도 이 표를 쓴다.
+window.LOVE_READING_ART = {"greeting":"/couple-assets/cover.webp","greeting-comic":"/couple-assets/cover.webp","cover-comic":"/couple-assets/cover.webp","empathy":"/couple-assets/attract.webp","thinking":"/couple-assets/attract.webp","thread-comic":"/couple-assets/attract.webp","explain":"/couple-assets/flow.webp","explain-comic":"/couple-assets/flow.webp","meeting":"/couple-assets/flow.webp","timing-comic":"/couple-assets/flow.webp","new-start":"/couple-assets/flow.webp","cheer":"/couple-assets/keep.webp","door-comic":"/couple-assets/keep.webp","conversation":"/couple-assets/keep.webp","distance":"/couple-assets/keep.webp","caution":"/couple-assets/keep.webp"};
 /* 두 사람의 궁합 화면(/couple.html) — 대화형 입력 → 무료 첫 장(/api/couple/preview) → 잠금 해제(/api/couple,
    로그인·카드 결제는 pay-flow.js) → 결과(/api/status/:jobId).
    입력값은 한 <form id="coupleForm"> 안에 모두 있다. 로그인으로 넘어갈 때 PayFlow.toLogin이 통째로 저장하고,
@@ -166,7 +168,7 @@
   function art(file, cls, label) {
     const fig = el('figure', 'lr-art ' + cls);
     const img = document.createElement('img');
-    img.src = '/love-assets/reading/' + file + '.webp'; img.alt = ''; img.loading = 'lazy'; img.decoding = 'async';
+    img.src = window.LOVE_READING_ART[file] || '/love-assets/reading/' + file + '.webp'; img.alt = ''; img.loading = 'lazy'; img.decoding = 'async';
     img.addEventListener('error', () => fig.remove());
     fig.appendChild(img);
     if (label) fig.appendChild(el('figcaption', 'lr-art-label', label));
@@ -246,12 +248,13 @@
     reader.appendChild(el('h1', 'lr-main-title', b.aName && b.bName ? b.aName + '님과 ' + b.bName + '님,\n두 사람은\n어떤 사이일까요?' : '두 사람은,\n어떤 사이일까요?'));
     reader.appendChild(el('p', 'lr-lead', r.pull.headline));
 
-    const c1 = chapter(0, '두 사람의 네 기둥', 'greeting-comic', 'lr-art-portrait lr-cut-wide', '여울의 인사');
+    const c1 = chapter(0, '두 사람의 네 기둥', 'greeting-comic', 'lr-art-portrait lr-cut-wide', '결의 인사');
     const two = el('div', 'couple-two'); two.append(pillarsPanel(pa), pillarsPanel(pb)); c1.appendChild(two);
+    if (window.SajuChart && r.charts) { SajuChart.replace(two.firstChild, r.charts.a); SajuChart.replace(two.lastChild, r.charts.b); two.className = 'couple-charts'; }
     if (r.note) c1.appendChild(el('p', 'lr-note', r.note));
     reader.appendChild(c1);
 
-    const c2 = chapter(1, '끌어당기는 자리, 부딪히는 자리', 'empathy', 'lr-art-portrait lr-cut-tall', '여울의 공감');
+    const c2 = chapter(1, '끌어당기는 자리, 부딪히는 자리', 'empathy', 'lr-art-portrait lr-cut-tall', '결의 공감');
     c2.appendChild(paper([['p', r.pull.lead], ['h', '서로 끌어당기는 결']]));
     c2.appendChild(pointList(r.pull.points));
     c2.appendChild(paper([['h', '부딪힐 수 있는 자리']]));
@@ -259,7 +262,7 @@
     c2.appendChild(teaser('부딪힐 때, 두 사람은 어떻게 풀면 좋을까요?', '다툼이 시작되는 신호와 푸는 대화, 서로 다른 연락 방식까지 전체 풀이에서 이어서 살펴봐요.', false));
     reader.appendChild(c2);
 
-    const c3 = chapter(2, '서로를 채워 주는 기운', 'explain', 'lr-art-portrait lr-cut-wide', '여울의 해설');
+    const c3 = chapter(2, '서로를 채워 주는 기운', 'explain', 'lr-art-portrait lr-cut-wide', '결의 해설');
     c3.appendChild(paper([['p', r.complement.headline + '.']].concat(r.complement.lines.map((t) => ['p', t]))));
     const two2 = el('div', 'couple-two'); two2.append(barsPanel(pa), barsPanel(pb)); c3.appendChild(two2);
     reader.appendChild(c3);
@@ -277,7 +280,7 @@
     c4.appendChild(teaser('두 사람의 흐름이 함께 좋은 세 달은?', '계절의 흐름을 봤다면, 이제 달마다 두 사람의 흐름이 어떻게 겹치는지 알아볼 차례예요.', true));
     reader.appendChild(c4);
 
-    const c5 = chapter(4, '전체 풀이에서 열리는 장', 'door-comic', 'lr-art-portrait lr-cut-tall', '여울의 응원');
+    const c5 = chapter(4, '전체 풀이에서 열리는 장', 'door-comic', 'lr-art-portrait lr-cut-tall', '결의 응원');
     const locked = el('div', 'lr-panel lr-locked'); locked.appendChild(el('h3', 'lr-sub', '전체 풀이에서 더 알려 드려요'));
     const ul = el('ul'); r.locked.forEach((t) => ul.appendChild(el('li', null, t))); locked.appendChild(ul);
     c5.appendChild(locked);
@@ -477,7 +480,8 @@
     const sections = parseSections(report);
     const answer = sections.find((s) => s.title === '한 줄 답');
     document.getElementById('paidAnswer').textContent = answer ? answer.text.replace(/\*\*/g, '') : '';
-    document.getElementById('coupleVisual').innerHTML = visual || ''; // 서버가 엔진 숫자로만 만든 막대
+    document.getElementById('coupleVisual').innerHTML = visual || '';
+    if (window.SajuChart) SajuChart.lift(document.getElementById('coupleVisual')); // 서버가 엔진 숫자로만 만든 막대
     const timeline = document.getElementById('paidTimeline');
     timeline.classList.toggle('hidden', !visual);
     document.getElementById('progressBlock').classList.add('hidden');

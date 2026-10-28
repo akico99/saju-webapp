@@ -53,7 +53,9 @@
     budget.left--;
     var wrap = el('figure', 'lr-art ' + (LANDSCAPE[scene] ? 'lr-art-scene' : 'lr-art-portrait') + (extraCls ? ' ' + extraCls : ''));
     var img = document.createElement('img');
-    img.src = '/love-assets/reading/' + encodeURIComponent(ART_FILES[scene] || 'explain-comic') + '.webp';
+    // 상품 페이지가 window.LOVE_READING_ART로 장면별 그림을 정하면 그것을 쓴다(신년운세·재회·궁합). 없으면 연애 그림.
+    var custom = root.LOVE_READING_ART && root.LOVE_READING_ART[scene];
+    img.src = custom || '/love-assets/reading/' + encodeURIComponent(ART_FILES[scene] || 'explain-comic') + '.webp';
     img.alt = ''; img.loading = 'lazy'; img.decoding = 'async';
     img.addEventListener('error', function () { var p = wrap.parentNode; if (p) { p.classList.remove('has-art'); p.removeChild(wrap); } });
     wrap.appendChild(img);

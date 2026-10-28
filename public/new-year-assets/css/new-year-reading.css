@@ -1,0 +1,23 @@
+/* 자동 생성: scripts/build-product-themes.js — new-year-reading.css (newyear 색). 직접 고치지 마세요. */
+/* 2027 신년운세 전용 — 공용 연애 읽기 디자인(love-redesign.css, reading.css) 위에 분기 칸·네 주제 막대·조심할 달 표시만 더한다. */
+.lr-reader .ny-quarters{margin:18px var(--lr-pad) 0}
+.lr-reader .ny-quarter-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+.lr-reader .ny-quarter{display:flex;flex-direction:column;align-items:center;gap:2px;padding:12px 4px 10px;border:1px solid var(--lr-line);border-radius:10px;background:var(--lr-soft);text-align:center}
+.lr-reader .ny-quarter-meter{display:flex;align-items:flex-end;width:18px;height:64px;margin-bottom:6px;border-radius:5px;background:#1c2538;overflow:hidden}
+.lr-reader .ny-quarter-meter i{display:block;width:100%;border-radius:5px 5px 2px 2px;background:linear-gradient(#ffbd8a,#c26f30)}
+.lr-reader .ny-quarter b{font-size:14px;color:#fff4eb}
+.lr-reader .ny-quarter small{font-size:11px;color:var(--lr-muted)}
+.lr-reader .ny-quarter em{font-style:normal;font-size:12px;font-weight:700;color:#ffd166}
+.love-bar.is-watch i{background:#6f6a73!important}
+/* 점수가 높은 달의 순위 숫자가 그래프 제목에 겹치지 않게 막대 위에 자리를 둔다. */
+.ny-chart .love-bars,.lr-summary-chart .ny-chart .love-bars{margin-top:40px}
+.love-bar.is-watch .love-rank{color:#c9c3cb!important}
+.ny-topics{margin-top:18px}
+.ny-topics h3{margin:0 0 10px;font:700 15px/1.5 ReadingSans,sans-serif;color:#f6ebe3}
+.ny-topics ul{list-style:none;margin:0;padding:0}
+.ny-topics li{display:grid;grid-template-columns:96px minmax(0,1fr) 48px;gap:10px;align-items:center;margin:0 0 8px;font-size:13px;color:#e8dacf}
+.ny-topics i{display:block;height:8px;border-radius:5px;background:#1c2538;overflow:hidden}
+.ny-topics i b{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,#c26f30,#ffbd8a)}
+.ny-topics em{font-style:normal;font-weight:700;color:#ffd166;text-align:right}
+.lr-flip.ny-watch .lr-flip-rank{color:#c9c3cb}
+.lr-flip.ny-watch .lr-flip-front{background:#15171b;border-color:#3b3f49}

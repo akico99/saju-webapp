@@ -5,6 +5,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { getFontFaceCss } = require('./reportCss');
+const { sajuChartHtml, SAJU_CHART_PDF_CSS } = require('./sajuChart');
 const { renderMarkup } = require('./textMarkup');
 const { splitBlocks, monthParts } = require('../../public/love-reading-model');
 
@@ -30,12 +31,11 @@ function bodyHtml(text, action) {
     return '<p' + (b.type === 'action' ? ' class="action"' : '') + '>' + renderMarkup(b.text) + '</p>';
   }).join('\n');
 }
-function pillarsHtml(engine) {
-  const pj = engine && engine.palja;
-  if (!pj) return '';
-  const cell = (label, p) => '<div class="pillar' + (label === '일주' ? ' day' : '') + '"><small>' + label + '</small><b>' + escape(p && p.stem ? p.stem + p.branch : '모름') + '</b></div>';
-  return '<div class="pillars">' + cell('시주', pj.hourPillar) + cell('일주', pj.dayPillar) + cell('월주', pj.monthPillar) + cell('연주', pj.yearPillar) + '</div>';
+// 여덟 글자 표(천간·지지·십신·지장간·12운성·신살) — 웹과 같은 부품(sajuChart.js)을 밝은 바탕용으로 쓴다.
+function pillarsHtml(engine, label) {
+  return engine && engine.manse ? sajuChartHtml(engine, { light: true, title: label }) : '';
 }
+
 function ohaengHtml(engine) {
   const c = engine && engine.counts && engine.counts.ohaeng;
   if (!c) return '';
@@ -155,7 +155,7 @@ function renderLoveHtml(engine, person, reading) {
   const tops = topCards(timing, notes);
   const chart = chartHtml(timing);
   const pil = pillarsHtml(engine), oh = ohaengHtml(engine);
-  return '<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>' + escape(name) + '님의 ' + escape(title) + '</title><style>' + getFontFaceCss() + '\n' + CSS + '</style></head><body>'
+  return '<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>' + escape(name) + '님의 ' + escape(title) + '</title><style>' + getFontFaceCss() + '\n' + CSS + SAJU_CHART_PDF_CSS + '</style></head><body>'
     + '<section class="cover"><p class="brand">사주보는 수달 · 여울의 연애 이야기</p><h1>인연의 시기</h1><p class="subtitle">' + escape(title) + '</p>' + (cover ? '<img class="cover-art" src="' + cover + '" alt="">' : '') + '<p class="person">' + escape(name) + '님을 위한 이야기</p><p class="meta">' + escape(birthLabel) + '</p>'
     + (answer ? '<div class="answer" data-section-key="answer">' + bodyHtml(answer.text).replace(/<\/?p[^>]*>/g, ' ').trim() + '</div>' : '')
     + '<p class="notice">웹에서 읽은 전체 풀이를 그대로 담았습니다. 사주 해석은 선택을 돕는 참고 자료이며 미래나 상대의 마음을 확정하지 않습니다.</p></section>'
@@ -163,7 +163,7 @@ function renderLoveHtml(engine, person, reading) {
     + '<section class="summary"><p class="kicker">AT A GLANCE</p><h2>' + escape(name) + '님의 앞으로 12개월, 한눈에</h2>'
     + (tops ? '<div class="box"><p class="ttl">인연 신호가 강한 세 달</p><div class="tops">' + tops + '</div></div>' : '')
     + (chart ? '<div class="box"><p class="ttl">달마다 인연 신호의 세기</p>' + chart + '</div>' : '')
-    + (pil || oh ? '<div class="two">' + (pil ? '<div class="box"><p class="ttl">사주 네 기둥</p>' + pil + '<p class="cap">가운데 붉은 칸(일주)의 아래 글자가 배우자 자리예요.</p></div>' : '') + (oh ? '<div class="box"><p class="ttl">다섯 기운의 분포</p>' + oh + '</div>' : '') + '</div>' : '')
+    + (pil || oh ? '<div class="two">' + (pil ? '<div class="box"><p class="ttl">사주 여덟 글자</p>' + pil + '</div>' : '') + (oh ? '<div class="box"><p class="ttl">다섯 기운의 분포</p>' + oh + '</div>' : '') + '</div>' : '')
     + '<div class="box"><p class="ttl">이 리포트의 구성</p><ol class="toc">' + toc + '</ol></div></section>'
     + chapters
     + (notes.length ? '<section class="chapter" id="love-months"><header class="chapter-head"><span class="no">12M</span><h2>앞으로 12개월</h2></header><div class="months">' + months + '</div></section>' : '')

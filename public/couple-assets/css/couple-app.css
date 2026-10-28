@@ -1,0 +1,18 @@
+/* 자동 생성: scripts/build-product-themes.js — couple-app.css (couple 색). 직접 고치지 마세요. */
+/* 두 사람의 궁합(/couple.html) 전용 — 공용 연애 화면 스타일(love.css, love-assets/*.css) 위에 두 사람 배치만 더한다. */
+/* 공용 product.css는 #loveLanding이 숨으면 하단 시작 버튼을 숨긴다. 이 화면의 소개 영역 id에 맞춰 같은 규칙을 둔다. */
+body:has(#coupleLanding.hidden) .landing-dock { display: none; }
+.couple-page .couple-names { display: grid; gap: 10px; }
+.couple-page .couple-two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 22px var(--lr-pad, 22px) 0; }
+@media (max-width: 420px) { .couple-page .couple-two { grid-template-columns: 1fr; } }
+.couple-page .couple-two .lr-panel { margin: 0; }
+.couple-page .couple-person .lr-pillars { grid-template-columns: repeat(4, 1fr); gap: 4px; }
+.couple-page .couple-person .lr-pillar b { font-size: 18px; }
+.couple-page .couple-person .lr-pillar span, .couple-page .couple-person .lr-pillar small { font-size: 10.5px; }
+.couple-page .couple-balance .lr-bar { grid-template-columns: 64px 1fr 30px; }
+.couple-page .couple-points { list-style: none; margin: 8px var(--lr-pad, 22px) 14px; padding: 0; display: grid; gap: 8px; }
+.couple-page .couple-points li { padding: 12px 14px; border-radius: 10px; border: 1px solid rgba(217,173,84, .28); background: rgba(217,173,84, .06); line-height: 1.6; }
+.couple-page .couple-points b { display: block; font-size: 12.5px; letter-spacing: .02em; color: #e1c48b; margin-bottom: 2px; }
+.couple-page .couple-points span { font-size: 15px; }
+.couple-page .couple-seasons { margin: 14px 0; }
+.couple-page .couple-chart .love-chart-note { line-height: 1.6; }

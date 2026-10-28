@@ -157,6 +157,6 @@ test('PDF HTML은 표지·두 사람의 기둥·전체 장·12개월을 담고 �
   assert.equal((html.match(/class="chapter"/g) || []).length, 7, '본문 여섯 장 + 12개월');
   assert.equal((html.match(/class="month"/g) || []).length, 12);
   assert.equal((html.match(/class="topcard"/g) || []).length, 3);
-  assert.match(html, /<b>모름<\/b>/, '시각 모름은 시주를 모름으로 표시한다');
+  assert.match(html, /태어난 시각을<br>몰라 비워 둠/, '시각 모름은 여덟 글자 표에서 시주를 비워 둔다');
   assert.match(html, /window.__chartsReady = true/);
 });

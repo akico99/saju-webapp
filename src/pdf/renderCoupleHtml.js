@@ -1,14 +1,16 @@
 'use strict';
 /* 두 사람의 궁합(compat_v2) PDF와 웹 결과 그래프. 웹 결과와 같은 본문을 그대로 담는다(추가 AI 호출 없음).
    구성은 연애 리포트 PDF(renderLoveHtml.js)와 같다: 표지 + 요약 쪽(함께 좋은 세 달·12개월 그래프·두 사람의 네 기둥·오행·목차)
-   + 이어 흐르는 본문 + 2단 12개월. 그림은 연애 리포트의 JPEG(src/pdf/assets/love)를 다시 쓴다. */
+   + 이어 흐르는 본문 + 2단 12개월. 그림은 궁합 전용 JPEG(src/pdf/assets/couple), 색은 productTheme의 couple. */
 const fs = require('node:fs');
 const path = require('node:path');
 const { getFontFaceCss } = require('./reportCss');
+const { sajuChartHtml, SAJU_CHART_PDF_CSS } = require('./sajuChart');
+const { themeCss } = require('../productTheme');
 const { renderMarkup } = require('./textMarkup');
 const { splitBlocks, monthParts } = require('../../public/love-reading-model');
 
-const ASSETS = path.join(__dirname, 'assets', 'love');
+const ASSETS = path.join(__dirname, 'assets', 'couple');
 const imageCache = new Map();
 function sharedImage(file) {
   if (!imageCache.has(file)) {
@@ -48,12 +50,11 @@ function bodyHtml(text, action) {
   }).join('\n');
 }
 function hourKnown(engine) { return !(engine.meta && (engine.meta.hourGiven === false || (engine.meta.input && engine.meta.input.hour == null))); }
-function pillarsHtml(engine) {
-  const pj = engine && engine.palja;
-  if (!pj) return '';
-  const cell = (label, p, known) => '<div class="pillar' + (label === '일주' ? ' day' : '') + '"><small>' + label + '</small><b>' + escape(known && p && p.stem ? p.stem + p.branch : '모름') + '</b></div>';
-  return '<div class="pillars">' + cell('시주', pj.hourPillar, hourKnown(engine)) + cell('일주', pj.dayPillar, true) + cell('월주', pj.monthPillar, true) + cell('연주', pj.yearPillar, true) + '</div>';
+// 여덟 글자 표(천간·지지·십신·지장간·12운성·신살) — 웹과 같은 부품(sajuChart.js)을 밝은 바탕용으로 쓴다.
+function pillarsHtml(engine, label) {
+  return engine && engine.manse ? sajuChartHtml(engine, { light: true, title: label }) : '';
 }
+
 function ohaengHtml(engine) {
   const c = engine && engine.counts && engine.counts.ohaeng;
   if (!c) return '';
@@ -185,9 +186,11 @@ function renderCoupleHtml(engineA, engineB, people, reading) {
   const months = ordered.map((n) => '<article class="month" data-month="' + escape(n.month) + '"><h3>' + (n.year ? escape(n.year) + '년 ' : '') + escape(n.month) + '월</h3>' + monthHtml(n.note) + '</article>').join('\n');
   const tops = topCards(timing, flow && flow.text);
   const chart = chartHtml(timing);
-  const personBox = (engine, name) => '<div class="box"><p class="who">' + escape(name) + '</p>' + pillarsHtml(engine) + ohaengHtml(engine) + '</div>';
-  return '<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>' + escape(nameA) + ' · ' + escape(nameB) + ' — 두 사람의 궁합</title><style>' + getFontFaceCss() + '\n' + CSS + '</style></head><body>'
-    + '<section class="cover"><p class="brand">사주보는 수달 · 여울의 관계 이야기</p><h1>두 사람의 궁합</h1><p class="subtitle">서로 끌리는 이유와 앞으로 12개월</p>' + (cover ? '<img class="cover-art" src="' + cover + '" alt="">' : '')
+  // 여덟 글자 표와 오행 막대를 따로 둔다. 한 상자로 묶으면 쪽에 다 들어가지 않아 2쪽 절반이 비었다.
+  const personBox = (engine, name) => '<div class="box"><p class="who">' + escape(name) + '</p>' + pillarsHtml(engine) + '</div>';
+  const ohaengBox = (engine, name) => '<div class="box"><p class="who">' + escape(name) + ' · 다섯 기운</p>' + ohaengHtml(engine) + '</div>';
+  return '<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>' + escape(nameA) + ' · ' + escape(nameB) + ' — 두 사람의 궁합</title><style>' + getFontFaceCss() + '\n' + themeCss(CSS + SAJU_CHART_PDF_CSS, 'couple') + '</style></head><body>'
+    + '<section class="cover"><p class="brand">사주보는 수달 · 결이 들려주는 두 사람 이야기</p><h1>두 사람의 궁합</h1><p class="subtitle">서로 끌리는 이유와 앞으로 12개월</p>' + (cover ? '<img class="cover-art" src="' + cover + '" alt="">' : '')
     + '<p class="person">' + escape(nameA) + ' · ' + escape(nameB) + '</p><p class="meta">' + escape(nameA) + ' ' + escape(birthLabel(engineA)) + '<br>' + escape(nameB) + ' ' + escape(birthLabel(engineB)) + '</p>'
     + (answer ? '<div class="answer" data-section-key="answer">' + bodyHtml(answer.text).replace(/<\/?p[^>]*>/g, ' ').trim() + '</div>' : '')
     + '<p class="notice">웹에서 읽은 전체 풀이를 그대로 담았습니다. 사주 해석은 선택을 돕는 참고 자료이며 미래나 상대의 마음을 확정하지 않습니다.</p></section>'
@@ -196,6 +199,7 @@ function renderCoupleHtml(engineA, engineB, people, reading) {
     + (tops ? '<div class="box"><p class="ttl">두 사람의 흐름이 함께 좋은 세 달</p><div class="tops">' + tops + '</div></div>' : '')
     + (chart ? '<div class="box"><p class="ttl">달마다 두 사람의 흐름</p>' + chart + '<p class="legend">막대: 두 사람 평균<span class="da"></span>' + escape(nameA) + '<span class="db"></span>' + escape(nameB) + '</p><p class="cap">숫자는 함께 좋은 순서입니다. 명리 해석을 위한 비교값이며 관계의 성공 확률이 아닙니다.</p></div>' : '')
     + '<div class="two">' + personBox(engineA, nameA) + personBox(engineB, nameB) + '</div>'
+    + '<div class="two">' + ohaengBox(engineA, nameA) + ohaengBox(engineB, nameB) + '</div>'
     + '<div class="box"><p class="ttl">이 리포트의 구성</p><ol class="toc">' + toc + '</ol></div></section>'
     + chapters
     + (notes.length ? '<section class="chapter" id="couple-months"><header class="chapter-head"><span class="no">12M</span><h2>앞으로 12개월</h2></header><div class="months">' + months + '</div></section>' : '')

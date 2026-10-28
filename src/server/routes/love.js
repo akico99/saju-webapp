@@ -2,6 +2,7 @@
 /* 무료 첫 장과 유료 웹/PDF 생성. PDF 완성 뒤 입력한 수신 주소로 전송한다.
    메일 실패는 결과를 유지하고 인증된 주문 소유자에게만 재전송을 허용한다. */
 const express = require('express');
+const { sajuChartHtml } = require('../../pdf/sajuChart');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
@@ -57,7 +58,7 @@ router.post('/love/preview', (req, res) => {
   let parsed;
   try { parsed = parseBody(req.body); } catch (e) { return res.status(400).json({ error: e.message }); }
   try {
-    res.json({ reading: buildLovePreview(parsed.birth, parsed.situation) });
+    res.json({ reading: { ...buildLovePreview(parsed.birth, parsed.situation), chart: sajuChartHtml(computeSaju(parsed.birth)) } });
   } catch (e) {
     res.status(400).json({ error: '명식 계산 실패: ' + e.message });
   }
@@ -110,7 +111,7 @@ async function startLove(userId, body) {
       if (!fs.existsSync(pdfPath)) throw new Error('PDF 생성 확인 실패');
       orders.markDone(jobId, {
         resultPath: pdfPath, cardPath: null, llmCostUsd: costUsd(reading.usage),
-        resultText: toPlainText(reading), resultVisual: loveWebHtml(reading.timing)
+        resultText: toPlainText(reading), resultVisual: sajuChartHtml(engineResult) + loveWebHtml(reading.timing)
       });
       // 발송 실패는 완성된 유료 결과를 오류/환불 상태로 바꾸지 않는다.
       await deliverLoveReport(jobId).catch(() => {});

@@ -1,0 +1,85 @@
+/* 자동 생성: scripts/build-product-themes.js — love-assets/love-redesign.css (couple 색). 직접 고치지 마세요. */
+/* Single visual system for cover, questions, preview and purchase. */
+body.love-page{--ink:#f8f4ed;--muted:#ccc4b4;--muted-2:#b9b2a4;--line:#2a4746;--bg:#070f0e;--bg-outer:#070f0e;--paper:#142222;--surface:#142222;--font-serif:ReadingSerif,serif;background:#070f0e;color:#f8f4ed;font-family:ReadingSans,'Noto Sans KR',sans-serif;letter-spacing:-.035em}
+body.love-page .app,body.love-page.done .app{max-width:480px;margin:auto;background:#070f0e;box-shadow:none;color:#f8f4ed;min-height:100svh}
+.love-page button,.love-page input,.love-page select{font-family:inherit}
+.love-page .love-header{height:58px;padding:0 20px;background:#070f0e;border-bottom:1px solid #172a29;color:#dcd3c1}
+.love-page .love-header a{color:#dad3c5;font-size:12px}.love-page .love-wordmark{font-weight:700}.love-page .love-wordmark span{color:#afa797;font-size:10px}
+.love-page .love-editorial{position:relative;padding:0 0 20px;background:#070f0e;color:#fff}
+.love-page .love-portrait-wrap{height:min(82svh,690px);min-height:480px;max-height:690px;border-radius:0;overflow:hidden;background:#070f0e}
+.love-page .love-portrait-wrap img{width:100%;height:100%;object-fit:cover;object-position:center 28%}
+.love-page .love-portrait-wrap::after{content:'';position:absolute;inset:0;background:linear-gradient(#070f0e44,transparent 24%,transparent 45%,#070f0e 100%);pointer-events:none}
+.love-page .cover-tag{z-index:2;left:24px;top:22px;border:1px solid #a7916588;background:#0c1515d9;color:#ecdfc6;padding:7px 10px;font-size:10px;font-weight:700;letter-spacing:.06em}
+.love-page .cover-title{z-index:2;bottom:32px;padding:0 24px;text-align:center;left:0;right:0}
+.love-page .cover-title h1{font:800 clamp(38px,10vw,48px)/1.4 ReadingSerif,serif;color:#fff0e7;letter-spacing:-.065em;margin:8px 0 12px;text-shadow:0 2px 20px #070f0e}
+.love-page .cover-title p{font:700 17px/1.7 ReadingSans,sans-serif;color:#f5eee0;margin:0 0 16px}.love-page .cover-byline{font:400 12px/1.5 ReadingSans,sans-serif;letter-spacing:.08em;color:#d0c3a9}
+.love-page .hero-promise{padding:0 24px 20px;font-size:12px;color:#d3cbba;gap:12px}.love-page .hero-promise i{color:#ab8f58}
+.love-page .love-primary,.love-page .landing-dock button{background:#d9ad54;color:#fff;border:0;border-radius:9px;min-height:56px;font-size:16px;font-weight:700;box-shadow:0 3px 24px #b58c3a33}
+.love-page .love-editorial>.love-primary{width:calc(100% - 40px);margin:0 20px}
+.love-page .love-meta{margin:0;padding:12px 15px 6px;font-size:11px;color:#beb5a4;text-align:center}
+.love-page .product-nav{background:#070f0e;border-color:#213d3c;padding:20px 12px}.love-page .product-nav a{color:#cec7b8;font-size:12px}
+.love-page .story-section,.love-page .love-detail,.love-page .scope-section{background:#070f0e;padding:64px 24px;color:#f3ede2}
+.love-page .story-section h2,.love-page .love-detail h2,.love-page .scope-section h2{font:800 26px/1.65 ReadingSerif,serif;letter-spacing:-.045em;color:#fcf7ec;text-align:center}
+.love-page .chapter-label,.love-page .love-eyebrow{font-size:11px;color:#d8bb80;text-align:center;letter-spacing:.08em;margin-bottom:16px}
+.love-page .thoughts{display:grid;gap:0;margin:32px 0}.love-page .thoughts p{background:transparent;border:0;border-bottom:1px solid #233d3c;border-radius:0;color:#d4ccbd;font-size:16px;line-height:1.85;text-align:center;padding:20px 8px;margin:0}
+.love-page .story-answer{font-size:17px;line-height:1.9;color:#dcd4c3}.love-page .story-answer strong{color:#efce8c}
+.love-page .yeoul-scene{background:#070f0e;aspect-ratio:2/3;min-height:440px}.love-page .yeoul-scene img{object-position:center}.love-page .yeoul-scene::after{background:linear-gradient(transparent,#070f0e)}
+.love-page .yeoul-scene>div{left:24px;right:24px;text-align:center;color:#fcf5e7}.love-page .yeoul-scene h2{font:800 30px/1.65 ReadingSerif,serif}.love-page .yeoul-scene span{color:#cdc2ac;font-size:12px}
+.love-page .yeoul-letter{background:#070f0e;padding:26px;color:#ded7c9}.love-page .yeoul-letter p{font:400 16px/1.95 ReadingSans,sans-serif}.love-page .yeoul-letter small{font-size:11px;color:#a9a191}.love-page .letter-seal{color:#d3b57c;border-color:#3e7270}
+.love-page .love-chapter-preview li{color:#e4ddcf;font-size:15px;line-height:1.8;border-color:#294645}.love-page .love-chapter-preview li::before{color:#d8b97a}
+.love-page .reading-specimen{border:1px solid #375958;border-radius:12px;background:#132121;padding:24px;box-shadow:none;margin-top:30px}.love-page .reading-specimen h3{font:800 22px/1.7 ReadingSerif,serif;color:#fbf2e1}.love-page .love-sample .reading-specimen p{font-size:15px;line-height:1.95;color:#e1dacc}
+.love-page .specimen-label{font-size:11px;color:#beb49f;border-color:#2b4b4a}.love-page .specimen-chapter{font-size:12px;color:#dec491}.love-page .sample-rule{background:#2f514f}.love-page .love-sample-action{background:#1d3433;padding:18px}.love-page .love-sample-action b{color:#f3dcad;font-size:13px}.love-page .love-sample .sample-footnote{color:#b8af9d;font-size:11px}
+.love-page .scope-card,.love-page .scope-card.full{background:#132222;border:1px solid #305251;border-radius:12px;padding:24px;color:#f4eee2}.love-page .scope-card.full{border-color:#aa8f59}.love-page .scope-card h3{font-size:20px}.love-page .scope-card p{color:#d9d1c2;font-size:15px;line-height:1.9}.love-page .scope-card a,.love-page .scope-tag,.love-page .scope-card.full .scope-tag{color:#e6cc99;font-size:12px}.love-page .scope-card.full h3 b{color:#f2d8a3;font-size:22px}.love-page .scope-card.full small{color:#c6bdab}.love-page .delivery-facts{border-color:#2b4b4a;color:#e0d7c6}
+.love-page .love-faq details{border-color:#2a4847}.love-page .love-faq summary{font-size:15px;color:#ede8dd;line-height:1.8}.love-page .love-faq details p{font-size:14px;color:#c5bdae;line-height:1.85}.love-page .love-faq .love-small{color:#b0a795;margin:26px 0}
+.love-page .landing-dock,.love-page .love-sticky{background:#070f0eee;border-color:#294c4b;backdrop-filter:blur(12px);padding-bottom:max(12px,env(safe-area-inset-bottom))}.love-page .landing-dock span{color:#c9bca3}
+.love-page .love-footer,.love-page .love-footer a{background:#070f0e;color:#afa693;border-color:#253f3e}
+/* One question per screen, no decorative chat-box chrome. */
+.love-page:has(#stage:not(.hidden)) .love-header{display:none}
+.love-page .stage{background:#070f0e;min-height:100svh;overflow:visible;display:flex;flex-direction:column;padding:0}
+.love-page .wizard-sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.love-page .stage-top{padding:20px 14px 12px;flex:none}.love-page .stage-top button{background:transparent;border:0;border-radius:8px;color:#e5dccb;backdrop-filter:none;font-size:26px}.love-page .wizard-brand{font-size:12px;color:#c3b9a6;letter-spacing:.05em}
+.love-page .wizard-progress{height:2px;margin:0 28px;background:#1f3736;overflow:hidden}.love-page .wizard-progress span{height:100%;display:block;background:#dbb466;width:14.28%;transition:width .2s}
+.love-page .wizard-count{padding:16px 28px;margin:0;font:700 11px/1.5 ReadingSans,sans-serif;letter-spacing:.1em;color:#b5a380}
+.love-page .stage-body{margin:auto 0 0;padding:clamp(45px,9svh,95px) 28px 38px;background:none;flex:1;display:flex;flex-direction:column;justify-content:center;min-width:0}
+.love-page .stage-step{width:100%;padding:0;border:0}.love-page .stage-step[hidden]{display:none!important}
+.love-page .wizard-kicker{font-size:13px;color:#bbb29f;margin:0 0 14px;text-align:left}
+.love-page .bubble{margin:0 0 32px;text-align:left;color:#fdf8ed;font-family:ReadingSans,sans-serif;line-height:1.6;letter-spacing:-.04em;box-shadow:none;background:none;padding:0;border:0;text-shadow:none}
+.love-page .bubble .q{font-size:26px;font-weight:700;line-height:1.55;color:#fdf8ed}.love-page .bubble .q::before,.love-page .bubble .q::after{content:none}.love-page .bubble small{font:400 13px/1.8 ReadingSans,sans-serif;color:#c0b7a4;margin-top:12px;opacity:1}
+.love-page .answer{gap:10px}.love-page .choice{flex:none;display:flex;min-height:60px;height:auto;padding:16px 18px;background:#131f1f;border:1px solid #2e4a49;border-radius:8px;font-size:15px;color:#f0ebe1;line-height:1.6;text-align:left;box-shadow:none}.love-page .choice small{font-size:12px;color:#beb5a4;margin-top:3px}.love-page .choice:hover,.love-page .choice:focus-visible{border-color:#cead6a;background:#192e2d}.love-page .choice.on{background:#2c6361;border-color:#ddbc7a;color:white}
+.love-page .wizard-gender{display:grid;grid-template-columns:1fr 1fr;gap:12px}.love-page .wizard-gender .choice{flex-direction:row;justify-content:space-between;align-items:center;min-height:86px;font-size:19px}
+.love-page .seg button{background:#131f1f;border:1px solid #355150;border-radius:8px;color:#d3cab7;min-height:48px;height:48px;font-size:14px}.love-page .seg button.on{background:#2c6563;color:#fff;border-color:#c7a869}
+.love-page .answer input[type=number],.love-page .answer input[type=text]{background:transparent;border:0;border-bottom:1px solid #766645;border-radius:0;height:64px;color:#fcf7ec;box-shadow:none;padding:8px 2px;text-align:left;font-size:25px;min-width:0}.love-page .answer input::placeholder{color:#867c67;font-size:23px}.love-page .answer input:focus{border-color:#efcf8f;box-shadow:none}.love-page .answer input:disabled{opacity:.4}
+.love-page .wizard-date{display:flex;gap:12px;margin:16px 0}.love-page .wizard-date label{display:flex;align-items:center;gap:4px;min-width:0;flex:1}.love-page .wizard-date label:first-child{flex:1.7}.love-page .wizard-date label span{color:#b1a690;font-size:14px}
+.love-page .unknown-row,.love-page .leap-row{justify-content:flex-start;color:#d0c8b7;font-size:14px;margin:14px 0}.love-page .unknown-row input,.love-page .leap-row input{accent-color:#dcb466}
+.love-page .go,.love-page .stage-body button[type=submit].go{min-height:56px;height:auto;padding:16px 12px;margin-top:24px;border-radius:8px;background:#d9ad54;color:white;font-size:16px;font-weight:700;box-shadow:none;border:0}
+.love-page .wizard-footnote{font-size:11px;line-height:1.7;text-align:center;color:#a79c87;margin:22px 0 0}.love-page .wizard-skip{background:none;border:0;color:#c0b7a5;font-size:13px;text-decoration:underline;display:block;margin:22px auto 0;padding:12px;min-height:44px;width:auto}
+.love-page .wizard-review{margin:0;padding:0}.love-page .wizard-review>div{display:flex;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid #263e3d;align-items:center}.love-page .wizard-review dt{font-size:12px;color:#bcb29f;flex:none}.love-page .wizard-review dd{display:flex;align-items:center;gap:8px;font-size:13px;text-align:right;line-height:1.7;margin:0;color:#efe8da}.love-page .wizard-review dd button{padding:6px;min-width:35px;min-height:35px;border:0;background:none;color:#e0c58f;font-size:11px;margin:0;width:auto;box-shadow:none}
+.love-page .bubble.err{margin-top:20px}.love-page .bubble.err .q{font-size:14px;color:#f3dbaa}
+/* Purchase sheet is a real dialog; the existing payment service follows confirmation. */
+.love-page.checkout-open{overflow:hidden}
+.love-page .checkout-sheet{position:fixed;inset:auto 0 0;margin:0 auto;width:min(100%,480px);max-width:480px;max-height:92svh;overflow-y:auto;border:1px solid #385a58;border-bottom:0;border-radius:22px 22px 0 0;background:#211b1e;color:#f4f1ea;padding:12px 22px max(22px,env(safe-area-inset-bottom));font-family:ReadingSans,sans-serif;box-shadow:0 -15px 70px #0008}
+.love-page .checkout-sheet::backdrop{background:#000b;backdrop-filter:blur(3px)}
+.love-page .checkout-handle{width:38px;height:4px;background:#77676d;border-radius:4px;margin:0 auto 20px}.love-page .checkout-header{display:flex;align-items:center;gap:12px;justify-content:space-between;margin-bottom:20px}.love-page .checkout-kicker{font-size:11px;color:#c8bca5}.love-page .checkout-header h2{font-size:20px;font-weight:700;line-height:1.5;margin:7px 0;color:#fdf9f2}.love-page #closeCheckout{width:40px;min-height:40px;background:none;color:#d3cbbc;border:0;padding:0;flex:none;font-size:25px;margin:0;box-shadow:none}
+.love-page .checkout-product{border:1px solid #dcb466;border-radius:12px;padding:14px;display:flex;align-items:center;gap:14px;background:#252c2c;position:relative}.love-page .checkout-product img{width:66px;height:93px;object-fit:cover;border-radius:6px}.love-page .checkout-product-label{font-size:10px;color:#bbb3a3}.love-page .checkout-product h3{font-size:20px;color:#fdf8ed;margin:7px 0 3px}.love-page .checkout-product p{font-size:11px;color:#ccc4b3;margin:0 0 8px}.love-page .checkout-product strong{font-size:23px;color:#fefbf4}.love-page .checkout-selected{margin-left:auto;color:#efce8c}
+.love-page .checkout-includes{padding:16px 0 16px 19px;margin:0;color:#dad4c8;font-size:12px;line-height:2.1}.love-page .checkout-description{color:#bcb5a6;font-size:12px;line-height:1.9;margin:0 0 20px}.love-page .checkout-total{border-top:1px solid #465655;padding:18px 0;display:flex;justify-content:space-between;align-items:center;font-size:14px}.love-page .checkout-total strong{font-size:24px;color:white}.love-page .checkout-terms{font-size:11px;color:#bab2a3;line-height:1.8;margin:0 0 14px;text-align:center}.love-page .checkout-terms a{color:#d5cdbc;text-decoration:underline}.love-page .checkout-confirm{width:100%;min-height:55px;border:0;border-radius:9px;background:#d9ad54;color:white;font-size:16px;font-weight:700;margin:0;box-shadow:none}.love-page .checkout-footnote{font-size:10px;line-height:1.8;text-align:center;color:#b9b2a4;margin:12px 0 0}
+.love-page .love-result:has(.lr-reader){background:#070f0e}.love-page .love-result:has(.lr-reader)>.lg-folded{background:#0f1b1b;color:#cbc2af;border-color:#203938;margin-top:18px}.love-page .lg-folded button{background:#172c2b;color:#dad0bc;border-color:#2a4e4d}
+.love-page .love-result:has(.lr-reader)>.love-unlock{background:#132222;color:#fcf5e7;border:1px solid #356261;padding:25px 20px}.love-page #unlockBtn,.love-page .love-result:has(.lr-reader) .love-sticky button{background:#d9ad54;color:white;font-weight:700;border-radius:9px;min-height:55px}.love-page .point-notice,.love-page .point-notice a{color:#ddd2bb}
+.love-page :focus-visible{outline:3px solid #f3daa9;outline-offset:4px}
+@media(max-width:350px){.love-page .stage-body{padding-left:20px;padding-right:20px}.love-page .bubble .q{font-size:23px}.love-page .checkout-sheet{padding-left:16px;padding-right:16px}.love-page .cover-title h1{font-size:36px}.love-page .love-portrait-wrap{min-height:460px}.love-page .choice{font-size:14px}}
+@media(prefers-reduced-motion:reduce){.love-page *{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+.love-page .wizard-progress{flex:none;min-height:2px;max-height:2px;border-radius:0;position:relative}
+.love-page #wizardProgress{min-height:2px;height:2px;border-radius:0;position:static}
+.love-page:has(#stage:not(.hidden)) .love-guide{display:none}
+.love-page .checkout-sheet .checkout-header{background:#211b1e;padding:0;border:0;text-align:left;position:static;box-shadow:none}
+.love-page .love-guide{background:#0c1616;color:#c1b8a5;border-color:#274342}.love-page .love-guide h2{color:#ece5d8}.love-page .love-guide p{color:#c1b8a5}
+.love-page .love-after{background:#070f0e;color:#d1c8b5}.love-page .love-after a{color:#e3ca98}
+
+.love-page .checkout-delivery{border-top:1px solid #455e5d;padding:20px 0;color:#f5f2ec;text-align:left}
+.love-page .checkout-delivery h3{font-size:19px;margin:0 0 16px}
+.love-page .checkout-delivery>label{display:block;font-size:14px;margin-bottom:8px}
+.love-page .checkout-delivery input[type=email]{width:100%;background:#0b1111;color:#fff;border:1px solid #988d77;border-radius:8px;padding:14px;font:inherit;font-size:16px}
+.love-page .checkout-delivery p{font-size:13px;line-height:1.7;color:#dcd6ca;margin:12px 0}
+.love-page .checkout-delivery .delivery-consent{display:flex;align-items:flex-start;gap:10px;line-height:1.7;font-size:13px}
+.love-page .delivery-consent input{width:20px;height:20px;flex:none;margin-top:2px;accent-color:#cca964}
+.love-page #deliveryError{color:#f5e0b7}.love-page #retryDelivery{padding:12px 16px;background:#325957;color:#fff;border:1px solid #9c8d6f;border-radius:8px}
+.love-page #deliveryStatus{font-size:14px;line-height:1.7;margin:16px 0}

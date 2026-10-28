@@ -1,15 +1,17 @@
 'use strict';
 /* 2027 신년운세 PDF — 웹 결과와 같은 본문을 그대로 담는다(추가 AI 호출·요약·개인별 그림 없음).
    연애 PDF(renderLoveHtml.js)와 같은 짜임: 표지 → 한눈에 보는 요약(좋은 세 달·조심할 달, 12개월 막대,
-   네 주제, 분기, 사주 네 기둥, 목차) → 이어 흐르는 본문 → 2단 12개월. 그림은 연애 상품의 PDF용 JPEG를 쓴다. */
+   네 주제, 분기, 사주 네 기둥, 목차) → 이어 흐르는 본문 → 2단 12개월. 그림은 신년운세 전용 JPEG(src/pdf/assets/new-year), 색은 productTheme의 newyear. */
 const fs = require('node:fs');
 const path = require('node:path');
 const { getFontFaceCss } = require('./reportCss');
+const { sajuChartHtml, SAJU_CHART_PDF_CSS } = require('./sajuChart');
+const { themeCss } = require('../productTheme');
 const { renderMarkup } = require('./textMarkup');
 const { splitBlocks, monthParts } = require('../../public/love-reading-model');
 const { levelOf } = require('../llm/newYearReading');
 
-const ASSETS = path.join(__dirname, 'assets', 'love');
+const ASSETS = path.join(__dirname, 'assets', 'new-year');
 const imageCache = new Map();
 function sharedImage(file) {
   if (!imageCache.has(file)) {
@@ -30,13 +32,11 @@ function bodyHtml(text) {
     return '<p' + (b.type === 'action' ? ' class="action"' : '') + '>' + renderMarkup(b.text) + '</p>';
   }).join('\n');
 }
-function pillarsHtml(engine) {
-  const pj = engine && engine.palja;
-  if (!pj) return '';
-  const hourKnown = !(engine.meta && (engine.meta.hourGiven === false || (engine.meta.input && engine.meta.input.hour == null)));
-  const cell = (label, p) => '<div class="pillar' + (label === '일주' ? ' day' : '') + '"><small>' + label + '</small><b>' + escape(p && p.stem ? p.stem + p.branch : '모름') + '</b></div>';
-  return '<div class="pillars">' + cell('시주', hourKnown ? pj.hourPillar : null) + cell('일주', pj.dayPillar) + cell('월주', pj.monthPillar) + cell('연주', pj.yearPillar) + '</div>';
+// 여덟 글자 표(천간·지지·십신·지장간·12운성·신살) — 웹과 같은 부품(sajuChart.js)을 밝은 바탕용으로 쓴다.
+function pillarsHtml(engine, label) {
+  return engine && engine.manse ? sajuChartHtml(engine, { light: true, title: label }) : '';
 }
+
 function ohaengHtml(engine) {
   const c = engine && engine.counts && engine.counts.ohaeng;
   if (!c) return '';
@@ -190,8 +190,8 @@ function renderNewYearHtml(engine, person, reading) {
     return '<article class="month' + (r ? ' top' : '') + (Number(n.month) === watch ? ' watch' : '') + '" data-month="' + escape(n.month) + '"><h3>' + escape(year) + '년 ' + escape(n.month) + '월' + tag + '</h3>' + monthHtml(n.note) + '</article>';
   }).join('\n');
   const pil = pillarsHtml(engine), oh = ohaengHtml(engine);
-  return '<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>' + escape(name) + '님의 ' + escape(year) + ' 신년운세</title><style>' + getFontFaceCss() + '\n' + CSS + '</style></head><body>'
-    + '<section class="cover"><p class="brand">사주보는 수달 · 여울의 한 해 이야기</p><h1>' + escape(year) + ' 신년운세</h1><p class="subtitle">한 해의 흐름과 열두 달의 할 일</p>' + (cover ? '<img class="cover-art" src="' + cover + '" alt="">' : '') + '<p class="person">' + escape(name) + '님의 ' + escape(year) + '년</p><p class="meta">' + escape(birthLabel) + '</p>'
+  return '<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>' + escape(name) + '님의 ' + escape(year) + ' 신년운세</title><style>' + getFontFaceCss() + '\n' + themeCss(CSS + SAJU_CHART_PDF_CSS, 'newyear') + '</style></head><body>'
+    + '<section class="cover"><p class="brand">사주보는 수달 · 새온의 한 해 이야기</p><h1>' + escape(year) + ' 신년운세</h1><p class="subtitle">한 해의 흐름과 열두 달의 할 일</p>' + (cover ? '<img class="cover-art" src="' + cover + '" alt="">' : '') + '<p class="person">' + escape(name) + '님의 ' + escape(year) + '년</p><p class="meta">' + escape(birthLabel) + '</p>'
     + (answer ? '<div class="answer" data-section-key="answer">' + bodyHtml(answer.text).replace(/<\/?p[^>]*>/g, ' ').trim() + '</div>' : '')
     + '<p class="notice">웹에서 읽은 전체 풀이를 그대로 담았습니다. 사주 해석은 선택을 돕는 참고 자료이며 미래를 확정하지 않습니다.</p></section>'
     + '<div class="flow">'
@@ -199,7 +199,7 @@ function renderNewYearHtml(engine, person, reading) {
     + (data ? '<div class="box"><p class="ttl">흐름이 가장 좋은 세 달과 조심할 달</p><div class="tops">' + topCards(data, notes) + '</div></div>' : '')
     + (data ? '<div class="box"><p class="ttl">' + escape(year) + '년 달마다 흐름의 세기</p>' + chartHtml(data) + '</div>' : '')
     + (data ? '<div class="two"><div class="box"><p class="ttl">네 주제의 한 해</p>' + topicsHtml(data) + '</div><div class="box"><p class="ttl">분기 흐름</p>' + quartersHtml(data) + '</div></div>' : '')
-    + (pil || oh ? '<div class="two">' + (pil ? '<div class="box"><p class="ttl">사주 네 기둥</p>' + pil + '<p class="cap">가운데 붉은 칸(일주)의 위 글자가 나를 뜻하는 글자예요.</p></div>' : '') + (oh ? '<div class="box"><p class="ttl">다섯 기운의 분포</p>' + oh + '</div>' : '') + '</div>' : '')
+    + (pil || oh ? '<div class="two">' + (pil ? '<div class="box"><p class="ttl">사주 여덟 글자</p>' + pil + '</div>' : '') + (oh ? '<div class="box"><p class="ttl">다섯 기운의 분포</p>' + oh + '</div>' : '') + '</div>' : '')
     + '<div class="box"><p class="ttl">이 리포트의 구성</p><ol class="toc">' + toc + '</ol></div></section>'
     + chapters
     + (notes.length ? '<section class="chapter"><header class="chapter-head"><span class="no">12M</span><h2>' + escape(year) + '년 12개월</h2></header><div class="months">' + months + '</div></section>' : '')

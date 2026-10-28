@@ -1,4 +1,6 @@
 'use strict';
+// 이 상품만의 그림(안내 인물·분위기가 연애 상품과 다르다). 공용 읽기 화면도 이 표를 쓴다.
+window.LOVE_READING_ART = {"greeting":"/reunion-assets/cover.webp","greeting-comic":"/reunion-assets/cover.webp","cover-comic":"/reunion-assets/cover.webp","explain":"/reunion-assets/drawn.webp","explain-comic":"/reunion-assets/drawn.webp","thinking":"/reunion-assets/drawn.webp","thread-comic":"/reunion-assets/drawn.webp","empathy":"/reunion-assets/drawn.webp","caution":"/reunion-assets/drawn.webp","distance":"/reunion-assets/drawn.webp","meeting":"/reunion-assets/flow.webp","timing-comic":"/reunion-assets/flow.webp","new-start":"/reunion-assets/flow.webp","cheer":"/reunion-assets/heal.webp","door-comic":"/reunion-assets/heal.webp","conversation":"/reunion-assets/heal.webp"};
 /* 「다시, 우리」 화면 — 한 질문씩 입력 → 무료 첫 장(/api/reunion/preview, AI 호출 없음) → 구매 시트 →
    유료 생성(/api/reunion, 로그인·카드 결제는 pay-flow.js) → 결과(/api/status/:jobId).
    입력값은 <form id="reunionForm"> 하나에 모두 있다(PayFlow.toLogin이 통째로 저장·복원한다).
@@ -201,7 +203,9 @@
     box.appendChild(cover);
 
     const s1 = section('두 사람의 네 기둥');
-    s1.append(pillarRow(r.me.pillars, me + '님 · 나를 뜻하는 글자 ' + r.me.ilgan), pillarRow(r.them.pillars, them + ' · 나를 뜻하는 글자 ' + r.them.ilgan));
+    const rowMe = pillarRow(r.me.pillars, me + '님 · 나를 뜻하는 글자 ' + r.me.ilgan), rowThem = pillarRow(r.them.pillars, them + ' · 나를 뜻하는 글자 ' + r.them.ilgan);
+    s1.append(rowMe, rowThem);
+    if (window.SajuChart && r.charts) { SajuChart.replace(rowMe, r.charts.me); SajuChart.replace(rowThem, r.charts.them); }
     if (r.note) s1.appendChild(el('p', 'love-small', r.note));
     box.appendChild(s1);
 
@@ -399,7 +403,8 @@
   }
   function renderPaid(report, visual, reportId) {
     renderPlain(report);
-    document.getElementById('reunionVisual').innerHTML = visual || ''; // 서버가 엔진 숫자로만 만든 막대
+    document.getElementById('reunionVisual').innerHTML = visual || '';
+    if (window.SajuChart) SajuChart.lift(document.getElementById('reunionVisual')); // 서버가 엔진 숫자로만 만든 막대
     const timeline = document.getElementById('paidTimeline');
     timeline.classList.toggle('hidden', !visual);
     document.getElementById('progressBlock').classList.add('hidden');

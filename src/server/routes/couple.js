@@ -2,6 +2,7 @@
 /* 두 사람의 궁합(compat_v2, /couple.html) — 무료 첫 장과 유료 웹/PDF 생성. PDF 완성 뒤 입력한 수신 주소로 보낸다.
    기존 궁합(/api/compat, 4,900원)과는 별개 상품이다. 메일 실패는 결과를 유지하고 주문 소유자에게만 재전송을 허용한다. */
 const express = require('express');
+const { sajuChartHtml } = require('../../pdf/sajuChart');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
@@ -57,7 +58,7 @@ router.post('/couple/preview', (req, res) => {
   let parsed;
   try { parsed = parseBody(req.body); } catch (e) { return res.status(400).json({ error: e.message }); }
   try {
-    res.json({ reading: buildCouplePreview(parsed.a.birth, parsed.b.birth, parsed.relation, { a: parsed.a.name, b: parsed.b.name }) });
+    res.json({ reading: { ...buildCouplePreview(parsed.a.birth, parsed.b.birth, parsed.relation, { a: parsed.a.name, b: parsed.b.name }), charts: { a: sajuChartHtml(computeSaju(parsed.a.birth), { title: (parsed.a.name || '나') + '의 여덟 글자' }), b: sajuChartHtml(computeSaju(parsed.b.birth), { title: (parsed.b.name || '그 사람') + '의 여덟 글자' }) } } });
   } catch (e) {
     res.status(400).json({ error: '명식 계산 실패: ' + e.message });
   }
@@ -111,7 +112,7 @@ async function startCouple(userId, body, { cardPaymentId } = {}) {
       if (!fs.existsSync(pdfPath)) throw new Error('PDF 생성 확인 실패');
       orders.markDone(jobId, {
         resultPath: pdfPath, cardPath: null, llmCostUsd: costUsd(reading.usage),
-        resultText: toPlainText(reading), resultVisual: coupleWebHtml(reading.timing)
+        resultText: toPlainText(reading), resultVisual: sajuChartHtml(engineA, { title: (parsed.a.name || '나') + '의 여덟 글자' }) + sajuChartHtml(engineB, { title: (parsed.b.name || '그 사람') + '의 여덟 글자' }) + coupleWebHtml(reading.timing)
       });
       // 발송 실패는 완성된 유료 결과를 오류/환불 상태로 바꾸지 않는다.
       await deliverReport(jobId).catch(() => {});

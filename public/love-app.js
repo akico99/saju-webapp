@@ -275,6 +275,7 @@
     if (window.LoveReadingModel && window.LoveReadingView) {
       if (disposeFreeReader) disposeFreeReader();
       disposeFreeReader = enhanceReading('freeReader', 'legacyFreeReading', () => window.LoveReadingModel.buildFree(r, b), { onUnlock: openCheckout });
+      if (window.SajuChart) SajuChart.replace(document.querySelector('#freeReader .lr-profile'), r.chart);
     }
 
     document.body.classList.add('done');
@@ -488,7 +489,8 @@
     const answer = sections.find((s) => s.title === '한 줄 답');
     const months = sections.find((s) => s.title === '앞으로 12개월');
     document.getElementById('paidAnswer').textContent = answer ? answer.text.replace(/\*\*/g, '') : '';
-    document.getElementById('loveVisual').innerHTML = visual || ''; // 서버가 엔진 숫자로만 만든 막대
+    document.getElementById('loveVisual').innerHTML = visual || '';
+    if (window.SajuChart) SajuChart.lift(document.getElementById('loveVisual')); // 서버가 엔진 숫자로만 만든 막대
     document.getElementById('paidTimeline').classList.toggle('hidden', !visual);
     const box = document.getElementById('loveSections');
     box.replaceChildren();

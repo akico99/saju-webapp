@@ -2,6 +2,7 @@
 /* 「다시, 우리」(재회) — 무료 첫 장(로그인·AI 호출 없음)과 유료 웹/PDF 생성. 연애 시기 리포트(routes/love.js)와 같은 흐름이다.
    PDF 완성 뒤 결제 전에 받은 이메일로 보낸다. 메일 실패는 주문을 실패로 만들지 않는다. */
 const express = require('express');
+const { sajuChartHtml } = require('../../pdf/sajuChart');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
@@ -57,7 +58,7 @@ router.post('/reunion/preview', (req, res) => {
   let parsed;
   try { parsed = parseBody(req.body); } catch (e) { return res.status(400).json({ error: e.message }); }
   try {
-    res.json({ reading: buildReunionPreview({ me: parsed.me.birth, them: parsed.them.birth, story: parsed.story }) });
+    res.json({ reading: { ...buildReunionPreview({ me: parsed.me.birth, them: parsed.them.birth, story: parsed.story }), charts: { me: sajuChartHtml(computeSaju(parsed.me.birth), { title: '나의 여덟 글자' }), them: sajuChartHtml(computeSaju(parsed.them.birth), { title: '그 사람의 여덟 글자' }) } } });
   } catch (e) {
     res.status(400).json({ error: '명식 계산 실패: ' + e.message });
   }
@@ -105,7 +106,7 @@ async function startReunion(userId, body) {
       if (!fs.existsSync(pdfPath)) throw new Error('PDF 생성 확인 실패');
       orders.markDone(jobId, {
         resultPath: pdfPath, cardPath: null, llmCostUsd: costUsd(reading.usage),
-        resultText: toPlainText(reading), resultVisual: reunionWebHtml(reading.timing)
+        resultText: toPlainText(reading), resultVisual: sajuChartHtml(engineA, { title: '나의 여덟 글자' }) + sajuChartHtml(engineB, { title: '그 사람의 여덟 글자' }) + reunionWebHtml(reading.timing)
       });
       await deliverReport(jobId).catch(() => {});
     })
