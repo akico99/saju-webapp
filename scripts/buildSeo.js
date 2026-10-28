@@ -46,7 +46,7 @@ const PAGES = [
     file: 'new-year.html', sitemap: newYear.enabled, crumb: newYear.year + '년 신년운세',
     robots: newYear.enabled ? null : 'noindex, follow',
     title: newYear.year + '년 신년운세 리포트 | ' + SITE_NAME,
-    description: newYear.year + '년 총운과 12개월 흐름, 재물·일·애정·건강 풀이를 담은 AI 신년운세 리포트. 웹 결과와 PDF, 공유 카드를 제공합니다.' +
+    description: newYear.year + '년 총운과 12개월 흐름, 재물·일·애정·건강 풀이를 담은 AI 신년운세 리포트. 웹 결과와 PDF 이메일로 제공합니다.' +
       (newYear.enabled ? ' ' + newYear.priceKrw.toLocaleString('ko-KR') + '원.' : ' 상품 준비 중입니다.'),
     keywords: [newYear.year + '년 신년운세', '신년운세', '월별 운세'],
     service: newYear.enabled ? { name: newYear.year + '년 신년운세 리포트', serviceType: '사주 풀이', price: newYear.priceKrw } : null
@@ -364,7 +364,7 @@ function main() {
   if (fs.existsSync(llmsPath)) {
     let llms = fs.readFileSync(llmsPath, 'utf8').replace(/^.*\]\(https:\/\/sajuotter\.com\/new-year\.html\).*\r?\n/gm, '');
     if (newYear.enabled) {
-      llms = llms.replace(/(## 유료 리포트\r?\n)/, '$1- [' + newYear.year + '년 신년운세](https://sajuotter.com/new-year.html): 총운·12개월 흐름·재물·일·애정·건강 풀이. 웹 결과·PDF·공유 카드 제공. ' + newYear.priceKrw.toLocaleString('ko-KR') + '원.\n');
+      llms = llms.replace(/(## 유료 리포트\r?\n)/, '$1- [' + newYear.year + '년 신년운세](https://sajuotter.com/new-year.html): 총운·12개월 흐름·재물·일·애정·건강 풀이. 웹 결과·PDF 이메일 제공. ' + newYear.priceKrw.toLocaleString('ko-KR') + '원.\n');
     }
     if (write('llms.txt', llms)) changed.push('llms.txt');
   }

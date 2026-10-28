@@ -40,12 +40,13 @@ test('화면은 서버의 계절 문구를 그대로 쓰고, 무료 첫 장의 �
   assert.match(js, /startYm/);
 });
 
-test('마이페이지는 PDF가 없는 연애 시기 리포트에 보기 링크를 준다', () => {
+test('마이페이지는 웹 결과가 본편인 상품(연애·재회·궁합·신년운세)에 보기 링크를 준다', () => {
   const html = read('mypage.html');
-  assert.match(html, /love_timing/);
-  assert.match(html, /\/love\.html\?jobId=/);
+  for (const [key, page] of [['love_timing', 'love'], ['reunion_v2', 'reunion'], ['compat_v2', 'couple'], ['new_year_2027', 'new-year']]) {
+    assert.match(html, new RegExp(key + ": '/" + page + "\\.html'"), key);
+  }
   // 다운로드 처리기(.download-link)가 보기 링크까지 잡아 /api/download/undefined 를 부르지 않게 클래스를 나눈다.
-  assert.match(html, /class="view-link" href="\/love\.html\?jobId=/);
+  assert.match(html, /class="view-link" href="\$\{STORY_PAGE\[o\.productKey\]\}\?jobId=/);
   // PDF가 있는 연애 리포트는 보기 옆에 PDF 내려받기를 함께 준다.
   assert.match(html, /o\.hasFile \? ` <button type="button" class="download-link"/);
 });

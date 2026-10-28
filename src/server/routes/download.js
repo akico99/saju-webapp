@@ -9,6 +9,8 @@ const router = express.Router();
 
 const NAME_BY_PRODUCT = {
   love_timing: '사주보는수달_인연의시기.pdf',
+  reunion_v2: '사주보는수달_다시우리.pdf',
+  compat_v2: '사주보는수달_두사람의궁합.pdf',
   full: '길잡이여울_평생사주.pdf',
   compat: '길잡이여울_궁합리포트.pdf',
   quick: '길잡이여울_빠른리딩.pdf',

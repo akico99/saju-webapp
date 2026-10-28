@@ -9,8 +9,8 @@ const { sendEmail } = require('./resend');
 const PRODUCTS = {
   love_timing: { title: '인연의 시기', file: '인연의시기.pdf', lead: '당신의 연애 이야기가 완성됐어요.' },
   new_year_2027: { title: '2027 신년운세', file: '2027신년운세.pdf', lead: '당신의 2027년 이야기가 완성됐어요.' },
-  reunion: { title: '다시, 우리', file: '재회운.pdf', lead: '두 사람의 이야기가 완성됐어요.' },
-  compat: { title: '두 사람의 궁합', file: '궁합.pdf', lead: '두 사람의 이야기가 완성됐어요.' }
+  reunion_v2: { title: '다시, 우리', file: '재회운.pdf', lead: '두 사람의 이야기가 완성됐어요.' },
+  compat_v2: { title: '두 사람의 궁합', file: '궁합.pdf', lead: '두 사람의 이야기가 완성됐어요.' }
 };
 const deliverable = (productKey) => Object.prototype.hasOwnProperty.call(PRODUCTS, productKey);
 

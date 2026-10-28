@@ -24,6 +24,8 @@ function productCatalog() {
     else if (key.startsWith('date_select_')) { const occ = Object.values(OCCASIONS).find((o) => o.productKey === key); name = occ && occ.label + ' 리포트'; }
     else if (key === newYearConfig.productKey) name = newYearConfig.year + '년 신년운세';
     else if (key === loveTimingConfig.productKey) name = loveTimingConfig.label;
+    else if (key === 'reunion_v2') name = '다시, 우리 — 재회 리포트';
+    else if (key === 'compat_v2') name = '두 사람의 궁합';
     if (name) out[key] = { name, price: points.PRICES[key] };
   }
   return out;

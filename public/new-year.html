@@ -6,20 +6,23 @@
 <script src="/track.js"></script>
 <script src="/back-nav.js" defer></script>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="icon" type="image/png" href="/favicon.png">
 <link rel="stylesheet" href="/theme.css">
-<link rel="stylesheet" href="/reading-ui.css">
-<link rel="stylesheet" href="/paid-flow.css">
 <link rel="stylesheet" href="/fortune-result.css">
-<link rel="stylesheet" href="/report-visuals.css">
+<link rel="stylesheet" href="/love.css">
+<link rel="stylesheet" href="/love-assets/product.css">
+<link rel="stylesheet" href="/love-assets/reading.css">
+<link rel="stylesheet" href="/love-assets/reading-integration.css">
+<link rel="stylesheet" href="/love-assets/love-redesign.css">
+<link rel="stylesheet" href="/new-year-reading.css">
 <title>2027년 신년운세 리포트 | 사주보는 수달</title>
-<meta name="description" content="2027년 총운과 12개월 흐름, 재물·일·애정·건강 풀이를 담은 AI 신년운세 리포트. 웹 결과와 PDF, 공유 카드를 제공합니다. 상품 준비 중입니다.">
+<meta name="description" content="2027년 총운과 12개월 흐름, 재물·일·애정·건강 풀이를 담은 AI 신년운세 리포트. 웹 결과와 PDF 이메일로 제공합니다. 상품 준비 중입니다.">
 <link rel="canonical" href="https://sajuotter.com/new-year.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="사주보는 수달">
 <meta property="og:title" content="2027년 신년운세 리포트 | 사주보는 수달">
-<meta property="og:description" content="2027년 총운과 12개월 흐름, 재물·일·애정·건강 풀이를 담은 AI 신년운세 리포트. 웹 결과와 PDF, 공유 카드를 제공합니다. 상품 준비 중입니다.">
+<meta property="og:description" content="2027년 총운과 12개월 흐름, 재물·일·애정·건강 풀이를 담은 AI 신년운세 리포트. 웹 결과와 PDF 이메일로 제공합니다. 상품 준비 중입니다.">
 <meta property="og:url" content="https://sajuotter.com/new-year.html">
 <meta property="og:image" content="https://sajuotter.com/og-cover.jpg">
 <meta property="og:image:width" content="1200">
@@ -28,7 +31,7 @@
 <meta property="og:locale" content="ko_KR">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="2027년 신년운세 리포트 | 사주보는 수달">
-<meta name="twitter:description" content="2027년 총운과 12개월 흐름, 재물·일·애정·건강 풀이를 담은 AI 신년운세 리포트. 웹 결과와 PDF, 공유 카드를 제공합니다. 상품 준비 중입니다.">
+<meta name="twitter:description" content="2027년 총운과 12개월 흐름, 재물·일·애정·건강 풀이를 담은 AI 신년운세 리포트. 웹 결과와 PDF 이메일로 제공합니다. 상품 준비 중입니다.">
 <meta name="twitter:image" content="https://sajuotter.com/og-cover.jpg">
 <meta name="robots" content="noindex, follow">
 <script type="application/ld+json">
@@ -77,7 +80,7 @@
    "@id": "https://sajuotter.com/new-year.html#webpage",
    "url": "https://sajuotter.com/new-year.html",
    "name": "2027년 신년운세 리포트 | 사주보는 수달",
-   "description": "2027년 총운과 12개월 흐름, 재물·일·애정·건강 풀이를 담은 AI 신년운세 리포트. 웹 결과와 PDF, 공유 카드를 제공합니다. 상품 준비 중입니다.",
+   "description": "2027년 총운과 12개월 흐름, 재물·일·애정·건강 풀이를 담은 AI 신년운세 리포트. 웹 결과와 PDF 이메일로 제공합니다. 상품 준비 중입니다.",
    "inLanguage": "ko-KR",
    "isPartOf": {
     "@id": "https://sajuotter.com/#website"
@@ -94,103 +97,213 @@
  ]
 }
 </script>
-<style>
-  .ny-intro { padding: 24px; border-radius: 22px; color: #f8f6f0; background: linear-gradient(145deg,#24344b,#142337); }
-  .ny-intro .eyebrow { color:#e2c27a; font-size:12px; font-weight:800; letter-spacing:.14em; }
-  .ny-intro h1 { margin:12px 0 8px; font-family:var(--font-serif); font-size:29px; line-height:1.38; letter-spacing:-.04em; }
-  .ny-intro p { margin:0; color:rgba(255,255,255,.76); font-size:14px; line-height:1.75; }
-  .ny-parts { display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-top:18px; }
-  .ny-part { padding:12px; border:1px solid rgba(226,194,122,.26); border-radius:13px; color:#f8f6f0; font-size:12px; line-height:1.55; }
-  .ny-part b { display:block; margin-bottom:3px; color:#e2c27a; font-size:13px; }
-  .ny-price { display:flex; justify-content:space-between; align-items:center; margin-top:18px; padding-top:16px; border-top:1px solid rgba(255,255,255,.16); }
-  .ny-price strong { font-size:25px; }
-  .ny-input-note { margin:10px 0 0; color:var(--muted); font-size:12px; line-height:1.65; }
-  .ny-progress { padding:18px; border-radius:14px; background:#f7f5f0; }
-  .ny-progress h2 { margin:0 0 6px; font-size:18px; }
-  .ny-section-card { margin-top:14px; padding:18px; border:1px solid #e7e1d7; border-radius:16px; background:#fff; }
-  .ny-section-card h3 { margin:0 0 12px; color:#24344b; font-size:18px; }
-  .ny-result-text h4 { margin:22px 0 8px; color:#24344b; font-size:17px; }
-  .ny-result-text p { margin:0 0 12px; line-height:1.8; }
-  .ny-result-text ul { padding-left:22px; margin:4px 0 14px; }
-  .ny-result-text li { margin:7px 0; line-height:1.75; }
-  .ny-actions { display:grid; gap:8px; margin-top:16px; }
-  .ny-actions a,.ny-actions button { width:100%; min-height:50px; display:flex; justify-content:center; align-items:center; border:0; border-radius:12px; background:#24344b; color:#fff; font:inherit; font-weight:800; text-decoration:none; cursor:pointer; }
-  .ny-actions .secondary { background:#f1eee6; color:#24344b; }
-  .ny-card-preview { display:block; width:min(100%,240px); margin:18px auto 0; border-radius:14px; border:1px solid #e6dfcd; box-shadow:0 8px 24px #24344b1c; }
-  .newyear-visuals .vz-panel { margin-top:12px; }
-  .newyear-visuals .ny-topic-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-  .newyear-visuals .ny-topic { padding:12px; border:1px solid #e6dfcd; border-radius:12px; background:#fff; }
-  .newyear-visuals .ny-topic-head { display:flex; justify-content:space-between; align-items:baseline; }
-  .newyear-visuals .ny-topic-head h3 { margin:0; font-size:15px; }
-  .newyear-visuals .ny-topic-head b { color:#8a6d1c; font-size:18px; }
-  .newyear-visuals .ny-topic-head small { margin-left:2px; font-size:11px; }
-  .newyear-visuals .ny-topic p { margin:6px 0; color:#6d7887; font-size:11px; }
-  .newyear-visuals .vz-spark { display:flex; gap:2px; height:44px; margin-top:8px; }
-  .newyear-visuals .vz-spark .c { display:flex; flex:1; min-width:0; flex-direction:column; align-items:center; }
-  .newyear-visuals .vz-spark .bar { display:flex; flex:1; width:100%; align-items:flex-end; overflow:hidden; border-radius:3px; background:#f1eee6; }
-  .newyear-visuals .vz-spark .bar i { display:block; width:100%; border-radius:3px 3px 0 0; }
-  .newyear-visuals .vz-spark .c span { margin-top:3px; color:#6d7887; font-size:8px; }
-  .newyear-visuals .vz-spark .c.best .bar { outline:1px solid #c7a13a; }
-  .newyear-visuals .vz-spark .c.low .bar i { background:#d98b71!important; }
-  @media(max-width:430px) { .ny-intro { padding:20px; } .ny-intro h1 { font-size:25px; } .ny-parts { gap:7px; } .ny-part { padding:10px; } .newyear-visuals .ny-topic-grid { gap:7px; } }
-</style>
 </head>
-<body class="reading-page paid-flow editorial-result-page">
-<div class="app no-nav">
-  <header>
-    <a class="back" href="/services.html">←</a>
-    <div class="ttl">2027 신년운세</div>
-    <a class="home-link" href="/" aria-label="홈으로">⌂</a>
+<body class="otter-stage love-page newyear-page">
+<div class="app">
+  <header class="love-header">
+    <a href="/" class="love-wordmark">〈 사주보는 수달<span>여울의 한 해 이야기</span></a>
+    <a href="/mypage.html">결과 보관함</a>
   </header>
-  <main>
-    <section class="ny-intro">
-      <div class="eyebrow">2027 NEW YEAR REPORT</div>
-      <h1>한 해의 흐름을<br>월별·주제별로 읽어요</h1>
-      <p>실제 명식의 용신과 십신 흐름을 바탕으로, 2027년 총운과 매달의 선택 방향을 담은 AI 리포트를 만듭니다.</p>
-      <div class="ny-parts">
-        <div class="ny-part"><b>월별 총운</b>1~12월 그래프와 달마다의 풀이</div>
-        <div class="ny-part"><b>주제별 네 가지 흐름</b>재물·일·애정·건강의 연간 점수와 풀이</div>
-        <div class="ny-part"><b>분기별 행동 제안</b>시기별로 할 것과 피할 것</div>
-        <div class="ny-part"><b>파일 제공</b>웹 결과와 PDF, 세로형 공유 카드</div>
+  <section id="loveLanding" class="love-landing" aria-labelledby="productTitle">
+    <div class="love-editorial">
+      <div class="love-portrait-wrap" id="portraitWrap">
+        <div class="love-water" aria-hidden="true"><span>年</span><i></i><i></i><i></i></div>
+        <img id="characterPortrait" hidden alt="한 해의 흐름을 안내하는 창작 캐릭터 여울">
+        <span class="cover-tag">사주보는 수달 오리지널</span>
+        <div class="cover-title"><p>내년은, 어떤 해가 될까요?</p><span class="cover-byline">여울의 한 해 이야기</span><h1 id="productTitle">2027 신년운세</h1><p class="love-subtitle">한 해의 흐름과 열두 달의 할 일</p></div>
       </div>
-      <div class="ny-price"><span>1회 결제 · AI 자동 생성</span><strong id="newYearPrice">준비 중</strong></div>
+      <div class="hero-promise"><span>한 해의 답</span><i>·</i><span>가장 좋은 세 달</span><i>·</i><span>열두 달의 할 일</span></div>
+      <button type="button" class="love-primary" id="startLove">내 2027년 첫 장 무료로 읽기 <span aria-hidden="true">↗</span></button>
+      <p class="love-meta">무료 첫 장은 가입 없이 · 전체 풀이 <strong id="newYearPrice">준비 중</strong></p>
+    </div>
+    <nav class="product-nav" aria-label="상품 안내"><a href="#loveStory">이런 고민이라면</a><a href="#sampleTitle">풀이 미리보기</a><a href="#loveContentsTitle">전체 구성</a></nav>
+    <section class="story-section" id="loveStory">
+      <p class="chapter-label">어쩌면, 당신의 이야기</p>
+      <h2>새해 계획은 늘 비슷한데,<br>이번에는 달라질 수 있을까요?</h2>
+      <div class="thoughts"><p>“언제 움직여야 할지 몰라 자꾸 미뤄요.”</p><p>“돈, 일, 관계… 어디에 먼저 힘을 써야 할까요?”</p><p>“좋은 때와 쉬어 갈 때를 미리 알고 싶어요.”</p></div>
+      <p class="story-answer">계획을 세우기 전에,<br><strong>내 한 해의 흐름부터 읽어 보세요.</strong></p>
     </section>
+    <section class="meet-yeoul"><div class="yeoul-scene"><img src="/love-assets/reading/greeting-comic.webp" alt="한 해의 이야기를 안내하는 여울" loading="lazy"><div><span>한 해의 흐름을 읽는 안내자</span><h2>반가워요.<br>저는 여울이에요.</h2></div></div><div class="yeoul-letter"><span class="letter-seal">年</span><p>힘이 실리는 달과 쉬어 갈 달,<br>먼저 꺼낼 일과 미뤄 둘 일에도<br>나를 이해할 단서가 있어요.</p><p>당신의 사주로 2027년 열두 달을 읽고,<br>달마다 해볼 일을 함께 정리해 볼게요.</p><small id="characterDisclosure">여울은 사주 풀이를 안내하는 창작 캐릭터입니다. 만세력 계산을 바탕으로 AI가 해석을 작성하며, 상담사의 대면 상담은 제공하지 않습니다.</small></div></section>
+    <section class="love-detail" aria-labelledby="loveContentsTitle">
+      <p class="love-eyebrow">한 해를 위한 아홉 장</p>
+      <h2 id="loveContentsTitle">막연했던 새해 계획을,<br>달력 위의 나의 이야기로.</h2>
+      <ol class="love-chapter-preview" id="productChapters"><li>2027년 한 줄 답과 총운</li><li>가장 좋은 세 달과 조심할 달</li><li>재물운 · 일·직업운</li><li>애정운 · 건강·생활 리듬</li><li>분기별 할 것·피할 것</li><li>열두 달 상세 흐름과 해볼 일</li></ol>
+    </section>
+    <section class="love-sample love-detail" aria-labelledby="sampleTitle">
+      <p class="love-eyebrow">이렇게 읽게 됩니다</p>
+      <h2 id="sampleTitle">읽고 끝나는 말보다,<br>달력에 적을 수 있는 일까지.</h2>
+      <div class="reading-specimen"><span class="specimen-label">풀이 형식 예시 · 개인 분석 결과가 아닙니다</span><span class="specimen-chapter">第三章 · 가장 좋은 세 달</span><h3>미뤄 둔 일을 꺼내기 좋은 달,<br>언제쯤일까요?</h3><p>흐름이 좋은 달에는 준비해 둔 일을 밖으로 꺼내 보이는 쪽이 힘을 받아요. 결과를 서두르기보다 시작을 분명히 하는 데 쓰면 좋아요.</p><div class="sample-rule"></div><span class="specimen-chapter">달력에 적어 둘 장면</span><p>그 달 첫 주에 미뤄 둔 제안서나 계획을 한 사람에게 먼저 보여 주고 의견을 들어 보세요.</p><div class="love-sample-action"><b>이 달의 작은 실천</b><p>한 해 목표 중 하나를 골라 첫 단계를 날짜와 함께 적어 두세요.</p></div></div>
+      <p class="sample-footnote">실제 리포트는 입력한 사주에 따라 달라집니다.</p>
+    </section>
+    <section class="scope-section"><p class="love-eyebrow">먼저 읽고, 더 궁금할 때</p><h2>첫 장은 무료.<br>선택은 천천히 하세요.</h2><div class="scope-card"><span class="scope-tag">가입 없이 무료</span><h3>내 2027년 첫 장</h3><p>2027년 한 줄 · 분기 흐름 네 칸<br>내 사주표 · 일간과 오행의 균형</p><a href="#startLove">무료 첫 장부터 읽기 ↑</a></div><div class="scope-card full"><span class="scope-tag">아홉 장의 전체 풀이</span><h3>2027 신년운세 <b data-ny-price>14,900원</b></h3><p>가장 좋은 세 달과 조심할 달부터<br>재물·일·애정·생활 리듬, 열두 달의 할 일까지.</p><div class="delivery-facts"><span>단건 결제</span><span>웹 리포트 + PDF 이메일</span><span>보관함에서 다시 읽기</span></div><small>전체 풀이 결제 시 로그인이 필요합니다.</small></div></section>
+    <section class="love-detail love-faq" aria-labelledby="faqTitle">
+      <p class="love-eyebrow">궁금한 점을 모았어요</p><h2 id="faqTitle">시작하기 전에</h2>
+      <details><summary>무료로 어디까지 볼 수 있나요?</summary><p>2027년을 한 줄로 요약한 흐름, 분기 흐름 네 칸, 내 사주표와 일간·오행의 균형을 볼 수 있습니다. 전체 풀이에서는 가장 좋은 세 달과 조심할 달, 네 주제, 분기별 할 것·피할 것, 열두 달 상세 흐름을 이어 읽습니다.</p></details>
+      <details><summary>태어난 시각을 몰라도 되나요?</summary><p>시각 모름을 선택하면 세 기둥으로 계산합니다. 시각을 알 때보다 해석 범위에 제한이 있으며 결과에 안내합니다.</p></details>
+      <details><summary>달은 어떤 기준으로 나누나요?</summary><p>사주의 달은 절기 기준이라 각 달의 기운은 양력 초순~중순에 바뀝니다. 그래서 2027년 1월은 아직 2026년의 기운이 남아 있고, 새해 기운은 2월 초 입춘부터 본격적으로 들어옵니다.</p></details>
+      <details><summary>누가 풀이하고 어떻게 받나요?</summary><p>여울은 사주 풀이를 안내하는 창작 캐릭터이며, 만세력 계산을 바탕으로 AI가 해석을 작성합니다. 전체 풀이는 단건 결제 후 자동 생성되는 웹 리포트이고, 결제 전에 입력한 이메일로 같은 내용의 PDF를 보내 드립니다. 마이페이지에서 다시 열 수 있습니다.</p></details>
+      <p class="love-small">흐름과 점수는 명리 해석을 위한 비교값이며 실제 성공 확률이 아닙니다. 건강·재정의 중요한 결정은 전문가와 상의하세요.</p>
+      <button type="button" class="love-primary" id="startLoveBottom">내 2027년 첫 장 무료로 읽기</button>
+    </section>
+  </section>
 
-    <form id="newYearForm" class="card" style="margin-top:16px;">
-      <div class="paid-section-head"><span>01</span><div><h2>나의 출생 정보</h2><p>정확히 입력할수록 명식 계산에 도움이 돼요.</p></div></div>
-      <div class="field"><label for="nyName">이름</label><input id="nyName" name="name" maxlength="30" placeholder="예: 홍길동"><p class="hint">결과물 표기용으로만 사용돼요. 비워두면 익명으로 표시합니다.</p></div>
-      <div class="field-row">
-        <div class="field"><label>생년월일</label><div class="date-inputs"><input type="number" name="year" placeholder="년" min="1900" max="2100" required><input type="number" name="month" placeholder="월" min="1" max="12" required><input type="number" name="day" placeholder="일" min="1" max="31" required></div></div>
-        <div class="field"><label for="nyCalendar">양력/음력</label><select id="nyCalendar" name="calendar"><option value="양력">양력</option><option value="음력">음력</option></select></div>
-      </div>
-      <div class="field checkbox-field"><label><input type="checkbox" name="isLeap"> 음력 윤달</label></div>
-      <div class="field"><label>태어난 시각</label><div class="date-inputs"><input type="number" name="hour" placeholder="시(0-23)" min="0" max="23"><input type="number" name="minute" placeholder="분" min="0" max="59"></div><label class="checkbox-field"><input type="checkbox" name="hourUnknown"> 시각 모름 (정오로 가정)</label></div>
-      <div class="field"><label for="nyGender">성별</label><select id="nyGender" name="gender"><option value="남">남자</option><option value="여">여자</option></select></div>
-      <p class="ny-input-note">리포트는 상담사 등 사람의 개입 없이 AI가 자동 생성합니다. 사주 해석은 미래를 확정하는 예측이 아니라 선택을 돕는 참고 자료입니다.</p>
-      <button type="submit" id="newYearSubmit" disabled style="width:100%;margin-top:15px;">가격 확인 중...</button>
-    </form>
-
-    <section id="newYearResult" class="result hidden" style="margin-top:18px;">
-      <div id="newYearProgress" class="ny-progress"><h2>2027년 리포트를 만들고 있어요</h2><p id="newYearProgressText">명식과 월별 흐름을 함께 읽고 있습니다.</p></div>
-      <div id="newYearError" class="error-box hidden" style="margin-top:12px;"></div>
-      <article id="newYearReport" class="fortune-result web-reading hidden" style="margin-top:12px;">
-        <section class="fr-cover"><p class="fr-eyebrow">2027년 AI 신년운세</p><h2 class="fr-verdict" id="newYearTitle">2027년 신년운세</h2><p class="fr-lead-inv">월별 흐름과 네 가지 주제를 한 번에 살펴보세요.</p></section>
-        <div id="newYearVisual"></div>
-        <div id="newYearSections" class="ny-result-text"></div>
-        <p class="fr-note">AI가 자동으로 생성한 사주 해석은 선택을 돕는 참고 자료이며, 미래를 확정하지 않습니다.</p>
-      </article>
-      <div id="newYearDownloads" class="hidden">
-        <img id="newYearCardPreview" class="ny-card-preview hidden" alt="2027년 신년운세 공유 카드 미리보기">
-        <div class="ny-actions">
-          <a id="newYearPdf" href="#">PDF로 저장하기</a>
-          <a id="newYearCard" class="secondary hidden" href="#" download>공유 카드 받기</a>
-          <button id="newYearShare" class="secondary" type="button">공유하기</button>
+  <section class="stage hidden" id="stage" aria-labelledby="inputTitle">
+    <h2 id="inputTitle" class="wizard-sr">여울의 한 해 이야기 — 내 정보 입력</h2>
+    <div class="stage-top">
+      <button type="button" id="backBtn" aria-label="이전 질문" disabled>‹</button>
+      <span class="wizard-brand">여울의 한 해 이야기</span>
+      <button type="button" id="closeInput" aria-label="상품 소개로 돌아가기">×</button>
+    </div>
+    <div class="wizard-progress" role="progressbar" aria-label="입력 진행" aria-valuemin="1" aria-valuemax="5" aria-valuenow="1"><span id="wizardProgress"></span></div>
+    <p class="wizard-count" id="wizardCount">01 / 05</p>
+    <form id="newYearForm" class="stage-body" novalidate>
+      <input type="hidden" name="gender" value="">
+      <input type="hidden" name="calendar" value="양력">
+      <fieldset class="stage-step" data-step="0">
+        <legend class="wizard-sr">성별</legend>
+        <p class="wizard-kicker">당신의 한 해를 펼쳐 볼게요</p>
+        <p class="bubble"><span class="q">먼저, 성별을 알려 주세요.</span><small>사주에서 한 해의 흐름을 읽는 데 사용해요.</small></p>
+        <div class="answer wizard-gender">
+          <button type="button" class="choice" data-gender="여">여자 <span aria-hidden="true">↗</span></button>
+          <button type="button" class="choice" data-gender="남">남자 <span aria-hidden="true">↗</span></button>
         </div>
-      </div>
-    </section>
-  </main>
+        <p class="wizard-footnote">첫 장은 무료로 읽을 수 있어요.</p>
+      </fieldset>
+      <fieldset class="stage-step" data-step="1" hidden>
+        <legend class="wizard-sr">생년월일</legend>
+        <p class="wizard-kicker">당신의 사주를 펼쳐 볼게요</p>
+        <p class="bubble"><span class="q">어느 날에 태어났나요?</span><small>양력인지 음력인지도 함께 확인해 주세요.</small></p>
+        <div class="answer">
+          <div class="seg" role="group" aria-label="양력 음력"><button type="button" data-calendar="양력" class="on" aria-pressed="true">양력</button><button type="button" data-calendar="음력" aria-pressed="false">음력</button></div>
+          <div class="row wizard-date"><label><input type="number" name="year" inputmode="numeric" placeholder="1995" min="1900" max="2100" aria-label="태어난 해"><span>년</span></label><label><input type="number" name="month" inputmode="numeric" placeholder="05" min="1" max="12" aria-label="태어난 달"><span>월</span></label><label><input type="number" name="day" inputmode="numeric" placeholder="15" min="1" max="31" aria-label="태어난 날"><span>일</span></label></div>
+          <label class="leap-row" hidden><input type="checkbox" name="isLeap"> 윤달이에요</label>
+          <button type="button" class="go" data-next>다음</button>
+        </div>
+      </fieldset>
+      <fieldset class="stage-step" data-step="2" hidden>
+        <legend class="wizard-sr">출생 시각</legend>
+        <p class="wizard-kicker">조금 더 자세히 읽으려면</p>
+        <p class="bubble"><span class="q">태어난 시각도 아세요?</span><small>모르면 비워도 괜찮아요.<br>시각 없이 세 기둥으로 풀이해 드려요.</small></p>
+        <div class="answer">
+          <div class="row wizard-date"><label><input type="number" name="hour" inputmode="numeric" placeholder="14" min="0" max="23" aria-label="태어난 시"><span>시</span></label><label><input type="number" name="minute" inputmode="numeric" placeholder="30" min="0" max="59" aria-label="태어난 분"><span>분</span></label></div>
+          <label class="unknown-row"><input type="checkbox" name="hourUnknown"> 시각을 몰라요</label>
+          <button type="button" class="go" data-next>다음</button>
+        </div>
+      </fieldset>
+      <fieldset class="stage-step" data-step="3" hidden>
+        <legend class="wizard-sr">이름 또는 별명</legend>
+        <p class="wizard-kicker">거의 다 왔어요</p>
+        <p class="bubble"><span class="q">뭐라고 불러 드릴까요?</span><small>당신의 풀이에 적을 이름이에요.<br>별명도, 빈칸도 괜찮아요.</small></p>
+        <div class="answer"><input type="text" name="name" maxlength="20" placeholder="이름 또는 별명" autocomplete="nickname" aria-label="이름 또는 별명"><button type="button" class="go" data-next>입력한 내용 확인하기</button></div>
+      </fieldset>
+      <fieldset class="stage-step" data-step="4" hidden>
+        <legend class="wizard-sr">입력 확인</legend>
+        <p class="wizard-kicker">이제 당신의 2027년을 펼칠게요</p>
+        <p class="bubble"><span class="q" id="reviewTitle">이 정보로 읽어 드릴까요?</span><small>생년월일과 시각을 한 번 더 확인해 주세요.</small></p>
+        <dl class="wizard-review" id="wizardReview"></dl>
+        <div class="answer"><button type="submit" class="go" id="previewBtn">내 2027년 첫 장 무료로 보기</button></div>
+        <p class="wizard-footnote">가입 없이 무료 · 결제는 전체 풀이를 선택할 때만</p>
+      </fieldset>
+      <p class="bubble err" id="stageError" role="alert" hidden><span class="q"></span></p>
+    </form>
+  </section>
+
+  <div class="love-result hidden" id="freeResult">
+    <div class="lg-folded">
+      <span id="foldedText"></span>
+      <button type="button" id="redoBtn">다시 입력</button>
+    </div>
+    <p class="love-resume hidden" id="resumeNote" role="status">로그인 전에 보던 첫 장을 다시 열었어요. 아래에서 이어서 결제할 수 있어요.</p>
+
+    <div id="freeReader" class="hidden"></div>
+    <article class="fortune-result" id="legacyFreeReading">
+      <section class="fr-cover">
+        <p class="fr-eyebrow">2027 신년운세 · 무료 첫 장</p>
+        <h2 class="fr-verdict" id="freeTitle"></h2>
+        <p class="fr-lead-inv" id="freeLead"></p>
+      </section>
+      <section class="fr-section">
+        <h3 class="fr-h">내 사주표</h3>
+        <div class="love-pillars" id="pillars"></div>
+        <p class="love-small" id="pillarNote"></p>
+      </section>
+      <section class="fr-section">
+        <h3 class="fr-h">2027년 분기 흐름</h3>
+        <p class="love-text" id="quarterLead"></p>
+        <div class="love-seasons" id="quarters"></div>
+      </section>
+      <section class="fr-section love-locked">
+        <h3 class="fr-h">전체 풀이에서 열리는 장</h3>
+        <ol class="love-locked-list" id="lockedList"></ol>
+      </section>
+    </article>
+
+    <div class="love-unlock">
+      <p class="love-unlock-kicker">전체 풀이</p>
+      <p class="love-unlock-title">가장 좋은 세 달과 열두 달의 할 일까지</p>
+      <div class="point-notice" id="pointNotice">가격 확인 중...</div>
+      <button type="button" id="unlockBtn">전체 풀이 열기</button>
+      <p class="love-small">판매처: 사주보는 수달 · 2027 신년운세 · 단건 결제<br>생성에 실패하면 결제는 자동으로 취소돼요. 사주 해석은 선택을 돕는 참고 자료이며 미래를 확정하지 않습니다.</p>
+    </div>
+    <div class="error-box hidden" id="errorBlock" role="alert"></div>
+    <div class="love-sticky" id="stickyBar">
+      <button type="button" id="stickyUnlock">가장 좋은 세 달 보기</button>
+    </div>
+  </div>
+
+  <div class="love-result hidden" id="paidResult">
+    <div id="paidReader" class="hidden"></div>
+    <div class="love-progress" id="progressBlock">
+      <p class="love-strong" id="progressTitle">당신의 2027년 열두 달을 읽고 있어요</p>
+      <p class="love-small">생성 시간은 상황에 따라 달라질 수 있어요. 이 화면을 닫아도 마이페이지에서 다시 볼 수 있어요.</p>
+    </div>
+    <article class="fortune-result hidden" id="paidReading">
+      <section class="fr-cover">
+        <p class="fr-eyebrow">2027 신년운세</p>
+        <h2 class="fr-verdict" id="paidTitle">한 줄 답부터 드릴게요</h2>
+        <p class="fr-lead-inv" id="paidAnswer"></p>
+      </section>
+      <div id="loveSections"></div>
+      <p class="fr-note">사주 해석은 선택을 돕는 참고 자료이며, 미래를 확정하지 않습니다.</p>
+    </article>
+    <div class="hidden" id="paidTimeline"><div id="loveVisual"></div><p class="love-small">흐름은 명리 해석을 위한 비교값이며 실제 성공 확률이 아닙니다.</p></div>
+    <div class="love-after hidden" id="paidActions">
+      <a id="lovePdfDownload" class="hidden">전체 풀이 PDF 내려받기</a><p id="deliveryStatus" role="status"></p><button id="retryDelivery" class="hidden" type="button">PDF 이메일 다시 보내기</button><a href="/mypage.html">마이페이지에서 다시 보기</a>
+    </div>
+    <div class="error-box hidden" id="paidError" role="alert"></div>
+  </div>
 </div>
+
+<dialog id="checkoutSheet" class="checkout-sheet" aria-labelledby="checkoutTitle" aria-describedby="checkoutDescription">
+  <div class="checkout-handle" aria-hidden="true"></div>
+  <header class="checkout-header"><div><span class="checkout-kicker">여울의 한 해 이야기</span><h2 id="checkoutTitle">2027년 전체 이야기를 열어 볼까요?</h2></div><button type="button" id="closeCheckout" aria-label="구매 안내 닫기">×</button></header>
+  <div class="checkout-product"><img src="/love-assets/reading/greeting-comic.webp" alt=""><div><span class="checkout-product-label">웹 + PDF 이메일 · 단건 결제</span><h3>2027 신년운세</h3><p>한 해의 흐름과 열두 달 전체 풀이</p><strong data-ny-price>14,900원</strong></div><span class="checkout-selected" aria-label="선택한 상품">✓</span></div>
+  <ul class="checkout-includes"><li>2027년 한 줄 답 · 총운 · 가장 좋은 세 달과 조심할 달</li><li>재물운 · 일·직업운 · 애정운 · 건강·생활 리듬</li><li>분기별 할 것·피할 것 · 열두 달 상세 흐름</li></ul>
+  <p id="checkoutDescription" class="checkout-description">결제 후 입력한 사주로 전체 풀이를 만들어요. 완성된 리포트는 이메일로 PDF를 보내 드리고, 결과 보관함에서도 다시 읽을 수 있어요.</p>
+  <section class="checkout-delivery" aria-labelledby="deliveryTitle">
+    <h3 id="deliveryTitle">PDF는 어디로 보내 드릴까요?</h3>
+    <label for="deliveryEmail">받으실 이메일</label>
+    <input id="deliveryEmail" name="deliveryEmail" form="newYearForm" type="email" autocomplete="email" maxlength="254" placeholder="you@example.com" required aria-describedby="deliveryHelp">
+    <p id="deliveryHelp">결제 후 완성된 전체 풀이를 PDF로 보내요. 주소를 한 번 더 확인해 주세요. 웹에서도 같은 내용을 읽을 수 있어요.</p>
+    <label class="delivery-consent"><input type="checkbox" id="deliveryConsent" name="deliveryConsent" form="newYearForm" required><span>입력한 이메일을 구매한 PDF 전달에 사용하는 데 동의합니다. 발송·재전송을 위해 30일 보관 후 삭제하며, 광고에는 사용하지 않습니다.</span></label>
+    <p id="deliveryError" role="alert" hidden></p>
+  </section>
+  <div class="checkout-total"><span>상품 금액</span><strong data-ny-price>14,900원</strong></div>
+  <p class="checkout-terms">판매처 사주보는 수달 · 정기결제 없음<br><a href="/terms.html" target="_blank" rel="noopener">이용약관</a><span aria-hidden="true"> · </span><a href="/privacy.html" target="_blank" rel="noopener">개인정보처리방침</a></p>
+  <button type="button" id="checkoutConfirm" class="checkout-confirm">전체 풀이 구매하기</button>
+  <p class="checkout-footnote">로그인 후 보유 포인트를 사용하거나 카드 결제로 이어집니다.</p>
+</dialog>
+
+<section class="love-guide" aria-labelledby="loveGuideTitle">
+  <h2 id="loveGuideTitle">2027 신년운세는 이렇게 읽어요</h2>
+  <p>생년월일과 태어난 시각으로 만세력을 계산하고, 2027년 열두 달마다 들어오는 기운을 같은 기준으로 비교합니다. 무료 첫 장에서는 2027년을 한 줄로 요약한 흐름과 분기 흐름, 내 사주표와 일간·오행의 균형을 볼 수 있어요.</p>
+  <p>전체 풀이(<span data-ny-price>14,900원</span>, 단건 결제)에서는 2027년 한 줄 답과 총운, 흐름이 가장 좋은 세 달과 조심할 달, 재물운·일·직업운·애정운·건강과 생활 리듬, 분기별 할 것과 피할 것, 열두 달 상세 흐름과 해볼 일을 알려 드려요. 결제 후 자동으로 만들어져 이 화면과 마이페이지에서 읽을 수 있고, 결제 전에 입력한 이메일로 같은 내용의 PDF를 보내 드립니다. 판매처는 사주보는 수달입니다.</p>
+</section>
+
+<div class="landing-dock"><button type="button" id="startLoveDock">내 2027년 첫 장 무료로 읽기 ↗</button></div>
 <script src="/pay-flow.js"></script>
+<script src="/love-reading-model.js"></script>
+<script src="/love-reading-view.js"></script>
 <script src="/new-year-app.js"></script>
 </body>
 </html>

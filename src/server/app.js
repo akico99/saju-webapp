@@ -24,6 +24,8 @@ const payRouter = require('./routes/pay');
 const newYearRouter = require('./routes/newYear');
 const newYearConfig = require('../config/newYear');
 const loveTimingConfig = require('../config/loveTiming');
+const reunionConfig = require('../config/reunion');
+const compatV2Config = require('../config/compatV2');
 const sceneReaderConfig = require('../config/sceneReader');
 
 const app = express();
@@ -44,11 +46,22 @@ app.use((req, res, next) => {
   // 정적 파일 처리기는 //, /./, /x/../ 를 정리한 뒤 파일을 찾는다. 같은 기준으로 정리한 경로를 검사해야
   // "/./love.html" 같은 주소로 게이트를 돌아가지 못한다.
   requestPath = path.posix.normalize(requestPath.replace(/\\/g, '/').replace(/\/{2,}/g, '/'));
-  if (!newYearConfig.enabled && (/^\/new-year(?:\.html|-app\.js)?\/?$/i.test(requestPath) || /^\/api\/newyear(?:\/|$)/i.test(requestPath))) {
+  if (!newYearConfig.enabled && (/^\/new-year(?:\.html|-app\.js|-reading\.css)?\/?$/i.test(requestPath) || /^\/api\/newyear(?:\/|$)/i.test(requestPath))) {
     return res.sendStatus(404);
   }
   // 연애 시기 리포트도 같은 방식으로 판매 전환 전까지 감춘다.
-  if (!loveTimingConfig.enabled && (/^\/love(?:\.html|-app\.js|-brand\.js|-reading-(?:model|view)\.js|\.css)?\/?$/i.test(requestPath) || /^\/love-assets(?:\/|$)/i.test(requestPath) || /^\/api\/love(?:\/|$)/i.test(requestPath))) {
+  if (!loveTimingConfig.enabled && (/^\/love(?:\.html|-app\.js)?\/?$/i.test(requestPath) || /^\/api\/love(?:\/|$)/i.test(requestPath))) {
+    return res.sendStatus(404);
+  }
+  // 연애 상품의 읽기 화면·그림·공용 CSS는 재회·궁합·신년운세 화면도 쓴다. 네 상품 중 하나라도 켜져 있으면 연다.
+  const storyOn = loveTimingConfig.enabled || reunionConfig.enabled || compatV2Config.enabled || newYearConfig.enabled;
+  if (!storyOn && (/^\/love(?:-brand\.js|-reading-(?:model|view)\.js|\.css)\/?$/i.test(requestPath) || /^\/love-assets(?:\/|$)/i.test(requestPath))) {
+    return res.sendStatus(404);
+  }
+  if (!reunionConfig.enabled && (/^\/reunion(?:\.html|-app\.js|-product\.css)?\/?$/i.test(requestPath) || /^\/api\/reunion(?:\/|$)/i.test(requestPath))) {
+    return res.sendStatus(404);
+  }
+  if (!compatV2Config.enabled && (/^\/couple(?:\.html|-app\.(?:js|css))?\/?$/i.test(requestPath) || /^\/api\/couple(?:\/|$)/i.test(requestPath))) {
     return res.sendStatus(404);
   }
   // 장면형 읽기 화면 파일은 켜기 전까지 404다. 궁합 페이지는 /api/scene-reader로 켜짐을 확인한 뒤에만 불러온다.
@@ -102,6 +115,8 @@ app.use('/api', dateSelectRouter);
 app.use('/api', payRouter);
 app.use('/api', newYearRouter);
 app.use('/api', require('./routes/love'));
+app.use('/api', require('./routes/reunion'));
+app.use('/api', require('./routes/couple'));
 app.use('/api', require('./routes/tracking'));
 
 module.exports = app;

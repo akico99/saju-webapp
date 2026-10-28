@@ -1,0 +1,36 @@
+/* 「다시, 우리」 전용 보충 스타일. 기본 화면은 연애 상품 CSS(love.css, love-assets/*.css)를 그대로 쓰고
+   여기서는 재회 상품에만 있는 요소(두 사람 기둥, 끌림·부딪힘 목록, 약속 목록, 잠금 카드)만 꾸민다. */
+.reunion-page { --reunion-ink: #1f2e47; --reunion-accent: #46679a; --reunion-soft: #eaeff6; }
+.reunion-cover .love-water span { letter-spacing: 0; }
+/* 입력·결과 화면에서는 소개용 하단 버튼을 숨긴다(product.css의 규칙은 #loveLanding만 본다). */
+body:has(#landing.hidden) .landing-dock { display: none; }
+.reunion-promise .reunion-rules { list-style: none; margin: 18px 0 0; padding: 0; display: grid; gap: 12px; }
+.reunion-promise .reunion-rules li { padding: 14px 16px; border-radius: 14px; background: var(--reunion-soft); color: var(--reunion-ink); line-height: 1.7; font-size: 15px; }
+.reunion-promise .reunion-rules b { display: block; margin-bottom: 2px; }
+.reunion-pillar-row { margin: 0 0 14px; }
+.reunion-who { margin: 0 0 6px; font-size: 13px; font-weight: 700; color: var(--reunion-accent); }
+.reunion-list { margin: 8px 0 12px; padding-left: 20px; line-height: 1.75; }
+.reunion-list li { margin: 0 0 6px; }
+.reunion-list.is-pull li::marker { color: #c23d5c; }
+.reunion-list.is-push li::marker { color: var(--reunion-accent); }
+.reunion-teaser { position: relative; margin: 14px 0 4px; padding: 16px; border: 1px dashed #b9c6da; border-radius: 16px; background: #f6f8fb; }
+.reunion-teaser strong { display: block; font-size: 16px; color: var(--reunion-ink); }
+.reunion-teaser p { margin: 6px 0 10px; font-size: 14px; line-height: 1.65; color: #4b5260; }
+.reunion-veil { display: grid; gap: 6px; margin: 0 0 12px; }
+.reunion-veil i { display: block; height: 10px; border-radius: 6px; background: linear-gradient(90deg, #dfe5ee, #eef1f6); }
+.reunion-veil i:nth-child(2) { width: 82%; }
+.reunion-veil i:nth-child(3) { width: 64%; }
+.reunion-teaser-btn { border: 0; border-radius: 999px; padding: 10px 16px; background: var(--reunion-ink); color: #fff; font-weight: 700; cursor: pointer; }
+.reunion-page .reunion-safety { margin: 16px auto; max-width: 640px; padding: 14px 16px; border-left: 3px solid #ef5368; border-radius: 0 12px 12px 0; background: #2a1118; color: #f1dfe2; font-size: 14px; line-height: 1.7; }
+/* 무료 첫 장 — 어두운 연애 화면 배경에 맞춘 색 */
+.reunion-page .reunion-free .fr-cover { background: #2a1118; border: 1px solid #53222d; }
+.reunion-page .reunion-free .fr-eyebrow { color: #e9bac1; }
+.reunion-page .reunion-free .fr-verdict { color: #fff5ee; }
+.reunion-page .reunion-free .fr-lead-inv { color: #f0d8d7; }
+.reunion-page .reunion-free .love-pillar { background: #24161a; border: 1px solid #53222d; }
+.reunion-page .reunion-free .love-pillar b { color: #fff2ea; }
+.reunion-page .reunion-free .love-pillar span, .reunion-page .reunion-free .love-pillar small { color: #cf9da8; }
+.reunion-page .reunion-free .love-pillar.day { background: #7d2738; border-color: #ef5368; }
+.reunion-page .reunion-free .love-text, .reunion-page .reunion-free .love-small { color: #d9c3c8; }
+.reunion-page .reunion-free .reunion-who { color: #f6b9c3; }
+.reunion-page .reunion-free .love-season b, .reunion-page .reunion-free .love-season small { color: #e8d3d6; }

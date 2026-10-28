@@ -12,6 +12,8 @@ const newYear = require('./routes/newYear');
 const newYearConfig = require('../config/newYear');
 const love = require('./routes/love');
 const loveTimingConfig = require('../config/loveTiming');
+const reunionConfig = require('../config/reunion');
+const compatV2Config = require('../config/compatV2');
 
 /**
  * @param {string} product - 클라이언트가 보내는 상품 종류: full | deep | compat | date_select | newyear
@@ -45,6 +47,12 @@ function resolveProduct(product, form) {
     label = loveTimingConfig.label;
     page = loveTimingConfig.page;
     start = love.start;
+  } else if (product === 'reunion') {
+    if (!reunionConfig.enabled) return null;
+    productKey = reunionConfig.productKey; label = reunionConfig.label; page = reunionConfig.page; start = require('./routes/reunion').start;
+  } else if (product === 'couple') {
+    if (!compatV2Config.enabled) return null;
+    productKey = compatV2Config.productKey; label = compatV2Config.label; page = compatV2Config.page; start = require('./routes/couple').start;
   } else {
     return null;
   }
