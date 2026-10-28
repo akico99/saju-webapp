@@ -13,7 +13,7 @@ const RESEND_FROM_NAME = process.env.RESEND_FROM_NAME || '길잡이 여울';
 const RESEND_REPLY_TO = process.env.RESEND_REPLY_TO || 'sooky2001@gmail.com';
 
 // attachments: [{ filename, content }] — content는 base64 인코딩된 문자열(Resend 규격).
-async function sendEmail({ to, subject, html, attachments }) {
+async function sendEmail({ to, subject, html, attachments, idempotencyKey }) {
   if (!RESEND_API_KEY) {
     throw new Error('이메일 발송이 아직 설정되지 않았습니다 (RESEND_API_KEY 없음).');
   }
@@ -21,7 +21,8 @@ async function sendEmail({ to, subject, html, attachments }) {
   if (attachments && attachments.length) body.attachments = attachments;
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
-    headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+    headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json', ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}) },
+    signal: AbortSignal.timeout(30000),
     body: JSON.stringify(body)
   });
   const data = await res.json().catch(() => ({}));

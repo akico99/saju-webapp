@@ -34,6 +34,10 @@ router.post('/pay/prepare', requireAuth, (req, res) => {
   const { product, form, attribution } = req.body || {};
   const resolved = resolveProduct(product, form);
   if (!resolved) return res.status(400).json({ error: '알 수 없는 상품입니다.' });
+  if (product === 'love') {
+    try { require('../../db/reportDelivery').parseDelivery(form); }
+    catch (e) { return res.status(400).json({ error: e.message }); }
+  }
   const user = users.findById(req.session.userId);
   const row = cardPayments.create({
     userId: user.id, amountKrw: resolved.price, orderName: resolved.label, testMode: TEST_MODE,

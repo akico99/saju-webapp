@@ -52,7 +52,7 @@ async function loadAllImages(page) {
 
 const overflow = () => {
   const w = innerWidth;
-  const wide = [...document.querySelectorAll('.lr-reader *')].filter((n) => n.getBoundingClientRect().right > w + 1 && !n.closest('.lr-nav-list')).map((n) => n.className || n.tagName);
+  const wide = [...document.querySelectorAll('.lr-reader *')].filter((n) => n.getBoundingClientRect().right > w + 1 && !n.closest('.lr-toc-list') && !n.closest('figure.lr-art')).map((n) => n.className || n.tagName);
   return { doc: document.documentElement.scrollWidth <= w, wide: wide.slice(0, 5) };
 };
 
@@ -87,7 +87,8 @@ test('전체 풀이 데모: 7개 장, 원문 그대로 보기, 12개월 탭 키�
     browser = await puppeteer.launch({ headless: true });
     const { page, errors } = await open(browser, 'http://127.0.0.1:' + port, '#paid');
     assert.equal(await page.$$eval('.lr-chapter', (n) => n.length), 7);
-    assert.equal(await page.$$eval('.lr-nav-btn', (n) => n.length), 7);
+    assert.equal(await page.$$eval('.lr-toc-btn', (n) => n.length), 7);
+    assert.equal(await page.$$eval('.lr-nav, .lr-nav-list', (n) => n.length), 0, '가로 스크롤 장 이동 막대는 없다');
     // 원문은 <pre> 안에 한 글자도 바뀌지 않고 들어 있다.
     assert.equal(await page.$eval('.lr-original .lr-pre', (e) => e.textContent), example.paid);
     // 한 줄 답은 lead로 한 번만, 장 안에 중복되지 않는다.
@@ -95,6 +96,7 @@ test('전체 풀이 데모: 7개 장, 원문 그대로 보기, 12개월 탭 키�
     const tabs = await page.$$eval('.lr-months .lr-tab', (n) => n.map((b) => b.textContent));
     assert.equal(tabs.length, 12);
     const before = await page.$eval('.lr-months .lr-detail', (e) => e.textContent);
+    await page.click('.lr-month-toggle');
     await page.focus('.lr-months .lr-tab[aria-selected="true"]');
     await page.keyboard.press('ArrowRight');
     const st = await page.evaluate(() => {
@@ -223,16 +225,22 @@ test('동작 줄이기 설정에서는 장 애니메이션과 부드러운 이�
   try {
     browser = await puppeteer.launch({ headless: true });
     const { page } = await open(browser, 'http://127.0.0.1:' + port, '#paid', { reducedMotion: true });
-    const css = await page.evaluate(() => ({ anim: getComputedStyle(document.querySelector('.lr-chapter')).animationName, trans: getComputedStyle(document.querySelector('.lr-track i, .lr-meter i, .lr-nav-btn')).transitionDuration }));
+    const css = await page.evaluate(() => ({ anim: getComputedStyle(document.querySelector('.lr-chapter')).animationName, trans: getComputedStyle(document.querySelector('.lr-track i, .lr-meter i, .lr-toc-btn')).transitionDuration }));
     assert.equal(css.anim, 'none');
     assert.match(css.trans, /^0s/);
     let behavior = null;
     await page.evaluate(() => { const o = Element.prototype.scrollIntoView; window.__sb = []; Element.prototype.scrollIntoView = function (a) { window.__sb.push(a && a.behavior); return o.call(this, a); }; });
-    await page.click('.lr-nav-btn:nth-child(3)');
+    await page.click('.lr-toc-btn:nth-child(3)');
     behavior = await page.evaluate(() => window.__sb[0]);
     assert.equal(behavior, 'auto');
     const normal = await open(browser, 'http://127.0.0.1:' + port, '#paid');
     assert.equal(await normal.page.$eval('.lr-chapter', (e) => getComputedStyle(e).animationName), 'lr-in');
+    // 패럴랙스는 동작 줄이기 설정에서 꺼지고, 기본 설정에서만 장 그림에 붙는다.
+    assert.equal(await page.$$eval('.lr-parallax', (n) => n.length), 0);
+    // 데모 페이지는 부드러운 스크롤이라 즉시 이동시킨 뒤 스크롤 이벤트로 그림 위치가 바뀌는지 본다.
+    await normal.page.$eval('.lr-parallax .lr-art', (e) => window.scrollTo({ top: e.getBoundingClientRect().top + window.scrollY - 300, behavior: 'instant' }));
+    await normal.page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+    assert.equal(await normal.page.$$eval('.lr-parallax .lr-art img', (n) => n.some((i) => /translate3d/.test(i.style.transform))), true);
   } finally {
     if (browser) await browser.close();
     child.removeAllListeners('exit'); child.kill();
@@ -252,14 +260,16 @@ test('보기 규칙: 끌림 장 제목, 월별 본문 중복 제거와 탭 유�
     assert.ok((await page.$$eval('.lr-chapter .lr-title', (n) => n.map((h) => h.textContent))).includes('서로 끌리는 이유'));
     const monthLines = example.paid.split('## 앞으로 12개월')[1].split('\n').filter((l) => /^- \d+월/.test(l)).map((l) => l.replace(/^- \d+월:\s*/, '').trim());
     assert.equal(monthLines.length, 12);
-    const body = await page.$eval('[data-chapter-id="months"]', (e) => { const c = e.cloneNode(true); c.querySelectorAll('.lr-months, .lr-head, .lr-art').forEach((n) => n.remove()); return c.textContent; });
+    assert.equal(await page.$$eval('.lr-all-months .lr-month-card',n=>n.length),12);
+    assert.equal(await page.$eval('.lr-all-months',n=>n.hidden),false);
+    const body = await page.$eval('[data-chapter-id="months"]', (e) => { const c = e.cloneNode(true); c.querySelectorAll('.lr-month-reading, .lr-head, .lr-art').forEach((n) => n.remove()); return c.textContent; });
     for (const t of monthLines) assert.ok(!body.includes(t), '월 문장이 본문에도 반복됨: ' + t);
     assert.equal(await page.$$eval('.lr-months .lr-tab', (n) => n.length), 12);
     const report = '### 한 줄 답\n답이에요.\n\n### 앞으로 12개월\n이 달들은 서로 이어서 읽어 주세요.\n\n- 3월: 봄 이야기예요\n- 4월: 여름 이야기예요';
     const out = await page.evaluate((r) => {
       const d = document.createElement('div'); document.body.prepend(d);
       LoveReadingView.render(d, LoveReadingModel.buildPaid(r), {});
-      return { flow: d.querySelector('[data-chapter-id="months"] .lr-talk, [data-chapter-id="months"] .lr-paper').textContent, tabs: d.querySelectorAll('.lr-months .lr-tab').length };
+      return { flow: [...d.querySelectorAll('[data-chapter-id="months"] .lr-talk, [data-chapter-id="months"] .lr-paper')].map(n=>n.textContent).join(' '), tabs: d.querySelectorAll('.lr-months .lr-tab').length };
     }, report);
     assert.ok(out.flow.includes('이 달들은 서로 이어서 읽어 주세요.'), '월 설명 문장이 사라짐');
     assert.equal(out.tabs, 2);
@@ -306,7 +316,7 @@ test('실제 love.html 결제 복귀(?jobId=): 새 읽기 화면과 시간표가
       if (!u.startsWith(base)) return req.abort();
       if (u.includes('/api/')) {
         apiCalls.push(new URL(u).pathname);
-        if (u.includes('/api/status/fixture-job')) return req.respond({ status: 200, contentType: 'application/json', body: JSON.stringify({ status: 'done', report: example.paid, visual: '<div class="fixture-visual">가상 시기 막대</div>' }) });
+        if (u.includes('/api/status/fixture-job')) return req.respond({ status: 200, contentType: 'application/json', body: JSON.stringify({ status: 'done', report: example.paid, visual: '<div class="fixture-visual">가상 시기 막대</div><div class="love-bars"><div class="love-bar is-top" data-rank="2" data-ym="2027-1"><i></i><b>1월</b></div><div class="love-bar is-top" data-rank="1" data-ym="2026-12"><i></i><b>12월</b></div><div class="love-bar is-top" data-rank="3" data-ym="2027-3"><i></i><b>3월</b></div></div>' }) });
         return req.respond({ status: 404, contentType: 'application/json', body: '{}' });
       }
       req.continue();
@@ -318,6 +328,13 @@ test('실제 love.html 결제 복귀(?jobId=): 새 읽기 화면과 시간표가
       return { reader: vis('paidReader'), legacy: vis('paidReading'), timeline: vis('paidTimeline'), visual: document.querySelector('#loveVisual .fixture-visual') && getComputedStyle(document.querySelector('#loveVisual .fixture-visual')).display !== 'none', chapters: document.querySelectorAll('#paidReader .lr-chapter').length, overflow: document.documentElement.scrollWidth <= innerWidth };
     });
     assert.deepEqual(st, { reader: true, legacy: false, timeline: true, visual: true, chapters: 7, overflow: true });
+    // 강한 세 달 카드는 그래프의 순위 순서로 세 장이 생기고, 눌렀을 때 뒤집힌다.
+    const flips = await page.$$eval('#paidReader .lr-flip', (n) => n.map((b) => b.getAttribute('aria-label')));
+    assert.equal(flips.length, 3);
+    assert.match(flips[0], /^가장 강한 달 2026년 12월/);
+    assert.match(flips[1], /^두 번째로 강한 달 2027년 1월/);
+    await page.click('#paidReader .lr-flip');
+    assert.equal(await page.$eval('#paidReader .lr-flip', (b) => b.getAttribute('aria-pressed')), 'true');
     assert.ok(apiCalls.includes('/api/status/fixture-job'));
     assert.deepEqual([...new Set(apiCalls)].filter((p) => !['/api/status/fixture-job', '/api/tracking-config', '/api/auth/me'].includes(p)), [], '결제·생성 API가 호출됨');
     assert.deepEqual(errors, []);

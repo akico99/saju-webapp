@@ -1,7 +1,7 @@
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { buildFree, buildPaid } = require('../public/love-reading-model');
+const { buildFree, buildPaid, monthParts, splitBlocks } = require('../public/love-reading-model');
 const { parseLoveText, toPlainText } = require('../src/llm/loveTimingReading');
 
 test('free adapter uses only supplied preview facts and preserves arrays', () => {
@@ -10,16 +10,25 @@ test('free adapter uses only supplied preview facts and preserves arrays', () =>
   assert.equal(model.kind,'free'); assert.equal(model.facts.pillars,reading.pillars);
   assert.equal(model.facts.balance,reading.balance); assert.equal(model.facts.balance.bars,reading.balance.bars); assert.equal(model.chapters.length,6);
   assert.match(model.chapters[2].blocks[0].text,/별도의 표식이 나타나지 않았/); assert.equal(model.original,reading);
-  assert.equal(model.chapters[1].title,'매력'); assert.ok(!model.chapters[1].blocks.some(b=>b.text==='매력'));
-  assert.deepEqual(model.chapters[1].blocks.map(b=>b.text),['근거']);
+  assert.equal(model.chapters[1].title,'당신이 가진 연애의 매력');
+  assert.deepEqual(model.chapters[1].blocks.map(b=>b.text),['근거','사주에서 살펴본 근거','매력']);
   assert.match(model.chapters[0].blocks.map(b=>b.text).join(' '),/솔로/);
+});
+
+test('관심 질문은 무료 결과의 유료 목차 순서에만 반영하고 원래 목록을 바꾸지 않는다', () => {
+  const reading = { locked:['인연 신호가 강한 세 달','나에게 끌리는 사람','반복되는 연애 패턴'] };
+  const model = buildFree(reading, { readingFocus:'pattern' });
+  assert.equal(model.facts.locked[0], '반복되는 연애 패턴');
+  assert.equal(reading.locked[0], '인연 신호가 강한 세 달');
+  assert.deepEqual(buildFree(reading, {}).facts.locked, reading.locked);
 });
 
 test('paid adapter retains exact original, legacy sections, paragraphs and year-qualified months', () => {
   const report = '### 한 줄 답\n12개월의 답입니다.\n\n### 나에게 끌리는 사람\n첫 문단입니다.\n\n둘째 문단입니다.\n\n### 내가 끌리는 사람\n다른 문단입니다.\n\n### 사용자 추가 장\n보존해야 할 문장입니다.\n\n### 월별 한 줄\n- 2026년 12월: 연말 흐름\n- 2027년 1월: 새해 흐름';
   const model = buildPaid(report);
   assert.equal(model.original,report);
-  assert.deepEqual(model.months,[{month:12,year:2026,text:'연말 흐름'},{month:1,year:2027,text:'새해 흐름'}]);
+  assert.deepEqual(model.months.map(({parts,...m})=>m),[{month:12,year:2026,text:'연말 흐름'},{month:1,year:2027,text:'새해 흐름'}]);
+  assert.deepEqual(model.months[0].parts,[{label:'',text:'연말 흐름'}]);
   const attraction=model.chapters.find(c=>c.id==='attraction');
   assert.match(attraction.blocks.map(b=>b.text).join(' '),/나에게 끌리는 사람/);
   assert.match(attraction.blocks.map(b=>b.text).join(' '),/내가 끌리는 사람/);
@@ -66,16 +75,17 @@ test('nested titles and preamble stay attached; attraction paragraphs and action
 
 const flat = s => s.replace(/\*\*/g,'').replace(/[\s#]+/g,'');
 
-test('asterisks are removed from visible text while original stays exact and no body text is lost', () => {
+test('짝이 맞는 강조(**구절**)는 남기고 짝 없는 별표는 지우며, 원문과 본문 글자는 잃지 않는다', () => {
   const report='### 한 줄 답\n**강한 달**은 12월이에요.\n\n### 반복되기 쉬운 연애 패턴\n**근거** 첫 문장이에요. 둘째 문장이에요.\n#### **보충**\n- 항목 하나\n* 항목 둘\n1. 항목 셋\n\n### 솔로인 지금 할 일\n설명 문장이에요.\n\n**오늘의 실천**\n- 연락하기\n- 2026년 12월 약속 잡기';
   const m=buildPaid(report);
   assert.equal(m.original,report);
   const seen=[m.lead,...m.chapters.flatMap(c=>c.blocks.map(b=>b.text))];
-  assert.ok(!seen.some(t=>t.includes('*')));
-  assert.equal(m.lead,'강한 달은 12월이에요.');
+  // 강조 짝을 걷어 내면 별표가 하나도 남지 않아야 한다(화면에 별표가 그대로 보이면 안 된다).
+  assert.ok(!seen.some(t=>t.replace(/\*\*[^*\n]+?\*\*/g,'').includes('*')));
+  assert.equal(m.lead,'**강한 달**은 12월이에요.');
   const body=flat(report.replace(/^#{1,3}\s.*$/gm,'').replace(/^\s*(?:[-*]|\d+\.)\s+/gm,''));
   const titles=m.chapters.map(c=>c.title).join('');
-  assert.equal(flat(seen.join('')),body);
+  assert.equal(flat(seen.join('').replace(/\*\*/g,'')),flat(body.replace(/\*\*/g,'')));
   assert.ok(titles.length>0);
   const action=m.chapters.find(c=>c.id==='action');
   assert.deepEqual(action.blocks.filter(b=>b.type==='action').map(b=>b.text),['연락하기','2026년 12월 약속 잡기']);
@@ -115,4 +125,19 @@ test('prose is grouped into 1-3 sentence cards, never truncated, dates and decim
 
 test('model source avoids regex lookbehind', () => {
   assert.ok(!/\(\?<[=!]/.test(require('node:fs').readFileSync(require.resolve('../public/love-reading-model'),'utf8')));
+});
+
+test('월별 표지는 흐름·해볼 일·점검으로 나누고, 문장에 붙은 표지는 소제목으로 떼지 않는다', () => {
+  assert.deepEqual(monthParts('**흐름** 표현이 살아나는 달. **해볼 일** 먼저 연락하기. **점검** 답장 속도 보기.'),
+    [{label:'흐름',text:'표현이 살아나는 달.'},{label:'해볼 일',text:'먼저 연락하기.'},{label:'점검',text:'답장 속도 보기.'}]);
+  const attached = splitBlocks('**근거**부터 보면, 불의 기운이에요.', false);
+  assert.equal(attached.some(b=>b.type==='heading'), false);
+  assert.match(attached.map(b=>b.text).join(' '), /^\*\*근거\*\*부터 보면/);
+  const alone = splitBlocks('**근거**\n불의 기운이에요.', false);
+  assert.deepEqual(alone[0], {type:'heading',text:'근거'});
+});
+
+test('강조 구절 안의 마침표에서는 문장을 자르지 않는다', () => {
+  const blocks = splitBlocks('앞 문장이에요. **이 달이 가장 강해요.** 뒤 문장이에요.', false);
+  for (const b of blocks) assert.equal((b.text.match(/\*\*/g) || []).length % 2, 0, b.text);
 });

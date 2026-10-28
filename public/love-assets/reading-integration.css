@@ -8,3 +8,7 @@
 .love-page .love-result:has(.lr-reader)>.love-sticky{margin:0}
 .love-page .love-result:has(.lr-reader)>.love-after{padding-bottom:24px}
 #paidTimeline{padding:24px}
+.love-page .love-result:has(.lr-reader){background:#180a0f;color:#fff2ee}
+.love-page .love-result:has(.lr-reader)>.lg-folded{background:#2a121a;color:#fff2ee;border-color:#55313a}
+.love-page .love-result:has(.lr-reader)>.love-unlock{background:#2a121a;color:#fff2ee}
+.love-page .love-result:has(.lr-reader) .love-sticky button{background:#c3475a;color:#fff}

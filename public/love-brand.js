@@ -8,13 +8,13 @@
       role: '관계의 흐름을 읽는 이야기 안내자',
       disclosure: '여울은 사주 풀이를 안내하는 창작 캐릭터입니다. 만세력 계산을 바탕으로 AI가 해석을 작성하며, 상담사의 대면 상담은 제공하지 않습니다.',
       // 이번 비공개 미리보기용 신규 원화. 별도 세션의 사용자 캐릭터 원본과는 구분한다.
-      portrait: '/love-assets/yeoul-cover.png'
+      portrait: '/love-assets/reading/cover-comic.webp'
     },
     product: {
       title: '인연의 시기',
       subtitle: '나의 연애 패턴과 앞으로 12개월',
-      priceKrw: 19900,
-      chapters: ['인연의 흐름이 강한 세 달', '나에게 끌리는 사람과 내가 끌리는 사람', '만남이 생기기 쉬운 자리', '반복되기 쉬운 연애 패턴', '조심할 관계의 신호', '지금 상황에 맞는 행동 제안', '앞으로 12개월, 달마다 한 줄']
+      priceKrw: 14900,
+      chapters: ['인연의 흐름이 강한 세 달', '나에게 끌리는 사람과 내가 끌리는 사람', '만남이 생기기 쉬운 자리', '반복되기 쉬운 연애 패턴', '조심할 관계의 신호', '지금 상황에 맞는 행동 제안', '앞으로 12개월, 달마다 흐름과 행동']
     }
   };
   if (typeof module === 'object' && module.exports) module.exports = brand;

@@ -1,0 +1,22 @@
+body.catalogue { color:#243530; font-family:'Noto Sans KR',system-ui,sans-serif; }
+.catalogue .shop-header { height:60px; }
+.catalogue .brand { font-family:'Noto Sans KR',system-ui,sans-serif; font-size:17px; font-weight:800; }
+.catalogue .brand small { font-size:10px; }
+.catalogue .category-nav { position:relative; top:auto; gap:30px; }
+.catalogue .category-nav a { font-size:15px; }
+.catalogue .feature { padding:0; }
+.catalogue .hero-card { border-radius:0; aspect-ratio:auto; height:min(78vh,650px); min-height:500px; }
+.catalogue .hero-card:after { inset:30% 0 0; background:linear-gradient(transparent,rgba(10,31,29,.48) 55%,#142d2b 100%); }
+.catalogue .hero-card>img { object-position:center 22%; }
+.catalogue .hero-lettering { left:25px; right:25px; bottom:25px; }
+.catalogue .hero-lettering h1 { font-family:'Noto Sans KR',system-ui,sans-serif; font-size:43px; font-weight:800; letter-spacing:-.06em; }
+.catalogue .hero-question { font-size:16px; font-weight:600; color:#fff; }
+.catalogue .hero-lettering p { font-size:14px; color:#f4eee7; }
+.catalogue .hero-link { display:flex; justify-content:center; gap:15px; padding:16px; border:0; border-radius:8px; background:#cf695f; font-size:15px; font-weight:700; }
+.catalogue .hero-caption { padding:12px 22px; }
+.catalogue .section-head h2 { font-size:22px; line-height:1.45; }
+.catalogue .section-lead,.catalogue .collection-note { font-size:13px; line-height:1.7; }
+.catalogue .concern-grid strong { font-family:'Noto Sans KR',system-ui,sans-serif; font-size:19px; line-height:1.5; }
+.catalogue .concern-grid a>span:last-child { font-size:12px; line-height:1.5; }
+.catalogue .brand-note h2 { font-family:'Noto Sans KR',system-ui,sans-serif; font-weight:700; }
+@media(max-width:350px){.catalogue .hero-card{min-height:440px}.catalogue .hero-lettering h1{font-size:36px}.catalogue .hero-question{font-size:14px}}

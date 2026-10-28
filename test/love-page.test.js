@@ -18,7 +18,7 @@ test('연애 시기 페이지는 입력·무료 첫 장·잠금 해제·결과 �
   }
   for (const src of ['/point-notice.js', '/pay-flow.js', '/love-app.js']) assert.ok(html.includes(`src="${src}"`), src);
   assert.ok(html.indexOf('/point-notice.js') < html.indexOf('/love-app.js'));
-  assert.match(html, /window\.POINT_NOTICE_PRICE = 19900/);
+  assert.match(html, /window\.POINT_NOTICE_PRICE = 14900/);
   assert.match(html, /href="\/love\.css"/);
   for (const m of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)) new vm.Script(m[1], { filename: 'love.html' });
 });
@@ -46,6 +46,8 @@ test('마이페이지는 PDF가 없는 연애 시기 리포트에 보기 링크�
   assert.match(html, /\/love\.html\?jobId=/);
   // 다운로드 처리기(.download-link)가 보기 링크까지 잡아 /api/download/undefined 를 부르지 않게 클래스를 나눈다.
   assert.match(html, /class="view-link" href="\/love\.html\?jobId=/);
+  // PDF가 있는 연애 리포트는 보기 옆에 PDF 내려받기를 함께 준다.
+  assert.match(html, /o\.hasFile \? ` <button type="button" class="download-link"/);
 });
 
 test('주문 이름(사용자 입력 포함)은 마이페이지와 관리자 주문 화면에서 이스케이프된다', () => {

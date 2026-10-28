@@ -1,10 +1,15 @@
 'use strict';
-/* 연애 시기 리포트 — 무료 첫 장(/api/love/preview, 로그인·LLM 없음)과 유료 생성(/api/love).
-   유료 생성은 심층 리딩(quick.js)과 같은 job 패턴이고, 결제 승인 뒤에는 pay.js가
-   resolveProduct('love')로 같은 start()를 부른다. PDF는 아직 만들지 않는다 — 결과는 웹 본문
-   (result_text)과 12개월 막대(result_visual)로 보관하고 /love.html?jobId= 에서 다시 본다. */
+/* 무료 첫 장과 유료 웹/PDF 생성. PDF 완성 뒤 입력한 수신 주소로 전송한다.
+   메일 실패는 결과를 유지하고 인증된 주문 소유자에게만 재전송을 허용한다. */
 const express = require('express');
 const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
+const { OUTPUT_ROOT } = require('../../config/outputDir');
+const { renderLoveHtml } = require('../../pdf/renderLoveHtml');
+const { renderPdf } = require('../../pdf/renderPdf');
+const delivery = require('../../db/reportDelivery');
+const { deliverLoveReport } = require('../../email/loveReport');
 const { computeSaju } = require('../../engine/index');
 const { buildLovePreview, situationOf, validateBirth } = require('../../engine/loveTiming');
 const { generateLoveReading, toPlainText } = require('../../llm/loveTimingReading');
@@ -61,6 +66,8 @@ router.post('/love/preview', (req, res) => {
 async function startLove(userId, body) {
   let parsed;
   try { parsed = parseBody(body); } catch (e) { throw new HttpError(400, { error: e.message }); }
+  let email;
+  try { email = delivery.parseDelivery(body); } catch (e) { throw new HttpError(400, { error: e.message }); }
 
   let engineResult;
   try { engineResult = computeSaju(parsed.birth); } catch (e) { throw new HttpError(400, { error: '명식 계산 실패: ' + e.message }); }
@@ -84,13 +91,29 @@ async function startLove(userId, body) {
     throw new HttpError(500, { error: '주문을 만드는 중 오류가 발생했습니다.' });
   }
 
+  let jobDir;
+  try {
+    delivery.create(jobId, email);
+    jobDir = path.join(OUTPUT_ROOT, jobId);
+    fs.mkdirSync(jobDir, { recursive: true });
+  } catch (e) {
+    orders.markError(jobId, 'PDF 생성 준비 실패');
+    refundPurchase(userId, price, '생성 준비 실패 환불: ' + productKey, jobId);
+    throw new HttpError(500, { error: '리포트 생성 준비에 실패했어요.' });
+  }
   orders.updateStatus(jobId, 'generating');
-  generateLoveReading(engineResult, person, parsed.situation, new Date(), { startYm: parsed.startYm })
-    .then((reading) => {
+  generateLoveReading(engineResult, person, parsed.situation, new Date(), { startYm: parsed.startYm, readingFocus: body.readingFocus })
+    .then(async (reading) => {
+      orders.updateStatus(jobId, 'rendering');
+      const pdfPath = path.join(jobDir, 'love-report.pdf');
+      await renderPdf(renderLoveHtml(engineResult, person, reading), pdfPath, { name: person.name, label: '인연의 시기' });
+      if (!fs.existsSync(pdfPath)) throw new Error('PDF 생성 확인 실패');
       orders.markDone(jobId, {
-        resultPath: null, cardPath: null, llmCostUsd: costUsd(reading.usage),
+        resultPath: pdfPath, cardPath: null, llmCostUsd: costUsd(reading.usage),
         resultText: toPlainText(reading), resultVisual: loveWebHtml(reading.timing)
       });
+      // 발송 실패는 완성된 유료 결과를 오류/환불 상태로 바꾸지 않는다.
+      await deliverLoveReport(jobId).catch(() => {});
     })
     .catch((e) => {
       orders.markError(jobId, e.message);
@@ -100,6 +123,14 @@ async function startLove(userId, body) {
 }
 
 router.post('/love', requireAuth, handle(startLove));
+
+router.post('/love/:jobId/delivery', requireAuth, async (req, res) => {
+  const order = orders.findByJobId(req.params.jobId);
+  if (!order || order.user_id !== req.session.userId || order.product_key !== loveTimingConfig.productKey) return res.sendStatus(404);
+  if (order.status !== 'done' || !order.result_path) return res.status(409).json({ error: 'PDF가 아직 준비되지 않았어요.' });
+  await deliverLoveReport(order.job_id);
+  return res.json({ delivery: delivery.publicState(order.job_id) });
+});
 
 module.exports = router;
 module.exports.start = startLove;

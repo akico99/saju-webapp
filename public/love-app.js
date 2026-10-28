@@ -8,7 +8,7 @@
 (function () {
   const form = document.getElementById('loveForm');
   const steps = Array.from(form.querySelectorAll('.stage-step'));
-  const dots = Array.from(document.querySelectorAll('#dots i'));
+  const wizardProgress = document.getElementById('wizardProgress');
   const backBtn = document.getElementById('backBtn');
   const stageError = document.getElementById('stageError');
   const freeResult = document.getElementById('freeResult');
@@ -85,21 +85,25 @@
   function show(i) {
     step = i;
     steps.forEach((s, k) => { s.hidden = k !== i; });
-    dots.forEach((d, k) => d.classList.toggle('on', k === i));
+    wizardProgress.style.width = ((i + 1) / steps.length * 100) + '%';
+    wizardProgress.parentElement.setAttribute('aria-valuenow', String(i + 1));
+    document.getElementById('wizardCount').textContent = String(i + 1).padStart(2, '0') + ' / 07';
+    if (i === 4) renderFocusChoices();
+    if (i === 6) renderReview();
     backBtn.disabled = i === 0;
     stageError.hidden = true;
     const first = steps[i].querySelector('input:not([type=hidden]):not([type=checkbox])');
-    if (first && i > 0) setTimeout(() => first.focus({ preventScroll: true }), 50);
+    if (first && i > 0) setTimeout(() => { if (step === i && !steps[i].contains(document.activeElement)) first.focus({ preventScroll: true }); }, 50);
   }
   function stageFail(msg) {
     stageError.querySelector('.q').textContent = msg;
     stageError.hidden = false;
   }
   function validate(i) {
-    if (i === 0 && !field('situation').value) return '지금 상황을 하나 골라 주세요.';
-    if (i === 1 && !field('gender').value) return '성별을 골라 주세요. 연애운 계산에 쓰여요.';
+    if (i === 3 && !field('situation').value) return '지금 상황을 하나 골라 주세요.';
+    if (i === 0 && !field('gender').value) return '성별을 골라 주세요. 연애운 계산에 쓰여요.';
     const intIn = (v, lo, hi) => /^\d+$/.test(String(v).trim()) && Number(v) >= lo && Number(v) <= hi;
-    if (i === 2) {
+    if (i === 1) {
       const yv = field('year').value, mv = field('month').value, dv = field('day').value;
       if (!intIn(yv, 1900, new Date().getFullYear()) || !intIn(mv, 1, 12) || !intIn(dv, 1, 31)) return '태어난 해·달·날을 숫자로 적어 주세요.';
       if (field('calendar').value !== '음력') {
@@ -108,7 +112,7 @@
         if (d.getTime() > Date.now()) return '아직 오지 않은 날짜예요. 생년월일을 다시 확인해 주세요.';
       }
     }
-    if (i === 3 && !field('hourUnknown').checked) {
+    if (i === 2 && !field('hourUnknown').checked) {
       if (!intIn(field('hour').value, 0, 23)) return '태어난 시(0~23)를 적거나 "시각을 몰라요"를 골라 주세요.';
       const mi = field('minute').value;
       if (mi !== '' && !intIn(mi, 0, 59)) return '태어난 분은 0~59로 적어 주세요. 모르면 비워 두세요.';
@@ -121,15 +125,58 @@
     if (step < steps.length - 1) show(step + 1);
   }
 
-  function markOn(buttons, on) { buttons.forEach((b) => b.classList.toggle('on', b === on)); }
+  function markOn(buttons, on) { buttons.forEach((b) => { b.classList.toggle('on', b === on); b.setAttribute('aria-pressed', String(b === on)); }); }
   const situationBtns = Array.from(form.querySelectorAll('[data-situation]'));
   situationBtns.forEach((b) => b.addEventListener('click', () => {
     field('situation').value = b.dataset.situation;
     markOn(situationBtns, b);
-    setTimeout(next, 120);
+    renderFocusChoices();
+    next();
   }));
   const genderBtns = Array.from(form.querySelectorAll('[data-gender]'));
-  genderBtns.forEach((b) => b.addEventListener('click', () => { field('gender').value = b.dataset.gender; markOn(genderBtns, b); stageError.hidden = true; }));
+  genderBtns.forEach((b) => b.addEventListener('click', () => { field('gender').value = b.dataset.gender; markOn(genderBtns, b); stageError.hidden = true; next(); }));
+  const FOCUS = {
+    single: [['timing', '다음 인연은 언제쯤 올까요?'], ['person', '어떤 사람과 서로 끌릴까요?'], ['pattern', '왜 비슷한 연애를 반복할까요?'], ['action', '새 인연을 위해 무엇부터 할까요?']],
+    some: [['person', '서로 끌리는 지점이 궁금해요'], ['timing', '다가가기 좋은 흐름을 알고 싶어요'], ['pattern', '썸에서 늘 막히는 이유가 궁금해요'], ['action', '지금 어떻게 다가가면 좋을까요?']],
+    dating: [['pattern', '반복되는 갈등을 돌아보고 싶어요'], ['person', '사랑할 때 내 모습을 알고 싶어요'], ['timing', '관계를 깊게 할 흐름이 궁금해요'], ['action', '지금 관계에 필요한 행동이 뭘까요?']],
+    breakup: [['pattern', '지난 연애의 패턴을 돌아보고 싶어요'], ['timing', '새로운 인연의 흐름이 궁금해요'], ['person', '다음에는 어떤 사람에게 끌릴까요?'], ['action', '이별 뒤 무엇부터 하면 좋을까요?']]
+  };
+  function focusLabel() {
+    const item = (FOCUS[field('situation').value] || FOCUS.single).find(x => x[0] === field('readingFocus').value);
+    return item ? item[1] : '전체 이야기';
+  }
+  function renderFocusChoices() {
+    const box = document.getElementById('focusChoices');
+    box.replaceChildren();
+    document.getElementById('focusKicker').textContent = ({ single:'새 인연을 기다리는 당신에게', some:'누군가를 마음에 둔 당신에게', dating:'지금 사랑하고 있는 당신에게', breakup:'이별을 지나고 있는 당신에게' })[field('situation').value] || '먼저 읽고 싶은 이야기';
+    (FOCUS[field('situation').value] || FOCUS.single).forEach(([value, label]) => {
+      const button = el('button', 'choice', label); button.type = 'button'; button.dataset.focus = value;
+      button.classList.toggle('on', field('readingFocus').value === value);
+      button.setAttribute('aria-pressed', String(field('readingFocus').value === value));
+      button.addEventListener('click', () => { field('readingFocus').value = value; next(); });
+      box.appendChild(button);
+    });
+  }
+  document.getElementById('skipFocus').addEventListener('click', () => { field('readingFocus').value = ''; next(); });
+  function renderReview() {
+    const name = field('name').value.trim();
+    document.getElementById('reviewTitle').textContent = name ? name + '님, 이 정보가 맞나요?' : '이 정보로 읽어 드릴까요?';
+    const rows = [
+      ['성별', field('gender').value === '여' ? '여자' : '남자', 0],
+      ['생년월일', field('year').value + '.' + field('month').value.padStart(2,'0') + '.' + field('day').value.padStart(2,'0') + ' · ' + field('calendar').value + (field('isLeap').checked ? ' 윤달' : ''), 1],
+      ['태어난 시각', field('hourUnknown').checked ? '시각 모름' : field('hour').value.padStart(2,'0') + ':' + (field('minute').value || '0').padStart(2,'0'), 2],
+      ['지금의 연애', SITUATION_LABEL[field('situation').value] || '', 3],
+      ['먼저 볼 이야기', focusLabel(), 4],
+      ['이름', name || '입력하지 않음', 5]
+    ];
+    const box = document.getElementById('wizardReview'); box.replaceChildren();
+    rows.forEach(([label, value, to]) => {
+      const row = el('div'); row.appendChild(el('dt', null, label));
+      const description = el('dd'); description.appendChild(el('span', null, value));
+      const edit = el('button', null, '수정'); edit.type = 'button'; edit.dataset.edit = String(to); edit.setAttribute('aria-label', label + ' 수정'); edit.addEventListener('click', () => show(to));
+      description.appendChild(edit); row.appendChild(description); box.appendChild(row);
+    });
+  }
   const calendarBtns = Array.from(form.querySelectorAll('[data-calendar]'));
   const leapRow = form.querySelector('.leap-row');
   function setCalendar(value) {
@@ -154,6 +201,9 @@
   function body() {
     return {
       situation: field('situation').value,
+      readingFocus: field('readingFocus').value,
+      deliveryEmail: field('deliveryEmail').value.trim(),
+      deliveryConsent: field('deliveryConsent').checked,
       name: field('name').value.trim(),
       gender: field('gender').value,
       calendar: field('calendar').value,
@@ -223,7 +273,7 @@
 
     if (window.LoveReadingModel && window.LoveReadingView) {
       if (disposeFreeReader) disposeFreeReader();
-      disposeFreeReader = enhanceReading('freeReader', 'legacyFreeReading', () => window.LoveReadingModel.buildFree(r, b));
+      disposeFreeReader = enhanceReading('freeReader', 'legacyFreeReading', () => window.LoveReadingModel.buildFree(r, b), { onUnlock: openCheckout });
     }
 
     document.body.classList.add('done');
@@ -236,6 +286,8 @@
   async function preview(b) {
     const btn = document.getElementById('previewBtn');
     btn.disabled = true;
+    btn.textContent = '당신의 사주를 읽고 있어요…';
+    form.setAttribute('aria-busy', 'true');
     try {
       const res = await fetch('/api/love/preview', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) });
       const data = await res.json().catch(() => ({}));
@@ -247,6 +299,8 @@
       return false;
     } finally {
       btn.disabled = false;
+      btn.textContent = '내 연애 첫 장 무료로 보기';
+      form.removeAttribute('aria-busy');
     }
   }
 
@@ -271,14 +325,33 @@
   function showError(msg) {
     errorBlock.textContent = msg;
     errorBlock.classList.remove('hidden');
+    errorBlock.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
-  // 한 줄 고정 버튼은 결제 안내 상자로 데려가기만 한다. 안내 상자가 화면에 들어오면 숨긴다.
-  const unlockBox = document.querySelector('.love-unlock');
-  const stickyBar = document.getElementById('stickyBar');
-  document.getElementById('stickyUnlock').addEventListener('click', () => unlockBox.scrollIntoView({ behavior: 'smooth', block: 'center' }));
-  if ('IntersectionObserver' in window) {
-    new IntersectionObserver((entries) => entries.forEach((en) => stickyBar.classList.toggle('away', en.isIntersecting)), { threshold: 0.2 }).observe(unlockBox);
+  const checkoutSheet = document.getElementById('checkoutSheet');
+  const checkoutConfirm = document.getElementById('checkoutConfirm');
+  let checkoutTrigger = null;
+  let purchasing = false;
+  function openCheckout(event) {
+    if (purchasing || checkoutSheet.open) return;
+    checkoutTrigger = event && event.currentTarget instanceof HTMLElement ? event.currentTarget : document.activeElement;
+    checkoutSheet.showModal();
+    document.body.classList.add('checkout-open');
+    document.getElementById('closeCheckout').focus({ preventScroll: true });
   }
+  function closeCheckout() { checkoutSheet.close(); }
+  checkoutSheet.addEventListener('close', () => {
+    document.body.classList.remove('checkout-open');
+    if (checkoutTrigger && checkoutTrigger.isConnected) checkoutTrigger.focus({ preventScroll: true });
+  });
+  checkoutSheet.addEventListener('click', (event) => {
+    if (event.target !== checkoutSheet) return;
+    const rect = checkoutSheet.getBoundingClientRect();
+    if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) closeCheckout();
+  });
+  document.getElementById('closeCheckout').addEventListener('click', closeCheckout);
+  unlockBtn.addEventListener('click', openCheckout);
+  document.getElementById('stickyUnlock').addEventListener('click', openCheckout);
+  freeResult.addEventListener('love:unlock', openCheckout);
   // 가격 안내(point-notice.js)의 "로그인하고 계속하기" 링크도 입력값을 저장하고 넘어가게 한다.
   document.getElementById('pointNotice').addEventListener('click', (e) => {
     const a = e.target.closest('a[href^="/login.html"]');
@@ -286,10 +359,24 @@
     e.preventDefault();
     PayFlow.toLogin(form);
   });
-  unlockBtn.addEventListener('click', async () => {
+  checkoutConfirm.addEventListener('click', async () => {
+    if (purchasing) return;
+    const deliveryEmail = field('deliveryEmail');
+    const deliveryError = document.getElementById('deliveryError');
+    if (!deliveryEmail.value.trim() || !deliveryEmail.checkValidity() || !field('deliveryConsent').checked) {
+      deliveryError.textContent = !deliveryEmail.value.trim() || !deliveryEmail.checkValidity() ? 'PDF를 받을 이메일을 정확히 입력해 주세요.' : 'PDF 전달을 위한 이메일 사용에 동의해 주세요.';
+      deliveryError.hidden = false;
+      (!deliveryEmail.value.trim() || !deliveryEmail.checkValidity() ? deliveryEmail : field('deliveryConsent')).focus();
+      return;
+    }
+    deliveryError.hidden = true;
+    purchasing = true;
+    closeCheckout();
     errorBlock.classList.add('hidden');
     const b = body();
     unlockBtn.disabled = true;
+    document.getElementById('stickyUnlock').disabled = true;
+    checkoutConfirm.disabled = true;
     try {
       const res = await fetch('/api/love', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) });
       const data = await res.json().catch(() => ({}));
@@ -302,6 +389,9 @@
       showError('요청 실패: ' + e.message);
     } finally {
       unlockBtn.disabled = false;
+      document.getElementById('stickyUnlock').disabled = false;
+      checkoutConfirm.disabled = false;
+      purchasing = false;
     }
   });
 
@@ -334,6 +424,64 @@
       }
     });
   }
+  // 강한 세 달 카드 — 순위는 서버가 엔진 숫자로 만든 그래프(data-rank)에서, 뒷면 문장은 이미 생성된 월별 풀이에서 가져온다.
+  function topMonthFlips(timeline, report) {
+    const bars = Array.from(timeline.querySelectorAll('.love-bar[data-rank]')).sort((a, b) => Number(a.dataset.rank) - Number(b.dataset.rank));
+    if (!bars.length || !window.LoveReadingModel) return null;
+    const months = window.LoveReadingModel.buildPaid(report).months || [];
+    const box = el('section', 'lr-flips');
+    box.setAttribute('aria-label', '인연 신호가 강한 세 달');
+    const head = el('p', 'lr-flips-title', '인연 신호가 강한 세 달');
+    head.appendChild(el('small', null, '카드를 눌러 뒤집어 보세요'));
+    box.appendChild(head);
+    const row = el('div', 'lr-flip-row');
+    bars.slice(0, 3).forEach((bar, i) => {
+      const [year, month] = String(bar.dataset.ym || '').split('-').map(Number);
+      const note = months.find((m) => m.month === month && (!m.year || m.year === year));
+      const flow = note ? ((note.parts && note.parts[0] && note.parts[0].text) || note.text || '') : '';
+      const first = (/^.*?[.!?](?=\s|$)/.exec(flow) || [flow])[0];
+      const rank = ['가장 강한 달', '두 번째로 강한 달', '세 번째로 강한 달'][i];
+      const card = el('button', 'lr-flip');
+      card.type = 'button';
+      card.setAttribute('aria-pressed', 'false');
+      card.setAttribute('aria-label', rank + ' ' + year + '년 ' + month + '월. 눌러서 이 달의 흐름 보기');
+      const inner = el('span', 'lr-flip-inner');
+      const front = el('span', 'lr-flip-front');
+      front.append(el('span', 'lr-flip-rank', String(i + 1)));
+      const label = el('span', 'lr-flip-label');
+      label.append(el('small', null, rank), el('b', null, year + '년 ' + month + '월'));
+      front.append(label, el('span', 'lr-flip-hint', '눌러서 보기'));
+      const back = el('span', 'lr-flip-back');
+      back.setAttribute('aria-hidden', 'true');
+      // 글과 강조 구절을 한 덩어리로 감싼다. 뒷면은 가운데 정렬용 flex라 감싸지 않으면 조각마다 따로 놓인다.
+      back.appendChild(appendRich(el('span', 'lr-flip-text'), first || '이 달의 풀이는 아래 12개월 장에서 읽을 수 있어요.'));
+      inner.append(front, back);
+      card.appendChild(inner);
+      card.addEventListener('click', () => {
+        const on = card.getAttribute('aria-pressed') !== 'true';
+        card.setAttribute('aria-pressed', String(on));
+        back.setAttribute('aria-hidden', String(!on));
+        front.setAttribute('aria-hidden', String(on));
+      });
+      row.appendChild(card);
+    });
+    box.appendChild(row);
+    // 카드가 처음 화면에 들어오면 첫 카드를 한 번 살짝 기울여 뒤집을 수 있다는 걸 보여 준다(동작 줄이기 설정이면 생략).
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const firstCard = row.querySelector('.lr-flip');
+    if (!reduce && firstCard && 'IntersectionObserver' in window) {
+      const io = new IntersectionObserver((entries) => {
+        if (!entries.some((e) => e.isIntersecting)) return;
+        io.disconnect();
+        if (firstCard.getAttribute('aria-pressed') === 'true') return;
+        firstCard.classList.add('is-peek');
+        firstCard.addEventListener('animationend', () => firstCard.classList.remove('is-peek'), { once: true });
+      }, { threshold: 0.8 });
+      io.observe(firstCard);
+    }
+    return box;
+  }
+
   function renderPaid(report, visual, reportId) {
     const sections = parseSections(report);
     const answer = sections.find((s) => s.title === '한 줄 답');
@@ -359,7 +507,7 @@
     list.replaceChildren();
     if (months) {
       months.text.split('\n').forEach((l) => {
-        const m = /^\s*-\s*(\d{1,2})월:\s*(.+)$/.exec(l);
+        const m = /^\s*-\s*(?:\d{4}년\s*)?(\d{1,2})월:\s*(.+)$/.exec(l);
         if (!m) return;
         const li = el('li'); li.append(el('b', null, m[1] + '월'), el('span', null, m[2]));
         list.appendChild(li);
@@ -372,8 +520,50 @@
     if (window.LoveReadingModel && window.LoveReadingView) {
       if (disposePaidReader) disposePaidReader();
       disposePaidReader = enhanceReading('paidReader', 'paidReading', () => window.LoveReadingModel.buildPaid(report), { reportId });
+      // 12개월 그래프는 결론 바로 아래에 둔다. 맨 끝에 두면 다 읽은 뒤에야 강한 달을 볼 수 있다.
+      const lead = document.querySelector('#paidReader .lr-lead');
+      const timeline = document.getElementById('paidTimeline');
+      if (lead && visual) {
+        timeline.classList.add('lr-summary-chart');
+        lead.after(timeline);
+        const flips = topMonthFlips(timeline, report);
+        if (flips) timeline.after(flips);
+      }
     }
   }
+
+  let deliveryJobId = null;
+  let deliveryTimer = null;
+  function updateDelivery(data, jobId) {
+    deliveryJobId = jobId;
+    const link = document.getElementById('lovePdfDownload');
+    link.classList.toggle('hidden', !data.hasPdf);
+    if (data.hasPdf) link.href = '/api/download/' + encodeURIComponent(jobId);
+    const state = data.delivery;
+    const message = document.getElementById('deliveryStatus');
+    const retry = document.getElementById('retryDelivery');
+    retry.classList.toggle('hidden', !state || !state.canRetry);
+    message.textContent = !state ? '' : state.exhausted && state.status !== 'sent' ? '이메일 전송을 완료했는지 확인할 수 없어요. PDF 내려받기를 이용하거나 sooky2001@gmail.com으로 문의해 주세요.' : state.status === 'sent' ? 'PDF 이메일 발송을 요청했어요. 받은편지함과 스팸함을 확인해 주세요.' : state.status === 'failed' ? '이메일 전송에 실패했어요. PDF는 바로 내려받을 수 있어요. 잠시 후 다시 보내기를 시도해 주세요.' : 'PDF 이메일을 보내고 있어요. PDF는 지금 내려받을 수 있어요.';
+    clearTimeout(deliveryTimer);
+    if (state && state.status !== 'sent' && !state.canRetry && !state.exhausted) {
+      deliveryTimer = setTimeout(async () => {
+        try {
+          const response = await fetch('/api/status/' + encodeURIComponent(jobId));
+          if (response.ok) updateDelivery(await response.json(), jobId);
+        } catch (_) { message.textContent = '전송 상태를 확인하지 못했어요. PDF를 내려받거나 페이지를 새로고침해 주세요.'; }
+      }, state.status === 'failed' ? 60000 : 5000);
+    }
+  }
+  document.getElementById('retryDelivery').addEventListener('click', async function () {
+    this.disabled = true;
+    try {
+      const response = await fetch('/api/love/' + encodeURIComponent(deliveryJobId) + '/delivery', { method: 'POST' });
+      if (!response.ok) throw new Error('retry failed');
+      const data = await response.json();
+      updateDelivery({ hasPdf: true, delivery: data.delivery }, deliveryJobId);
+    } catch (_) { document.getElementById('deliveryStatus').textContent = '전송 요청에 실패했어요. PDF 내려받기를 이용해 주세요.'; }
+    finally { this.disabled = false; }
+  });
 
   function paidFail(msg) {
     document.getElementById('progressBlock').classList.add('hidden');
@@ -388,7 +578,11 @@
       const data = await res.json().catch(() => ({}));
       if (res.status === 401) { location.href = '/login.html?redirect=' + encodeURIComponent(location.pathname + location.search); return; }
       if (!res.ok) return paidFail(data.error || '주문을 찾지 못했어요.');
-      if (data.status === 'done') return renderPaid(data.report, data.visual, jobId);
+      if (data.status === 'done') {
+        renderPaid(data.report, data.visual, jobId);
+        updateDelivery(data, jobId);
+        return;
+      }
       if (data.status === 'error') return paidFail(data.error || '생성 중 문제가 생겼어요. 결제는 자동으로 취소돼요.');
       setTimeout(() => poll(jobId), 2500);
     } catch (e) {
@@ -414,8 +608,8 @@
     show(0);
     // 새로고침 때 브라우저가 되살린 값도 버튼 선택 상태에 맞춰 둔다.
     const syncButtons = (b) => {
-      situationBtns.forEach((x) => x.classList.toggle('on', x.dataset.situation === b.situation));
-      genderBtns.forEach((x) => x.classList.toggle('on', x.dataset.gender === b.gender));
+      markOn(situationBtns, situationBtns.find(x => x.dataset.situation === b.situation));
+      markOn(genderBtns, genderBtns.find(x => x.dataset.gender === b.gender));
       setCalendar(b.calendar || '양력');
     };
     syncButtons(body());

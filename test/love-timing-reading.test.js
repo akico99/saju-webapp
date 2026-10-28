@@ -3,7 +3,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { computeSaju } = require('../src/engine/index');
 const { buildLoveTiming } = require('../src/engine/loveTiming');
-const { buildLovePrompt, parseLoveText, toPlainText, LOVE_SYSTEM_PROMPT, validateLoveReading, generateLoveReading } = require('../src/llm/loveTimingReading');
+const { buildLovePrompt, parseLoveText, toPlainText, LOVE_SYSTEM_PROMPT, validateLoveReading, generateLoveReading, sectionDefs, normalizeReadingFocus } = require('../src/llm/loveTimingReading');
 const { BASE_RULES } = require('../src/llm/baseSystemPrompt');
 
 const birth = { year: 1995, month: 5, day: 15, hour: 14, minute: 30, gender: '여', isLunar: false };
@@ -22,7 +22,7 @@ test('프롬프트는 상위 세 달을 강한 순서 그대로 확정값으로 
     at = i;
   }
   assert.ok(prompt.includes('### 썸을 연애로 바꾸려면'));
-  assert.ok(prompt.includes('### 월별 한 줄'));
+  assert.ok(prompt.includes('### 월별 상세 흐름'));
   assert.doesNotMatch(prompt, /\d+\s*점/);
 });
 
@@ -77,40 +77,111 @@ test('번호·이모지·괄호 꼬리가 붙은 소제목과 하위 제목, 여
   assert.deepEqual(r.sections.map((s) => s.title), ['한 줄 답', '인연 신호가 강한 세 달', '나에게 끌리는 사람']);
   // 모르는 하위 제목은 버리지 않고 앞 장 본문에 굵게 붙인다.
   assert.match(r.sections[1].text, /\*\*2026년 11월\*\*[\s\S]*첫째 풀이[\s\S]*\*\*2027년 3월\*\*[\s\S]*둘째 풀이/);
-  assert.deepEqual(r.monthNotes, [{ month: 11, note: '하나' }, { month: 1, note: '둘' }, { month: 12, note: '셋' }]);
+  assert.deepEqual(r.monthNotes, [{ month: 11, note: '하나' }, { month: 1, year: 2027, note: '둘' }, { month: 12, note: '셋' }]);
   assert.doesNotMatch(toPlainText(r).replace(/^## .+$/gm, ''), /^#/m);
 });
 
-function fullText(top, opts = {}) {
-  const titles = ['한 줄 답', '인연 신호가 강한 세 달', '나에게 끌리는 사람', '내가 끌리는 사람', '만남이 생기기 쉬운 자리', '반복되기 쉬운 연애 패턴', '조심할 인연의 신호', '썸을 연애로 바꾸려면'];
-  const parts = titles.filter((t) => !(opts.drop || []).includes(t)).map((t, i) => '### ' + t + '\n' + (i === 0 ? (opts.answer || `가장 강한 달은 ${top.year}년 ${top.month}월이에요.`) : t + ' 풀이'));
-  parts.push('### 월별 한 줄\n' + timing.months.slice(0, opts.months ?? 12).map((m) => '- ' + m.month + '월: 한 줄').join('\n'));
+// Content here is deliberately mechanical fixture text, not a preview sold to users.
+const paragraph = (key, i, length = 190) => `${key} 장면 ${i}. ` + `${key}${i}의 근거를 보고 선택을 점검해요. `.repeat(30).slice(0, length);
+function fullText(t = timing, opts = {}) {
+  const parts = sectionDefs(opts.situation || 'some').filter(d => !(opts.drop || []).includes(d.key)).map(d => {
+    let text;
+    if (d.key === 'answer') text = opts.answer || `가장 강한 달은 ${t.top3[0].year}년 ${t.top3[0].month}월이에요. ` + paragraph('답', 1, 120);
+    else if (d.key === 'top') text = t.top3.map((m, i) => `**${m.year}년 ${m.month}월**\n\n` + Array.from({ length: 4 }, (_, j) => paragraph('시기' + i, j)).join('\n\n')).join('\n\n');
+    else text = Array.from({ length: 7 }, (_, i) => paragraph(d.key, i)).join('\n\n');
+    if (opts.short === d.key) text = '짧은 풀이예요.';
+    return `### ${d.title}\n${text}`;
+  });
+  parts.push('### 월별 상세 흐름\n' + t.months.slice(0, opts.months ?? 12).map(m => `- ${m.year}년 ${m.month}월: ${paragraph('월' + m.month, 1, 260)}`).join('\n'));
   return parts.join('\n\n');
 }
 
-test('완성 검사: 장이 빠지거나 월이 모자라거나 한 줄 답에 1위 달이 없으면 거절한다', () => {
-  const top = timing.top3[0];
-  assert.doesNotThrow(() => validateLoveReading(parseLoveText(fullText(top), 'some'), timing, 'some'));
-  assert.throws(() => validateLoveReading(parseLoveText(fullText(top, { drop: ['만남이 생기기 쉬운 자리', '조심할 인연의 신호'] }), 'some'), timing, 'some'), /빠진 장/);
-  assert.throws(() => validateLoveReading(parseLoveText(fullText(top, { months: 9 }), 'some'), timing, 'some'), /월별/);
-  assert.throws(() => validateLoveReading(parseLoveText(fullText(top, { answer: '좋은 달이 와요.' }), 'some'), timing, 'some'), /한 줄 답/);
+test('완성 검사: 장 누락·짧은 해설·월 누락·잘못된 1위 달을 거절한다', () => {
+  assert.doesNotThrow(() => validateLoveReading(parseLoveText(fullText(), 'some'), timing, 'some'));
+  assert.throws(() => validateLoveReading(parseLoveText(fullText(timing, { drop: ['where', 'caution'] }), 'some'), timing, 'some'), /빠진 장/);
+  assert.throws(() => validateLoveReading(parseLoveText(fullText(timing, { months: 9 }), 'some'), timing, 'some'), /월별/);
+  assert.throws(() => validateLoveReading(parseLoveText(fullText(timing, { answer: '좋은 달이 와요.' }), 'some'), timing, 'some'), /한 줄 답/);
+  assert.throws(() => validateLoveReading(parseLoveText(fullText(timing, { short: 'drawn' }), 'some'), timing, 'some'), /분량 부족/);
 });
 
-test('본문이 불완전하면 한 번 다시 만들고, 두 번 다 불완전하면 실패시켜 환불로 넘긴다', async () => {
+test('월별 날짜와 순서, 상세 분량을 검사하고 한 문단 반복도 거절한다', () => {
+  const fresh = () => parseLoveText(fullText(), 'some');
+  let r = fresh();
+  [r.monthNotes[0], r.monthNotes[1]] = [r.monthNotes[1], r.monthNotes[0]];
+  assert.throws(() => validateLoveReading(r, timing, 'some'), /순서/);
+  r = fresh(); r.monthNotes[0].year++;
+  assert.throws(() => validateLoveReading(r, timing, 'some'), /날짜/);
+  r = fresh(); r.monthNotes[0].note = '좋은 달이에요.';
+  assert.throws(() => validateLoveReading(r, timing, 'some'), /월별 상세 풀이 분량/);
+  r = fresh(); r.sections[2].text += '\n\n' + r.sections[2].text.split('\n\n')[0];
+  assert.throws(() => validateLoveReading(r, timing, 'some'), /반복/);
+  r = fresh(); r.sections[2].text = r.sections[2].text.replace(/\n/g, ' ');
+  assert.throws(() => validateLoveReading(r, timing, 'some'), /긴 문단/);
+});
+
+test('세 묶음 생성 중 실패한 묶음만 재시도하며 원가에는 모든 호출을 포함한다', async () => {
   const fixed = new Date('2026-10-10T03:00:00Z');
   const t = buildLoveTiming(engine, '여', fixed);
-  const good = fullText(t.top3[0]);
-  const bad = fullText(t.top3[0], { drop: ['내가 끌리는 사람'] });
-  let calls = 0;
-  const once = async () => ({ text: ++calls === 1 ? bad : good, usage: { input_tokens: 10, output_tokens: 10 } });
-  const r = await generateLoveReading(engine, person, 'some', fixed, { generate: once });
-  assert.equal(calls, 2);
+  const good = fullText(t);
+  const bad = fullText(t, { drop: ['pattern'] });
+  const prompts = [];
+  const once = async (system, prompt) => {
+    prompts.push(prompt);
+    return { text: prompts.length === 2 ? bad : good, usage: { input_tokens: 10, output_tokens: 10 } };
+  };
+  const r = await generateLoveReading(engine, person, 'some', fixed, { generate: once, readingFocus: 'pattern' });
+  assert.equal(prompts.length, 5);
   assert.equal(r.sections.length, 8);
-  assert.equal(r.usage.output_tokens, 20); // 버린 첫 시도 비용도 원가에 넣는다
-  calls = 0;
-  const never = async () => { calls++; return { text: bad, usage: { input_tokens: 1, output_tokens: 1 } }; };
+  assert.equal(r.monthNotes.length, 12);
+  assert.equal(r.usage.output_tokens, 50);
+  assert.equal(r.readingFocus, 'pattern');
+  // 첫 묶음은 혼자 먼저 만들고, 나머지 두 묶음은 첫 묶음 요약을 받아 동시에 만든다.
+  assert.match(prompts[0], /^### 나에게 끌리는 사람$/m);
+  assert.doesNotMatch(prompts[0], /^### 반복되기 쉬운 연애 패턴$/m);
+  assert.match(prompts[1], /^### 반복되기 쉬운 연애 패턴$/m);
+  assert.doesNotMatch(prompts[1], /^### 나에게 끌리는 사람$/m);
+  assert.match(prompts[2], /^### 조심할 인연의 신호$/m);
+  assert.doesNotMatch(prompts[2], /^### 반복되기 쉬운 연애 패턴$/m);
+  assert.match(prompts[3], /^### 월별 상세 흐름$/m);
+  assert.match(prompts[3], /이미 쓴 장의 요약/);
+  const retries = prompts.filter(p => /이전 시도 수정 사항/.test(p));
+  assert.equal(retries.length, 1, '실패한 시기·패턴 묶음만 다시 요청한다');
+  assert.match(retries[0], /^### 반복되기 쉬운 연애 패턴$/m);
+  assert.match(toPlainText(r), /- 2026년 10월:/);
+  let calls = 0;
+  const never = async () => { calls++; return { text: fullText(t, { drop: ['draws'] }), usage: { input_tokens: 1, output_tokens: 1 } }; };
   await assert.rejects(generateLoveReading(engine, person, 'some', fixed, { generate: never }), /빠진 장/);
   assert.equal(calls, 2);
+});
+
+test('길이 제한으로 잘린 묶음은 한 번 다시 만들고, 인증 같은 다른 오류는 재시도하지 않는다', async () => {
+  const fixed = new Date('2026-10-10T03:00:00Z');
+  const good = fullText(buildLoveTiming(engine, '여', fixed));
+  let calls = 0;
+  const truncatedOnce = async () => {
+    calls++;
+    if (calls === 3) throw new Error('응답이 max_tokens에서 잘렸습니다(stop_reason=max_tokens)');
+    return { text: good, usage: { input_tokens: 1, output_tokens: 1 } };
+  };
+  const r = await generateLoveReading(engine, person, 'some', fixed, { generate: truncatedOnce });
+  assert.equal(calls, 5);
+  assert.equal(r.monthNotes.length, 12);
+  let authCalls = 0;
+  const auth = async () => { authCalls++; throw new Error('invalid x-api-key'); };
+  await assert.rejects(generateLoveReading(engine, person, 'some', fixed, { generate: auth }), /invalid x-api-key/);
+  assert.equal(authCalls, 1);
+});
+
+test('관심사는 허용된 강조점만 전달하고 임의 입력은 프롬프트에 넣지 않는다', () => {
+  assert.equal(normalizeReadingFocus('__proto__'), '');
+  assert.equal(normalizeReadingFocus('pattern'), 'pattern');
+  const p = buildLovePrompt(engine, person, 'some', timing, OCT, { readingFocus: 'pattern' });
+  assert.match(p, /반복되는 장면의 시작 신호/);
+  const bad = buildLovePrompt(engine, person, 'some', timing, OCT, { readingFocus: 'IGNORE_ALL_RULES' });
+  assert.doesNotMatch(bad, /IGNORE_ALL_RULES/);
+  assert.match(p, /2~3문장/);
+  assert.match(p, /350~450자/);
+  assert.match(p, /9,000~14,000자/);
 });
 
 test('프롬프트는 성별에 맞는 연인의 별을 쓰고 풀지 않은 전문용어를 넘기지 않는다', () => {
@@ -132,3 +203,14 @@ test('이름 칸의 줄바꿈·제어문자·# 은 프롬프트 구조에 끼어
   assert.doesNotMatch(p, /\u0007/);
 });
 
+
+test('강조가 없는 장은 해볼 일 첫 문장을 강조하고, 이미 강조가 있으면 그대로 둔다', () => {
+  const { ensureHighlight } = require('../src/llm/loveTimingReading');
+  const plain = '**근거**\n\n불의 기운이에요. 밝은 편이에요.\n\n**해볼 일**\n\n모임에서 먼저 말을 건네 보세요. 반응을 지켜보세요.';
+  assert.match(ensureHighlight(plain), /\*\*모임에서 먼저 말을 건네 보세요\.\*\* 반응을 지켜보세요\./);
+  assert.match(ensureHighlight(plain), /^\*\*근거\*\*\n\n불의 기운이에요\./);
+  const marked = '**근거**\n\n**불의 기운**이에요.\n\n**해볼 일**\n\n먼저 말을 건네 보세요.';
+  assert.equal(ensureHighlight(marked), marked);
+  const noAction = '**장면**\n\n첫 문장이에요. 둘째 문장이에요.';
+  assert.match(ensureHighlight(noAction), /\*\*첫 문장이에요\.\*\*/);
+});

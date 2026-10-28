@@ -25,7 +25,7 @@ const result = JSON.parse(execFileSync(process.execPath, ['-e', `
     try {
       const base = 'http://127.0.0.1:' + server.address().port;
       const post = async (url, body) => { const r = await fetch(base + url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); return { status: r.status, body: await r.json().catch(() => null) }; };
-      const form = { situation: 'single', name: '수달', gender: '여', year: '1995', month: '5', day: '15', calendar: '양력', hour: '14', minute: '30', hourUnknown: false };
+      const form = { situation: 'single', deliveryEmail:'test@example.test', deliveryConsent:true, name: '수달', gender: '여', year: '1995', month: '5', day: '15', calendar: '양력', hour: '14', minute: '30', hourUnknown: false };
       const ok = await post('/api/love/preview', form);
       const noGender = await post('/api/love/preview', { ...form, gender: '' });
       const badDate = await post('/api/love/preview', { ...form, year: '' });
@@ -53,7 +53,7 @@ test('무료 첫 장은 로그인 없이 바로 응답한다', () => {
   const r = result.ok.body.reading;
   assert.equal(r.situation.label, '솔로');
   assert.equal(r.seasons.length, 4);
-  assert.equal(r.price, 19900);
+  assert.equal(r.price, 14900);
 });
 
 test('무료 첫 장은 성별·생년월일이 없으면 400과 안내를 준다', () => {

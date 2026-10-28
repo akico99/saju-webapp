@@ -33,9 +33,10 @@ test('모바일 상품 소개에서 실제 무료 해석, 재입력, 로그인�
     await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1 });
     const base = 'http://127.0.0.1:' + port;
     const errors = [];
+    let purchases = 0;
     page.on('pageerror', (error) => errors.push(error.message));
     await page.setRequestInterception(true);
-    page.on('request', (req) => req.url().startsWith(base) ? req.continue() : req.abort());
+    page.on('request', (req) => { if(req.url() === base + '/api/love') purchases++; return req.url().startsWith(base) ? req.continue() : req.abort(); });
     await page.goto(base + '/love-assets/home.html', { waitUntil: 'networkidle0' });
     for (const width of [320, 390, 1280]) {
       await page.setViewport({ width, height: 844 });
@@ -60,16 +61,18 @@ test('모바일 상품 소개에서 실제 무료 해석, 재입력, 로그인�
     }
     await page.setViewport({ width: 390, height: 844 });
     await page.click('#startLove');
-    await page.click('[data-situation="single"]');
-    await page.waitForFunction(() => !document.querySelector('[data-step="1"]').hidden);
-    await page.type('[name="name"]', '테스트');
     await page.click('[data-gender="여"]');
-    await page.click('[data-step="1"] [data-next]');
     await page.type('[name="year"]', '1995');
     await page.type('[name="month"]', '5');
     await page.type('[name="day"]', '15');
-    await page.click('[data-step="2"] [data-next]');
+    await page.click('[data-step="1"] [data-next]');
     await page.click('[name="hourUnknown"]');
+    await page.click('[data-step="2"] [data-next]');
+    await page.click('[data-situation="single"]');
+    assert.ok(await page.$('[data-focus="timing"]'));
+    await page.click('[data-focus="timing"]');
+    await page.type('[name="name"]', '테스트');
+    await page.click('[data-step="5"] [data-next]');
     await page.click('#previewBtn');
     await page.waitForFunction(() => !document.getElementById('freeResult').classList.contains('hidden'));
     assert.match(await page.$eval('#freeTitle', (e) => e.textContent), /테스트/);
@@ -87,20 +90,49 @@ test('모바일 상품 소개에서 실제 무료 해석, 재입력, 로그인�
     assert.equal(await page.$eval('#stage', (e) => getComputedStyle(e).display), 'flex');
     await page.click('#closeInput');
     await page.click('#startLoveBottom');
-    await page.click('[data-situation="single"]');
-    await page.waitForFunction(() => !document.querySelector('[data-step="1"]').hidden, { timeout: 5000 }).catch(async (e) => {
-      const state = await page.evaluate(() => ({ steps: [...document.querySelectorAll('.stage-step')].map((s) => s.hidden), err: document.getElementById('stageError').textContent, errHidden: document.getElementById('stageError').hidden, stage: document.getElementById('stage').className, landing: document.getElementById('loveLanding').className, active: document.activeElement && document.activeElement.outerHTML.slice(0, 80), y: scrollY }));
-      throw new Error('REENTRY ' + JSON.stringify(state));
-    });
+    await page.click('[data-gender="여"]');
     await page.click('[data-step="1"] [data-next]');
     await page.click('[data-step="2"] [data-next]');
+    await page.click('[data-situation="single"]');
+    await page.click('[data-focus="timing"]');
+    await page.click('[data-step="5"] [data-next]');
     await page.click('#previewBtn');
     await page.waitForFunction(() => !document.getElementById('freeResult').classList.contains('hidden'), { timeout: 8000 }).catch(async (e) => {
       const state = await page.evaluate(() => ({ steps: [...document.querySelectorAll('.stage-step')].map((s) => s.hidden), err: document.getElementById('stageError').textContent, errHidden: document.getElementById('stageError').hidden, stage: document.getElementById('stage').className, free: document.getElementById('freeResult').className, body: document.body.className }));
       throw new Error(e.message + ' ' + JSON.stringify(state));
     });
-    await Promise.all([page.waitForNavigation(), page.click('#unlockBtn')]);
+    await page.click('#unlockBtn');
+    assert.equal(await page.$eval('#checkoutSheet',e=>e.open),true);
+    assert.equal(await page.$eval('.checkout-header',e=>getComputedStyle(e).backgroundColor),'rgb(33, 27, 30)');
+    await page.keyboard.press('Escape');
+    await page.waitForFunction(()=>!document.querySelector('#checkoutSheet').open);
+    assert.equal(await page.evaluate(()=>document.activeElement.id),'unlockBtn');
+    await page.click('.lr-teaser-lock');
+    assert.equal(await page.$eval('#checkoutSheet',e=>e.open),true);
+    await page.click('#closeCheckout');
+    await page.click('#stickyUnlock');
+    assert.equal(await page.$eval('#checkoutSheet',e=>e.open),true);
+    for (const width of [320,390]) {
+      await page.setViewport({width,height:844});
+      assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+    }
+    await page.screenshot({path:path.join(__dirname,'../docs/preview/checkout-mobile.png'),fullPage:false});
+    assert.equal(purchases,0,'구매 확인 전에는 유료 API를 호출하면 안 됨');
+    await page.click('#checkoutConfirm');
+    assert.equal(purchases,0,'이메일과 동의 없이는 구매하지 않는다');
+    await page.type('#deliveryEmail','fictional@example.test');
+    await page.click('#deliveryConsent');
+    await Promise.all([page.waitForNavigation(), page.click('#checkoutConfirm')]);
+    assert.equal(purchases,1);
     assert.match(page.url(), /login\.html/);
+    await page.goto(base+'/love.html',{waitUntil:'networkidle0'});
+    await page.waitForSelector('#freeReader .lr-reader',{visible:true});
+    assert.equal(await page.$eval('[name=readingFocus]',e=>e.value),'timing');
+    assert.equal(await page.$eval('[name=hourUnknown]',e=>e.checked),true);
+    assert.equal(await page.$eval('#resumeNote',e=>e.classList.contains('hidden')),false);
+    assert.equal(await page.$eval('#deliveryEmail',e=>e.value),'fictional@example.test');
+    assert.equal(await page.$eval('#deliveryConsent',e=>e.checked),true);
+    assert.equal(purchases,1,'복귀만으로 재구매 요청이 발생하면 안 됨');
     assert.deepEqual(errors, []);
   } finally {
     if (browser) await browser.close();

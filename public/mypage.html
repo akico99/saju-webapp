@@ -153,9 +153,9 @@
     empty.classList.add('hidden');
     data.orders.forEach((o) => {
       const tr = document.createElement('tr');
-      // 연애 시기 리포트(love_timing)는 PDF 없이 웹 화면으로만 준다 — 다운로드 대신 결과 화면으로 연결한다.
+      // 연애 시기 리포트(love_timing)는 웹 결과 화면이 본편이다. PDF가 있으면(2026-10 이후 주문) 내려받기도 함께 준다.
       const action = (o.status === 'done' && o.productKey === 'love_timing')
-        ? `<a class="view-link" href="/love.html?jobId=${encodeURIComponent(o.jobId)}">보기</a>`
+        ? `<a class="view-link" href="/love.html?jobId=${encodeURIComponent(o.jobId)}">보기</a>${o.hasFile ? ` <button type="button" class="download-link" data-job-id="${o.jobId}">PDF</button>` : ''}`
         : (o.status === 'done' && o.hasFile)
           ? `<button type="button" class="download-link" data-job-id="${o.jobId}">다운로드</button>`
           : (o.inProgress ? '생성 중...' : '-');
