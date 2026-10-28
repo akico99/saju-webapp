@@ -17,7 +17,7 @@ const cardPayments = require('../src/db/cardPayments');
 const db = require('../src/db/index');
 const { refundPurchase } = require('../src/server/refundPurchase');
 
-const PRODUCT = 'deep_love';
+const PRODUCT = 'date_select_moving'; // 판매 중인 3,900원 상품(주제별 심층 리딩은 2026-10 판매 종료)
 const PRICE = points.PRICES[PRODUCT];
 let seq = 0;
 let cancelCalls = [];

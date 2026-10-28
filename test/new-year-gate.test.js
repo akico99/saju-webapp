@@ -31,7 +31,8 @@ test('비활성 신년운세는 판매와 결제 준비에서 빠지고 기존 �
   assert.equal(result.newYearPayment, null);
   assert.equal(result.sellable, false);
   assert.equal(result.catalog.new_year_2027, undefined);
-  assert.deepEqual(result.existing, [true, true, true, true]);
+  // 평생사주·궁합·택일은 그대로 팔고, 주제별 심층 리딩(deep)은 2026-10 판매 종료라 결제 준비가 거절된다.
+  assert.deepEqual(result.existing, [true, true, false, true]);
   for (const route of ['/', '/compat.html', '/quick.html', '/date-select.html', '/lifetime-report.html']) {
     assert.equal(result.statuses[route], 200, route);
   }

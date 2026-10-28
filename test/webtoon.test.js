@@ -99,7 +99,8 @@ test('직업·적성운 웹툰의 상품·추적·샘플 링크가 서비스와 
   const quick = read('quick.html');
   assert.match(points, /deep_career/);
   assert.match(points, /deep_career[^\n]*3900|3900[^\n]*deep_career/);
-  assert.match(quick, /topic=career/);
+  // 심층 리딩은 2026-10 판매 종료 — 웹툰의 직업·적성운 링크는 quick.html이 신년운세로 안내한다.
+  assert.match(quick, /career: '\/new-year\.html'/);
   assert.match(html, /<strong class="ticket-price">3,900<small>원<\/small><\/strong>/);
   assert.match(html, /<span class="cta-price">3,900원<\/span>/);
   assert.match(html, /href="\/quick\.html\?topic=career&amp;from=career-webtoon"/);
@@ -177,7 +178,7 @@ test('웹툰 페이지가 분석 태그와 홈 진입 링크를 유지한다', (
   assert.match(page(), /G-THWHBPH5WR/);
   assert.match(fs.readFileSync(path.join(__dirname, '..', 'scripts', 'injectGA.js'), 'utf8'), /'webtoon\/lifetime\.html'/);
   const home = read('index.html');
-  assert.match(home, /<a class="today-fortune-card" href="\/webtoon\/lifetime\.html\?from=home-lifetime-story">/);
+  assert.match(home, /<a class="lifetime-story" href="\/webtoon\/lifetime\.html\?from=home-lifetime-story">/);
 });
 
 const compatPage = () => read('webtoon/compat.html');

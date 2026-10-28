@@ -1,5 +1,6 @@
 'use strict';
-/* 두 사람의 궁합(compat_v2, /couple.html) — 무료 첫 장과 유료 웹/PDF 생성. PDF 완성 뒤 입력한 수신 주소로 보낸다.
+/* 두 사람의 궁합(compat_v2, /couple.html) — 무료 사주 분석, 그 위에 나중에 채우는 두 사람 관계 소개
+   (/api/couple/intro, 가장 싼 모델)와 유료 웹/PDF 생성. PDF 완성 뒤 입력한 수신 주소로 보낸다.
    기존 궁합(/api/compat, 4,900원)과는 별개 상품이다. 메일 실패는 결과를 유지하고 주문 소유자에게만 재전송을 허용한다. */
 const express = require('express');
 const { sajuChartHtml } = require('../../pdf/sajuChart');
@@ -14,6 +15,8 @@ const { deliverReport } = require('../../email/loveReport');
 const { computeSaju } = require('../../engine/index');
 const { validateBirth } = require('../../engine/loveTiming');
 const { buildCouplePreview, generateCoupleReading, toPlainText, relationOf, cleanName } = require('../../llm/coupleReading');
+const { recordForReview } = require('../reviewRecord');
+const { introHandler, coupleFacts } = require('../../llm/freeIntro');
 const { costUsd } = require('../../llm/client');
 const points = require('../../db/points');
 const orders = require('../../db/orders');
@@ -63,6 +66,12 @@ router.post('/couple/preview', (req, res) => {
     res.status(400).json({ error: '명식 계산 실패: ' + e.message });
   }
 });
+
+// 두 사람 관계 소개 — 미리보기와 같은 입력. 이름은 AI에 넘기지 않는다('나'·'그 사람').
+router.post('/couple/intro', introHandler((body) => {
+  const parsed = parseBody(body);
+  return coupleFacts(parsed.a.birth, parsed.b.birth, buildCouplePreview(parsed.a.birth, parsed.b.birth, parsed.relation, { a: '나', b: '그 사람' }));
+}));
 
 /** 유료 시작 — 라우트(/api/couple)와 카드 결제 승인(pay.js)이 같은 함수를 쓴다. */
 async function startCouple(userId, body, { cardPaymentId } = {}) {
@@ -114,6 +123,7 @@ async function startCouple(userId, body, { cardPaymentId } = {}) {
         resultPath: pdfPath, cardPath: null, llmCostUsd: costUsd(reading.usage),
         resultText: toPlainText(reading), resultVisual: sajuChartHtml(engineA, { title: (parsed.a.name || '나') + '의 여덟 글자' }) + sajuChartHtml(engineB, { title: (parsed.b.name || '그 사람') + '의 여덟 글자' }) + coupleWebHtml(reading.timing)
       });
+      recordForReview(jobId, reading, { engines: [engineA, engineB], names: [parsed.a.name, parsed.b.name] });
       // 발송 실패는 완성된 유료 결과를 오류/환불 상태로 바꾸지 않는다.
       await deliverReport(jobId).catch(() => {});
     })

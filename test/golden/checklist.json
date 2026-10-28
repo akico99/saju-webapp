@@ -1,0 +1,477 @@
+{
+  "notice": "꼭 들어가야 할 해석 체크리스트 — 사주를 아는 사람이 채운다. 빈 칸(keywords가 빈 배열)인 항목은 보고서에서 \"미작성\"으로만 표시된다.",
+  "format": {
+    "section": "장 key(아래 sections 참고). 비우면 본문 전체에서 찾는다",
+    "expect": "꼭 들어가야 할 해석을 한 문장으로",
+    "keywords": "본문에 이 중 하나 이상이 있어야 통과(표현이 여러 가지면 모두 적는다)",
+    "mustNot": "본문에 있으면 안 되는 표현(선택)"
+  },
+  "sections": {
+    "love": "answer·top·drawn·draws·where·pattern·caution·action·months",
+    "newyear": "answer·overall·months3·wealth·career·love·health·quarters·months",
+    "reunion": "answer·drawn·crossed·them·flow·stop·heal·months",
+    "couple": "answer·attract·fit·clash·talk·flow·keep·months"
+  },
+  "cases": {
+    "love-01": {
+      "reviewer": "",
+      "items": [
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        },
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        },
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        }
+      ]
+    },
+    "love-02": {
+      "reviewer": "",
+      "items": [
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        },
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        },
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        }
+      ]
+    },
+    "love-03": {
+      "reviewer": "",
+      "items": [
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        },
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        },
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        }
+      ]
+    },
+    "love-04": {
+      "reviewer": "",
+      "items": [
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        },
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        },
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        }
+      ]
+    },
+    "love-05": {
+      "reviewer": "",
+      "items": [
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        },
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        },
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        }
+      ]
+    },
+    "newyear-01": {
+      "reviewer": "",
+      "items": [
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        },
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        },
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        }
+      ]
+    },
+    "newyear-02": {
+      "reviewer": "",
+      "items": [
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        },
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        },
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        }
+      ]
+    },
+    "newyear-03": {
+      "reviewer": "",
+      "items": [
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        },
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        },
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        }
+      ]
+    },
+    "newyear-04": {
+      "reviewer": "",
+      "items": [
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        },
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        },
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        }
+      ]
+    },
+    "newyear-05": {
+      "reviewer": "",
+      "items": [
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        },
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        },
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        }
+      ]
+    },
+    "reunion-01": {
+      "reviewer": "",
+      "items": [
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        },
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        },
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        }
+      ]
+    },
+    "reunion-02": {
+      "reviewer": "",
+      "items": [
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        },
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        },
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        }
+      ]
+    },
+    "reunion-03": {
+      "reviewer": "",
+      "items": [
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        },
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        },
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        }
+      ]
+    },
+    "reunion-04": {
+      "reviewer": "",
+      "items": [
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        },
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        },
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        }
+      ]
+    },
+    "reunion-05": {
+      "reviewer": "",
+      "items": [
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        },
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        },
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        }
+      ]
+    },
+    "couple-01": {
+      "reviewer": "",
+      "items": [
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        },
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        },
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        }
+      ]
+    },
+    "couple-02": {
+      "reviewer": "",
+      "items": [
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        },
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        },
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        }
+      ]
+    },
+    "couple-03": {
+      "reviewer": "",
+      "items": [
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        },
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        },
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        }
+      ]
+    },
+    "couple-04": {
+      "reviewer": "",
+      "items": [
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        },
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        },
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        }
+      ]
+    },
+    "couple-05": {
+      "reviewer": "",
+      "items": [
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        },
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        },
+        {
+          "section": "",
+          "expect": "",
+          "keywords": [],
+          "mustNot": []
+        }
+      ]
+    }
+  }
+}

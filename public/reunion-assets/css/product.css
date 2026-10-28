@@ -1,6 +1,6 @@
 /* 자동 생성: scripts/build-product-themes.js — love-assets/product.css (reunion 색). 직접 고치지 마세요. */
 @import url('https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;600;700&display=swap');
-body.love-page{--font-serif:'Gowun Batang',serif;--bg:#fcfbf7;--bg-outer:#eef0ec;--ink:#253a32;--muted:#7c8277;--line:#e6e7dd;font-family:'Noto Sans KR',sans-serif;background:var(--bg-outer);letter-spacing:-.035em}
+body.love-page{--font-serif:'Gowun Batang',serif;--bg:#fcfbf7;--bg-outer:#eef0ec;--ink:#253a32;--muted:#7c8277;--line:#e6e7dd;font-family:Pretendard,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg-outer);letter-spacing:-.035em}
 body.love-page .app{max-width:480px;padding:0;margin:0 auto;background:var(--bg);box-shadow:0 0 50px #1c372308;overflow:clip}
 .love-header{height:65px;padding:12px 20px;background:#fcfbf7;border-bottom:0}
 .love-page .love-landing{padding:0;margin:0}
@@ -60,7 +60,7 @@ body.love-page .app{max-width:480px;padding:0;margin:0 auto;background:var(--bg)
 .scope-card.full{background:#20473a;color:#edf0df;border-color:#20473a}
 .scope-card.full .scope-tag{color:#b5c29b}
 .scope-card.full h3{display:flex;gap:10px;justify-content:space-between;align-items:baseline;font-family:var(--font-serif);font-weight:400}
-.scope-card.full h3 b{font-family:'Noto Sans KR',sans-serif;font-size:17px;white-space:nowrap}
+.scope-card.full h3 b{font-family:Pretendard,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;font-size:17px;white-space:nowrap}
 .scope-card.full p{color:#b7c4a8}
 .delivery-facts{display:flex;flex-wrap:wrap;gap:6px;border-top:1px solid #a8b49240;padding-top:18px;margin-top:20px}
 .delivery-facts span{font-size:8px;color:#b4c6a4;border:1px solid #a8b49240;border-radius:3px;padding:5px}

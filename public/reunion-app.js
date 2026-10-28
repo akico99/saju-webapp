@@ -1,7 +1,7 @@
 'use strict';
 // 이 상품만의 그림(안내 인물·분위기가 연애 상품과 다르다). 공용 읽기 화면도 이 표를 쓴다.
 window.LOVE_READING_ART = {"greeting":"/reunion-assets/cover.webp","greeting-comic":"/reunion-assets/cover.webp","cover-comic":"/reunion-assets/cover.webp","explain":"/reunion-assets/drawn.webp","explain-comic":"/reunion-assets/drawn.webp","thinking":"/reunion-assets/drawn.webp","thread-comic":"/reunion-assets/drawn.webp","empathy":"/reunion-assets/drawn.webp","caution":"/reunion-assets/drawn.webp","distance":"/reunion-assets/drawn.webp","meeting":"/reunion-assets/flow.webp","timing-comic":"/reunion-assets/flow.webp","new-start":"/reunion-assets/flow.webp","cheer":"/reunion-assets/heal.webp","door-comic":"/reunion-assets/heal.webp","conversation":"/reunion-assets/heal.webp"};
-/* 「다시, 우리」 화면 — 한 질문씩 입력 → 무료 첫 장(/api/reunion/preview, AI 호출 없음) → 구매 시트 →
+/* 「다시, 우리」 화면 — 한 질문씩 입력 → 무료 사주 분석(/api/reunion/preview, AI 호출 없음) → 구매 시트 →
    유료 생성(/api/reunion, 로그인·카드 결제는 pay-flow.js) → 결과(/api/status/:jobId).
    입력값은 <form id="reunionForm"> 하나에 모두 있다(PayFlow.toLogin이 통째로 저장·복원한다).
    서버 문자열은 textContent로만 넣는다. 예외는 서버가 엔진 숫자만으로 만든 12개월 막대(result_visual)뿐이다.
@@ -166,7 +166,7 @@ window.LOVE_READING_ART = {"greeting":"/reunion-assets/cover.webp","greeting-com
     return out;
   }
 
-  /* ---------- 무료 첫 장 ---------- */
+  /* ---------- 무료 사주 분석 ---------- */
   function section(title, cls) { const s = el('section', 'fr-section' + (cls ? ' ' + cls : '')); s.appendChild(el('h3', 'fr-h', title)); return s; }
   function pillarRow(pillars, label) {
     const wrap = el('div', 'reunion-pillar-row');
@@ -199,8 +199,10 @@ window.LOVE_READING_ART = {"greeting":"/reunion-assets/cover.webp","greeting-com
     const box = document.getElementById('freeReading');
     box.replaceChildren();
     const cover = el('section', 'fr-cover');
-    cover.append(el('p', 'fr-eyebrow', '다시, 우리 · 무료 첫 장'), el('h2', 'fr-verdict', me + '님과 ' + them + ', 두 사람의 첫 장'), el('p', 'fr-lead-inv', r.safety));
+    cover.append(el('p', 'fr-eyebrow', '다시, 우리 · 무료 사주 분석'), el('h2', 'fr-verdict', me + '님과 ' + them + ', 두 사람의 무료 사주 분석'), el('p', 'fr-lead-inv', r.safety));
     box.appendChild(cover);
+    // 두 사람 관계 소개(AI)는 나중에 채운다. 실패하면 칸이 사라진다.
+    if (window.FreeExtras) box.appendChild(FreeExtras.introCard('/api/reunion/intro', { ...b, deliveryEmail: undefined }, { variant: 'fr', title: '두 사람은 이런 사이였어요', loading: '수달이 두 사람의 사주를 읽고 소개를 쓰고 있어요…' }));
 
     const s1 = section('두 사람의 네 기둥');
     const rowMe = pillarRow(r.me.pillars, me + '님 · 나를 뜻하는 글자 ' + r.me.ilgan), rowThem = pillarRow(r.them.pillars, them + ' · 나를 뜻하는 글자 ' + r.them.ilgan);
@@ -230,7 +232,9 @@ window.LOVE_READING_ART = {"greeting":"/reunion-assets/cover.webp","greeting-com
       seasons.appendChild(col);
     });
     s4.appendChild(seasons);
-    s4.appendChild(teaser(r.story.boundary ? '마음의 흐름이 바뀌는 세 달' : '관계 신호가 강한 세 달', r.story.boundary ? '연락할 때가 아니라, 내 마음을 정리하고 관계를 돌아보기 좋은 달을 알려 드려요.' : '두 사람의 기운이 함께 움직이는 달과, 다가간다면 멈춰야 할 기준을 함께 알려 드려요.'));
+    const third = window.FreeExtras ? FreeExtras.thirdCard(r.third, { variant: 'fr', title: r.story.boundary ? '마음의 흐름이 세 번째로 크게 바뀌는 달' : '관계 신호가 세 번째로 강한 달', rankLabel: '세 달 중 3위' }) : null;
+    if (third) { third.className = 'free-third'; s4.appendChild(third); }
+    s4.appendChild(teaser(r.story.boundary ? '마음의 흐름이 가장 크게 바뀌는 두 달' : '관계 신호가 가장 강한 두 달', r.story.boundary ? '연락할 때가 아니라, 내 마음을 정리하고 관계를 돌아보기 좋은 1·2위 달을 알려 드려요.' : '두 사람의 기운이 가장 크게 움직이는 1·2위 달과, 다가간다면 멈춰야 할 기준을 함께 알려 드려요.'));
     box.appendChild(s4);
 
     const s5 = section('전체 풀이에서 열리는 장', 'love-locked');
@@ -254,14 +258,14 @@ window.LOVE_READING_ART = {"greeting":"/reunion-assets/cover.webp","greeting-com
     try {
       const res = await fetch('/api/reunion/preview', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || '첫 장을 만들지 못했어요. 잠시 뒤 다시 시도해 주세요.');
+      if (!res.ok) throw new Error(data.error || '무료 사주 분석을 만들지 못했어요. 잠시 뒤 다시 시도해 주세요.');
       renderFree(data.reading, b);
       return true;
     } catch (e) {
       stageFail(e.message);
       return false;
     } finally {
-      btn.disabled = false; btn.textContent = '두 사람의 첫 장 무료로 보기';
+      btn.disabled = false; btn.textContent = '두 사람의 무료 사주 분석 보기';
       form.removeAttribute('aria-busy');
     }
   }

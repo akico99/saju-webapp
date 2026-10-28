@@ -9,11 +9,13 @@
    해가 바뀌면 config/newYear.js의 year와 상품 키를 함께 올린다. */
 const { BASE_RULES } = require('./baseSystemPrompt');
 const { generateText, sumUsage } = require('./client');
+const { EVIDENCE_RULE, splitEvidence, startReview } = require('./readingReview');
 const { monthlyFlow, yearlyFlow } = require('../engine/monthlyFlow');
 const { buildTimingData, tier } = require('./deepReading');
 const { computeSaju } = require('../engine/index');
 const { readBalance, pillarsOf } = require('../engine/freeReadings');
 const { validateBirth } = require('../engine/loveTiming');
+const { describeThird } = require('../engine/monthPlain');
 const newYearConfig = require('../config/newYear');
 
 const YEAR = newYearConfig.year || 2027;
@@ -140,7 +142,8 @@ function lockedTitles() {
   return ['가장 좋은 세 달과 조심할 달', '재물운 · 일·직업운', '애정운 · 건강·생활 리듬', '분기별 할 것·피할 것', '12개월 상세 흐름'];
 }
 
-/** 무료 첫 장 — 엔진 숫자만. 달별 점수·가장 좋은 달은 유료의 핵심이라 응답에 넣지 않는다(개발자 도구로 보인다). */
+/** 무료 사주 분석 — 엔진 숫자만. 가장 좋은 세 달 중 3위 한 달만 공개하고, 1·2위 달과 달별 점수는
+    유료의 핵심이라 응답에 넣지 않는다(개발자 도구로 보인다). */
 function buildNewYearPreview(birth) {
   if (birth.gender !== '여' && birth.gender !== '남') throw new Error('성별을 골라 주세요. 신년운세 계산에 쓰여요.');
   validateBirth(birth);
@@ -164,7 +167,8 @@ function buildNewYearPreview(birth) {
     balance: { headline: balance.headline, lead: balance.lead, bars: balance.bars },
     quarters: data.quarters.map((q) => ({ label: q.label, range: q.range, level: q.level, avg: q.avg })),
     // 분기 평균 1위와 월별 1위 달은 자주 다르다. 어느 경우든 같은 문장을 써 1위 달의 위치를 흘리지 않는다.
-    quarterLead: '분기로 묶어 보면 ' + best.label + '(' + best.range + ')의 흐름이 가장 고르게 좋아요. 가장 좋은 한 달은 이 분기 밖에 있을 수도 있어서, 정확한 세 달은 전체 풀이에서 알려 드려요.',
+    quarterLead: '분기로 묶어 보면 ' + best.label + '(' + best.range + ')의 흐름이 가장 고르게 좋아요. 가장 좋은 한 달은 이 분기 밖에 있을 수도 있어서, 1·2위 두 달은 전체 풀이에서 알려 드려요.',
+    third: describeThird(data.months[data.top3[2].month - 1], birth.gender, 'year'),
     strongCount: data.strongCount,
     locked: lockedTitles(),
     price: newYearConfig.priceKrw
@@ -267,7 +271,7 @@ function buildNewYearPrompt(data, engine, person = {}, options = {}) {
     '## 이 사람의 구조\n' + structureLines(engine, data, gender) + '\n\n' +
     '## 이 사람 정보\n이름: ' + (name || '(이름 없음, "고객님"으로 부르기)') + ' / 성별: ' + (gender || '(미상)') + ' / ' + y + '년 기준 ' + data.age + '세\n\n' +
     (options.previous ? '## 이미 쓴 장의 요약 (새 장에서는 같은 설명을 반복하지 마세요)\n' + options.previous + '\n\n' : '') +
-    '## 쓰는 형식\n이번 요청에 지정한 소제목만 정확히 이 표기와 순서로 쓰세요. **근거**, **장면**, **해볼 일**, **할 것**, **피할 것**, **점검** 같은 표지는 문장 안에 넣지 말고 한 줄에 표지만 단독으로 쓴 뒤, 다음 줄부터 2~3문장 문단을 쓰세요(월별 상세 흐름은 한 줄 형식 유지). 문단 사이에는 빈 줄을 넣으세요. 각 장과 각 달마다 독자가 꼭 기억할 핵심 구절 1~3곳을 **짧은 구절**(20자 안팎, 한 문장 안에서 열고 닫기)로 굵게 표시하세요. 강조가 하나도 없는 장이 있으면 안 됩니다. 표지 말고는 굵게를 남발하지 마세요. 글자 수는 제목·표지 기호를 뺀, 띄어쓰기를 포함한 본문 기준입니다. 전체 리포트는 약 9,000~14,000자 목표이며, 이번에는 아래 장만 씁니다.\n\n' +
+    '## 쓰는 형식\n이번 요청에 지정한 소제목만 정확히 이 표기와 순서로 쓰세요. **근거**, **장면**, **해볼 일**, **할 것**, **피할 것**, **점검** 같은 표지는 문장 안에 넣지 말고 한 줄에 표지만 단독으로 쓴 뒤, 다음 줄부터 2~3문장 문단을 쓰세요(월별 상세 흐름은 한 줄 형식 유지). 문단 사이에는 빈 줄을 넣으세요. 각 장과 각 달마다 독자가 꼭 기억할 핵심 구절 1~3곳을 **짧은 구절**(20자 안팎, 한 문장 안에서 열고 닫기)로 굵게 표시하세요. 강조가 하나도 없는 장이 있으면 안 됩니다. 표지 말고는 굵게를 남발하지 마세요. 글자 수는 제목·표지 기호를 뺀, 띄어쓰기를 포함한 본문 기준입니다. 전체 리포트는 약 9,000~14,000자 목표이며, 이번에는 아래 장만 씁니다.\n' + EVIDENCE_RULE + '\n\n' +
     format;
 }
 
@@ -415,6 +419,8 @@ async function generateNewYearReading(engine, person = {}, opts = {}) {
   const generate = opts.generate || generateText;
   const data = buildNewYearData(engine, person);
   const usages = [];
+  // 장별 근거·사실 대조 기록(검토용). 화면·PDF 본문에는 들어가지 않는다.
+  const review = startReview({ engines: [engine], months: data.months, ranked: data.top3.map((m) => ({ year: data.year, month: m.month })), rankSections: ['answer', 'overall', 'months3'], extra: [data.overall, data.context] }, SECTION_DEFS);
   async function runPart(part, base) {
     const previous = base.map((s) => s.title + ': ' + s.text.replace(/\s+/g, ' ').slice(0, 240)).join('\n');
     const prompt = buildNewYearPrompt(data, engine, person, { ...part, previous });
@@ -431,10 +437,12 @@ async function generateNewYearReading(engine, person = {}, opts = {}) {
         continue;
       }
       usages.push(usage);
-      const parsed = parseNewYearText(text);
+      const ev = splitEvidence(text);
+      const parsed = parseNewYearText(ev.text);
       const selected = { sections: parsed.sections.filter((s) => part.sectionKeys.includes(s.key)), monthNotes: part.includeMonths ? parsed.monthNotes : [] };
       try {
         validateNewYearReading({ sections: [...base, ...selected.sections], monthNotes: selected.monthNotes }, data, part);
+        review.check(selected, ev.notes, attempt < 1);
         accepted = selected;
         break;
       } catch (e) {
@@ -455,7 +463,7 @@ async function generateNewYearReading(engine, person = {}, opts = {}) {
   const ordered = SECTION_DEFS.map((def) => sections.find((s) => s.key === def.key)).map((sec) => (sec.key === 'answer' ? sec : { ...sec, text: ensureHighlight(sec.text) }));
   const parsed = { sections: ordered, monthNotes: monthNotes.map((n) => ({ ...n, year: data.year })) };
   validateNewYearReading(parsed, data);
-  return { year: data.year, title: data.year + ' 신년운세', data, ...parsed, usage: sumUsage(usages) };
+  return { year: data.year, title: data.year + ' 신년운세', data, ...parsed, ...review.result(), usage: sumUsage(usages) };
 }
 
 module.exports = {

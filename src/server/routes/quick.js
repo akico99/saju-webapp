@@ -53,9 +53,14 @@ async function startDeep(userId, body, { cardPaymentId } = {}) {
     throw new HttpError(400, { error: '명식 계산 실패: ' + e.message });
   }
 
+  const productKey = 'deep_' + parsed.topic;
+  // 2026-10 판매 종료 — 새 주문은 받지 않는다. 이미 끝난 주문의 열람·다운로드는 주문/다운로드 라우트가 그대로 맡는다.
+  if (!points.SELLABLE.has(productKey)) {
+    throw new HttpError(410, { error: '주제별 심층 리딩은 판매를 마쳤어요. 새 리포트로 안내해 드릴게요.', code: 'discontinued', next: /^deep_(love|relationship)$/.test(productKey) ? '/love.html' : '/new-year.html' });
+  }
+
   // 이미 생성 중인 같은 상품이 있으면 또 결제/생성하지 않는다 — 프론트에서 버튼을
   // 잠가도(setFormBusy) 여러 탭이나 직접 API 호출까지는 못 막으므로 서버에서 한 번 더 막는다.
-  const productKey = 'deep_' + parsed.topic;
   const pending = orders.findPendingByUserAndProduct(userId, productKey);
   if (pending) {
     throw new HttpError(409, {

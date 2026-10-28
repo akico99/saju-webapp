@@ -1,5 +1,6 @@
 'use strict';
-/* 2027 신년운세 — 무료 첫 장(/api/newyear/preview, 로그인·AI 호출 없음)과 유료 웹/PDF 생성(/api/newyear).
+/* 2027 신년운세 — 무료 사주 분석(/api/newyear/preview, 로그인·AI 호출 없음), 그 위에 나중에 채우는 개인 소개
+   (/api/newyear/intro, 가장 싼 모델)와 유료 웹/PDF 생성(/api/newyear).
    PDF 완성 뒤 결제 전에 받은 수신 주소로 보낸다. 메일 실패는 결과를 유지하고, 인증된 주문 소유자에게만
    재전송(/api/newyear/:jobId/delivery)을 허용한다. 구조는 routes/love.js와 같다. */
 const express = require('express');
@@ -11,6 +12,8 @@ const { OUTPUT_ROOT } = require('../../config/outputDir');
 const { computeSaju } = require('../../engine');
 const { validateBirth } = require('../../engine/loveTiming');
 const { generateNewYearReading, buildNewYearPreview, toPlainText } = require('../../llm/newYearReading');
+const { recordForReview } = require('../reviewRecord');
+const { introHandler, newYearFacts } = require('../../llm/freeIntro');
 const { costUsd } = require('../../llm/client');
 const { renderNewYearHtml } = require('../../pdf/renderNewYearHtml');
 const { newYearWebHtml } = require('../../pdf/newYearVisuals');
@@ -66,6 +69,12 @@ router.post('/newyear/preview', (req, res) => {
   }
 });
 
+// 무료 사주 분석의 개인 소개 — 미리보기와 같은 입력을 받는다. 근거에는 달 정보 없이 한 해 요약만 넣는다.
+router.post('/newyear/intro', introHandler((body) => {
+  const parsed = parseBody(body);
+  return newYearFacts(parsed.birth, buildNewYearPreview(parsed.birth).yearLine);
+}));
+
 async function startNewYear(userId, body, { cardPaymentId } = {}) {
   if (!config.enabled) throw new HttpError(404, { error: '상품을 준비 중입니다.' });
   let parsed;
@@ -116,6 +125,7 @@ async function startNewYear(userId, body, { cardPaymentId } = {}) {
         resultPath: pdfPath, cardPath: null, llmCostUsd: costUsd(reading.usage),
         resultText: toPlainText(reading), resultVisual: sajuChartHtml(engine) + newYearWebHtml(reading)
       });
+      recordForReview(jobId, reading, { engines: [engine], names: [person.name] });
       // 발송 실패는 완성된 유료 결과를 오류/환불 상태로 바꾸지 않는다.
       await deliverReport(jobId).catch(() => {});
     })

@@ -27,7 +27,7 @@ test('12개월은 두 사람 각자 점수의 반올림 평균이고, 상위 세
   assert.equal(timing.years.periods.length, 3, '앞으로 3년은 compatTiming 값을 그대로 쓴다');
 });
 
-test('무료 첫 장은 두 사람의 기둥·끌림·보완을 주고 달 이름과 달별 점수는 주지 않는다', () => {
+test('무료 사주 분석은 두 사람의 기둥·끌림·보완과 함께 좋은 3위 달만 주고, 1·2위 달 이름과 달별 점수는 주지 않는다', () => {
   const p = c.buildCouplePreview(birthA, birthB, 'dating', { a: '지우', b: '민준' }, NOW);
   assert.equal(p.people.length, 2);
   assert.equal(p.people[0].pillars.length, 4);
@@ -37,7 +37,9 @@ test('무료 첫 장은 두 사람의 기둥·끌림·보완을 주고 달 이�
   assert.ok(p.complement.headline);
   assert.equal(p.price, 14900);
   // 계절 이름(예: "2026년 11월~2027년 1월")과 시작 달은 연애 상품처럼 공개한다. 그 밖에는 달 이름이 없어야 한다.
-  const { seasons, seasonLead, startYm, ...rest } = p;
+  const { seasons, seasonLead, startYm, third, ...rest } = p;
+  assert.equal(third.label, label(timing.top3[2]), '3위 달은 공개한다');
+  assert.ok(!JSON.stringify(third).includes(label(timing.top3[0])) && !JSON.stringify(third).includes(label(timing.top3[1])));
   const json = JSON.stringify(rest);
   for (const m of timing.top3) assert.ok(!json.includes(label(m)), '함께 좋은 달 이름은 무료 응답에 없다: ' + label(m));
   assert.doesNotMatch(seasonLead.replace(/\d{4}년 \d{1,2}(?:~\d{1,2})?월(?:~\d{4}년 \d{1,2}월)?/, ''), /\d{1,2}월/);

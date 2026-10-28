@@ -1,7 +1,7 @@
 @font-face{font-family:ReadingSerif;src:url('/fonts/NanumMyeongjo-ExtraBold.ttf') format('truetype');font-display:swap;font-weight:800}
 @font-face{font-family:ReadingSans;src:url('/samples/compat/fonts/NanumGothic-Regular.woff2') format('woff2');font-display:swap;font-weight:400}
 @font-face{font-family:ReadingSans;src:url('/samples/compat/fonts/NanumGothic-Bold.woff2') format('woff2');font-display:swap;font-weight:700}
-.lr-reader{--lr-bg:#100607;--lr-ink:#f7eeea;--lr-muted:#c4a7a7;--lr-line:#482126;--lr-accent:#ef5368;--lr-soft:#2a1116;--lr-pad:24px;box-sizing:border-box;display:block;width:100%;max-width:480px;margin:0 auto;padding:30px 0 54px;background:var(--lr-bg);color:var(--lr-ink);font:400 16px/1.85 ReadingSans,'Noto Sans KR',sans-serif;letter-spacing:-.035em;word-break:keep-all;overflow-wrap:anywhere;text-align:left}
+.lr-reader{--lr-bg:#100607;--lr-ink:#f7eeea;--lr-muted:#c4a7a7;--lr-line:#482126;--lr-accent:#ef5368;--lr-soft:#2a1116;--lr-pad:24px;box-sizing:border-box;display:block;width:100%;max-width:480px;margin:0 auto;padding:30px 0 54px;background:var(--lr-bg);color:var(--lr-ink);font:400 16px/1.85 Pretendard,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;letter-spacing:-.035em;word-break:keep-all;overflow-wrap:anywhere;text-align:left}
 .lr-reader *,.lr-reader *::before,.lr-reader *::after{box-sizing:border-box}
 .lr-reader h1,.lr-reader h2,.lr-reader h3,.lr-reader h4,.lr-reader p,.lr-reader figure,.lr-reader article,.lr-reader header,.lr-reader nav,.lr-reader pre{margin:0;padding:0;border:0;background:none;text-shadow:none;text-transform:none}
 .lr-reader strong{color:#ff9aa6;font-weight:700}
@@ -10,7 +10,7 @@
 .lr-reader p.lr-lead{font-size:16px;line-height:1.8;text-align:center;padding:0 28px 30px;color:#f1c6c6;white-space:pre-line}
 .lr-reader .lr-chapter{position:relative;padding:0 0 48px;margin:0;scroll-margin-top:80px}
 .lr-reader .lr-head{text-align:center;padding:65px 24px 32px;position:relative}
-.lr-reader .lr-num{display:block;font:700 13px/1.6 ReadingSans,sans-serif;letter-spacing:.14em;color:#f26879;margin:0 auto 28px;width:120px;position:relative}
+.lr-reader .lr-num{display:block;font:700 13px/1.6 Pretendard,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;letter-spacing:.14em;color:#f26879;margin:0 auto 28px;width:120px;position:relative}
 .lr-reader .lr-num::before,.lr-reader .lr-num::after{content:'';height:1px;width:35px;position:absolute;top:50%;background:linear-gradient(90deg,transparent,#843039)}
 .lr-reader .lr-num::before{left:0}.lr-reader .lr-num::after{right:0;transform:rotate(180deg)}
 .lr-reader h2.lr-title{font:800 clamp(23px,6vw,28px)/1.6 ReadingSerif,serif;letter-spacing:-.04em;color:#fff1eb;text-align:center;white-space:pre-line}
@@ -25,17 +25,17 @@
 .lr-reader .lr-bubble{position:relative;flex:0 1 auto;width:174px;min-height:138px;border-radius:50%;padding:26px 23px;display:flex;flex-direction:column;justify-content:center;background:#fffaf4;color:#25191a;box-shadow:0 4px 20px #0003;border:0}
 .lr-reader .lr-bubble::after{content:'';position:absolute;left:16px;top:9px;width:27px;height:26px;background:#fffaf4;clip-path:polygon(0 0,100% 100%,38% 100%);transform:rotate(-12deg)}
 .lr-reader .lr-speaker{display:none}
-.lr-reader .lr-bubble p.lr-bt{color:#291f22;font:700 16px/1.65 ReadingSans,sans-serif;text-align:center;word-break:keep-all;overflow-wrap:anywhere;white-space:pre-line;margin:0}
+.lr-reader .lr-bubble p.lr-bt{color:#291f22;font:700 16px/1.65 Pretendard,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;text-align:center;word-break:keep-all;overflow-wrap:anywhere;white-space:pre-line;margin:0}
 .lr-reader .lr-bubble strong{color:#9f283b}
 .lr-reader .lr-paper{padding:10px 26px 8px;margin:0}
-.lr-reader .lr-paper p.lr-pt{color:#efe0dd;font:400 16px/1.95 ReadingSans,sans-serif;letter-spacing:-.035em;text-align:left;margin:0 0 18px}
-.lr-reader .lr-paper h3.lr-h3{color:#ffb3bb;font:700 17px/1.6 ReadingSans,sans-serif;margin:28px 0 12px;padding-top:14px;border-top:1px solid #482126}
+.lr-reader .lr-paper p.lr-pt{color:#efe0dd;font:400 16px/1.95 Pretendard,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;letter-spacing:-.035em;text-align:left;margin:0 0 18px}
+.lr-reader .lr-paper h3.lr-h3{color:#ffb3bb;font:700 17px/1.6 Pretendard,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;margin:28px 0 12px;padding-top:14px;border-top:1px solid #482126}
 .lr-reader .lr-paper h3.lr-h3:first-child{margin-top:4px;border:0;padding:0}
 .lr-reader .lr-paper p.lr-act{background:#281217;border-left:2px solid #ed6475;padding:14px 16px;border-radius:0 8px 8px 0}
 .lr-reader .lr-art-inline{margin:32px -26px!important}
 .lr-reader .lr-art-inline img{aspect-ratio:4/5}
 .lr-reader .lr-panel,.lr-reader .lr-details{background:#211013;border:1px solid #462027;border-radius:12px;padding:20px;margin:22px var(--lr-pad) 0;color:#f7e8e5}
-.lr-reader h3.lr-sub{font:700 17px/1.5 ReadingSans,sans-serif;text-align:center;color:#f6e4e1;margin:0 0 20px}
+.lr-reader h3.lr-sub{font:700 17px/1.5 Pretendard,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;text-align:center;color:#f6e4e1;margin:0 0 20px}
 .lr-reader .lr-details{padding:0 18px}
 .lr-reader summary{padding:16px 0;cursor:pointer;font-weight:700;font-size:14px;min-height:48px}
 .lr-reader .lr-details[open] summary{border-bottom:1px solid var(--lr-line);margin-bottom:16px}
@@ -61,20 +61,20 @@
 .lr-reader .lr-season-text{display:flex;flex-direction:column;gap:6px;font-size:16px}
 .lr-reader .lr-season-text span{font-size:13px;color:#cda9ab}
 .lr-reader .lr-teaser{text-align:center;position:relative;padding:22px 18px 24px;overflow:hidden;background:linear-gradient(#2d1118,#1b0c0f);border-color:#5a2530}
-.lr-reader .lr-teaser-title{display:block;font:700 17px/1.6 ReadingSans,sans-serif;color:#ffedf0;margin-bottom:10px}
+.lr-reader .lr-teaser-title{display:block;font:700 17px/1.6 Pretendard,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;color:#ffedf0;margin-bottom:10px}
 .lr-reader p.lr-teaser-description{font-size:13px;line-height:1.8;color:#d5b3b7;text-align:center;margin:0 auto;max-width:29em}
 .lr-reader .lr-veiled{position:relative;min-height:120px;padding:20px 4px 12px;user-select:none}
 .lr-reader .lr-hidden-row{display:flex;align-items:center;gap:12px;margin:12px 0;padding:9px;border-radius:5px;background:#35141e;font-size:12px;text-align:left}
 .lr-reader .lr-hidden-row span{flex:1;color:#e2bfc4}
 .lr-reader .lr-hidden-row i{width:36%;height:9px;border-radius:8px;filter:blur(4px);background:#b96376;opacity:.65}
-.lr-reader button.lr-teaser-lock{display:inline-flex;align-items:center;justify-content:center;gap:9px;background:#10080a;border:1px solid #9b4052;border-radius:24px;padding:12px 19px;color:#ffe8e8;font:700 13px/1.5 ReadingSans,sans-serif;min-height:44px;max-width:100%}
+.lr-reader button.lr-teaser-lock{display:inline-flex;align-items:center;justify-content:center;gap:9px;background:#10080a;border:1px solid #9b4052;border-radius:24px;padding:12px 19px;color:#ffe8e8;font:700 13px/1.5 Pretendard,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;min-height:44px;max-width:100%}
 .lr-reader button.lr-teaser-lock::before{content:'';width:10px;height:10px;border:1.5px solid #ff8799;border-radius:2px;box-shadow:0 -5px 0 -2px #10080a,0 -6px 0 -1px #ff8799;flex:none}
 .lr-reader .lr-calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:14px;margin:7px auto;width:80%;max-width:250px;filter:blur(3px)}
 .lr-reader .lr-calendar i{width:9px;height:9px;border-radius:50%;background:#a35d67;margin:auto;opacity:.5}
 .lr-reader .lr-calendar i:nth-child(11),.lr-reader .lr-calendar i:nth-child(19),.lr-reader .lr-calendar i:nth-child(24){background:#ff3458;box-shadow:0 0 14px #ff3458;transform:scale(1.8);opacity:1}
 .lr-reader .lr-locked{display:none}
 .lr-reader .lr-contents{padding:40px 24px 12px}
-.lr-reader .lr-eyebrow{display:block;font:700 10px/1.6 ReadingSans,sans-serif;letter-spacing:.16em;color:#e76a7e}
+.lr-reader .lr-eyebrow{display:block;font:700 10px/1.6 Pretendard,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;letter-spacing:.16em;color:#e76a7e}
 .lr-reader .lr-contents>.lr-eyebrow{text-align:center}
 .lr-reader h3.lr-contents-title{text-align:center;font:800 24px/1.65 ReadingSerif,serif;white-space:pre-line;margin:14px 0 28px;color:#fff0e9}
 .lr-reader .lr-content-card{border:1px solid #4b2029;border-radius:12px;overflow:hidden;background:#211013;margin-bottom:16px}
@@ -96,7 +96,7 @@
 .lr-reader .lr-check label{display:flex;gap:12px;align-items:flex-start;font-size:15px;padding:8px 0;cursor:pointer}
 .lr-reader .lr-check input{width:20px;height:20px;flex:none;margin:3px 0;accent-color:#ef5368}
 .lr-reader .lr-check .is-done span{color:#c1a9ac;text-decoration:line-through}
-.lr-reader pre.lr-pre{font:400 15px/1.9 ReadingSans,sans-serif;white-space:pre-wrap;overflow-wrap:anywhere;color:#e7d1d2}
+.lr-reader pre.lr-pre{font:400 15px/1.9 Pretendard,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;white-space:pre-wrap;overflow-wrap:anywhere;color:#e7d1d2}
 .lr-reader .lr-original{margin-top:42px}
 .lr-reader button:focus-visible,.lr-reader summary:focus-visible,.lr-reader input:focus-visible,.lr-reader h2:focus-visible{outline:3px solid #ffa9b5;outline-offset:4px}
 @media(min-width:600px){.lr-reader{--lr-pad:28px}}
@@ -125,7 +125,7 @@
 .lr-reader .lr-month-reading [hidden]{display:none!important}
 .lr-reader .lr-month-card .lr-mt{font-size:16px;line-height:1.85;color:#fff1eb}
 @media(max-width:340px){.lr-paid .lr-paper{padding:16px 20px}.lr-reader .lr-month-reading{padding:0 16px}.lr-reader .lr-all-months .lr-month-card{padding:18px}}
-.lr-reader .lr-month-label{display:block;margin:14px 0 2px;font:700 13px/1.5 ReadingSans,sans-serif;color:#ff9aa6;letter-spacing:.02em}
+.lr-reader .lr-month-label{display:block;margin:14px 0 2px;font:700 13px/1.5 Pretendard,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;color:#ff9aa6;letter-spacing:.02em}
 
 /* 사이트 공통 header 규칙(theme.css: sticky·flex)이 장 제목에 걸리지 않게 되돌린다. */
 .lr-reader header.lr-head{display:block;position:relative;top:auto;z-index:auto;background:none;backdrop-filter:none;border:0}
@@ -153,7 +153,7 @@
 /* 결론 아래 12개월 그래프: 어두운 화면용 색. 연도는 첫 달과 1월에만 작게 위에 둔다. */
 .lr-summary-chart{background:#1b0b0f;border:1px solid #4b2029;border-radius:12px;padding:16px 14px 12px}
 .lr-summary-chart .love-chart{padding:0;border:0}
-.lr-summary-chart .love-chart h3{margin:0 0 4px;font:700 15px/1.5 ReadingSans,sans-serif;color:#f6e3e3}
+.lr-summary-chart .love-chart h3{margin:0 0 4px;font:700 15px/1.5 Pretendard,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;color:#f6e3e3}
 .lr-summary-chart .love-bars{height:132px;gap:4px;margin-top:22px}
 .lr-summary-chart .love-bar i{background:#4a2530;border-radius:4px 4px 1px 1px}
 .lr-summary-chart .love-bar.is-top i{background:linear-gradient(#ff8a9a,#c2304b)}
@@ -182,7 +182,7 @@
 .lr-summary-chart .love-bars{margin-bottom:24px}
 
 /* 편집 디자인: 상자·강조선 대신 표지 글씨와 미색 쪽지로 구분한다. */
-.lr-paid .lr-paper h3.lr-h3-label{border:0;padding:0;margin:26px 0 8px;font:700 12.5px/1.4 ReadingSans,sans-serif;letter-spacing:.16em;color:#e9a2ad}
+.lr-paid .lr-paper h3.lr-h3-label{border:0;padding:0;margin:26px 0 8px;font:700 12.5px/1.4 Pretendard,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;letter-spacing:.16em;color:#e9a2ad}
 .lr-paid .lr-paper h3.lr-h3-label::before{content:"";display:inline-block;width:14px;height:1px;background:#e9a2ad;vertical-align:middle;margin:0 8px 3px 0}
 .lr-paid .lr-paper h3.lr-h3-date{border:0;border-top:1px solid #3a1a20;padding:26px 0 0;margin:34px 0 4px;font:800 21px/1.45 ReadingSerif,serif;letter-spacing:-.03em;color:#fff1eb}
 .lr-paid .lr-paper h3.lr-h3:first-child{margin-top:6px;border-top:0;padding-top:0}
@@ -201,7 +201,7 @@
 .lr-parallax .lr-art img{transform:scale(1.15);will-change:transform}
 /* 강한 세 달 카드 플립: 앞면은 어두운 카드와 금색 순위, 뒷면은 본문의 '해볼 일' 쪽지와 같은 미색 종이. */
 .lr-flips{margin:0 20px 22px}
-.lr-flips-title{display:flex;justify-content:space-between;align-items:baseline;margin:0 0 10px;font:700 15px/1.5 ReadingSans,sans-serif;color:#f6e3e3}
+.lr-flips-title{display:flex;justify-content:space-between;align-items:baseline;margin:0 0 10px;font:700 15px/1.5 Pretendard,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;color:#f6e3e3}
 .lr-flips-title small{font-size:12px;font-weight:400;color:#a98990}
 .lr-flip-row{display:grid;gap:10px}
 .lr-reader button.lr-flip{display:block;width:100%;padding:0;margin:0;border:0;background:none;color:inherit;text-align:left;perspective:1000px;min-height:44px}

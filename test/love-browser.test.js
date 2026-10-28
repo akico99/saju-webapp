@@ -37,7 +37,8 @@ test('모바일 상품 소개에서 실제 무료 해석, 재입력, 로그인�
     page.on('pageerror', (error) => errors.push(error.message));
     await page.setRequestInterception(true);
     page.on('request', (req) => { if(req.url() === base + '/api/love') purchases++; return req.url().startsWith(base) ? req.continue() : req.abort(); });
-    await page.goto(base + '/love-assets/home.html', { waitUntil: 'networkidle0' });
+    // 상품 목록 시안은 메인(/)으로 옮겨 갔다. 메인의 넘침을 보고, 상황별 진입 주소로 바로 들어간다.
+    await page.goto(base + '/', { waitUntil: 'networkidle0' });
     for (const width of [320, 390, 1280]) {
       await page.setViewport({ width, height: 844 });
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'home overflow at ' + width);
@@ -45,7 +46,7 @@ test('모바일 상품 소개에서 실제 무료 해석, 재입력, 로그인�
     await page.setViewport({ width: 390, height: 844 });
     await page.screenshot({ path: path.join(os.tmpdir(), 'love-home-mobile.png'), fullPage: true });
     await page.screenshot({ path: path.join(os.tmpdir(), 'love-home-first-screen.png'), fullPage: false });
-    await Promise.all([page.waitForNavigation(), page.click('a[href="/love.html?concern=some"]')]);
+    await page.goto(base + '/love.html?concern=some', { waitUntil: 'networkidle0' });
     assert.equal(await page.$eval('[name=situation]', e => e.value), 'some');
     await page.click('#startLoveDock');
     assert.equal(await page.$eval('.landing-dock', e => getComputedStyle(e).display), 'none');

@@ -7,11 +7,11 @@ body:has(#coupleLanding.hidden) .landing-dock { display: none; }
 .couple-page .couple-two .lr-panel { margin: 0; }
 .couple-page .couple-person .lr-pillars { grid-template-columns: repeat(4, 1fr); gap: 4px; }
 .couple-page .couple-person .lr-pillar b { font-size: 18px; }
-.couple-page .couple-person .lr-pillar span, .couple-page .couple-person .lr-pillar small { font-size: 10.5px; }
+.couple-page .couple-person .lr-pillar span, .couple-page .couple-person .lr-pillar small { font-size: 12px; }
 .couple-page .couple-balance .lr-bar { grid-template-columns: 64px 1fr 30px; }
 .couple-page .couple-points { list-style: none; margin: 8px var(--lr-pad, 22px) 14px; padding: 0; display: grid; gap: 8px; }
 .couple-page .couple-points li { padding: 12px 14px; border-radius: 10px; border: 1px solid rgba(239, 62, 84, .28); background: rgba(239, 62, 84, .06); line-height: 1.6; }
-.couple-page .couple-points b { display: block; font-size: 12.5px; letter-spacing: .02em; color: #ef7d8e; margin-bottom: 2px; }
+.couple-page .couple-points b { display: block; font-size: 13px; letter-spacing: .02em; color: #ef7d8e; margin-bottom: 2px; }
 .couple-page .couple-points span { font-size: 15px; }
 .couple-page .couple-seasons { margin: 14px 0; }
 .couple-page .couple-chart .love-chart-note { line-height: 1.6; }

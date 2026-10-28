@@ -28,7 +28,7 @@ body.otter-stage.done .app { background: var(--bg); padding-bottom: 40px; }
 .bubble { color: #fff; text-align: center; font-family: var(--font-serif); font-size: 21px; line-height: 1.55; letter-spacing: -.01em; word-break: keep-all; margin: 0 0 18px; text-shadow: 0 2px 14px rgba(0,0,0,.45); }
 .bubble .q::before { content: '“ '; opacity: .7; }
 .bubble .q::after { content: ' ”'; opacity: .7; }
-.bubble small { display: block; font-family: 'Pretendard', sans-serif; font-size: 13px; opacity: .75; margin-top: 8px; letter-spacing: 0; }
+.bubble small { display: block; font-family: Pretendard,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif; font-size: 13px; opacity: .75; margin-top: 8px; letter-spacing: 0; }
 .bubble.err { margin: 14px 0 0; font-size: 15px; }
 .bubble.err .q { color: #ffdec4; }
 

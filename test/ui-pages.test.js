@@ -6,7 +6,7 @@ const vm = require('node:vm');
 
 const publicDir = path.join(__dirname, '..', 'public');
 const pages = [
-  'free', 'life-graph', 'today-preview', 'today-fortune', 'quick', 'compat',
+  'free', 'life-graph', 'today-preview', 'today-fortune', 'compat',
   'lifetime-report', 'date-select', 'login', 'signup', 'forgot-password',
   'reset-password', 'profiles', 'mypage', 'services'
 ];
@@ -15,7 +15,7 @@ const pages = [
 // 사람이 죽은 폼을 만나지 않게, 리다이렉트 목적지가 살아있는 페이지인지만 확인한다.
 const retiredRedirects = {
   'life-topics': '/services.html',
-  'career-timing': '/quick.html?topic=career',
+  'career-timing': '/new-year.html',
   'birth-timing': '/date-select.html?occasion=birth',
   'reunion-check': '/compat.html'
 };
@@ -43,7 +43,7 @@ for (const name of pages) {
 
 test('paid forms preserve integration hooks and load the shared paid UI', () => {
   for (const [name, formId, resultId] of [
-    ['quick', 'quickForm', 'result'], ['compat', 'compatForm', 'result'],
+    ['compat', 'compatForm', 'result'],
     ['lifetime-report', 'sajuForm', 'result'], ['date-select', 'dsForm', 'dsResult']
   ]) {
     const html = fs.readFileSync(path.join(publicDir, `${name}.html`), 'utf8');
@@ -109,46 +109,43 @@ test('balance free reading uses the three-page result book without changing othe
   assert.ok(fs.existsSync(path.join(publicDir, 'balance-book.js')));
 });
 
-test('home service rows expose desktop carousel controls and keep edge breathing room', () => {
+// 2026-10 메인 개편 — 첫 화면은 "요즘 가장 궁금한 건?" 하나만 묻고, 아래로 대표 상품 카드(상품별 그림)를 둔다.
+test('home asks one question and leads each choice to its product', () => {
   const html = fs.readFileSync(path.join(publicDir, 'index.html'), 'utf8');
-  const rows = html.match(/class="row-scroll"/g) || [];
-  assert.ok(rows.length >= 5, 'home should keep the service rows');
-  assert.equal((html.match(/data-service-carousel/g) || []).length, rows.length,
-    'each service row should have one carousel root');
-  assert.equal((html.match(/data-carousel-track/g) || []).length, rows.length,
-    'each service row should have one track marker');
-  assert.equal((html.match(/data-carousel-prev/g) || []).length, rows.length,
-    'each service row should have a previous control');
-  assert.equal((html.match(/data-carousel-next/g) || []).length, rows.length,
-    'each service row should have a next control');
-  assert.match(html, /<script src="\/service-carousel\.js"><\/script>/);
-
-  const css = fs.readFileSync(path.join(publicDir, 'editorial-refresh.css'), 'utf8');
-  assert.match(css, /\.editorial-home \.row-scroll\s*\{[^}]*padding[^}]*28px/);
-  assert.match(css, /\.service-carousel \.carousel-control/);
+  const ask = html.match(/<section class="ask"[\s\S]*?<\/section>/)?.[0];
+  assert.ok(ask, 'first screen section missing');
+  assert.match(ask, /<h1[^>]*>요즘 가장<br>궁금한 건\?<\/h1>/);
+  for (const [label, href] of [['연애·인연', '/love.html'], ['2027년 한 해', '/new-year.html'], ['다시 그 사람', '/reunion.html'], ['우리 둘의 궁합', '/compat.html']]) {
+    const choice = ask.match(new RegExp('<a class="ask-choice[^"]*"[^>]*href="' + href.replace(/\./g, '\\.') + '[^"]*"[^>]*>[\\s\\S]*?<\/a>'))?.[0];
+    assert.ok(choice && choice.includes(label), label + ' → ' + href);
+  }
+  // 꺼진 재회는 처음부터 숨기고, 궁합은 새 궁합이 켜질 때까지 예전 궁합 페이지로 보낸다(home.js가 공개 여부를 보고 바꾼다).
+  assert.match(ask, /data-product="reunion" href="\/reunion\.html[^"]*" hidden/);
+  assert.match(ask, /data-product="couple" href="\/compat\.html/);
+  assert.match(html, /<script src="\/home\.js"><\/script>/);
+  assert.match(html, /<link rel="stylesheet" href="\/home\.css">/);
 });
 
-test('home uses dedicated editorial images for every previously icon-only service', () => {
+test('home product cards use each product cover and keep the lifetime report lower down', () => {
   const html = fs.readFileSync(path.join(publicDir, 'index.html'), 'utf8');
-  for (const asset of ['life-graph.webp', 'balance.webp', 'noble.webp', 'charm.webp', 'intro.webp', 'love.webp', 'relationship.webp']) {
-    assert.ok(fs.existsSync(path.join(publicDir, 'tiles', asset)), `${asset}: missing image`);
-    assert.ok(html.includes(`/tiles/${asset}`), `${asset}: not connected to home`);
+  for (const cover of ['/love-assets/reading/cover-comic.webp', '/new-year-assets/cover.webp', '/reunion-assets/cover.webp', '/couple-assets/cover.webp']) {
+    assert.ok(fs.existsSync(path.join(publicDir, cover.slice(1))), cover + ': missing image');
+    assert.ok(html.includes(cover), cover + ': not on home');
   }
-  assert.match(html, /내 인생의 파도는 지금 어디쯤일까/);
-  assert.match(html, /많은 기운과 비어 있는 기운을 한눈에/);
-  assert.match(html, /나를 돕는 사람의 결을 살펴보세요/);
-  assert.match(html, /사람들은 나를 어떻게 기억할까/);
-  assert.match(html, /내 사주의 첫 문장부터 읽어보세요/);
-  assert.match(html, /인연이 시작되고 깊어지는 방식/);
-  assert.match(html, /사람 사이에서 반복되는 나의 패턴/);
+  for (const tone of ['tone-love', 'tone-newyear', 'tone-reunion', 'tone-couple']) assert.ok(html.includes('report-card ' + tone), tone);
+  assert.ok(html.indexOf('class="lifetime"') > html.indexOf('id="reports"'), 'lifetime report should sit below the main products');
+  assert.doesNotMatch(html, /quick\.html/, 'discontinued topic readings must not be linked from home');
+  assert.doesNotMatch(html, /date-select\.html\?occasion/, 'date selection is reachable from the menu, not the home body');
+  for (const free of ['/today-preview.html', '/free.html?kind=charm', '/free.html?kind=balance']) assert.ok(html.includes('href="' + free + '"'), free);
 });
 
 test('all-services catalog reuses the same dedicated editorial images', () => {
   const html = fs.readFileSync(path.join(publicDir, 'services.html'), 'utf8');
-  for (const asset of ['today-fortune.webp', 'life-graph-services.webp', 'balance.webp', 'noble.webp', 'charm.webp', 'intro.webp', 'love.webp', 'relationship.webp']) {
+  for (const asset of ['today-fortune.webp', 'life-graph-services.webp', 'balance.webp', 'noble.webp', 'charm.webp']) {
     assert.ok(html.includes(`/tiles/${asset}`), `${asset}: missing from catalog`);
   }
   assert.ok(html.includes('src="/illustrations/otter-field-guide.png"'), 'field guide image missing from catalog');
+  assert.doesNotMatch(html, /quick\.html/, 'discontinued topic readings must not be listed');
 });
 
 test('all-services catalog groups daily and life-flow readings with the free services', () => {
@@ -163,14 +160,11 @@ test('all-services catalog groups daily and life-flow readings with the free ser
   assert.doesNotMatch(html, /id="todayFortuneCard"|id="tfTitle"|id="tfDesc"|id="tfCta"/);
 });
 
-test('home menu and free service carousel expose the field guide', () => {
+test('home menu exposes the field guide and the full free list', () => {
   const html = fs.readFileSync(path.join(publicDir, 'index.html'), 'utf8');
   const freeMenu = html.match(/<div class="menu-section">\s*<div class="menu-section-ttl">무료로 먼저 보기<\/div>([\s\S]*?)<\/div>/)?.[1];
-  const freeCarousel = html.match(/<div class="service-carousel" data-service-carousel>[\s\S]*?<\/section>/)?.[0];
   assert.ok(freeMenu?.includes('href="/field-guide.html"'), 'field guide missing from the free menu');
-  assert.ok(freeCarousel?.includes('href="/field-guide.html"'), 'field guide missing from the home free-service cards');
-  assert.ok(freeCarousel?.includes('/illustrations/otter-field-guide.png'), 'field guide art missing from the home card');
-  assert.ok(freeCarousel?.includes('수달이 기록한 나의 사주 도감'), 'field guide card title missing from home');
+  assert.match(html, /href="\/services\.html#free"/, 'home should link to the full free list');
 });
 
 test('llms lists the field guide as a free service', () => {
@@ -182,7 +176,7 @@ test('llms lists the field guide as a free service', () => {
 // 절대 URL이어야 크롤러가 받아간다. scripts/buildSeo.js 가 만드는 결과를 고정한다.
 test('shared pages expose share preview metadata with an absolute image', () => {
   const shared = ['index', 'services', 'free', 'life-graph', 'today-preview', 'today-fortune',
-    'quick', 'compat', 'date-select', 'lifetime-report', 'consult', 'webtoon/lifetime', 'field-guide'];
+    'compat', 'date-select', 'lifetime-report', 'consult', 'webtoon/lifetime', 'field-guide'];
   for (const name of shared) {
     const html = fs.readFileSync(path.join(publicDir, `${name}.html`), 'utf8');
     const title = html.match(/<title>([^<]*)<\/title>/);
@@ -248,8 +242,7 @@ test('priority keywords sit in title, visible intro and JSON-LD', () => {
   const cases = [
     ['field-guide.html', '2026년 신년운세'],
     ['compat.html', '사주 궁합'],
-    ['quick.html', '이직운'],
-    ['index.html', '2026년 신년운세'],
+    ['index.html', '2027 신년운세'],
     ['index.html', '사주 궁합']
   ];
   for (const [file, keyword] of cases) {

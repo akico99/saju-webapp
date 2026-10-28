@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/png" href="/favicon.png">
+<title>사주보는 수달 — 유료 풀이 검토</title>
+<link rel="stylesheet" href="/theme.css">
+<link rel="stylesheet" href="/saju-chart.css">
+<style>
+  .wrap { max-width: 1280px; }
+  h2.sec { font-size: 16px; margin: 28px 0 10px; color: var(--ink); }
+  .note { font-size: 13px; color: var(--muted); margin: 0 0 14px; line-height: 1.6; }
+  table.sum { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.sum th, table.sum td { padding: 7px 8px; border-bottom: 1px solid var(--line); text-align: right; }
+  table.sum th:first-child, table.sum td:first-child, table.sum th:nth-child(2), table.sum td:nth-child(2) { text-align: left; }
+  .rate-bad { color: var(--danger); font-weight: 800; }
+  .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; font-size: 13px; }
+  .toolbar select, .toolbar input { padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); font: inherit; }
+  .toolbar button, .mark button { padding: 7px 14px; border-radius: 8px; border: 1px solid var(--ink); background: var(--ink); color: #fff; font: inherit; font-weight: 700; cursor: pointer; width: auto; margin: 0; }
+  .samples { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+  .sample { text-align: left; background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; cursor: pointer; font: inherit; color: inherit; width: auto; margin: 0; }
+  .sample.on { border-color: var(--ink); box-shadow: 0 0 0 2px var(--ink) inset; }
+  .sample b { display: block; font-size: 14px; }
+  .sample span { display: block; font-size: 12.5px; color: var(--muted); margin-top: 3px; }
+  .pill { display: inline-block; font-size: 11.5px; font-weight: 800; padding: 2px 7px; border-radius: 99px; margin-right: 4px; }
+  .pill.err { background: #fde2e2; color: #a2191f; }
+  .pill.warn { background: #fff3cd; color: #7a5600; }
+  .pill.ok { background: #e0f2e6; color: #1d6b39; }
+  .detail { margin-top: 26px; }
+  .charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 420px)); gap: 14px; margin-bottom: 18px; }
+  .charts .saju-chart { margin: 0; }
+  .row { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) 230px; gap: 16px; padding: 18px 0; border-top: 1px solid var(--line); align-items: start; }
+  .row h3 { grid-column: 1 / -1; margin: 0; font-size: 16px; color: var(--ink); }
+  .body { font-size: 14.5px; line-height: 1.75; white-space: pre-wrap; word-break: keep-all; max-height: 520px; overflow: auto; padding-right: 8px; }
+  .side { font-size: 13.5px; line-height: 1.65; }
+  .side .ev { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; word-break: keep-all; }
+  .side .ev.none { color: var(--muted); }
+  .side .chk { border-left: 3px solid #e0a800; padding: 6px 10px; margin: 0 0 8px; background: #fffaf0; }
+  .side .chk.error { border-color: #c62828; background: #fff4f4; }
+  .side .chk q { display: block; color: var(--muted); font-size: 12.5px; margin-top: 3px; quotes: none; }
+  .mark label { display: flex; gap: 6px; align-items: center; font-size: 14px; margin: 0 0 6px; }
+  .mark textarea { width: 100%; min-height: 76px; border: 1px solid var(--line); border-radius: 8px; padding: 8px; font: inherit; font-size: 13px; margin: 4px 0 8px; box-sizing: border-box; }
+  .mark .saved { font-size: 12px; color: var(--muted); margin-left: 6px; }
+  @media (max-width: 900px) { .row { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>유료 풀이 검토</h1>
+    <div style="display:flex;align-items:center;gap:14px;">
+      <a href="/admin.html" style="font-size:12.5px;color:var(--muted);text-decoration:none;">← 관리자 홈</a>
+      <button class="logout" id="logoutBtn">관리자 로그아웃</button>
+    </div>
+  </header>
+
+  <p class="note">최근 완료 주문에서 상품별로 무작위 표본을 뽑아요. 이름·생년월일·이메일은 저장할 때 이미 가려져 있고, 여덟 글자 표만 보여요.
+    장마다 본문과 생성 때 숨겨 받은 근거, 자동 대조 경고를 나란히 보고 판정을 남겨 주세요. 같은 장을 다시 판정하면 덮어써요.</p>
+
+  <h2 class="sec">상품·장별 오류율</h2>
+  <table class="sum">
+    <thead><tr><th>상품</th><th>장</th><th>판정</th><th>맞음</th><th>애매함</th><th>틀림</th><th>오류율</th><th>자동 오류</th><th>자동 경고</th></tr></thead>
+    <tbody id="sumBody"></tbody>
+  </table>
+
+  <h2 class="sec">무작위 표본</h2>
+  <div class="toolbar">
+    <label>상품 <select id="product"><option value="">전체</option><option value="love_timing">인연의 시기</option><option value="new_year_2027">신년운세 2027</option><option value="reunion_v2">다시, 우리</option><option value="compat_v2">두 사람의 궁합</option></select></label>
+    <label>상품당 <input id="per" type="number" min="1" max="20" value="3" style="width:60px"> 건</label>
+    <button id="drawBtn" type="button">새 표본 뽑기</button>
+  </div>
+  <div class="samples" id="samples"></div>
+  <p class="note" id="emptySamples" hidden>검토 기록이 있는 완료 주문이 아직 없어요.</p>
+
+  <section class="detail" id="detail" hidden>
+    <h2 class="sec" id="detailTitle"></h2>
+    <div class="charts" id="charts"></div>
+    <div id="rows"></div>
+  </section>
+</div>
+
+<script>
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const rich = (s) => esc(s).replace(/\*\*([^*\n]+?)\*\*/g, '<b>$1</b>');
+  const VERDICT = { ok: '맞음', unclear: '애매함', wrong: '틀림' };
+  const api = async (url, opts) => {
+    const res = await fetch(url, opts);
+    if (res.status === 401) { location.href = '/admin-login.html'; throw new Error('login'); }
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || res.status);
+    return data;
+  };
+
+  async function loadSummary() {
+    const { rows } = await api('/api/admin/review/summary');
+    document.getElementById('sumBody').innerHTML = rows.length ? rows.map((r) =>
+      '<tr><td>' + esc(r.productLabel) + '</td><td>' + esc(r.sectionKey) + '</td><td>' + r.judged + '</td><td>' + r.ok + '</td><td>' + r.unclear + '</td><td>' + r.wrong
+      + '</td><td class="' + (r.wrongRate >= 0.2 ? 'rate-bad' : '') + '">' + (r.wrongRate == null ? '-' : Math.round(r.wrongRate * 100) + '%')
+      + '</td><td>' + r.autoErrors + '</td><td>' + r.autoWarnings + '</td></tr>').join('')
+      : '<tr><td colspan="9" style="text-align:center;color:var(--muted)">아직 판정이나 자동 경고가 없어요.</td></tr>';
+  }
+
+  async function draw() {
+    const q = new URLSearchParams({ per: document.getElementById('per').value || '3' });
+    const p = document.getElementById('product').value;
+    if (p) q.set('product', p);
+    const { items } = await api('/api/admin/review/sample?' + q);
+    const box = document.getElementById('samples');
+    document.getElementById('emptySamples').hidden = items.length > 0;
+    box.innerHTML = items.map((it) => '<button type="button" class="sample" data-job="' + esc(it.jobId) + '"><b>' + esc(it.productLabel) + '</b>'
+      + '<span>' + esc(it.finishedAt || '') + ' · 장 ' + it.sections + '개 · 판정 ' + it.marked + '개</span><span>'
+      + (it.autoErrors ? '<i class="pill err">오류 ' + it.autoErrors + '</i>' : '') + (it.autoWarnings ? '<i class="pill warn">경고 ' + it.autoWarnings + '</i>' : '')
+      + (!it.autoErrors && !it.autoWarnings ? '<i class="pill ok">자동 경고 없음</i>' : '') + '</span></button>').join('');
+    box.querySelectorAll('.sample').forEach((b) => b.addEventListener('click', () => open(b.dataset.job, b)));
+  }
+
+  function checkHtml(c) {
+    return '<div class="chk ' + (c.level === 'error' ? 'error' : '') + '">' + (c.level === 'error' ? '오류' : '경고') + ' · ' + esc(c.message) + '<q>' + esc(c.quote) + '</q></div>';
+  }
+
+  async function open(jobId, btn) {
+    document.querySelectorAll('.sample').forEach((b) => b.classList.toggle('on', b === btn));
+    const d = await api('/api/admin/review/job/' + encodeURIComponent(jobId));
+    document.getElementById('detail').hidden = false;
+    document.getElementById('detailTitle').textContent = d.productLabel + ' — ' + (d.title || '') + ' (' + (d.finishedAt || '') + ')';
+    document.getElementById('charts').innerHTML = d.charts.join(''); // 서버가 엔진 값으로 만든 표(사용자 입력 없음)
+    document.getElementById('rows').innerHTML = d.sections.map((s) => {
+      const m = s.mark || {};
+      return '<div class="row" data-key="' + esc(s.key) + '"><h3>' + esc(s.title) + '</h3>'
+        + '<div class="body">' + rich(s.text) + '</div>'
+        + '<div class="side"><div class="ev' + (s.evidence ? '' : ' none') + '"><b>근거</b><br>' + (s.evidence ? esc(s.evidence) : '근거 줄이 없어요(예전 결과이거나 모델이 빠뜨림).') + '</div>'
+        + (s.checks.length ? s.checks.map(checkHtml).join('') : '<div class="note">자동 경고 없음</div>') + '</div>'
+        + '<form class="mark">' + Object.entries(VERDICT).map(([v, t]) => '<label><input type="radio" name="v" value="' + v + '"' + (m.verdict === v ? ' checked' : '') + '> ' + t + '</label>').join('')
+        + '<textarea name="memo" placeholder="메모(어떤 해석이 왜 틀렸는지)">' + esc(m.memo || '') + '</textarea>'
+        + '<button type="submit">판정 저장</button><span class="saved">' + (m.verdict ? '저장됨: ' + VERDICT[m.verdict] : '') + '</span></form></div>';
+    }).join('') + (d.otherChecks.length ? '<div class="row"><h3>장을 특정하지 못한 경고</h3><div class="side">' + d.otherChecks.map(checkHtml).join('') + '</div></div>' : '');
+    document.querySelectorAll('#rows form.mark').forEach((f) => f.addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      const verdict = (f.querySelector('input[name=v]:checked') || {}).value;
+      const saved = f.querySelector('.saved');
+      if (!verdict) { saved.textContent = '판정을 골라 주세요'; return; }
+      try {
+        await api('/api/admin/review/job/' + encodeURIComponent(jobId) + '/marks', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sectionKey: f.closest('.row').dataset.key, verdict, memo: f.memo.value }) });
+        saved.textContent = '저장됨: ' + VERDICT[verdict];
+        loadSummary();
+      } catch (e) { saved.textContent = '저장 실패: ' + e.message; }
+    }));
+    document.getElementById('detail').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  document.getElementById('drawBtn').addEventListener('click', draw);
+  document.getElementById('logoutBtn').addEventListener('click', async () => { await fetch('/api/admin/logout', { method: 'POST' }); location.href = '/admin-login.html'; });
+  (async () => {
+    const me = await (await fetch('/api/admin/me')).json();
+    if (!me.isAdmin) { location.href = '/admin-login.html'; return; }
+    await loadSummary();
+    await draw();
+  })();
+</script>
+</body>
+</html>
+

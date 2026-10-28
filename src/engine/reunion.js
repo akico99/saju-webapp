@@ -1,10 +1,11 @@
 'use strict';
-/* 「다시, 우리」 엔진 계산 — 무료 첫 장과 유료 본문이 같은 숫자를 쓴다.
+/* 「다시, 우리」 엔진 계산 — 무료 사주 분석과 유료 본문이 같은 숫자를 쓴다.
 
    - 두 사람의 관계 구조: engine/compatibility.analyzeCompatibility 그대로(끌림·부딪힘).
    - 12개월 관계 신호: 각자 monthlyFlow(topic 'love', 성별 반영)를 구해 평균한 값. 상위 세 달이 유료의
      "다시 이어질 흐름"이다. 연락하라는 날짜가 아니라 두 사람 모두에게 관계의 기운이 움직이는 달이다.
-   - 무료 첫 장에는 달 이름·달별 점수를 넣지 않는다(개발자 도구로 바로 보인다). 계절 네 칸만 준다.
+   - 무료 사주 분석에는 계절 네 칸과 상위 세 달 중 3위 달 하나만 준다. 1·2위 달 이름과 달별 점수는
+     넣지 않는다(개발자 도구로 바로 보인다).
 
    안전: 상대가 차단했거나(contact=blocked) 그 사람이 먼저 이별을 말했으면(initiator=them) "경계 존중 모드"다.
    이때 본문은 연락을 권하지 않고 회복 중심으로 쓴다(llm/reunionReading.js). */
@@ -13,6 +14,7 @@ const { monthlyFlow } = require('./monthlyFlow');
 const { analyzeCompatibility } = require('./compatibility');
 const { readBalance, readCharm, pillarsOf } = require('./freeReadings');
 const { validateBirth, seoulYearMonth } = require('./loveTiming');
+const { describeThirdPair } = require('./monthPlain');
 const reunionConfig = require('../config/reunion');
 
 const SINCE = {
@@ -122,7 +124,7 @@ function compatOf(engineA, engineB) {
   return { ...c, crossYukhap: c.crossYukhap.filter(keep), crossChung: c.crossChung.filter(keep), crossSamhap: c.crossSamhap.filter(keep) };
 }
 
-/** 끌림·부딪힘을 사람이 읽는 문장 목록으로. 무료 첫 장과 유료 프롬프트가 같은 문장을 쓴다. */
+/** 끌림·부딪힘을 사람이 읽는 문장 목록으로. 무료 사주 분석과 유료 프롬프트가 같은 문장을 쓴다. */
 function describeBond(engineA, engineB) {
   const c = compatOf(engineA, engineB);
   const attraction = [], friction = [];
@@ -158,7 +160,7 @@ function lockedTitles(boundary) {
   ];
 }
 
-/* 무료 첫 장. 입력 검사(validateBirth)를 여기서도 한다. */
+/* 무료 사주 분석. 입력 검사(validateBirth)를 여기서도 한다. */
 function buildReunionPreview(input, now = new Date()) {
   const story = validateStory(input.story);
   for (const b of [input.me, input.them]) {
@@ -177,7 +179,9 @@ function buildReunionPreview(input, now = new Date()) {
     them: { pillars: readCharm(engineB).pillars, ilgan: engineB.ilgan.char + '(' + engineB.ilgan.ko + ')', balance: { headline: balB.headline, bars: balB.bars } },
     bond: { attraction: bond.attraction, friction: bond.friction, toMe: bond.toMe, toThem: bond.toThem },
     seasons: timing.seasons,
-    seasonLead: '두 사람의 관계 기운을 계절로 묶으면 ' + best.label + '이 가장 고르게 움직여요. 신호가 가장 강한 한 달은 이 계절 밖에 있을 수도 있어서, 정확한 세 달은 전체 풀이에서 알려 드려요.',
+    seasonLead: '두 사람의 관계 기운을 계절로 묶으면 ' + best.label + '이 가장 고르게 움직여요. 신호가 가장 강한 한 달은 이 계절 밖에 있을 수도 있어서, 1·2위 두 달은 전체 풀이에서 알려 드려요.',
+    // 상위 세 달 중 3위만 공개한다.
+    third: describeThirdPair(timing.top3[2], input.me.gender, input.them.gender, { boundary }),
     strongCount: timing.strongCount,
     startYm: timing.months[0].year + '-' + timing.months[0].month,
     note: [hourKnown(engineA) ? '' : '내 태어난 시각을 몰라 시주는 근거로 쓰지 않았어요.', hourKnown(engineB) ? '' : '그 사람의 태어난 시각을 몰라 시주는 근거로 쓰지 않았어요.'].filter(Boolean).join(' ') || null,

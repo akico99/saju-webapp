@@ -19,8 +19,6 @@ const compatV2Config = require('../config/compatV2');
    LEGACY_PRICES는 새로 팔지 않는다. 남겨두는 이유는 재시작 복구(recoverPendingOrders)와
    환불이 order.product_key로 가격을 찾기 때문 — 지우면 옛 키로 남은 주문을 환불 못 한다. */
 const PRICES = {
-  // 주제별 심층 리딩
-  deep_intro: 3900, deep_wealth: 3900, deep_career: 3900, deep_love: 3900, deep_relationship: 3900, deep_health: 3900,
   // 택일 리포트 (LLM + PDF)
   date_select_moving: 3900, date_select_opening: 3900, date_select_wedding: 3900, date_select_birth: 3900,
   // 관계 · 전체
@@ -38,7 +36,10 @@ const LEGACY_PRICES = {
   // 이직 시기·재회·출산택일은 LLM도 PDF도 없는 점수표라 값을 올릴 수 없었다.
   // 이직 시기 → 직업·적성 심층 리딩(5년 타임라인 포함), 재회 → 궁합(재회 관점 문단),
   // 출산택일 → 택일 리포트(임신·출산)로 흡수.
-  career_timing: 990, reunion: 990, birth_timing: 2900
+  career_timing: 990, reunion: 990, birth_timing: 2900,
+  // 2026-10 주제별 심층 리딩(3,900원 6종) 판매 종료 — 14,900원 대표 상품(인연의 시기·신년운세)으로 모았다.
+  // 연애·관계 → /love.html, 재물·직업·건강·첫 풀이 → /new-year.html (public/quick.html이 안내한다).
+  deep_intro: 3900, deep_wealth: 3900, deep_career: 3900, deep_love: 3900, deep_relationship: 3900, deep_health: 3900
 };
 Object.assign(PRICES, LEGACY_PRICES);
 const SELLABLE = new Set(Object.keys(PRICES).filter((k) => !(k in LEGACY_PRICES)));

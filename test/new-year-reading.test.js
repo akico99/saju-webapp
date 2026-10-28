@@ -47,15 +47,19 @@ test('엔진 확정값: 좋은 세 달은 점수 순이고 조심할 달은 그 
   assert.deepEqual(data.topics.map((t) => t.key), ['wealth', 'career', 'love', 'health']);
 });
 
-test('무료 첫 장은 한 줄·분기·일간·오행만 주고 달별 점수와 좋은 달은 싣지 않는다', () => {
+test('무료 사주 분석은 한 줄·분기·일간·오행과 3위 달 하나만 주고, 달별 점수와 1·2위 달은 싣지 않는다', () => {
   const r = ny.buildNewYearPreview(birth);
   assert.equal(r.quarters.length, 4);
   assert.match(r.yearLine.headline, /^2027년 정미년은/);
   assert.ok(r.ilgan.char && r.balance.bars.length === 5);
   assert.equal(r.price, require('../src/config/newYear').priceKrw);
-  const json = JSON.stringify(r);
+  assert.equal(r.third.label, '2027년 ' + data.top3[2].month + '월');
+  assert.ok(r.third.text.length > 30);
+  const { third, ...rest } = r;
+  const json = JSON.stringify(rest);
   assert.doesNotMatch(json, /"months"|"top3"|"watch"|"best"|"topics"/);
   assert.doesNotMatch(json, /\d{4}년 \d{1,2}월/);
+  assert.doesNotMatch(JSON.stringify(third), /점수|\d{2,}점/);
   assert.throws(() => ny.buildNewYearPreview({ ...birth, gender: '' }), /성별/);
   assert.throws(() => ny.buildNewYearPreview({ ...birth, month: 2, day: 30 }), /날짜/);
   assert.equal(ny.buildNewYearPreview({ ...birth, hour: null }).pillars.length, 3);

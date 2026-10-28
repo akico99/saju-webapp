@@ -1,14 +1,15 @@
 'use strict';
-/* 연애 시기 리포트의 엔진 계산 — 무료 첫 장과 유료 본문이 같은 숫자를 쓴다.
+/* 연애 시기 리포트의 엔진 계산 — 무료 사주 분석과 유료 본문이 같은 숫자를 쓴다.
 
    - buildLoveTiming: 이번 달(KST)부터 12개월 연애 점수(monthlyFlow topic 'love', 성별 반영),
      그중 상위 세 달, 3개월씩 묶은 네 칸, 인연 신호가 강한 달 수.
-   - buildLovePreview: 무료 첫 장. 사주표·오행·타고난 매력과 계절 단위 흐름만 담는다.
-     어느 달이 가장 강한지는 유료 상품의 핵심이라 달별 점수·달 이름은 응답에 넣지 않는다
-     (넣으면 개발자 도구로 바로 보인다). */
+   - buildLovePreview: 무료 사주 분석. 사주표·오행·타고난 매력과 계절 단위 흐름, 그리고 상위 세 달 중
+     3위 달 하나(연·월과 그달의 성격)만 담는다. 1·2위 달과 달별 점수는 유료 상품의 핵심이라 응답에
+     넣지 않는다(넣으면 개발자 도구로 바로 보인다). */
 const { computeSaju } = require('./index');
 const { monthlyFlow } = require('./monthlyFlow');
 const { readBalance, readCharm } = require('./freeReadings');
+const { describeThird } = require('./monthPlain');
 const loveTimingConfig = require('../config/loveTiming');
 const { Lunar } = require('lunar-javascript');
 
@@ -36,7 +37,7 @@ function firstMonth(now) {
   return month === 12 ? { year: year + 1, month: 1 } : { year, month: month + 1 };
 }
 
-/* 유료 12개월의 시작 달. 무료 첫 장에서 받은 startYm("2026-11")을 다시 보내면 그 달로 고정한다 —
+/* 유료 12개월의 시작 달. 무료 사주 분석에서 받은 startYm("2026-11")을 다시 보내면 그 달로 고정한다 —
    15일에 미리보고 16일에 결제해도 무료에서 본 흐름과 같은 12개월을 받게 하려는 것이다. 허용하는 값은
    지금 기준 시작 달과 그 직전 달 둘뿐이고, 나머지는 무시한다(임의의 과거·미래 창을 받지 않는다). */
 function resolveStart(now, startYm) {
@@ -110,7 +111,7 @@ function validateBirth(b, now = new Date()) {
 
 function lockedTitles(situation) {
   return [
-    '인연 신호가 가장 강한 세 달과 그때 할 일',
+    '인연 신호가 가장 강한 두 달과 세 달의 할 일',
     '나에게 끌리는 사람, 내가 끌리는 사람',
     '만남이 생기기 쉬운 자리',
     '반복되기 쉬운 연애 패턴',
@@ -141,7 +142,9 @@ function buildLovePreview(birth, situationKey, now = new Date()) {
     seasons: timing.seasons,
     // 계절 평균 1위 칸과 월별 1위 달은 자주 다르다. 1위 달이 그 칸 안에 있다고 약속하지 않고, 어느
     // 경우든 같은 문장을 써서 1위 달의 위치도 흘리지 않는다.
-    seasonLead: `계절로 묶어 보면 ${best.label}의 흐름이 가장 고르게 좋아요. 인연 신호가 가장 강한 한 달은 이 계절 밖에 있을 수도 있어서, 정확한 세 달은 전체 풀이에서 알려 드려요.`,
+    seasonLead: `계절로 묶어 보면 ${best.label}의 흐름이 가장 고르게 좋아요. 인연 신호가 가장 강한 한 달은 이 계절 밖에 있을 수도 있어서, 1·2위 두 달은 전체 풀이에서 알려 드려요.`,
+    // 상위 세 달 중 3위만 공개한다. 1·2위의 연·월·점수는 싣지 않는다.
+    third: describeThird(timing.top3[2], birth.gender, 'love'),
     startYm: `${timing.months[0].year}-${timing.months[0].month}`,
     strongCount: timing.strongCount,
     note: charm.note,

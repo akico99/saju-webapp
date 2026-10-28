@@ -116,7 +116,7 @@
       if (t) evidence.push({ type: 'heading', text: t });
       evidence.push(...splitBlocks(f && f.core));
     }
-    if (!evidence.length) evidence.push({ type: 'prose', text: '이번 무료 첫 장에서는 매력을 풀어 주는 별도의 표식이 나타나지 않았어요. 전체 풀이에서 더 자세히 살펴볼게요.' });
+    if (!evidence.length) evidence.push({ type: 'prose', text: '이번 무료 사주 분석에서는 매력을 풀어 주는 별도의 표식이 나타나지 않았어요. 전체 풀이에서 더 자세히 살펴볼게요.' });
     const balanceBlocks = [];
     const bh = tidy(balance.headline);
     if (bh) balanceBlocks.push({ type: 'prose', text: bh });

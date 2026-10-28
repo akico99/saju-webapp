@@ -1,5 +1,6 @@
 'use strict';
-/* 무료 첫 장과 유료 웹/PDF 생성. PDF 완성 뒤 입력한 수신 주소로 전송한다.
+/* 무료 사주 분석(즉시, AI 없음)과 그 위에 나중에 채우는 개인 소개(/api/love/intro, 가장 싼 모델),
+   유료 웹/PDF 생성. PDF 완성 뒤 입력한 수신 주소로 전송한다.
    메일 실패는 결과를 유지하고 인증된 주문 소유자에게만 재전송을 허용한다. */
 const express = require('express');
 const { sajuChartHtml } = require('../../pdf/sajuChart');
@@ -14,6 +15,8 @@ const { deliverLoveReport } = require('../../email/loveReport');
 const { computeSaju } = require('../../engine/index');
 const { buildLovePreview, situationOf, validateBirth } = require('../../engine/loveTiming');
 const { generateLoveReading, toPlainText } = require('../../llm/loveTimingReading');
+const { recordForReview } = require('../reviewRecord');
+const { introHandler, loveFacts } = require('../../llm/freeIntro');
 const { loveWebHtml } = require('../../pdf/loveVisual');
 const { costUsd } = require('../../llm/client');
 const points = require('../../db/points');
@@ -64,6 +67,12 @@ router.post('/love/preview', (req, res) => {
   }
 });
 
+// 무료 사주 분석의 개인 소개 — 미리보기와 같은 입력을 받는다. 캐시·한도·실패 처리는 freeIntro가 맡는다.
+router.post('/love/intro', introHandler((body) => {
+  const parsed = parseBody(body);
+  return loveFacts(parsed.birth, situationOf(parsed.situation).label);
+}));
+
 async function startLove(userId, body) {
   let parsed;
   try { parsed = parseBody(body); } catch (e) { throw new HttpError(400, { error: e.message }); }
@@ -113,6 +122,7 @@ async function startLove(userId, body) {
         resultPath: pdfPath, cardPath: null, llmCostUsd: costUsd(reading.usage),
         resultText: toPlainText(reading), resultVisual: sajuChartHtml(engineResult) + loveWebHtml(reading.timing)
       });
+      recordForReview(jobId, reading, { engines: [engineResult], names: [person.name] });
       // 발송 실패는 완성된 유료 결과를 오류/환불 상태로 바꾸지 않는다.
       await deliverLoveReport(jobId).catch(() => {});
     })

@@ -34,7 +34,7 @@ test.before(async () => {
 });
 
 let seq = 0;
-function createPayment({ form = { name: '테스트' }, productKey = 'deep_love', userId } = {}) {
+function createPayment({ form = { name: '테스트' }, productKey = 'date_select_moving', userId } = {}) {
   seq++;
   const user = userId ? users.findById(userId) : users.createUser({ email: `reliable${seq}@example.com`, passwordHash: 'x' });
   const row = payments.create({ userId: user.id, amountKrw: points.PRICES[productKey], orderName: '테스트 상품', testMode: true, productKey, form, attribution: { first: { utm_source: 'test' } } });

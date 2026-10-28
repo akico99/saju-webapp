@@ -9,6 +9,7 @@
    프롬프트로 지시하고, 생성 뒤 문장 단위 검사(checkSafety)로 한 번 더 걸러 어긋나면 그 묶음을 다시 만든다. */
 const { BASE_RULES } = require('./baseSystemPrompt');
 const { generateText, sumUsage } = require('./client');
+const { EVIDENCE_RULE, splitEvidence, startReview } = require('./readingReview');
 const { SINCE, INITIATOR, CONTACT, validateStory, boundaryMode, buildReunionTiming, describeBond, levelOf, hourKnown, OHAENG_PLAIN } = require('../engine/reunion');
 
 const REUNION_SYSTEM_PROMPT = `당신은 '사주보는 수달'에서 「다시, 우리」 재회 리포트를 쓰는 풀이자입니다. 읽는 사람은 이별을 겪은 20~30대이고, 사주를 모릅니다. 마음이 흔들리는 시기라는 점을 늘 기억하세요.
@@ -127,7 +128,7 @@ function buildReunionPrompt(engineA, engineB, people, story, timing, options = {
     + '그 사람의 구조:\n' + personStructure(engineB, '그 사람') + '\n\n'
     + '## 두 사람 정보\n나: ' + (nameA || '(이름 없음, "고객님"으로 부르기)') + ' / ' + (gA || '미상') + '\n그 사람: ' + (nameB || '(이름 없음, "그 사람"으로 부르기)') + ' / ' + (gB || '미상') + '\n\n'
     + (options.previous ? '## 이미 쓴 장의 요약 (새 장에서는 같은 설명을 반복하지 마세요)\n' + options.previous + '\n\n' : '')
-    + '## 쓰는 형식\n이번 요청에 지정한 소제목만 정확히 이 표기와 순서로 쓰세요. 굵은 표지는 문장 안에 넣지 말고 한 줄에 단독으로 쓴 뒤 다음 줄부터 2~3문장 문단을 쓰세요(월별 상세 흐름은 한 줄 형식 유지). 각 장과 각 달마다 독자가 꼭 기억할 핵심 구절 1~3곳을 **짧은 구절**(20자 안팎)로 굵게 표시하세요. 강조가 없는 장이 있으면 안 됩니다. 글자 수는 띄어쓰기를 포함한 본문 기준입니다. 전체 리포트는 약 9,000~14,000자 목표이며, 이번에는 아래 장만 씁니다.\n\n'
+    + '## 쓰는 형식\n이번 요청에 지정한 소제목만 정확히 이 표기와 순서로 쓰세요. 굵은 표지는 문장 안에 넣지 말고 한 줄에 단독으로 쓴 뒤 다음 줄부터 2~3문장 문단을 쓰세요(월별 상세 흐름은 한 줄 형식 유지). 각 장과 각 달마다 독자가 꼭 기억할 핵심 구절 1~3곳을 **짧은 구절**(20자 안팎)로 굵게 표시하세요. 강조가 없는 장이 있으면 안 됩니다. 글자 수는 띄어쓰기를 포함한 본문 기준입니다. 전체 리포트는 약 9,000~14,000자 목표이며, 이번에는 아래 장만 씁니다.\n' + EVIDENCE_RULE + '\n\n'
     + format;
 }
 
@@ -282,6 +283,8 @@ async function generateReunionReading(engineA, engineB, people, storyIn, now = n
   const generate = opts.generate || generateText;
   const timing = buildReunionTiming(engineA, engineB, now, { startYm: opts.startYm });
   const usages = [], sections = [], monthNotes = [];
+  // 장별 근거·사실 대조 기록(검토용). 화면·PDF 본문에는 들어가지 않는다.
+  const review = startReview({ engines: [engineA, engineB], months: timing.months, ranked: timing.top3, rankSections: ['answer', 'flow'] }, sectionDefs(boundary));
   async function runPart(part, base) {
     const previous = base.map(s => s.title + ': ' + s.text.replace(/\s+/g, ' ').slice(0, 240)).join('\n');
     const prompt = buildReunionPrompt(engineA, engineB, people, story, timing, { ...part, previous });
@@ -297,10 +300,12 @@ async function generateReunionReading(engineA, engineB, people, storyIn, now = n
         continue;
       }
       usages.push(usage);
-      const parsed = parseReunionText(text, boundary);
+      const ev = splitEvidence(text);
+      const parsed = parseReunionText(ev.text, boundary);
       const selected = { sections: parsed.sections.filter(s => part.sectionKeys.includes(s.key)), monthNotes: part.includeMonths ? parsed.monthNotes : [] };
       try {
         validateReunionReading({ sections: [...base, ...selected.sections], monthNotes: selected.monthNotes }, timing, boundary, part);
+        review.check(selected, ev.notes, attempt < 2);
         accepted = selected;
         break;
       } catch (e) {
@@ -320,7 +325,7 @@ async function generateReunionReading(engineA, engineB, people, storyIn, now = n
   const ordered = sectionDefs(boundary).map(def => sections.find(s => s.key === def.key)).map(sec => sec.key === 'answer' ? sec : { ...sec, text: ensureHighlight(sec.text) });
   const parsed = { sections: ordered, monthNotes: monthNotes.map((n, i) => ({ ...n, year: timing.months[i].year })) };
   validateReunionReading(parsed, timing, boundary);
-  return { title: '다시, 우리', boundary, story, timing, ...parsed, usage: sumUsage(usages) };
+  return { title: '다시, 우리', boundary, story, timing, ...parsed, ...review.result(), usage: sumUsage(usages) };
 }
 
 module.exports = { REUNION_SYSTEM_PROMPT, sectionDefs, buildReunionPrompt, parseReunionText, validateReunionReading, checkSafety, ensureHighlight, toPlainText, generateReunionReading, MIN_SECTION_CHARS, GENERATION_PARTS, MONTHS_TITLE };

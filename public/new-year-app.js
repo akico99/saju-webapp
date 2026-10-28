@@ -1,12 +1,12 @@
 'use strict';
 // 이 상품만의 그림(안내 인물·분위기가 연애 상품과 다르다). 공용 읽기 화면도 이 표를 쓴다.
 window.LOVE_READING_ART = {"greeting":"/new-year-assets/cover.webp","greeting-comic":"/new-year-assets/cover.webp","cover-comic":"/new-year-assets/cover.webp","explain":"/new-year-assets/months.webp","explain-comic":"/new-year-assets/months.webp","meeting":"/new-year-assets/months.webp","timing-comic":"/new-year-assets/months.webp","new-start":"/new-year-assets/plan.webp","thinking":"/new-year-assets/work.webp","thread-comic":"/new-year-assets/work.webp","empathy":"/new-year-assets/work.webp","caution":"/new-year-assets/work.webp","distance":"/new-year-assets/work.webp","cheer":"/new-year-assets/plan.webp","door-comic":"/new-year-assets/plan.webp","conversation":"/new-year-assets/plan.webp"};
-/* 2027 신년운세 화면 — 대화형 입력 → 무료 첫 장(/api/newyear/preview) → 구매 시트 → 유료 생성(/api/newyear,
+/* 2027 신년운세 화면 — 대화형 입력 → 무료 사주 분석(/api/newyear/preview) → 구매 시트 → 유료 생성(/api/newyear,
    로그인·카드 결제는 pay-flow.js) → 결과(/api/status/:jobId). 연애 화면(love-app.js)과 같은 흐름이다.
    입력값은 한 <form id="newYearForm"> 안에 모두 있다(이메일 칸도 form= 속성으로 묶는다). 그래야 로그인으로
-   넘어갈 때 PayFlow.toLogin이 통째로 저장하고, 돌아와서 복원한 뒤 무료 첫 장을 다시 열 수 있다.
+   넘어갈 때 PayFlow.toLogin이 통째로 저장하고, 돌아와서 복원한 뒤 무료 사주 분석을 다시 열 수 있다.
    서버 응답 문자열은 innerHTML로 넣지 않는다(textContent). 예외는 서버가 엔진 숫자만으로 만든 그래프(result_visual)뿐이다.
-   무료 첫 장은 이 파일의 renderFreeReader가, 유료 결과는 공용 LoveReadingView가 그린다(같은 lr-* 디자인). */
+   무료 사주 분석은 이 파일의 renderFreeReader가, 유료 결과는 공용 LoveReadingView가 그린다(같은 lr-* 디자인). */
 (function () {
   const YEAR = 2027;
   const form = document.getElementById('newYearForm');
@@ -167,7 +167,7 @@ window.LOVE_READING_ART = {"greeting":"/new-year-assets/cover.webp","greeting-co
     };
   }
 
-  /* ---------- 무료 첫 장 — 편집형 읽기 화면(lr-*) ---------- */
+  /* ---------- 무료 사주 분석 — 편집형 읽기 화면(lr-*) ---------- */
   function art(file, label, cut) {
     const fig = el('figure', 'lr-art lr-art-portrait ' + (cut || 'lr-cut-wide'));
     const img = document.createElement('img');
@@ -286,15 +286,18 @@ window.LOVE_READING_ART = {"greeting":"/new-year-assets/cover.webp","greeting-co
     const name = b.name || '고객';
     const reader = el('div', 'lr-reader lr-free');
     reader.setAttribute('role', 'region');
-    reader.setAttribute('aria-label', name + '님의 2027년 첫 장');
+    reader.setAttribute('aria-label', name + '님의 2027년 무료 사주 분석');
     reader.appendChild(el('h1', 'lr-main-title', name + '님의\n2027년은\n어떤 해일까요?'));
     reader.appendChild(rich(el('p', 'lr-lead'), r.yearLine.headline + '.'));
+    // AI 개인 소개는 나중에 채운다(실패하면 칸이 사라진다).
+    if (window.FreeExtras) reader.appendChild(FreeExtras.introCard('/api/newyear/intro', { ...b, deliveryEmail: undefined }, { title: (b.name ? b.name + '님은' : '당신은') + ' 이런 사람이에요' }));
+    const third = window.FreeExtras ? FreeExtras.thirdCard(r.third, { title: YEAR + '년, 세 번째로 좋은 달', rankLabel: '좋은 세 달 중 3위' }) : null;
     const yl = r.yearLine, ig = r.ilgan;
     reader.appendChild(chapter(0, '당신의 2027년 이야기', { id: 'welcome', art: ['greeting-comic', '새온의 인사'], speech: '내년의 나,\n어디쯤 서 있을까요?', lines: ['태어난 날의 네 기둥으로 2027년 열두 달을 같은 기준에서 비교했어요. 먼저 한 해의 큰 흐름과 분기마다 달라지는 결을 살펴봐요.'], extra: [pillarsBox(r.pillars, r.note)] }));
     reader.appendChild(chapter(1, YEAR + '년, 한 줄로', { id: 'year', art: ['explain-comic', '새온의 해설'], speech: yl.ganzi + '년,\n' + yl.tier + '.', lines: ['**' + yl.headline + '.** ' + yl.text, yl.comes] }));
-    reader.appendChild(chapter(2, '분기마다 달라지는 흐름', { id: 'quarters', art: ['timing-comic', '만남의 장면'], speech: '힘을 쓸 때와\n쉬어 갈 때가 있어요.', lines: [r.quarterLead], extra: [quarterPanel(r.quarters), lockCard('가장 좋은 세 달과 조심할 달은 언제일까요?', '분기 흐름을 봤다면, 이제 달마다의 흐름과 그때 해볼 일을 알아볼 차례예요.', 'timing')] }));
+    reader.appendChild(chapter(2, '분기마다 달라지는 흐름', { id: 'quarters', art: ['timing-comic', '만남의 장면'], speech: '힘을 쓸 때와\n쉬어 갈 때가 있어요.', lines: [r.quarterLead], extra: [quarterPanel(r.quarters), third, lockCard('가장 좋은 두 달과 조심할 달은 언제일까요?', '세 번째 달을 봤다면, 이제 1·2위 두 달과 조심할 달, 그때 해볼 일을 알아볼 차례예요.', 'timing')] }));
     reader.appendChild(chapter(3, '나를 뜻하는 글자와 다섯 기운', { id: 'ilgan', art: ['thread-comic', '새온의 생각'], speech: '같은 해라도\n받아들이는 결은 달라요.', lines: ['**' + ig.char + '(' + ig.ko + '), ' + ig.ohaengKo + '의 사람.** ' + ig.text, r.balance.headline + '. ' + r.balance.lead], extra: [balancePanel(r.balance), lockCard('재물·일·애정·생활 리듬은 어떨까요?', '네 주제마다 가장 좋은 달과 조심할 달, 그 달에 준비할 일을 전체 풀이에서 읽어요.', 'topics', ['재물운', '일·직업운', '애정운', '건강·생활 리듬'])] }));
-    reader.appendChild(chapter(4, '무료 요약과 전체 풀이', { id: 'whole-reading', art: ['door-comic', '새온의 응원'], speech: '언제, 무엇을,\n어떻게 시작할지.', lines: [r.strongCount > 0 ? '2027년에는 흐름이 좋은 달이 ' + r.strongCount + '번 있어요. 그중 가장 좋은 세 달이 언제인지, 그때 무엇을 하면 좋은지는 전체 풀이에서 알려 드릴게요.' : '2027년은 잔잔한 흐름이 길어요. 그래도 그중 가장 나은 세 달은 분명히 있어요. 전체 풀이에서 알려 드릴게요.'], extra: [lockedList(r.locked || []), contents()] }));
+    reader.appendChild(chapter(4, '무료 요약과 전체 풀이', { id: 'whole-reading', art: ['door-comic', '새온의 응원'], speech: '언제, 무엇을,\n어떻게 시작할지.', lines: [r.strongCount > 0 ? '2027년에는 흐름이 좋은 달이 ' + r.strongCount + '번 있어요. 세 번째로 좋은 달은 위에서 보여 드렸고, 가장 좋은 두 달이 언제인지, 그때 무엇을 하면 좋은지는 전체 풀이에서 알려 드릴게요.' : '2027년은 잔잔한 흐름이 길어요. 그래도 그중 나은 세 달은 분명히 있어요. 세 번째 달은 위에서 보여 드렸고, 가장 나은 두 달은 전체 풀이에서 알려 드릴게요.'], extra: [lockedList(r.locked || []), contents()] }));
     target.replaceChildren(reader);
     target.classList.remove('hidden');
     document.getElementById('legacyFreeReading').classList.add('reader-replaced');
@@ -303,7 +306,7 @@ window.LOVE_READING_ART = {"greeting":"/new-year-assets/cover.webp","greeting-co
   function renderFree(r, b) {
     const who = b.name || '고객';
     document.getElementById('foldedText').textContent = b.year + '.' + b.month + '.' + b.day + (b.calendar === '음력' ? ' (음력)' : '') + ' · ' + b.gender;
-    document.getElementById('freeTitle').textContent = who + '님의 2027년 첫 장';
+    document.getElementById('freeTitle').textContent = who + '님의 2027년 무료 사주 분석';
     document.getElementById('freeLead').textContent = r.yearLine.headline + '. ' + r.yearLine.text;
     const pillars = document.getElementById('pillars');
     pillars.replaceChildren();
@@ -348,7 +351,7 @@ window.LOVE_READING_ART = {"greeting":"/new-year-assets/cover.webp","greeting-co
     try {
       const res = await fetch('/api/newyear/preview', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || '첫 장을 만들지 못했어요. 잠시 뒤 다시 시도해 주세요.');
+      if (!res.ok) throw new Error(data.error || '무료 사주 분석을 만들지 못했어요. 잠시 뒤 다시 시도해 주세요.');
       renderFree(data.reading, b);
       return true;
     } catch (e) {
@@ -356,7 +359,7 @@ window.LOVE_READING_ART = {"greeting":"/new-year-assets/cover.webp","greeting-co
       return false;
     } finally {
       btn.disabled = false;
-      btn.textContent = '내 2027년 첫 장 무료로 보기';
+      btn.textContent = '내 2027년 무료 사주 분석 보기';
       form.removeAttribute('aria-busy');
     }
   }
@@ -637,7 +640,7 @@ window.LOVE_READING_ART = {"greeting":"/new-year-assets/cover.webp","greeting-co
     const syncButtons = (b) => { markOn(genderBtns, genderBtns.find((x) => x.dataset.gender === b.gender)); setCalendar(b.calendar || '양력'); };
     syncButtons(body());
     // 로그인하고 돌아오면 pay-flow.js가 load 직후 입력값을 복원하고 폼 안에 안내문(.form-resume-note)을 남긴다.
-    // 그 표시가 있을 때만 단계를 다시 묻지 않고 무료 첫 장을 바로 연다.
+    // 그 표시가 있을 때만 단계를 다시 묻지 않고 무료 사주 분석을 바로 연다.
     window.addEventListener('load', () => setTimeout(async () => {
       const restoredNote = form.querySelector('.form-resume-note');
       if (!restoredNote) return;

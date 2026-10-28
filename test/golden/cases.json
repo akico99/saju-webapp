@@ -1,0 +1,527 @@
+{
+  "notice": "기준 사주 묶음 — 모두 가상 인물이다. 실제 고객 정보를 넣지 않는다. hour가 null이면 태어난 시각 모름.",
+  "now": "2026-10-28T03:00:00Z",
+  "note": "why는 이 사주를 기준으로 고른 이유(예: 시각 모름, 배우자 자리 충, 화 과다). 사람이 채운다.",
+  "cases": [
+    {
+      "id": "love-01",
+      "product": "love",
+      "input": {
+        "name": "가람",
+        "birth": {
+          "year": 1995,
+          "month": 5,
+          "day": 15,
+          "hour": 14,
+          "minute": 30,
+          "gender": "여",
+          "isLunar": false
+        },
+        "situation": "single",
+        "readingFocus": "timing"
+      },
+      "why": ""
+    },
+    {
+      "id": "love-02",
+      "product": "love",
+      "input": {
+        "name": "나래",
+        "birth": {
+          "year": 1998,
+          "month": 1,
+          "day": 3,
+          "hour": null,
+          "minute": 0,
+          "gender": "여",
+          "isLunar": false
+        },
+        "situation": "some",
+        "readingFocus": "person"
+      },
+      "why": ""
+    },
+    {
+      "id": "love-03",
+      "product": "love",
+      "input": {
+        "name": "다온",
+        "birth": {
+          "year": 1991,
+          "month": 8,
+          "day": 27,
+          "hour": 6,
+          "minute": 10,
+          "gender": "남",
+          "isLunar": false
+        },
+        "situation": "dating",
+        "readingFocus": "pattern"
+      },
+      "why": ""
+    },
+    {
+      "id": "love-04",
+      "product": "love",
+      "input": {
+        "name": "라온",
+        "birth": {
+          "year": 1993,
+          "month": 11,
+          "day": 2,
+          "hour": 22,
+          "minute": 40,
+          "gender": "남",
+          "isLunar": false
+        },
+        "situation": "breakup",
+        "readingFocus": "action"
+      },
+      "why": ""
+    },
+    {
+      "id": "love-05",
+      "product": "love",
+      "input": {
+        "name": "마루",
+        "birth": {
+          "year": 2000,
+          "month": 2,
+          "day": 19,
+          "hour": 3,
+          "minute": 0,
+          "gender": "여",
+          "isLunar": true
+        },
+        "situation": "single",
+        "readingFocus": ""
+      },
+      "why": ""
+    },
+    {
+      "id": "newyear-01",
+      "product": "newyear",
+      "input": {
+        "name": "바다",
+        "birth": {
+          "year": 1988,
+          "month": 3,
+          "day": 9,
+          "hour": 9,
+          "minute": 0,
+          "gender": "남",
+          "isLunar": false
+        }
+      },
+      "why": ""
+    },
+    {
+      "id": "newyear-02",
+      "product": "newyear",
+      "input": {
+        "name": "사랑",
+        "birth": {
+          "year": 1996,
+          "month": 12,
+          "day": 24,
+          "hour": null,
+          "minute": 0,
+          "gender": "여",
+          "isLunar": false
+        }
+      },
+      "why": ""
+    },
+    {
+      "id": "newyear-03",
+      "product": "newyear",
+      "input": {
+        "name": "아라",
+        "birth": {
+          "year": 1979,
+          "month": 7,
+          "day": 7,
+          "hour": 18,
+          "minute": 20,
+          "gender": "여",
+          "isLunar": false
+        }
+      },
+      "why": ""
+    },
+    {
+      "id": "newyear-04",
+      "product": "newyear",
+      "input": {
+        "name": "자람",
+        "birth": {
+          "year": 2002,
+          "month": 10,
+          "day": 1,
+          "hour": 12,
+          "minute": 0,
+          "gender": "남",
+          "isLunar": false
+        }
+      },
+      "why": ""
+    },
+    {
+      "id": "newyear-05",
+      "product": "newyear",
+      "input": {
+        "name": "차오",
+        "birth": {
+          "year": 1985,
+          "month": 4,
+          "day": 29,
+          "hour": 1,
+          "minute": 15,
+          "gender": "남",
+          "isLunar": true
+        }
+      },
+      "why": ""
+    },
+    {
+      "id": "reunion-01",
+      "product": "reunion",
+      "input": {
+        "me": {
+          "name": "가온",
+          "birth": {
+            "year": 1995,
+            "month": 5,
+            "day": 15,
+            "hour": 14,
+            "minute": 30,
+            "gender": "여",
+            "isLunar": false
+          }
+        },
+        "them": {
+          "name": "나무",
+          "birth": {
+            "year": 1993,
+            "month": 11,
+            "day": 2,
+            "hour": null,
+            "minute": 0,
+            "gender": "남",
+            "isLunar": false
+          }
+        },
+        "story": {
+          "since": "m6",
+          "initiator": "mutual",
+          "contact": "cut"
+        }
+      },
+      "why": ""
+    },
+    {
+      "id": "reunion-02",
+      "product": "reunion",
+      "input": {
+        "me": {
+          "name": "도담",
+          "birth": {
+            "year": 1992,
+            "month": 9,
+            "day": 23,
+            "hour": 21,
+            "minute": 10,
+            "gender": "남",
+            "isLunar": false
+          }
+        },
+        "them": {
+          "name": "라희",
+          "birth": {
+            "year": 1994,
+            "month": 3,
+            "day": 8,
+            "hour": 9,
+            "minute": 0,
+            "gender": "여",
+            "isLunar": false
+          }
+        },
+        "story": {
+          "since": "y1",
+          "initiator": "them",
+          "contact": "blocked"
+        }
+      },
+      "why": ""
+    },
+    {
+      "id": "reunion-03",
+      "product": "reunion",
+      "input": {
+        "me": {
+          "name": "마음",
+          "birth": {
+            "year": 1997,
+            "month": 6,
+            "day": 11,
+            "hour": 7,
+            "minute": 45,
+            "gender": "여",
+            "isLunar": false
+          }
+        },
+        "them": {
+          "name": "바람",
+          "birth": {
+            "year": 1996,
+            "month": 2,
+            "day": 14,
+            "hour": 16,
+            "minute": 0,
+            "gender": "남",
+            "isLunar": false
+          }
+        },
+        "story": {
+          "since": "m1",
+          "initiator": "me",
+          "contact": "sometimes"
+        }
+      },
+      "why": ""
+    },
+    {
+      "id": "reunion-04",
+      "product": "reunion",
+      "input": {
+        "me": {
+          "name": "새봄",
+          "birth": {
+            "year": 1990,
+            "month": 12,
+            "day": 5,
+            "hour": null,
+            "minute": 0,
+            "gender": "남",
+            "isLunar": false
+          }
+        },
+        "them": {
+          "name": "여름",
+          "birth": {
+            "year": 1991,
+            "month": 8,
+            "day": 18,
+            "hour": null,
+            "minute": 0,
+            "gender": "여",
+            "isLunar": false
+          }
+        },
+        "story": {
+          "since": "m6",
+          "initiator": "them",
+          "contact": "cut"
+        }
+      },
+      "why": ""
+    },
+    {
+      "id": "reunion-05",
+      "product": "reunion",
+      "input": {
+        "me": {
+          "name": "우리",
+          "birth": {
+            "year": 1999,
+            "month": 4,
+            "day": 2,
+            "hour": 11,
+            "minute": 30,
+            "gender": "여",
+            "isLunar": false
+          }
+        },
+        "them": {
+          "name": "은결",
+          "birth": {
+            "year": 1998,
+            "month": 9,
+            "day": 9,
+            "hour": 23,
+            "minute": 50,
+            "gender": "여",
+            "isLunar": false
+          }
+        },
+        "story": {
+          "since": "y1",
+          "initiator": "me",
+          "contact": "sometimes"
+        }
+      },
+      "why": ""
+    },
+    {
+      "id": "couple-01",
+      "product": "couple",
+      "input": {
+        "a": {
+          "name": "지우",
+          "birth": {
+            "year": 1995,
+            "month": 5,
+            "day": 15,
+            "hour": 14,
+            "minute": 30,
+            "gender": "여",
+            "isLunar": false
+          }
+        },
+        "b": {
+          "name": "민준",
+          "birth": {
+            "year": 1993,
+            "month": 11,
+            "day": 2,
+            "hour": null,
+            "minute": 0,
+            "gender": "남",
+            "isLunar": false
+          }
+        },
+        "relation": "dating"
+      },
+      "why": ""
+    },
+    {
+      "id": "couple-02",
+      "product": "couple",
+      "input": {
+        "a": {
+          "name": "하늘",
+          "birth": {
+            "year": 1989,
+            "month": 1,
+            "day": 20,
+            "hour": 5,
+            "minute": 0,
+            "gender": "남",
+            "isLunar": false
+          }
+        },
+        "b": {
+          "name": "하윤",
+          "birth": {
+            "year": 1990,
+            "month": 6,
+            "day": 6,
+            "hour": 13,
+            "minute": 0,
+            "gender": "여",
+            "isLunar": false
+          }
+        },
+        "relation": "married"
+      },
+      "why": ""
+    },
+    {
+      "id": "couple-03",
+      "product": "couple",
+      "input": {
+        "a": {
+          "name": "서로",
+          "birth": {
+            "year": 2001,
+            "month": 3,
+            "day": 3,
+            "hour": 20,
+            "minute": 0,
+            "gender": "여",
+            "isLunar": false
+          }
+        },
+        "b": {
+          "name": "한결",
+          "birth": {
+            "year": 2000,
+            "month": 10,
+            "day": 10,
+            "hour": 8,
+            "minute": 30,
+            "gender": "남",
+            "isLunar": false
+          }
+        },
+        "relation": "some"
+      },
+      "why": ""
+    },
+    {
+      "id": "couple-04",
+      "product": "couple",
+      "input": {
+        "a": {
+          "name": "온새",
+          "birth": {
+            "year": 1997,
+            "month": 7,
+            "day": 27,
+            "hour": null,
+            "minute": 0,
+            "gender": "남",
+            "isLunar": false
+          }
+        },
+        "b": {
+          "name": "이슬",
+          "birth": {
+            "year": 1996,
+            "month": 11,
+            "day": 30,
+            "hour": 17,
+            "minute": 15,
+            "gender": "여",
+            "isLunar": false
+          }
+        },
+        "relation": "crush"
+      },
+      "why": ""
+    },
+    {
+      "id": "couple-05",
+      "product": "couple",
+      "input": {
+        "a": {
+          "name": "초롱",
+          "birth": {
+            "year": 1994,
+            "month": 8,
+            "day": 8,
+            "hour": 10,
+            "minute": 0,
+            "gender": "여",
+            "isLunar": true
+          }
+        },
+        "b": {
+          "name": "푸름",
+          "birth": {
+            "year": 1994,
+            "month": 8,
+            "day": 8,
+            "hour": 10,
+            "minute": 0,
+            "gender": "여",
+            "isLunar": false
+          }
+        },
+        "relation": "dating"
+      },
+      "why": ""
+    }
+  ]
+}

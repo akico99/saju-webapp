@@ -34,8 +34,26 @@ const PUBLIC_DIR = path.join(ROOT, 'public');
 // 서버와 같은 설정을 읽는다. 공개 전 상품은 사이트맵에 넣지 않는다.
 require('dotenv').config({ path: path.join(ROOT, '.env') });
 const newYear = require('../src/config/newYear');
+const loveTiming = require('../src/config/loveTiming');
+const reunion = require('../src/config/reunion');
+const compatV2 = require('../src/config/compatV2');
 
 const Y = FORTUNE_YEAR;
+
+/* 메인의 대표 상품 목록(JSON-LD ItemList)과 llms.txt의 유료 리포트 목록 — 판매 중인 것만, 메인 화면과 같은 순서로.
+   새 궁합(두 사람의 궁합)이 꺼져 있으면 예전 사주 궁합(4,900원)을 대신 싣는다. 주제별 심층 리딩(3,900원)은 2026-10 판매 종료. */
+function paidReports() {
+  return [
+    loveTiming.enabled && { name: '인연의 시기 — 연애 시기 리포트', file: 'love.html', llms: '[인연의 시기](https://sajuotter.com/love.html): 나의 연애 패턴과 다음 인연이 오는 때, 앞으로 12개월의 흐름. 웹 결과·PDF 이메일 제공. ' + loveTiming.priceKrw.toLocaleString('ko-KR') + '원.' },
+    newYear.enabled && { name: newYear.year + '년 신년운세 리포트', file: 'new-year.html', llms: '[' + newYear.year + '년 신년운세](https://sajuotter.com/new-year.html): 총운·12개월 흐름·재물·일·애정·건강 풀이. 웹 결과·PDF 이메일 제공. ' + newYear.priceKrw.toLocaleString('ko-KR') + '원.' },
+    reunion.enabled && { name: '다시, 우리 — 재회 리포트', file: 'reunion.html', llms: '[다시, 우리](https://sajuotter.com/reunion.html): 두 사람의 사주로 읽는 재회 리포트. 웹 결과·PDF 이메일 제공. ' + reunion.priceKrw.toLocaleString('ko-KR') + '원.' },
+    compatV2.enabled
+      ? { name: '두 사람의 궁합', file: 'couple.html', llms: '[두 사람의 궁합](https://sajuotter.com/couple.html): 서로 끌리는 이유와 앞으로 12개월. 웹 결과·PDF 이메일 제공. ' + compatV2.priceKrw.toLocaleString('ko-KR') + '원.' }
+      : { name: '사주 궁합 리포트', file: 'compat.html', llms: '[궁합](https://sajuotter.com/compat.html): 두 사람의 명식을 나란히 놓고 상성과 시기를 봅니다. 재회 관점 포함. 4,900원.' },
+    { name: '평생사주 100페이지 리포트', file: 'lifetime-report.html', llms: '[평생사주 100페이지](https://sajuotter.com/premium.html): 태어난 순간부터 지금까지 명식·격국·용신·대운·형충회합을 18장, 100페이지 PDF로 담은 정식 리포트. 3초 요약카드 포함. 14,900원.' },
+    { name: '택일 리포트', file: 'date-select.html', llms: '[언제가 좋을까 (택일)](https://sajuotter.com/date-select.html): 이사·개업·결혼·임신과 출산 날짜를 만세력으로 계산합니다. 각 3,900원.' }
+  ].filter(Boolean);
+}
 
 /* service가 있는 페이지는 Service + Offer를 JSON-LD에 넣는다. price는 원 단위 숫자, 무료는 0.
    catalog는 한 페이지에서 여러 주제를 파는 경우(주제별 심층 리딩)에만 쓴다.
@@ -53,15 +71,15 @@ const PAGES = [
   },
   {
     file: 'index.html', sitemap: true, crumb: '홈',
-    title: '사주 풀이·' + Y + '년 신년운세·사주 궁합 | ' + SITE_NAME,
-    description: '사람의 개입이 없는 AI 사주 서비스. 실제 만세력으로 계산해 바로 리포트로 드려요. 오늘의 운세와 ' + Y + '년 신년운세는 무료로 보고, 사주 궁합·이직운·재물운·평생사주는 궁금한 주제만 골라 봅니다.',
-    keywords: ['사주 풀이', '무료 사주', Y + '년 신년운세', '사주 궁합', '이직운', '오늘의 운세', '평생사주']
+    title: '사주 연애운·' + newYear.year + ' 신년운세·사주 궁합 | ' + SITE_NAME,
+    description: '요즘 가장 궁금한 것 하나만 고르세요. 연애·인연, ' + newYear.year + ' 신년운세, 사주 궁합을 실제 만세력으로 계산해 AI가 웹과 PDF 리포트로 풀어 드려요. 오늘의 운세·타고난 매력·오행 밸런스는 무료입니다.',
+    keywords: ['사주 연애운', newYear.year + ' 신년운세', '사주 궁합', '오늘의 운세', '무료 사주', '평생사주']
   },
   {
     file: 'services.html', sitemap: true, crumb: '전체 서비스', pageType: 'CollectionPage',
-    title: '사주 궁합·이직운·신년운세 전체 서비스 | ' + SITE_NAME,
-    description: Y + '년 신년운세를 담은 무료 사주 도감과 오늘의 운세부터 사주 궁합, 이직운을 보는 직업·적성운, 평생사주 100페이지까지 전체 서비스를 한눈에 봅니다.',
-    keywords: ['사주 서비스', Y + '년 신년운세', '사주 궁합', '이직운', '무료 사주']
+    title: '사주 연애운·신년운세·사주 궁합 전체 서비스 | ' + SITE_NAME,
+    description: '연애운을 보는 인연의 시기와 ' + newYear.year + ' 신년운세, 사주 궁합, 평생사주 100페이지부터 ' + Y + '년 신년운세를 담은 무료 사주 도감과 오늘의 운세까지 전체 서비스를 한눈에 봅니다.',
+    keywords: ['사주 서비스', '사주 연애운', newYear.year + ' 신년운세', '사주 궁합', '무료 사주']
   },
   {
     file: 'field-guide.html', sitemap: true, crumb: '사주 도감',
@@ -97,23 +115,10 @@ const PAGES = [
     keywords: ['무료 사주 풀이', '오행', '귀인', '무료 사주'],
     service: { name: '무료 미니 리딩', serviceType: '무료 사주 풀이', price: 0 }
   },
-  {
-    file: 'quick.html', sitemap: true, crumb: '주제별 심층 리딩',
-    title: '이직운·재물운·애정운 사주 풀이 | ' + SITE_NAME,
-    description: '5년 이직 타임라인을 담은 이직운(직업·적성운)부터 재물운, 애정·결혼운, 대인관계, 건강운까지 궁금한 주제 하나를 깊게 봅니다. 주제당 3,900원.',
-    keywords: ['이직운', '직업운', '재물운', '애정운', '사주 풀이'],
-    service: {
-      name: '주제별 심층 사주 리딩', serviceType: '사주 풀이', price: 3900,
-      catalog: [
-        ['직업·적성운 (이직운, 5년 이직 타임라인)', 'career'],
-        ['재물운', 'wealth'],
-        ['애정·결혼운', 'love'],
-        ['대인관계·인복', 'relationship'],
-        ['건강운', 'health'],
-        ['내 사주 첫 풀이', 'intro']
-      ]
-    }
-  },
+  // 새 대표 상품 페이지는 <head>를 상품 작업에서 직접 관리한다. 켜진 상품만 사이트맵에 넣는다.
+  { file: 'love.html', sitemap: loveTiming.enabled, manageHead: false },
+  { file: 'reunion.html', sitemap: reunion.enabled, manageHead: false },
+  { file: 'couple.html', sitemap: compatV2.enabled, manageHead: false },
   {
     file: 'compat.html', sitemap: true, crumb: '사주 궁합',
     title: '사주 궁합 보기 | 연애·결혼·재회 궁합 리포트 - ' + SITE_NAME,
@@ -162,7 +167,9 @@ const PAGES = [
 
 /* 판매 종료 후 location.replace로 옮겨 가기만 하는 페이지. 색인에서 빼고 옮겨 갈 곳을 알려 준다. */
 const REDIRECT_STUBS = {
-  'career-timing.html': '/quick.html',
+  // 주제별 심층 리딩(2026-10 판매 종료) — quick.html은 주제에 맞는 새 상품으로 보내는 안내 페이지다.
+  'quick.html': '/',
+  'career-timing.html': '/new-year.html',
   'life-topics.html': '/services.html',
   'reunion-check.html': '/compat.html',
   'birth-timing.html': '/date-select.html'
@@ -241,8 +248,11 @@ function jsonLdFor(page) {
     webPage.about = { '@id': SITE + '/#org' };
     graph.push({
       '@type': 'ItemList', '@id': SITE + '/#services', name: SITE_NAME + ' 대표 서비스',
-      itemListElement: PAGES.filter((p) => p.service && p.file !== 'premium.html').map((p, i) => ({
-        '@type': 'ListItem', position: i + 1, name: p.service.name, url: urlOf(p.file)
+      itemListElement: paidReports().filter((p) => p.file !== 'date-select.html').concat([
+        { name: '오늘의 운세', file: 'today-preview.html' },
+        { name: '무료 미니 리딩', file: 'free.html' }
+      ]).map((p, i) => ({
+        '@type': 'ListItem', position: i + 1, name: p.name, url: urlOf(p.file)
       }))
     });
   }
@@ -359,13 +369,11 @@ function main() {
   // 사이트맵의 lastmod는 위에서 고친 파일의 상태를 보고 정하므로 HTML을 먼저 쓴다.
   if (write('sitemap.xml', buildSitemap())) changed.push('sitemap.xml');
   if (write('robots.txt', buildRobots())) changed.push('robots.txt');
-  // llms.txt에도 판매 중인 상품만 표시한다. 본문 가격과 같은 설정이 원장이다.
+  // llms.txt의 유료 리포트 목록은 판매 중인 상품으로 다시 쓴다. 본문 가격과 같은 설정이 원장이다.
   const llmsPath = path.join(PUBLIC_DIR, 'llms.txt');
   if (fs.existsSync(llmsPath)) {
-    let llms = fs.readFileSync(llmsPath, 'utf8').replace(/^.*\]\(https:\/\/sajuotter\.com\/new-year\.html\).*\r?\n/gm, '');
-    if (newYear.enabled) {
-      llms = llms.replace(/(## 유료 리포트\r?\n)/, '$1- [' + newYear.year + '년 신년운세](https://sajuotter.com/new-year.html): 총운·12개월 흐름·재물·일·애정·건강 풀이. 웹 결과·PDF 이메일 제공. ' + newYear.priceKrw.toLocaleString('ko-KR') + '원.\n');
-    }
+    const section = '## 유료 리포트\n' + paidReports().map((p) => '- ' + p.llms).join('\n') + '\n';
+    const llms = fs.readFileSync(llmsPath, 'utf8').replace(/## 유료 리포트\r?\n[\s\S]*?(?=\r?\n## )/, () => section);
     if (write('llms.txt', llms)) changed.push('llms.txt');
   }
   console.log(changed.length ? '바뀐 파일:\n  ' + changed.join('\n  ') : '바뀐 파일 없음');
@@ -373,4 +381,4 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { PAGES, REDIRECT_STUBS, ROBOTS_DISALLOW, FORTUNE_YEAR, urlOf, jsonLdFor, headBlock, buildSitemap };
+module.exports = { PAGES, REDIRECT_STUBS, ROBOTS_DISALLOW, FORTUNE_YEAR, urlOf, jsonLdFor, headBlock, buildSitemap, paidReports };

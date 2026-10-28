@@ -234,4 +234,7 @@ router.get('/admin/orders/:jobId', requireAdmin, (req, res) => {
   res.json({ order });
 });
 
+// 유료 풀이 검토(/admin-review.html)
+router.use(require('./adminReview'));
+
 module.exports = router;

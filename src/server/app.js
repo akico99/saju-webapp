@@ -64,6 +64,11 @@ app.use((req, res, next) => {
   if (!compatV2Config.enabled && (/^\/couple(?:\.html|-app\.(?:js|css))?\/?$/i.test(requestPath) || /^\/couple-assets(?:\/|$)/i.test(requestPath) || /^\/api\/couple(?:\/|$)/i.test(requestPath))) {
     return res.sendStatus(404);
   }
+  // 새 궁합(두 사람의 궁합)이 열리면 예전 궁합(4,900원) 페이지는 새 궁합으로 안내한다.
+  // 결제 뒤 돌아오는 주소(?jobId=)는 예전 주문 결과를 보여야 하므로 그대로 둔다.
+  if (compatV2Config.enabled && req.method === 'GET' && /^\/compat\.html$/i.test(requestPath) && !('jobId' in req.query)) {
+    return res.redirect(302, '/couple.html' + (req.query.from ? '?from=' + encodeURIComponent(String(req.query.from)) : ''));
+  }
   // 장면형 읽기 화면 파일은 켜기 전까지 404다. 궁합 페이지는 /api/scene-reader로 켜짐을 확인한 뒤에만 불러온다.
   if (!sceneReaderConfig.enabled && (/^\/reading-(?:view\.(?:js|css)|model-[a-z0-9-]+\.js)$/i.test(requestPath) || /^\/reading-assets(?:\/|$)/i.test(requestPath))) {
     return res.sendStatus(404);
@@ -73,6 +78,15 @@ app.use((req, res, next) => {
 
 app.get('/api/scene-reader', (req, res) => {
   res.set('Cache-Control', 'no-store').json({ enabled: sceneReaderConfig.enabled });
+});
+// 메인 화면이 지금 열린 대표 상품만 보여 주도록 공개 여부를 알려 준다(가격은 표시용, 결제 기준은 points.PRICES).
+app.get('/api/products/available', (req, res) => {
+  res.set('Cache-Control', 'no-store').json({
+    love: loveTimingConfig.enabled,
+    newYear: newYearConfig.enabled,
+    reunion: reunionConfig.enabled,
+    couple: compatV2Config.enabled
+  });
 });
 
 app.use(session({

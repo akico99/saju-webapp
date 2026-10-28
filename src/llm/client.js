@@ -123,7 +123,9 @@ function getClient() {
 /**
  * @param {string} systemPrompt
  * @param {string} userMessage
- * @param {{maxRetries?: number, maxTokens?: number}} opts
+ * @param {{maxRetries?: number, maxTokens?: number, model?: string, thinking?: object}} opts — model을 주면 SAJU_MODEL
+ *   대신 그 모델을 쓴다(무료 사주 분석의 짧은 소개처럼 가장 싼 모델로 충분한 호출). thinking은 그대로 API에 넘긴다
+ *   — claude-haiku-5-5는 기본으로 생각 토큰을 써서 짧은 글도 출력 토큰이 3~4배가 되므로 {type:'disabled'}로 끈다.
  * @returns {Promise<{text: string, usage: object}>}
  */
 async function generateText(systemPrompt, userMessage, opts = {}) {
@@ -136,8 +138,9 @@ async function generateText(systemPrompt, userMessage, opts = {}) {
     try {
       // withResponse()로 원본 HTTP 응답을 함께 받아 분당 한도 헤더를 읽는다.
       const { data: response, response: http } = await c.messages.create({
-        model: MODEL,
+        model: opts.model || MODEL,
         max_tokens: maxTokens,
+        ...(opts.thinking ? { thinking: opts.thinking } : {}),
         system: systemPrompt,
         messages: [{ role: 'user', content: userMessage }]
       }).withResponse();

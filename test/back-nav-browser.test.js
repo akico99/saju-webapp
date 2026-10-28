@@ -28,11 +28,12 @@ test('상품 목록에서 평생사주로 들어간 뒤 ←를 누르면 상품 
     const page = await browser.newPage();
     await page.setRequestInterception(true);
     page.on('request', (req) => (req.url().startsWith(base) ? req.continue() : req.abort()));
-    await page.goto(base + '/love-assets/home.html', { waitUntil: 'domcontentloaded' });
-    await Promise.all([page.waitForNavigation({ waitUntil: 'domcontentloaded' }), page.click('a[href="/lifetime-report.html"]')]);
+    // 상품 목록 시안(love-assets/home.html)은 메인으로 옮겨 갔다 — 실제 상품 목록(services.html)에서 들어간다.
+    await page.goto(base + '/services.html', { waitUntil: 'domcontentloaded' });
+    await Promise.all([page.waitForNavigation({ waitUntil: 'domcontentloaded' }), page.click('#products a[href="/lifetime-report.html"]')]);
     await page.waitForFunction(() => document.querySelector('script[src="/back-nav.js"]') && document.readyState !== 'loading');
     await Promise.all([page.waitForNavigation({ waitUntil: 'domcontentloaded' }), page.click('header a.back')]);
-    assert.equal(new URL(page.url()).pathname, '/love-assets/home.html');
+    assert.equal(new URL(page.url()).pathname, '/services.html');
 
     const direct = await browser.newPage();
     await direct.setRequestInterception(true);

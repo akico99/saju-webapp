@@ -8,6 +8,7 @@
    모델이 그 용어를 본문에 옮겨 적어 공통 원칙 3(전문용어 금지)을 어기기 쉽다. */
 const { BASE_RULES } = require('./baseSystemPrompt');
 const { generateText, sumUsage } = require('./client');
+const { EVIDENCE_RULE, splitEvidence, startReview } = require('./readingReview');
 const { buildTimingData, tier } = require('./deepReading');
 const { SITUATIONS, buildLoveTiming, situationOf, levelOf } = require('../engine/loveTiming');
 const { pillarsOf } = require('../engine/freeReadings');
@@ -195,6 +196,7 @@ ${options.previous ? '## 이미 쓴 장의 요약 (새 장에서는 같은 설�
 
 ## 쓰는 형식
 이번 요청에 지정한 소제목만 정확히 이 표기와 순서로 쓰세요. **근거**, **장면**, **해볼 일** 같은 표지는 문장 안에 넣지 말고 한 줄에 표지만 단독으로 쓴 뒤, 다음 줄부터 2~3문장 문단을 쓰세요(월별 상세 흐름은 한 줄 형식 유지). 문단 사이에는 빈 줄을 넣으세요. 각 장과 각 달마다 독자가 꼭 기억할 핵심 구절 1~3곳을 **짧은 구절**(20자 안팎, 한 문장 안에서 열고 닫기)로 굵게 표시하세요. 강조가 하나도 없는 장이 있으면 안 됩니다. 표지 말고는 굵게를 남발하지 마세요. 글자 수는 제목·표지 기호를 뺀, 띄어쓰기를 포함한 본문 기준입니다. 전체 리포트는 약 9,000~14,000자 목표이며, 이번에는 아래 장만 씁니다.
+${EVIDENCE_RULE}
 
 ${format}`;
 }
@@ -338,7 +340,7 @@ function toPlainText(reading) {
 }
 
 /**
- * @param {object} opts { startYm?: '2026-11' 무료 첫 장의 시작 달, readingFocus?: 'person'|'timing'|'pattern'|'action', generate?: 테스트용 생성 함수 }
+ * @param {object} opts { startYm?: '2026-11' 무료 사주 분석의 시작 달, readingFocus?: 'person'|'timing'|'pattern'|'action', generate?: 테스트용 생성 함수 }
  * @returns {{ title, situationKey, timing, sections, monthNotes, usage }}
  */
 async function generateLoveReading(engine, person, situationKey, now = new Date(), opts = {}) {
@@ -349,6 +351,8 @@ async function generateLoveReading(engine, person, situationKey, now = new Date(
   const usages = [];
   const sections = [], monthNotes = [];
   const readingFocus = normalizeReadingFocus(opts.readingFocus);
+  // 장별 근거·사실 대조 기록(검토용). 화면·PDF 본문에는 들어가지 않는다.
+  const review = startReview({ engines: [engine], months: timing.months, ranked: timing.top3, rankSections: ['answer', 'top'] }, sectionDefs(situationKey));
   async function runPart(part, base) {
     const previous = base.map(s => `${s.title}: ${s.text.replace(/\s+/g, ' ').slice(0, 240)}`).join('\n');
     const prompt = buildLovePrompt(engine, person, situationKey, timing, now, { ...part, readingFocus, previous });
@@ -365,11 +369,13 @@ async function generateLoveReading(engine, person, situationKey, now = new Date(
         continue;
       }
       usages.push(usage);
-      const parsed = parseLoveText(text, situationKey);
+      const ev = splitEvidence(text);
+      const parsed = parseLoveText(ev.text, situationKey);
       // 요청 밖의 장이 섞여도 기존에 완료한 장을 덮어쓰거나 중복 저장하지 않는다.
       const selected = { sections: parsed.sections.filter(s => part.sectionKeys.includes(s.key)), monthNotes: part.includeMonths ? parsed.monthNotes : [] };
       try {
         validateLoveReading({ sections: [...base, ...selected.sections], monthNotes: selected.monthNotes }, timing, situationKey, part);
+        review.check(selected, ev.notes, attempt < 1);
         accepted = selected;
         break;
       } catch (e) {
@@ -394,7 +400,7 @@ async function generateLoveReading(engine, person, situationKey, now = new Date(
   const ordered = sectionDefs(situationKey).map(def => sections.find(s => s.key === def.key)).map(sec => sec.key === 'answer' ? sec : { ...sec, text: ensureHighlight(sec.text) });
   const parsed = { sections: ordered, monthNotes: monthNotes.map((n, i) => ({ ...n, year: timing.months[i].year })) };
   validateLoveReading(parsed, timing, situationKey);
-  return { title: '연애 시기 리포트', situationKey, readingFocus, timing, ...parsed, usage: sumUsage(usages) };
+  return { title: '연애 시기 리포트', situationKey, readingFocus, timing, ...parsed, ...review.result(), usage: sumUsage(usages) };
 }
 
 module.exports = { LOVE_SYSTEM_PROMPT, buildLovePrompt, parseLoveText, validateLoveReading, toPlainText, generateLoveReading, sectionDefs, normalizeReadingFocus, ensureHighlight };

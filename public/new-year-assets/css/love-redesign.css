@@ -1,6 +1,6 @@
 /* 자동 생성: scripts/build-product-themes.js — love-assets/love-redesign.css (newyear 색). 직접 고치지 마세요. */
 /* Single visual system for cover, questions, preview and purchase. */
-body.love-page{--ink:#faf2eb;--muted:#d0beb0;--muted-2:#bdada0;--line:#283249;--bg:#07090f;--bg-outer:#07090f;--paper:#121824;--surface:#121824;--font-serif:ReadingSerif,serif;background:#07090f;color:#faf2eb;font-family:ReadingSans,'Noto Sans KR',sans-serif;letter-spacing:-.035em}
+body.love-page{--ink:#faf2eb;--muted:#d0beb0;--muted-2:#bdada0;--line:#283249;--bg:#07090f;--bg-outer:#07090f;--paper:#121824;--surface:#121824;--font-serif:ReadingSerif,serif;background:#07090f;color:#faf2eb;font-family:Pretendard,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;letter-spacing:-.035em}
 body.love-page .app,body.love-page.done .app{max-width:480px;margin:auto;background:#07090f;box-shadow:none;color:#faf2eb;min-height:100svh}
 .love-page button,.love-page input,.love-page select{font-family:inherit}
 .love-page .love-header{height:58px;padding:0 20px;background:#07090f;border-bottom:1px solid #161c2b;color:#e0ccbd}
@@ -12,7 +12,7 @@ body.love-page .app,body.love-page.done .app{max-width:480px;margin:auto;backgro
 .love-page .cover-tag{z-index:2;left:24px;top:22px;border:1px solid #b2805a88;background:#0b0e16d9;color:#f2d6c0;padding:7px 10px;font-size:10px;font-weight:700;letter-spacing:.06em}
 .love-page .cover-title{z-index:2;bottom:32px;padding:0 24px;text-align:center;left:0;right:0}
 .love-page .cover-title h1{font:800 clamp(38px,10vw,48px)/1.4 ReadingSerif,serif;color:#fff0e7;letter-spacing:-.065em;margin:8px 0 12px;text-shadow:0 2px 20px #07090f}
-.love-page .cover-title p{font:700 17px/1.7 ReadingSans,sans-serif;color:#f9e9dc;margin:0 0 16px}.love-page .cover-byline{font:400 12px/1.5 ReadingSans,sans-serif;letter-spacing:.08em;color:#d6b9a2}
+.love-page .cover-title p{font:700 17px/1.7 Pretendard,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;color:#f9e9dc;margin:0 0 16px}.love-page .cover-byline{font:400 12px/1.5 Pretendard,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;letter-spacing:.08em;color:#d6b9a2}
 .love-page .hero-promise{padding:0 24px 20px;font-size:12px;color:#d7c4b6;gap:12px}.love-page .hero-promise i{color:#b97a4a}
 .love-page .love-primary,.love-page .landing-dock button{background:#ef8b3e;color:#fff;border:0;border-radius:9px;min-height:56px;font-size:16px;font-weight:700;box-shadow:0 3px 24px #c96d2633}
 .love-page .love-editorial>.love-primary{width:calc(100% - 40px);margin:0 20px}
@@ -25,7 +25,7 @@ body.love-page .app,body.love-page.done .app{max-width:480px;margin:auto;backgro
 .love-page .story-answer{font-size:17px;line-height:1.9;color:#e0cdbf}.love-page .story-answer strong{color:#ffb47b}
 .love-page .yeoul-scene{background:#07090f;aspect-ratio:2/3;min-height:440px}.love-page .yeoul-scene img{object-position:center}.love-page .yeoul-scene::after{background:linear-gradient(transparent,#07090f)}
 .love-page .yeoul-scene>div{left:24px;right:24px;text-align:center;color:#fff0e4}.love-page .yeoul-scene h2{font:800 30px/1.65 ReadingSerif,serif}.love-page .yeoul-scene span{color:#d2baa7;font-size:12px}
-.love-page .yeoul-letter{background:#07090f;padding:26px;color:#e2d2c5}.love-page .yeoul-letter p{font:400 16px/1.95 ReadingSans,sans-serif}.love-page .yeoul-letter small{font-size:11px;color:#ad9b8d}.love-page .letter-seal{color:#e19f6d;border-color:#394c77}
+.love-page .yeoul-letter{background:#07090f;padding:26px;color:#e2d2c5}.love-page .yeoul-letter p{font:400 16px/1.95 Pretendard,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif}.love-page .yeoul-letter small{font-size:11px;color:#ad9b8d}.love-page .letter-seal{color:#e19f6d;border-color:#394c77}
 .love-page .love-chapter-preview li{color:#e8d8cb;font-size:15px;line-height:1.8;border-color:#273148}.love-page .love-chapter-preview li::before{color:#e7a16b}
 .love-page .reading-specimen{border:1px solid #34405c;border-radius:12px;background:#121723;padding:24px;box-shadow:none;margin-top:30px}.love-page .reading-specimen h3{font:800 22px/1.7 ReadingSerif,serif;color:#ffecdd}.love-page .love-sample .reading-specimen p{font-size:15px;line-height:1.95;color:#e4d5c9}
 .love-page .specimen-label{font-size:11px;color:#c3ac9a;border-color:#28344e}.love-page .specimen-chapter{font-size:12px;color:#ebb184}.love-page .sample-rule{background:#2c3854}.love-page .love-sample-action{background:#1b2336;padding:18px}.love-page .love-sample-action b{color:#ffcaa1;font-size:13px}.love-page .love-sample .sample-footnote{color:#bca898;font-size:11px}
@@ -39,12 +39,12 @@ body.love-page .app,body.love-page.done .app{max-width:480px;margin:auto;backgro
 .love-page .wizard-sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 .love-page .stage-top{padding:20px 14px 12px;flex:none}.love-page .stage-top button{background:transparent;border:0;border-radius:8px;color:#e9d6c7;backdrop-filter:none;font-size:26px}.love-page .wizard-brand{font-size:12px;color:#c8b2a1;letter-spacing:.05em}
 .love-page .wizard-progress{height:2px;margin:0 28px;background:#1d2639;overflow:hidden}.love-page .wizard-progress span{height:100%;display:block;background:#ef9652;width:14.28%;transition:width .2s}
-.love-page .wizard-count{padding:16px 28px;margin:0;font:700 11px/1.5 ReadingSans,sans-serif;letter-spacing:.1em;color:#be9677}
+.love-page .wizard-count{padding:16px 28px;margin:0;font:700 11px/1.5 Pretendard,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;letter-spacing:.1em;color:#be9677}
 .love-page .stage-body{margin:auto 0 0;padding:clamp(45px,9svh,95px) 28px 38px;background:none;flex:1;display:flex;flex-direction:column;justify-content:center;min-width:0}
 .love-page .stage-step{width:100%;padding:0;border:0}.love-page .stage-step[hidden]{display:none!important}
 .love-page .wizard-kicker{font-size:13px;color:#c0aa9a;margin:0 0 14px;text-align:left}
-.love-page .bubble{margin:0 0 32px;text-align:left;color:#fff4eb;font-family:ReadingSans,sans-serif;line-height:1.6;letter-spacing:-.04em;box-shadow:none;background:none;padding:0;border:0;text-shadow:none}
-.love-page .bubble .q{font-size:26px;font-weight:700;line-height:1.55;color:#fff4eb}.love-page .bubble .q::before,.love-page .bubble .q::after{content:none}.love-page .bubble small{font:400 13px/1.8 ReadingSans,sans-serif;color:#c4b0a0;margin-top:12px;opacity:1}
+.love-page .bubble{margin:0 0 32px;text-align:left;color:#fff4eb;font-family:Pretendard,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;line-height:1.6;letter-spacing:-.04em;box-shadow:none;background:none;padding:0;border:0;text-shadow:none}
+.love-page .bubble .q{font-size:26px;font-weight:700;line-height:1.55;color:#fff4eb}.love-page .bubble .q::before,.love-page .bubble .q::after{content:none}.love-page .bubble small{font:400 13px/1.8 Pretendard,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;color:#c4b0a0;margin-top:12px;opacity:1}
 .love-page .answer{gap:10px}.love-page .choice{flex:none;display:flex;min-height:60px;height:auto;padding:16px 18px;background:#111621;border:1px solid #2c364c;border-radius:8px;font-size:15px;color:#f2e7df;line-height:1.6;text-align:left;box-shadow:none}.love-page .choice small{font-size:12px;color:#c2afa0;margin-top:3px}.love-page .choice:hover,.love-page .choice:focus-visible{border-color:#df9359;background:#171f30}.love-page .choice.on{background:#273a68;border-color:#eda269;color:white}
 .love-page .wizard-gender{display:grid;grid-template-columns:1fr 1fr;gap:12px}.love-page .wizard-gender .choice{flex-direction:row;justify-content:space-between;align-items:center;min-height:86px;font-size:19px}
 .love-page .seg button{background:#111621;border:1px solid #333d53;border-radius:8px;color:#d7c3b3;min-height:48px;height:48px;font-size:14px}.love-page .seg button.on{background:#273b6a;color:#fff;border-color:#d79059}
@@ -57,7 +57,7 @@ body.love-page .app,body.love-page.done .app{max-width:480px;margin:auto;backgro
 .love-page .bubble.err{margin-top:20px}.love-page .bubble.err .q{font-size:14px;color:#ffc89e}
 /* Purchase sheet is a real dialog; the existing payment service follows confirmation. */
 .love-page.checkout-open{overflow:hidden}
-.love-page .checkout-sheet{position:fixed;inset:auto 0 0;margin:0 auto;width:min(100%,480px);max-width:480px;max-height:92svh;overflow-y:auto;border:1px solid #35415d;border-bottom:0;border-radius:22px 22px 0 0;background:#211b1e;color:#f6eee8;padding:12px 22px max(22px,env(safe-area-inset-bottom));font-family:ReadingSans,sans-serif;box-shadow:0 -15px 70px #0008}
+.love-page .checkout-sheet{position:fixed;inset:auto 0 0;margin:0 auto;width:min(100%,480px);max-width:480px;max-height:92svh;overflow-y:auto;border:1px solid #35415d;border-bottom:0;border-radius:22px 22px 0 0;background:#211b1e;color:#f6eee8;padding:12px 22px max(22px,env(safe-area-inset-bottom));font-family:Pretendard,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;box-shadow:0 -15px 70px #0008}
 .love-page .checkout-sheet::backdrop{background:#000b;backdrop-filter:blur(3px)}
 .love-page .checkout-handle{width:38px;height:4px;background:#77676d;border-radius:4px;margin:0 auto 20px}.love-page .checkout-header{display:flex;align-items:center;gap:12px;justify-content:space-between;margin-bottom:20px}.love-page .checkout-kicker{font-size:11px;color:#ceb39f}.love-page .checkout-header h2{font-size:20px;font-weight:700;line-height:1.5;margin:7px 0;color:#fff7f0}.love-page #closeCheckout{width:40px;min-height:40px;background:none;color:#d7c5b8;border:0;padding:0;flex:none;font-size:25px;margin:0;box-shadow:none}
 .love-page .checkout-product{border:1px solid #ef9753;border-radius:12px;padding:14px;display:flex;align-items:center;gap:14px;background:#24272d;position:relative}.love-page .checkout-product img{width:66px;height:93px;object-fit:cover;border-radius:6px}.love-page .checkout-product-label{font-size:10px;color:#bfad9f}.love-page .checkout-product h3{font-size:20px;color:#fff4eb;margin:7px 0 3px}.love-page .checkout-product p{font-size:11px;color:#d0bdaf;margin:0 0 8px}.love-page .checkout-product strong{font-size:23px;color:#fff8f3}.love-page .checkout-selected{margin-left:auto;color:#ffb57c}
@@ -83,3 +83,129 @@ body.love-page .app,body.love-page.done .app{max-width:480px;margin:auto;backgro
 .love-page .delivery-consent input{width:20px;height:20px;flex:none;margin-top:2px;accent-color:#dd8f53}
 .love-page #deliveryError{color:#ffd1ad}.love-page #retryDelivery{padding:12px 16px;background:#2f3c5c;color:#fff;border:1px solid #a38268;border-radius:8px}
 .love-page #deliveryStatus{font-size:14px;line-height:1.7;margin:16px 0}
+/* ===== 가독성 정리(2026-10): Pretendard 본문, 어두운 바탕 17px·500, 안내문 14px 이상, 줄바꿈 =====
+   글꼴은 /fonts/pretendard/pretendard.css(HTML <link>). 명조 제목은 ReadingSerif 유지, 자간·줄간만 다듬는다.
+   가운데 정렬 문구는 balance, 본문은 pretty로 한 글자만 다음 줄로 떨어지는 줄을 막는다. */
+body.love-page{font-weight:500;letter-spacing:-.015em;word-break:keep-all;overflow-wrap:break-word;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+body.love-page :where(p,li,dd,dt,summary,label,small,figcaption){text-wrap:pretty}
+body.love-page :is(h1,h2,h3,h4,.bubble .q,.cover-title p,.thoughts p,.story-answer,.love-meta,.hero-promise,.wizard-footnote,.checkout-terms,.checkout-footnote,.lr-bt,.lr-lead,.lr-focus-note,.lr-teaser-description,.lr-flip-hint,.sample-footnote,.love-unlock-title,.fr-verdict,.fr-next-lead,.yeoul-scene span,.chapter-label,.love-eyebrow){word-break:keep-all;text-wrap:balance}
+body.love-page .lr-paid p.lr-lead{text-wrap:pretty}
+/* 명조 제목: 자간을 덜 조이고 줄간을 줄여 한 덩어리로 읽히게 */
+body.love-page .cover-title h1{letter-spacing:-.045em;line-height:1.3}
+body.love-page :is(.story-section,.love-detail,.scope-section) h2{font-size:25px;line-height:1.5;letter-spacing:-.03em}
+body.love-page .yeoul-scene h2{line-height:1.5;letter-spacing:-.03em}
+body.love-page .reading-specimen h3{line-height:1.55;letter-spacing:-.03em}
+body.love-page .lr-reader h1.lr-main-title{line-height:1.42;letter-spacing:-.035em}
+body.love-page .lr-reader h2.lr-title{line-height:1.48;letter-spacing:-.03em}
+body.love-page .lr-reader h3.lr-contents-title{line-height:1.5;letter-spacing:-.03em}
+body.love-page .bubble .q{line-height:1.45;letter-spacing:-.03em}
+/* 소개 화면 */
+body.love-page .love-header a{font-size:14px}
+body.love-page .love-wordmark span{font-size:12px}
+body.love-page .cover-tag{font-size:12px}
+body.love-page .cover-title p{line-height:1.6}
+body.love-page .cover-byline{font-size:13px;color:#e0c6b3}
+body.love-page .hero-promise{font-size:14px;color:#e2d2c6}
+body.love-page .love-meta{font-size:14px;line-height:1.6;color:#d6c5b8}
+body.love-page .product-nav a{font-size:14px}
+body.love-page :is(.chapter-label,.love-eyebrow){font-size:13px;font-weight:700}
+body.love-page .thoughts p{font-size:17px;line-height:1.75;color:#e8dad0}
+body.love-page .story-answer{line-height:1.8;color:#ecddd2}
+body.love-page .yeoul-scene span{font-size:14px;color:#e2cfc0}
+body.love-page .yeoul-letter p{font-size:17px;line-height:1.8;color:#eee2d8}
+body.love-page .yeoul-letter small{font-size:14px;color:#cdbdb0}
+body.love-page .love-chapter-preview li{font-size:16px;line-height:1.7}
+body.love-page .specimen-label{font-size:13px}
+body.love-page .specimen-chapter{font-size:13px}
+body.love-page .love-sample .reading-specimen p{font-size:16px;line-height:1.8;color:#eee0d6}
+body.love-page .love-sample-action b{font-size:14px}
+body.love-page .love-sample .sample-footnote{font-size:14px;line-height:1.7;color:#cfbdb0}
+body.love-page .scope-card p{font-size:16px;line-height:1.75;color:#e6d8cd}
+body.love-page :is(.scope-card a,.scope-tag,.scope-card.full .scope-tag){font-size:13px}
+body.love-page .scope-card.full small{font-size:14px}
+body.love-page .love-faq summary{font-size:16px;line-height:1.7}
+body.love-page .love-faq details p{font-size:15px;line-height:1.75;color:#d8c8bc}
+body.love-page .love-faq .love-small,body.love-page .love-small{font-size:14px;line-height:1.7;color:#cdb9aa}
+body.love-page .love-guide p{font-size:14px;line-height:1.75}
+body.love-page .landing-dock span{font-size:14px}
+/* 입력 화면 */
+body.love-page .wizard-brand{font-size:13px}
+body.love-page .wizard-count{font-size:13px}
+body.love-page .wizard-kicker{font-size:14px;color:#d4c1b2}
+body.love-page .bubble small{font-size:15px;line-height:1.7;color:#d6c4b7;font-weight:500}
+body.love-page .choice{font-size:16px;line-height:1.55}
+body.love-page .choice small{font-size:14px;line-height:1.55;color:#d2c0b3}
+body.love-page .wizard-footnote{font-size:14px;line-height:1.7;color:#c9b5a5}
+body.love-page .wizard-skip{font-size:14px}
+body.love-page .wizard-review dt{font-size:14px;color:#d1bdae}
+body.love-page .wizard-review dd{font-size:15px}
+body.love-page .wizard-review dd button{font-size:14px}
+body.love-page :is(.unknown-row,.leap-row){font-size:15px}
+/* 무료 결과 */
+body.love-page .lg-folded{font-size:14px}
+body.love-page .lg-folded button{font-size:13px}
+body.love-page .love-resume{font-size:14px}
+body.love-page .love-unlock-kicker{font-size:13px}
+body.love-page .love-teaser{font-size:15px}
+body.love-page .point-notice{font-size:14px;line-height:1.7}
+/* 구매 시트 */
+body.love-page .checkout-kicker{font-size:13px}
+body.love-page .checkout-header h2{font-size:21px;line-height:1.4}
+body.love-page .checkout-product-label{font-size:12px;color:#d1c0b3}
+body.love-page .checkout-product p{font-size:14px;line-height:1.5;color:#e0d0c4}
+body.love-page .checkout-includes{font-size:15px;line-height:1.9;color:#eee2d8}
+body.love-page .checkout-description{font-size:14px;line-height:1.75;color:#d6c7bc}
+body.love-page .checkout-total{font-size:15px}
+body.love-page .checkout-terms{font-size:14px;line-height:1.7;color:#d2c2b6}
+body.love-page .checkout-footnote{font-size:14px;line-height:1.7;color:#cfbfb3}
+body.love-page .checkout-delivery p{font-size:14px;line-height:1.7;color:#e6dbd2}
+body.love-page .checkout-delivery .delivery-consent{font-size:14px;line-height:1.7}
+/* 읽기 화면(무료·유료 공통): 본문 17px·500·줄간 1.75, 좌우 여백 24px로 통일 */
+body.love-page .lr-reader{font-size:17px;font-weight:500;line-height:1.75;letter-spacing:-.015em}
+body.love-page .lr-reader p.lr-lead{font-size:17px;line-height:1.75;color:#f8e9de;padding-left:24px;padding-right:24px}
+body.love-page .lr-reader .lr-paper{padding-left:24px;padding-right:24px}
+body.love-page .lr-reader .lr-paper p.lr-pt{font-size:17px;font-weight:500;line-height:1.78;letter-spacing:-.015em;color:#fbf3ec}
+body.love-page .lr-reader .lr-paper h3.lr-h3{font-size:18px;line-height:1.5}
+body.love-page .lr-reader .lr-art-inline{margin-left:-24px!important;margin-right:-24px!important}
+body.love-page .lr-reader .lr-bubble p.lr-bt{font-weight:700;line-height:1.55;letter-spacing:-.02em}
+body.love-page .lr-reader h3.lr-sub{font-size:18px}
+body.love-page .lr-reader .lr-focus-note{font-size:15px;line-height:1.6}
+body.love-page .lr-reader .lr-pillar{font-size:13px}
+body.love-page .lr-reader p.lr-note{font-size:14px;line-height:1.7}
+body.love-page .lr-reader .lr-bar-name{font-size:14px}
+body.love-page .lr-reader .lr-bar-name em{font-size:12px}
+body.love-page .lr-reader .lr-bar-val{font-size:13px}
+body.love-page .lr-reader :is(button.lr-tab,button.lr-nav-btn,button.lr-resume){font-size:14px}
+body.love-page .lr-reader .lr-season-text span{font-size:14px}
+body.love-page .lr-reader p.lr-teaser-description{font-size:15px;line-height:1.7;color:#e4d3c6}
+body.love-page .lr-reader .lr-hidden-row{font-size:14px}
+body.love-page .lr-reader .lr-content-copy li{font-size:15px;line-height:1.7;color:#e6d9cf}
+body.love-page .lr-reader p.lr-toc-title{font-size:14px}
+body.love-page .lr-reader button.lr-toc-btn{font-size:15px}
+body.love-page .lr-reader .lr-toc-n{font-size:13px}
+body.love-page .lr-reader .lr-month-label{font-size:14px}
+body.love-page .lr-reader .lr-month-card .lr-mt{font-size:17px;font-weight:500;line-height:1.78}
+body.love-page .lr-reader .lr-month-reading{padding-left:24px;padding-right:24px}
+body.love-page .lr-paid{letter-spacing:-.01em}
+body.love-page .lr-paid .lr-paper{padding-left:24px;padding-right:24px}
+body.love-page .lr-paid .lr-paper p.lr-pt{line-height:1.78;letter-spacing:-.01em}
+body.love-page .lr-paid p.lr-lead{margin-left:24px;margin-right:24px;padding:20px;line-height:1.75}
+body.love-page .lr-reader .lr-toc{margin-left:24px;margin-right:24px}
+body.love-page .lr-summary-chart .love-chart-note,body.love-page .lr-summary-chart>p{font-size:14px;line-height:1.7;color:#c8b8ac}
+body.love-page .lr-summary-chart .love-rank{font-size:13px}
+body.love-page .lr-summary-chart .love-bar b{font-size:12px}
+body.love-page .lr-summary-chart .love-bar small{font-size:11px}
+body.love-page .lr-flips-title{gap:12px;align-items:flex-start}
+body.love-page .lr-flips-title small{font-size:14px;text-align:right;text-wrap:balance}
+body.love-page .lr-flip-front{gap:12px;padding-left:16px;padding-right:14px}
+body.love-page .lr-flip-label{min-width:0;word-break:keep-all;overflow-wrap:normal}
+body.love-page .lr-flip-label small{font-size:13px;letter-spacing:.02em;line-height:1.5}
+body.love-page .lr-flip-label b{white-space:nowrap;font-size:clamp(17px,5.3vw,21px)}
+body.love-page .lr-flips-title,body.love-page .lr-flips-title>*{text-wrap:balance}
+body.love-page .love-chapter-preview li{text-wrap:balance}
+body.love-page .lr-reader button.lr-toc-btn{text-wrap:pretty}
+body.love-page .lr-reader .lr-toc-list{grid-template-columns:1fr;gap:6px}
+body.love-page :is(h1,h2,h3,h4,.bubble .q,.lr-bt,.lr-lead,.lr-toc-btn,.lr-flips-title>*,.lr-focus-note,.lr-teaser-description){overflow-wrap:break-word}
+body.love-page .scope-card.full h3{flex-wrap:wrap;row-gap:2px}
+@media(max-width:360px){body.love-page .lr-flip-hint{padding:7px 10px}body.love-page .lr-flip-hint::before{content:none}body.love-page .lr-flip-rank{width:22px;font-size:30px}}
+@media(max-width:340px){body.love-page .lr-reader .lr-paper,body.love-page .lr-paid .lr-paper,body.love-page .lr-reader .lr-month-reading{padding-left:20px;padding-right:20px}body.love-page .lr-reader .lr-art-inline{margin-left:-20px!important;margin-right:-20px!important}body.love-page .lr-paid p.lr-lead,body.love-page .lr-reader .lr-toc{margin-left:20px;margin-right:20px}body.love-page .lr-reader p.lr-lead{padding-left:20px;padding-right:20px}}

@@ -12,7 +12,7 @@
    --surface-2 카드 안의 안쪽 블록(글리프 자리, 막대 트랙)
    모든 페이지가 이 파일 하나를 공유한다 — 페이지별 <style>은 최소한만 남긴다.
    ============================================================ */
-@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css');
+@import url('/fonts/pretendard/pretendard.css');
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;700&display=swap');
 
 :root {

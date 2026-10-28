@@ -345,6 +345,10 @@ function deleteAccount(userId, { codeId = null, removeDir, now = new Date() } = 
     }
     const retained = retainTransactions(userId, now);
     const files = queueGeneratedFiles(userId);
+    // 유료 풀이 검토 기록(db/reviews.js)은 주문 job_id로만 이어져 있어 주문보다 먼저 지운다.
+    for (const table of ['reading_review_marks', 'reading_reviews']) {
+      if (hasTable(table)) db.prepare('DELETE FROM ' + table + ' WHERE job_id IN (SELECT job_id FROM orders WHERE user_id = ?)').run(userId);
+    }
     // 자식 표부터 지운다(외래 키).
     for (const table of ['consents', 'saved_profiles', 'point_transactions', 'point_requests', 'email_verifications', 'password_resets',
       'account_deletion_codes', 'orders', 'card_payments']) {

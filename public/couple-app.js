@@ -1,10 +1,10 @@
 'use strict';
 // 이 상품만의 그림(안내 인물·분위기가 연애 상품과 다르다). 공용 읽기 화면도 이 표를 쓴다.
 window.LOVE_READING_ART = {"greeting":"/couple-assets/cover.webp","greeting-comic":"/couple-assets/cover.webp","cover-comic":"/couple-assets/cover.webp","empathy":"/couple-assets/attract.webp","thinking":"/couple-assets/attract.webp","thread-comic":"/couple-assets/attract.webp","explain":"/couple-assets/flow.webp","explain-comic":"/couple-assets/flow.webp","meeting":"/couple-assets/flow.webp","timing-comic":"/couple-assets/flow.webp","new-start":"/couple-assets/flow.webp","cheer":"/couple-assets/keep.webp","door-comic":"/couple-assets/keep.webp","conversation":"/couple-assets/keep.webp","distance":"/couple-assets/keep.webp","caution":"/couple-assets/keep.webp"};
-/* 두 사람의 궁합 화면(/couple.html) — 대화형 입력 → 무료 첫 장(/api/couple/preview) → 잠금 해제(/api/couple,
+/* 두 사람의 궁합 화면(/couple.html) — 대화형 입력 → 무료 사주 분석(/api/couple/preview) → 잠금 해제(/api/couple,
    로그인·카드 결제는 pay-flow.js) → 결과(/api/status/:jobId).
    입력값은 한 <form id="coupleForm"> 안에 모두 있다. 로그인으로 넘어갈 때 PayFlow.toLogin이 통째로 저장하고,
-   돌아와서 복원한 뒤 무료 첫 장을 다시 연다. 서버 응답 문자열은 innerHTML로 넣지 않는다(textContent).
+   돌아와서 복원한 뒤 무료 사주 분석을 다시 연다. 서버 응답 문자열은 innerHTML로 넣지 않는다(textContent).
    예외는 서버가 엔진 숫자만으로 만든 12개월 막대(result_visual)뿐이다.
    유료 결과는 연애 리포트와 같은 읽기 화면(LoveReadingView)을 쓴다. */
 (function () {
@@ -25,7 +25,7 @@ window.LOVE_READING_ART = {"greeting":"/couple-assets/cover.webp","greeting-comi
   const landing = document.getElementById('coupleLanding');
   const stage = document.getElementById('stage');
   let step = 0;
-  let startYm = null; // 무료 첫 장의 12개월 시작 달 — 결제 요청에 실어 같은 12개월로 풀이를 받는다
+  let startYm = null; // 무료 사주 분석의 12개월 시작 달 — 결제 요청에 실어 같은 12개월로 풀이를 받는다
   let disposePaidReader = null;
 
   const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
@@ -164,7 +164,7 @@ window.LOVE_READING_ART = {"greeting":"/couple-assets/cover.webp","greeting-comi
     return out;
   }
 
-  /* ---------- 무료 첫 장 (연애 리포트 읽기 화면과 같은 lr-* 디자인) ---------- */
+  /* ---------- 무료 사주 분석 (연애 리포트 읽기 화면과 같은 lr-* 디자인) ---------- */
   function art(file, cls, label) {
     const fig = el('figure', 'lr-art ' + cls);
     const img = document.createElement('img');
@@ -244,9 +244,11 @@ window.LOVE_READING_ART = {"greeting":"/couple-assets/cover.webp","greeting-comi
     const box = document.getElementById('freeReader');
     box.replaceChildren();
     const reader = el('div', 'lr-reader lr-free couple-free');
-    reader.setAttribute('role', 'region'); reader.setAttribute('aria-label', '두 사람의 궁합 무료 첫 장');
+    reader.setAttribute('role', 'region'); reader.setAttribute('aria-label', '두 사람의 궁합 무료 사주 분석');
     reader.appendChild(el('h1', 'lr-main-title', b.aName && b.bName ? b.aName + '님과 ' + b.bName + '님,\n두 사람은\n어떤 사이일까요?' : '두 사람은,\n어떤 사이일까요?'));
     reader.appendChild(el('p', 'lr-lead', r.pull.headline));
+    // 두 사람 관계 소개(AI)는 나중에 채운다. 실패하면 칸이 사라진다.
+    if (window.FreeExtras) reader.appendChild(FreeExtras.introCard('/api/couple/intro', { ...b, deliveryEmail: undefined }, { title: '두 사람은 이런 사이예요', loading: '수달이 두 사람의 사주를 읽고 소개를 쓰고 있어요…' }));
 
     const c1 = chapter(0, '두 사람의 네 기둥', 'greeting-comic', 'lr-art-portrait lr-cut-wide', '결의 인사');
     const two = el('div', 'couple-two'); two.append(pillarsPanel(pa), pillarsPanel(pb)); c1.appendChild(two);
@@ -277,7 +279,9 @@ window.LOVE_READING_ART = {"greeting":"/couple-assets/cover.webp","greeting-comi
       seasons.appendChild(col);
     });
     c4.appendChild(seasons);
-    c4.appendChild(teaser('두 사람의 흐름이 함께 좋은 세 달은?', '계절의 흐름을 봤다면, 이제 달마다 두 사람의 흐름이 어떻게 겹치는지 알아볼 차례예요.', true));
+    const third = window.FreeExtras ? FreeExtras.thirdCard(r.third, { title: '두 사람이 함께 세 번째로 좋은 달', rankLabel: '함께 좋은 세 달 중 3위' }) : null;
+    if (third) c4.appendChild(third);
+    c4.appendChild(teaser('두 사람의 흐름이 함께 가장 좋은 두 달은?', '세 번째 달을 봤다면, 이제 1·2위 두 달과 달마다 두 사람의 흐름이 어떻게 겹치는지 알아볼 차례예요.', true));
     reader.appendChild(c4);
 
     const c5 = chapter(4, '전체 풀이에서 열리는 장', 'door-comic', 'lr-art-portrait lr-cut-tall', '결의 응원');
@@ -302,7 +306,7 @@ window.LOVE_READING_ART = {"greeting":"/couple-assets/cover.webp","greeting-comi
     try {
       const res = await fetch('/api/couple/preview', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || '첫 장을 만들지 못했어요. 잠시 뒤 다시 시도해 주세요.');
+      if (!res.ok) throw new Error(data.error || '무료 사주 분석을 만들지 못했어요. 잠시 뒤 다시 시도해 주세요.');
       renderFree(data.reading, b);
       return true;
     } catch (e) {
@@ -310,7 +314,7 @@ window.LOVE_READING_ART = {"greeting":"/couple-assets/cover.webp","greeting-comi
       return false;
     } finally {
       btn.disabled = false;
-      btn.textContent = '두 사람의 첫 장 무료로 보기';
+      btn.textContent = '두 사람의 무료 사주 분석 보기';
       form.removeAttribute('aria-busy');
     }
   }
@@ -589,7 +593,7 @@ window.LOVE_READING_ART = {"greeting":"/couple-assets/cover.webp","greeting-comi
     };
     syncButtons(body());
     // 로그인하고 돌아오면 pay-flow.js가 입력값을 복원하고 폼 안에 안내문(.form-resume-note)을 남긴다.
-    // 그 표시가 있을 때만 단계를 다시 묻지 않고 무료 첫 장을 바로 연다.
+    // 그 표시가 있을 때만 단계를 다시 묻지 않고 무료 사주 분석을 바로 연다.
     window.addEventListener('load', () => setTimeout(async () => {
       const restoredNote = form.querySelector('.form-resume-note');
       if (!restoredNote) return;

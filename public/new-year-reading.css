@@ -5,16 +5,16 @@
 .lr-reader .ny-quarter-meter{display:flex;align-items:flex-end;width:18px;height:64px;margin-bottom:6px;border-radius:5px;background:#3a1a22;overflow:hidden}
 .lr-reader .ny-quarter-meter i{display:block;width:100%;border-radius:5px 5px 2px 2px;background:linear-gradient(#ff8a9a,#c2304b)}
 .lr-reader .ny-quarter b{font-size:14px;color:#fff1eb}
-.lr-reader .ny-quarter small{font-size:11px;color:var(--lr-muted)}
-.lr-reader .ny-quarter em{font-style:normal;font-size:12px;font-weight:700;color:#ffd166}
+.lr-reader .ny-quarter small{font-size:13px;color:var(--lr-muted)}
+.lr-reader .ny-quarter em{font-style:normal;font-size:13px;font-weight:700;color:#ffd166}
 .love-bar.is-watch i{background:#6f6a73!important}
 /* 점수가 높은 달의 순위 숫자가 그래프 제목에 겹치지 않게 막대 위에 자리를 둔다. */
 .ny-chart .love-bars,.lr-summary-chart .ny-chart .love-bars{margin-top:40px}
 .love-bar.is-watch .love-rank{color:#c9c3cb!important}
 .ny-topics{margin-top:18px}
-.ny-topics h3{margin:0 0 10px;font:700 15px/1.5 ReadingSans,sans-serif;color:#f6e3e3}
+.ny-topics h3{margin:0 0 10px;font:700 15px/1.5 Pretendard,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;color:#f6e3e3}
 .ny-topics ul{list-style:none;margin:0;padding:0}
-.ny-topics li{display:grid;grid-template-columns:96px minmax(0,1fr) 48px;gap:10px;align-items:center;margin:0 0 8px;font-size:13px;color:#e8cfd3}
+.ny-topics li{display:grid;grid-template-columns:96px minmax(0,1fr) 48px;gap:10px;align-items:center;margin:0 0 8px;font-size:15px;color:#e8cfd3}
 .ny-topics i{display:block;height:8px;border-radius:5px;background:#3a1a22;overflow:hidden}
 .ny-topics i b{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,#c2304b,#ff8a9a)}
 .ny-topics em{font-style:normal;font-weight:700;color:#ffd166;text-align:right}

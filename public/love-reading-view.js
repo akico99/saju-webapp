@@ -440,7 +440,7 @@
         sec.appendChild(lockedPreview('나에게 끌리는 사람은?', '내가 끌리는 사람과 나에게 끌리는 사람. 그 차이까지 이어서 살펴봐요.','person',opts.onUnlock));
       }
       if (kind === 'free' && ids[i] === 'seasons') {
-        sec.appendChild(lockedPreview('가장 강한 세 달은 언제일까요?', '계절의 흐름을 봤다면, 이제 월별 흐름과 그때 해볼 일을 알아볼 차례예요.','timing',opts.onUnlock));
+        sec.appendChild(lockedPreview('가장 강한 두 달은 언제일까요?', '세 번째 달을 봤다면, 이제 1·2위 두 달과 월별 흐름, 그때 해볼 일을 알아볼 차례예요.','timing',opts.onUnlock));
       }
       if(kind==='free' && ids[i]==='balance') sec.appendChild(lockedPreview('반복되는 관계를 바꾸려면', '되풀이되는 패턴과 조심할 신호, 지금 상황에 맞는 행동을 전체 풀이에서 읽어요.','action',opts.onUnlock));
       if(kind==='free' && ids[i]==='whole-reading') sec.appendChild(reportContents(budget,opts.onUnlock));

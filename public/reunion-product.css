@@ -8,7 +8,7 @@ body:has(#landing.hidden) .landing-dock { display: none; }
 .reunion-promise .reunion-rules li { padding: 14px 16px; border-radius: 14px; background: var(--reunion-soft); color: var(--reunion-ink); line-height: 1.7; font-size: 15px; }
 .reunion-promise .reunion-rules b { display: block; margin-bottom: 2px; }
 .reunion-pillar-row { margin: 0 0 14px; }
-.reunion-who { margin: 0 0 6px; font-size: 13px; font-weight: 700; color: var(--reunion-accent); }
+.reunion-who { margin: 0 0 6px; font-size: 14px; font-weight: 700; color: var(--reunion-accent); }
 .reunion-list { margin: 8px 0 12px; padding-left: 20px; line-height: 1.75; }
 .reunion-list li { margin: 0 0 6px; }
 .reunion-list.is-pull li::marker { color: #c23d5c; }
@@ -21,7 +21,8 @@ body:has(#landing.hidden) .landing-dock { display: none; }
 .reunion-veil i:nth-child(2) { width: 82%; }
 .reunion-veil i:nth-child(3) { width: 64%; }
 .reunion-teaser-btn { border: 0; border-radius: 999px; padding: 10px 16px; background: var(--reunion-ink); color: #fff; font-weight: 700; cursor: pointer; }
-.reunion-page .reunion-safety { margin: 16px auto; max-width: 640px; padding: 14px 16px; border-left: 3px solid #ef5368; border-radius: 0 12px 12px 0; background: #2a1118; color: #f1dfe2; font-size: 14px; line-height: 1.7; }
+.reunion-page .reunion-safety { margin: 16px 24px; max-width: 640px; padding: 14px 16px; border-left: 3px solid #ef5368; border-radius: 0 12px 12px 0; background: #2a1118; color: #f1dfe2; font-size: 15px; line-height: 1.7; text-wrap: pretty; }
+@media (max-width: 340px) { .reunion-page .reunion-safety { margin: 16px 20px; } }
 /* 무료 첫 장 — 어두운 연애 화면 배경에 맞춘 색 */
 .reunion-page .reunion-free .fr-cover { background: #2a1118; border: 1px solid #53222d; }
 .reunion-page .reunion-free .fr-eyebrow { color: #e9bac1; }

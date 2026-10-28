@@ -1,5 +1,6 @@
 'use strict';
-/* 「다시, 우리」(재회) — 무료 첫 장(로그인·AI 호출 없음)과 유료 웹/PDF 생성. 연애 시기 리포트(routes/love.js)와 같은 흐름이다.
+/* 「다시, 우리」(재회) — 무료 사주 분석(로그인·AI 호출 없음), 그 위에 나중에 채우는 두 사람 관계 소개
+   (/api/reunion/intro, 가장 싼 모델)와 유료 웹/PDF 생성. 연애 시기 리포트(routes/love.js)와 같은 흐름이다.
    PDF 완성 뒤 결제 전에 받은 이메일로 보낸다. 메일 실패는 주문을 실패로 만들지 않는다. */
 const express = require('express');
 const { sajuChartHtml } = require('../../pdf/sajuChart');
@@ -15,6 +16,8 @@ const { computeSaju } = require('../../engine/index');
 const { validateBirth } = require('../../engine/loveTiming');
 const { buildReunionPreview, validateStory, describeBond } = require('../../engine/reunion');
 const { generateReunionReading, toPlainText } = require('../../llm/reunionReading');
+const { recordForReview } = require('../reviewRecord');
+const { introHandler, reunionFacts } = require('../../llm/freeIntro');
 const { costUsd } = require('../../llm/client');
 const points = require('../../db/points');
 const orders = require('../../db/orders');
@@ -64,6 +67,13 @@ router.post('/reunion/preview', (req, res) => {
   }
 });
 
+// 두 사람 관계 소개 — 미리보기와 같은 입력. 경계 존중 모드면 연락·재회를 권하지 않게 근거에 표시한다.
+router.post('/reunion/intro', introHandler((body) => {
+  const parsed = parseBody(body);
+  const p = buildReunionPreview({ me: parsed.me.birth, them: parsed.them.birth, story: parsed.story });
+  return reunionFacts(parsed.me.birth, parsed.them.birth, p.bond, p.story);
+}));
+
 async function startReunion(userId, body) {
   let parsed;
   try { parsed = parseBody(body); } catch (e) { throw new HttpError(400, { error: e.message }); }
@@ -108,6 +118,7 @@ async function startReunion(userId, body) {
         resultPath: pdfPath, cardPath: null, llmCostUsd: costUsd(reading.usage),
         resultText: toPlainText(reading), resultVisual: sajuChartHtml(engineA, { title: '나의 여덟 글자' }) + sajuChartHtml(engineB, { title: '그 사람의 여덟 글자' }) + reunionWebHtml(reading.timing)
       });
+      recordForReview(jobId, reading, { engines: [engineA, engineB], names: [people.me.name, people.them.name] });
       await deliverReport(jobId).catch(() => {});
     })
     .catch((e) => {
