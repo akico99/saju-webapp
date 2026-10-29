@@ -19,3 +19,17 @@ test('저장된 배너가 없는 새 환경의 기본 배너는 판매 중인 �
   vm.runInNewContext(source, sandbox);
   assert.deepEqual(Array.from(module.exports.readBanners(), (b) => b.href), ['life-graph.html', 'lifetime-report.html']);
 });
+
+test('저장된 평생사주 배너 텍스트의 옛 가격만 새 가격으로 보이고 다른 상품은 유지한다', () => {
+  const module = { exports: {} };
+  const source = fs.readFileSync('src/db/bannerPositions.js', 'utf8');
+  const saved = [
+    { image: '/banners/one.jpg', href: '/lifetime-report.html', blocks: [{ type: 'body', text: '평생사주 14,900원' }] },
+    { image: '/banners/two.jpg', href: '/love.html', blocks: [{ type: 'body', text: '연애 14,900원' }] }
+  ];
+  const sandbox = { module, exports: module.exports, __dirname: 'src/db', require: (name) => name === 'fs' ? { readFileSync() { return JSON.stringify(saved); } } : require(name) };
+  vm.runInNewContext(source, sandbox);
+  const banners = module.exports.readBanners();
+  assert.equal(banners[0].blocks[0].text, '평생사주 18,900원');
+  assert.equal(banners[1].blocks[0].text, '연애 14,900원');
+});

@@ -38,7 +38,7 @@ const LEGACY_DEFAULTS = {
   3: { image: '/banners/3.png', imagePosition: '50% 50%', eyebrow: 'COMPATIBILITY', headline: '둘이 보는 진짜 궁합', price: '궁합 리포트 · 4,900원', href: 'compat.html', cta: '지금 보기 →', textAlign: 'left', textVAlign: 'bottom', textScale: 1 },
   4: { image: '/banners/4.png', imagePosition: '50% 50%', eyebrow: 'MONEY', headline: '돈이 들어오고 나가는 흐름', price: '재물운 심층 리딩 · 3,900원', href: 'quick.html?topic=wealth', cta: '지금 보기 →', textAlign: 'left', textVAlign: 'bottom', textScale: 1 },
   5: { image: '/banners/5.png', imagePosition: '50% 50%', eyebrow: 'FREE', headline: '내 인생, 흐름으로 한눈에 보기', price: '인생 그래프 · 무료 체험', href: 'life-graph.html', cta: '무료로 보기 →', textAlign: 'left', textVAlign: 'bottom', textScale: 1 },
-  6: { image: '/banners/6.png', imagePosition: '50% 50%', eyebrow: 'FULL REPORT', headline: '인생 전체를 18장으로', price: '평생사주 100p 정식 리포트 · 14,900원', href: 'lifetime-report.html', cta: '지금 보기 →', textAlign: 'left', textVAlign: 'bottom', textScale: 1 }
+  6: { image: '/banners/6.png', imagePosition: '50% 50%', eyebrow: 'FULL REPORT', headline: '인생 전체를 18장으로', price: '평생사주 100p 정식 리포트 · 18,900원', href: 'lifetime-report.html', cta: '지금 보기 →', textAlign: 'left', textVAlign: 'bottom', textScale: 1 }
 };
 
 function isValidPosition(v) {
@@ -86,7 +86,7 @@ function cleanBanner(raw, fallback) {
   const blocks = Array.isArray(v.blocks)
     ? v.blocks.map(cleanBlock).filter((b) => b.text.trim())
     : blocksFromLegacyFields(Object.assign({}, def, v));
-  return {
+  const banner = {
     id: typeof v.id === 'string' && v.id ? v.id : (def.id || crypto.randomUUID()),
     image: typeof v.image === 'string' && v.image ? v.image : (def.image || ''),
     imagePosition: isValidPosition(v.imagePosition) ? v.imagePosition : (def.imagePosition || '50% 50%'),
@@ -96,6 +96,11 @@ function cleanBanner(raw, fallback) {
     overlay: OVERLAYS.includes(v.overlay) ? v.overlay : (def.overlay || 'strong'),
     blocks: blocks.slice(0, 12)
   };
+  // 관리자가 저장한 문구도 연결된 평생사주 상품의 현재 가격과 맞춘다.
+  if (/(?:^|\/)(?:lifetime-report|premium)\.html(?:[?#]|$)/i.test(banner.href)) {
+    banner.blocks = banner.blocks.map((b) => ({ ...b, text: b.text.replace(/14,900|14900/g, (price) => price === '14900' ? '18900' : '18,900') }));
+  }
+  return banner;
 }
 
 function migrateLegacy(saved) {

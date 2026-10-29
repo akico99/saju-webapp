@@ -50,7 +50,7 @@ function paidReports() {
     compatV2.enabled
       ? { name: '두 사람의 궁합', file: 'couple.html', llms: '[두 사람의 궁합](https://sajuotter.com/couple.html): 서로 끌리는 이유와 앞으로 12개월. 웹 결과·PDF 이메일 제공. ' + compatV2.priceKrw.toLocaleString('ko-KR') + '원.' }
       : { name: '사주 궁합 리포트', file: 'compat.html', llms: '[궁합](https://sajuotter.com/compat.html): 두 사람의 명식을 나란히 놓고 상성과 시기를 봅니다. 재회 관점 포함. 4,900원.' },
-    { name: '평생사주 100페이지 리포트', file: 'lifetime-report.html', llms: '[평생사주 100페이지](https://sajuotter.com/premium.html): 태어난 순간부터 지금까지 명식·격국·용신·대운·형충회합을 18장, 100페이지 PDF로 담은 정식 리포트. 3초 요약카드 포함. 14,900원.' },
+    { name: '평생사주 100페이지 리포트', file: 'lifetime-report.html', llms: '[평생사주 100페이지](https://sajuotter.com/premium.html): 태어난 순간부터 지금까지 명식·격국·용신·대운·형충회합을 18장, 100페이지 PDF로 담은 정식 리포트. 3초 요약카드 포함. 18,900원.' },
     { name: '택일 리포트', file: 'date-select.html', llms: '[언제가 좋을까 (택일)](https://sajuotter.com/date-select.html): 이사·개업·결혼·임신과 출산 날짜를 만세력으로 계산합니다. 각 3,900원.' }
   ].filter(Boolean);
 }
@@ -136,16 +136,16 @@ const PAGES = [
   {
     file: 'lifetime-report.html', sitemap: true, crumb: '평생사주',
     title: '평생사주 100페이지 리포트 | 대운·용신 사주 풀이 - ' + SITE_NAME,
-    description: '태어난 순간부터 지금까지, 명식·격국·용신·대운을 모두 담은 평생사주 100페이지 리포트. 3초 요약카드 포함, 14,900원.',
+    description: '태어난 순간부터 지금까지, 명식·격국·용신·대운을 모두 담은 평생사주 100페이지 리포트. 3초 요약카드 포함, 18,900원.',
     keywords: ['평생사주', '사주 풀이', '대운', '용신', '사주 리포트'],
-    service: { name: '평생사주 100페이지 리포트', serviceType: '사주 풀이', price: 14900 }
+    service: { name: '평생사주 100페이지 리포트', serviceType: '사주 풀이', price: 18900 }
   },
   {
     file: 'premium.html', sitemap: true, crumb: '평생사주 정식 리포트',
     title: '평생사주 100p 정식 리포트 | ' + SITE_NAME,
     description: '명식·격국·용신·대운·형충회합을 18장, 100페이지 PDF로 담은 사주보는 수달의 평생사주 정식 리포트. 3초 요약카드 포함.',
     keywords: ['평생사주', '사주 리포트', '사주 풀이'],
-    service: { name: '평생사주 100페이지 리포트', serviceType: '사주 풀이', price: 14900 }
+    service: { name: '평생사주 100페이지 리포트', serviceType: '사주 풀이', price: 18900 }
   },
   { file: 'webtoon/lifetime.html', sitemap: true, manageHead: false },
   { file: 'webtoon/compat.html', sitemap: true, manageHead: false },

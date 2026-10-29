@@ -25,10 +25,19 @@ function recoverPendingOrders() {
     // 이미 다른 프로세스가 처리 중이라는 뜻이므로 건너뛴다.
     if (!orders.claimForRecovery(order.job_id)) continue;
 
-    const price = points.PRICES[order.product_key];
+    const card = order.card_payment_id ? cardPayments.findById(order.card_payment_id) : null;
+    if (order.card_payment_id && (!card || card.user_id !== order.user_id || card.product_key !== order.product_key ||
+        card.status !== 'paid' || (card.job_id && card.job_id !== order.job_id))) {
+      orders.markError(order.job_id, '서버 재시작으로 인해 완료되지 못함(카드 결제 상태 확인 필요)');
+      continue;
+    }
+    const cardAmount = card && card.user_id === order.user_id && card.product_key === order.product_key ? card.amount_krw : null;
+    // 과거 가격으로 산 주문에 현재 가격을 적용하지 않는다. 기록 없는 평생사주 주문은 수동 확인한다.
+    const price = points.purchaseAmount(order.user_id, order.job_id) || cardAmount ||
+      (order.product_key === 'full' ? null : points.PRICES[order.product_key]);
     if (!price) {
-      console.warn(`[재시작 복구] 알 수 없는 상품(${order.product_key}), 주문 ${order.job_id} 환불 건너뜀 — 수동 확인 필요`);
-      orders.markError(order.job_id, '서버 재시작으로 인해 완료되지 못함(상품 정보 불명, 수동 환불 필요)');
+      console.warn(`[재시작 복구] 환불 금액을 확인할 수 없어 주문 ${order.job_id} 환불 건너뜀 — 수동 확인 필요`);
+      orders.markError(order.job_id, '서버 재시작으로 인해 완료되지 못함(환불 금액 수동 확인 필요)');
       continue;
     }
     refundPurchase(order.user_id, price, `서버 재시작으로 중단된 작업 자동 환불: ${order.product_key}`, order.job_id);

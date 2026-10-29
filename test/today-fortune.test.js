@@ -9,7 +9,7 @@ test('오늘의 추천은 판매 종료된 심층 리딩이 아닌 판매 중인
   for (let day = 1; day <= 30; day++) {
     const { upsell } = getTodayFortune(birth, new Date(2026, 9, day));
     assert.equal(upsell.href, '/lifetime-report.html');
-    assert.equal(upsell.price, '14,900원');
+    assert.equal(upsell.price, '18,900원');
   }
 });
 

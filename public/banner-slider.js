@@ -23,7 +23,7 @@
     { image: '/banners/5.png', imagePosition: '50% 50%', href: '/life-graph.html', textAlign: 'left', textVAlign: 'bottom',
       blocks: blocks([{ type: 'label', text: 'FREE' }, { type: 'title', text: '내 인생, 흐름으로 한눈에 보기' }, { type: 'body', text: '인생 그래프 · 무료 체험' }, { type: 'button', text: '무료로 보기 →' }]) },
     { image: '/banners/6.png', imagePosition: '50% 50%', href: '/lifetime-report.html', textAlign: 'left', textVAlign: 'bottom',
-      blocks: blocks([{ type: 'label', text: 'FULL REPORT' }, { type: 'title', text: '인생 전체를 18장으로' }, { type: 'body', text: '평생사주 100p 정식 리포트 · 14,900원' }, { type: 'button', text: '지금 보기 →' }]) }
+      blocks: blocks([{ type: 'label', text: 'FULL REPORT' }, { type: 'title', text: '인생 전체를 18장으로' }, { type: 'body', text: '평생사주 100p 정식 리포트 · 18,900원' }, { type: 'button', text: '지금 보기 →' }]) }
   ];
 
   /* 블록 하나를 실제 요소로. 관리자가 넣은 글은 textContent로만 넣는다 —

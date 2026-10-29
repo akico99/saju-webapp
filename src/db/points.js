@@ -22,7 +22,7 @@ const PRICES = {
   // 택일 리포트 (LLM + PDF)
   date_select_moving: 3900, date_select_opening: 3900, date_select_wedding: 3900, date_select_birth: 3900,
   // 관계 · 전체
-  compat: 4900, full: 14900,
+  compat: 4900, full: 18900,
   // 연애 시기 리포트 — 구조 개편 첫 대표 상품. 공개 전에는 아래에서 SELLABLE에서 뺀다.
   [loveTimingConfig.productKey]: loveTimingConfig.priceKrw,
   // 재회(옛 990원 점수표 'reunion'과 섞이지 않게 새 키)·새 궁합(기존 4,900원 'compat'과 별개)
@@ -55,16 +55,29 @@ const stmts = {
   `),
   findRefundByRefId: db.prepare(
     "SELECT id FROM point_transactions WHERE ref_type='refund' AND ref_id=? LIMIT 1"
-  )
+  ),
+  findChargeByRefId: db.prepare("SELECT delta FROM point_transactions WHERE user_id=? AND ref_type='product_purchase' AND ref_id=? AND delta<0 ORDER BY id DESC LIMIT 1"),
+  findCardForCharge: db.prepare('SELECT * FROM card_payments WHERE id=?'),
+  findOrderForCard: db.prepare('SELECT id FROM orders WHERE card_payment_id=? LIMIT 1')
 };
 
 /** 상품 구매 시 포인트를 차감한다. 잔액 부족이면 code='insufficient_points'인 Error를 던진다.
     refId를 넘기면(예: jobId) 이 차감 거래와 나중의 환불·주문을 같은 값으로 묶어 추적할 수 있다. */
-function chargeForProduct(userId, productKey, refId) {
-  const price = PRICES[productKey];
+function chargeForProduct(userId, productKey, refId, cardPaymentId) {
+  let price = PRICES[productKey];
   if (!price) throw new Error('알 수 없는 상품입니다: ' + productKey);
   // 판매 종료된 키로는 새 결제를 만들지 않는다 — 환불·복구 조회는 PRICES로 계속 된다.
   if (!SELLABLE.has(productKey)) throw new Error('판매가 종료된 상품입니다: ' + productKey);
+
+  if (cardPaymentId != null) {
+    const card = stmts.findCardForCharge.get(cardPaymentId);
+    if (!card || card.user_id !== userId || card.product_key !== productKey || card.status !== 'paid' || card.job_id ||
+        !Number.isSafeInteger(card.amount_krw) || card.amount_krw <= 0 || stmts.findOrderForCard.get(cardPaymentId)) {
+      throw new Error('상품과 일치하는 미사용 카드 결제를 확인할 수 없습니다.');
+    }
+    // 가격 변경 전 준비·승인된 주문도 서버가 저장한 결제액 그대로 처리한다.
+    price = card.amount_krw;
+  }
 
   const user = findById(userId);
   if (!user || user.point_balance < price) {
@@ -90,7 +103,7 @@ function chargeForProduct(userId, productKey, refId) {
 function chargeForProductAndCreateOrder(userId, productKey, { label, jobId, cardPaymentId }) {
   let price;
   const tx = db.transaction(() => {
-    price = chargeForProduct(userId, productKey, jobId);
+    price = chargeForProduct(userId, productKey, jobId, cardPaymentId);
     orders.createOrder({ userId, productKey, cardPaymentId, label, jobId });
   });
   tx();
@@ -118,6 +131,11 @@ function recordCardRefund(userId, reason, refId) {
   stmts.insertTx.run({ userId, delta: 0, reason: `카드 결제 취소: ${reason}`.slice(0, 200), refType: 'refund', refId: refId || null });
 }
 
+function purchaseAmount(userId, jobId) {
+  const row = stmts.findChargeByRefId.get(userId, jobId);
+  return row ? -row.delta : null;
+}
+
 module.exports = {
-  PRICES, LEGACY_PRICES, SELLABLE, chargeForProduct, chargeForProductAndCreateOrder, refund, recordCardRefund
+  PRICES, LEGACY_PRICES, SELLABLE, chargeForProduct, chargeForProductAndCreateOrder, purchaseAmount, refund, recordCardRefund
 };

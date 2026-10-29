@@ -106,7 +106,7 @@ function readNoble(r) {
   return {
     kind: 'noble', title: '사주 속 귀인', headline, lead, found, hourUnknown, pillars: pillarStrip(r),
     note: hourUnknown ? '태어난 시각이 없어 시주(자녀·말년·아랫사람 자리)는 보지 못했습니다.' : null,
-    upsell: { lead: '사주 전체의 흐름과 여러 주제를 더 살펴보고 싶다면 평생사주를 확인해 보세요.', name: '평생사주 100p', price: '14,900원', href: '/lifetime-report.html' }
+    upsell: { lead: '사주 전체의 흐름과 여러 주제를 더 살펴보고 싶다면 평생사주를 확인해 보세요.', name: '평생사주 100p', price: '18,900원', href: '/lifetime-report.html' }
   };
 }
 
@@ -165,7 +165,7 @@ function readBalance(r) {
     lead: `${total}글자 중 ${iga(strongestNames)} ${strongestAll.length > 1 ? '각각 ' : ''}${strongest.count}개로 가장 많고${lacking.length ? `, ${eunneun(lacking.map((l) => l.ko).join('·'))} 0개입니다` : ', 빠진 기운은 없습니다'}. 글자 수만으로 기운의 좋고 나쁨을 단정하지 않습니다.`,
     bars, total, hourUnknown: pillars.length === 3, strongest: strongestAll[0], strongestAll, lacking,
     weakest: weakest && weakest.el !== strongest.el ? { ...weakest, text: `${eunneun(weakest.ko)} 있긴 하지만 ${weakest.count}개로 얇습니다. 없는 건 아니라 의식하면 쓸 수 있는 자리입니다.` } : null,
-    upsell: { lead: '오행을 포함해 사주 전체의 기질과 흐름을 더 살펴보고 싶다면 평생사주를 확인해 보세요.', name: '평생사주 100p', price: '14,900원', href: '/lifetime-report.html' }
+    upsell: { lead: '오행을 포함해 사주 전체의 기질과 흐름을 더 살펴보고 싶다면 평생사주를 확인해 보세요.', name: '평생사주 100p', price: '18,900원', href: '/lifetime-report.html' }
   };
 }
 
@@ -220,7 +220,7 @@ function readCharm(r) {
     base: { ilgan: `${ilgan.char}(${ilgan.ko})`, ohaeng: ilgan.ohaeng, text: base },
     found,
     note: pillarsOf(r).length === 3 ? '태어난 시각이 없어 시주는 보지 못했습니다.' : null,
-    upsell: { lead: '사주 전체의 기질과 인연을 포함한 여러 주제를 더 살펴보고 싶다면 평생사주를 확인해 보세요.', name: '평생사주 100p', price: '14,900원', href: '/lifetime-report.html' }
+    upsell: { lead: '사주 전체의 기질과 인연을 포함한 여러 주제를 더 살펴보고 싶다면 평생사주를 확인해 보세요.', name: '평생사주 100p', price: '18,900원', href: '/lifetime-report.html' }
   };
 }
 

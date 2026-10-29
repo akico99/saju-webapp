@@ -110,12 +110,12 @@ function questOf(yongshinMain, questAction) {
    상품이 어긋나면 추천이 아니라 광고로 읽힌다(2026-09).
    topic은 오늘 십성 그룹에서 나온 계산값이라, 날짜가 바뀌면 추천도 같이 바뀐다. */
 const TOPIC_UPSELL = {
-  relationship: { label: '사람 사이와 내 기질이 궁금하다면', name: '평생사주 100p', href: '/lifetime-report.html', price: '14,900원' },
-  career: { label: '일의 방향과 인생 흐름이 궁금하다면', name: '평생사주 100p', href: '/lifetime-report.html', price: '14,900원' },
-  wealth: { label: '돈과 인생의 흐름이 궁금하다면', name: '평생사주 100p', href: '/lifetime-report.html', price: '14,900원' },
-  total: { label: '내 사주 전체가 궁금하다면', name: '평생사주 100p', href: '/lifetime-report.html', price: '14,900원' }
+  relationship: { label: '사람 사이와 내 기질이 궁금하다면', name: '평생사주 100p', href: '/lifetime-report.html', price: '18,900원' },
+  career: { label: '일의 방향과 인생 흐름이 궁금하다면', name: '평생사주 100p', href: '/lifetime-report.html', price: '18,900원' },
+  wealth: { label: '돈과 인생의 흐름이 궁금하다면', name: '평생사주 100p', href: '/lifetime-report.html', price: '18,900원' },
+  total: { label: '내 사주 전체가 궁금하다면', name: '평생사주 100p', href: '/lifetime-report.html', price: '18,900원' }
 };
-const FALLBACK_UPSELL = { label: '내 인생 전체가 궁금하다면', name: '평생사주 100p', href: '/lifetime-report.html', price: '14,900원' };
+const FALLBACK_UPSELL = { label: '내 인생 전체가 궁금하다면', name: '평생사주 100p', href: '/lifetime-report.html', price: '18,900원' };
 
 function upsellFor(topic) {
   return TOPIC_UPSELL[topic] || FALLBACK_UPSELL;

@@ -8,11 +8,11 @@
    실제 제출 순서로 돌린다. 고른 값은 hidden input[name=concern]으로 폼에 들어간다. */
 (function () {
   const CONCERNS = [
-    { key: 'wealth', label: '돈과 재물', sub: '열심히 버는데 왜 안 남을까', product: { name: '평생사주 100p', price: '14,900원', href: '/lifetime-report.html' } },
-    { key: 'career', label: '직업과 이직', sub: '지금 버틸까, 움직일까', product: { name: '평생사주 100p', price: '14,900원', href: '/lifetime-report.html' } },
-    { key: 'love', label: '연애와 인연', sub: '왜 같은 지점에서 자꾸 엇갈릴까', product: { name: '평생사주 100p', price: '14,900원', href: '/lifetime-report.html' } },
-    { key: 'relationship', label: '사람 관계', sub: '사람 때문에 자꾸 지칠 때', product: { name: '평생사주 100p', price: '14,900원', href: '/lifetime-report.html' } },
-    { key: 'life', label: '전체 인생 흐름', sub: '지금이 내 인생 어디쯤인지', product: { name: '평생사주 100p', price: '14,900원', href: '/lifetime-report.html' } }
+    { key: 'wealth', label: '돈과 재물', sub: '열심히 버는데 왜 안 남을까', product: { name: '평생사주 100p', price: '18,900원', href: '/lifetime-report.html' } },
+    { key: 'career', label: '직업과 이직', sub: '지금 버틸까, 움직일까', product: { name: '평생사주 100p', price: '18,900원', href: '/lifetime-report.html' } },
+    { key: 'love', label: '연애와 인연', sub: '왜 같은 지점에서 자꾸 엇갈릴까', product: { name: '평생사주 100p', price: '18,900원', href: '/lifetime-report.html' } },
+    { key: 'relationship', label: '사람 관계', sub: '사람 때문에 자꾸 지칠 때', product: { name: '평생사주 100p', price: '18,900원', href: '/lifetime-report.html' } },
+    { key: 'life', label: '전체 인생 흐름', sub: '지금이 내 인생 어디쯤인지', product: { name: '평생사주 100p', price: '18,900원', href: '/lifetime-report.html' } }
   ];
   const BY_KEY = Object.fromEntries(CONCERNS.map((c) => [c.key, c]));
 
