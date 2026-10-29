@@ -134,10 +134,42 @@
     else if (path === '/date-select.html') key = 'date_select_' + (q.get('occasion') || 'moving');
     else if (path === '/lifetime-report.html') key = 'full';
     else if (path === '/new-year.html') key = 'new_year_2027';
+    else if (path === '/love.html') key = 'love_timing';
+    else if (path === '/reunion.html') key = 'reunion_v2';
+    else if (path === '/couple.html') key = 'compat_v2';
     var p = key && cfg.products[key];
     if (p) viewItem({ productKey: key, name: p.name, value: p.price });
   }
 
-  window.SoTrack = { attribution: attribution, viewItem: viewItem, beginCheckout: beginCheckout, purchase: purchase, signUp: signUp };
+  /* 무료 사주 분석 결과 표시(Lead)와 잠금 해제 버튼 클릭(UnlockClick).
+     소액 광고는 구매만으로는 학습 신호가 모자라 무료 결과를 최적화 이벤트로 쓴다.
+     로그인 복귀·재열람으로 부풀지 않게 상품별로 브라우저 세션당 한 번만 보낸다. 출생정보는 넣지 않는다. */
+  function onceInSession(k) {
+    try { if (sessionStorage.getItem(k)) return false; sessionStorage.setItem(k, '1'); } catch (e) {}
+    return true;
+  }
+  function productInfo(key) {
+    var p = cfg && cfg.products && cfg.products[key];
+    return { productKey: key, name: (p && p.name) || key, value: (p && p.price) || 0 };
+  }
+  function freeResult(key) {
+    if (!key || !onceInSession('so_free_' + key)) return;
+    when(function () {
+      var p = productInfo(key);
+      ga('event', 'generate_lead', { currency: 'KRW', value: 0, lead_source: 'free_result', items: [item(p)] });
+      meta('track', 'Lead', { content_ids: [key], content_name: p.name, content_category: 'free_result', value: 0, currency: 'KRW' });
+      kakao(function (k) { if (k.participation) k.participation('free_result'); });
+    });
+  }
+  function unlockClick(key) {
+    if (!key || !onceInSession('so_unlock_' + key)) return;
+    when(function () {
+      var p = productInfo(key);
+      ga('event', 'unlock_click', { currency: 'KRW', value: p.value, items: [item(p)] });
+      meta('trackCustom', 'UnlockClick', { content_ids: [key], content_name: p.name, value: p.value, currency: 'KRW' });
+    });
+  }
+
+  window.SoTrack = { attribution: attribution, viewItem: viewItem, beginCheckout: beginCheckout, purchase: purchase, signUp: signUp, freeResult: freeResult, unlockClick: unlockClick };
 })();
 

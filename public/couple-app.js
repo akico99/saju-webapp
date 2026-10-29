@@ -295,6 +295,7 @@ window.LOVE_READING_ART = {"greeting":"/couple-assets/cover.webp","greeting-comi
     landing.classList.add('hidden');
     stage.classList.add('hidden');
     freeResult.classList.remove('hidden');
+    if (window.SoTrack && SoTrack.freeResult) SoTrack.freeResult('compat_v2');
     toTop();
   }
 
@@ -348,6 +349,7 @@ window.LOVE_READING_ART = {"greeting":"/couple-assets/cover.webp","greeting-comi
     if (purchasing || checkoutSheet.open) return;
     checkoutTrigger = event && event.currentTarget instanceof HTMLElement ? event.currentTarget : document.activeElement;
     checkoutSheet.showModal();
+    if (window.SoTrack && SoTrack.unlockClick) SoTrack.unlockClick('compat_v2');
     document.body.classList.add('checkout-open');
     document.getElementById('closeCheckout').focus({ preventScroll: true });
   }

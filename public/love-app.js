@@ -303,6 +303,7 @@
     landing.classList.add('hidden');
     document.getElementById('stage').classList.add('hidden');
     freeResult.classList.remove('hidden');
+    if (window.SoTrack && SoTrack.freeResult) SoTrack.freeResult('love_timing');
     toTop();
   }
 
@@ -358,6 +359,7 @@
     if (purchasing || checkoutSheet.open) return;
     checkoutTrigger = event && event.currentTarget instanceof HTMLElement ? event.currentTarget : document.activeElement;
     checkoutSheet.showModal();
+    if (window.SoTrack && SoTrack.unlockClick) SoTrack.unlockClick('love_timing');
     document.body.classList.add('checkout-open');
     document.getElementById('closeCheckout').focus({ preventScroll: true });
   }

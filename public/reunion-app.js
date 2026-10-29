@@ -248,6 +248,7 @@ window.LOVE_READING_ART = {"greeting":"/reunion-assets/cover.webp","greeting-com
     landing.classList.add('hidden');
     stage.classList.add('hidden');
     freeResult.classList.remove('hidden');
+    if (window.SoTrack && SoTrack.freeResult) SoTrack.freeResult('reunion_v2');
     toTop();
   }
 
@@ -291,6 +292,7 @@ window.LOVE_READING_ART = {"greeting":"/reunion-assets/cover.webp","greeting-com
     if (purchasing || sheet.open) return;
     trigger = event && event.currentTarget instanceof HTMLElement ? event.currentTarget : document.activeElement;
     sheet.showModal();
+    if (window.SoTrack && SoTrack.unlockClick) SoTrack.unlockClick('reunion_v2');
     document.body.classList.add('checkout-open');
     document.getElementById('closeCheckout').focus({ preventScroll: true });
   }
