@@ -117,8 +117,9 @@ function readBanners() {
   if (saved && typeof saved === 'object' && LEGACY_IDS.some((id) => saved[id])) {
     return migrateLegacy(saved);
   }
-  // 저장된 파일이 아예 없으면(첫 실행) 기존과 동일하게 보이도록 기본 6개를 보여준다.
-  return LEGACY_IDS.map((id) => cleanBanner({}, LEGACY_DEFAULTS[id]));
+  // 첫 실행에는 판매가 종료된 옛 상품의 배너를 넣지 않는다. LEGACY_DEFAULTS는
+  // 관리자가 저장한 옛 형식의 누락 필드를 복원하는 용도로만 유지한다.
+  return ['5', '6'].map((id) => cleanBanner({}, LEGACY_DEFAULTS[id]));
 }
 
 function writeBanners(list) {

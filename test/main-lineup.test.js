@@ -85,7 +85,7 @@ function probe(on) {
     const server = app.listen(0, '127.0.0.1', async () => {
       const base = 'http://127.0.0.1:' + server.address().port;
       // fetch는 일부 임의 포트를 "bad port"로 막으므로 http로 직접 묻는다.
-      const get = (u) => new Promise((resolve) => require('http').get(base + u, (res) => { let b = ''; res.on('data', (d) => { b += d; }); res.on('end', () => resolve({ status: res.statusCode, body: b })); }));
+      const get = (u) => new Promise((resolve) => require('http').get(base + u, (res) => { let b = ''; res.on('data', (d) => { b += d; }); res.on('end', () => resolve({ status: res.statusCode, body: b, location: res.headers.location })); }));
       const tags = [...html.matchAll(/<(a|img|link|script)[ >][^>]*>/g)].map((x) => x[0]);
       const urls = [];
       for (const tag of tags) {
@@ -101,7 +101,8 @@ function probe(on) {
       const available = JSON.parse((await get('/api/products/available')).body);
       const compat = { plain: await get('/compat.html'), resume: await get('/compat.html?jobId=x') };
       const loc = (r) => r.status;
-      console.log(JSON.stringify({ statuses, available, compat: { plain: loc(compat.plain), resume: loc(compat.resume) } }));
+      const compatWebtoon = await get('/webtoon/compat.html?utm_source=test&utm_content=card');
+      console.log(JSON.stringify({ statuses, available, compat: { plain: loc(compat.plain), resume: loc(compat.resume) }, compatWebtoon: { status: compatWebtoon.status, location: compatWebtoon.location } }));
       server.closeAllConnections(); server.close();
       setTimeout(() => process.exit(0), 50);
     });
@@ -109,11 +110,12 @@ function probe(on) {
 }
 
 test('대표 상품이 모두 켜져 있으면 메인의 모든 링크와 상품 그림이 열린다', () => {
-  const { statuses, available, compat } = probe(true);
+  const { statuses, available, compat, compatWebtoon } = probe(true);
   assert.deepEqual(available, { love: true, newYear: true, reunion: true, couple: true });
   assert.ok(statuses.length > 30, 'home should expose its links');
   // 새 궁합이 켜지면 예전 궁합 주소는 새 궁합으로 넘어간다(결제 복귀 주소는 그대로).
   assert.deepEqual(compat, { plain: 302, resume: 200 });
+  assert.deepEqual(compatWebtoon, { status: 302, location: '/couple.html?utm_source=test&utm_content=card' });
   for (const s of statuses) assert.equal(s.status, s.url.startsWith('/compat.html') ? 302 : 200, s.attr + ' ' + s.url);
   for (const cover of ['/love-assets/reading/cover-comic.webp', '/new-year-assets/cover.webp', '/reunion-assets/cover.webp', '/couple-assets/cover.webp']) {
     assert.ok(statuses.some((s) => s.url === cover), cover);
@@ -121,9 +123,10 @@ test('대표 상품이 모두 켜져 있으면 메인의 모든 링크와 상품
 });
 
 test('대표 상품이 꺼져 있으면 메인이 기본으로 보여 주는 링크는 모두 열린다', () => {
-  const { statuses, available, compat } = probe(false);
+  const { statuses, available, compat, compatWebtoon } = probe(false);
   assert.deepEqual(available, { love: false, newYear: false, reunion: false, couple: false });
   assert.deepEqual(compat, { plain: 200, resume: 200 }, 'old compat page stays while the new one is off');
+  assert.deepEqual(compatWebtoon, { status: 200 }, 'old compat webtoon stays while the new one is off');
   // 꺼진 상품 링크는 home.js가 숨긴다. 궁합은 data-src(새 궁합 그림)만 꺼져 있고 기본 링크는 예전 궁합이다.
   // 숨겨진 카드 안의 표지 그림(상품별 폴더)도 상품과 함께 잠긴다 — 숨긴 카드의 lazy 그림은 브라우저가 받지 않는다.
   const gated = /^\/(love|new-year|reunion|couple)-assets\//;

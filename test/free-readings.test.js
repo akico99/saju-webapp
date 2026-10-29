@@ -12,7 +12,8 @@ test('세 종류 모두 결과 구조를 갖춘다', () => {
     const r = readFree(kind, b);
     assert.equal(r.kind, kind);
     assert.ok(r.headline && r.lead, kind + ': headline/lead');
-    assert.ok(r.upsell && r.upsell.href.startsWith('/quick.html?topic='), kind + ': upsell');
+    assert.equal(r.upsell.href, '/lifetime-report.html', kind + ': available report');
+    assert.equal(r.upsell.price, '14,900원', kind + ': current price');
   }
 });
 

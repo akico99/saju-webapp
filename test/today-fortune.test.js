@@ -5,6 +5,14 @@ const { getTodayFortune } = require('../src/engine/todayFortune');
 
 const birth = { year: 1985, month: 11, day: 3, hour: 22, minute: 0, gender: '남', isLunar: false };
 
+test('오늘의 추천은 판매 종료된 심층 리딩이 아닌 판매 중인 리포트를 안내한다', () => {
+  for (let day = 1; day <= 30; day++) {
+    const { upsell } = getTodayFortune(birth, new Date(2026, 9, day));
+    assert.equal(upsell.href, '/lifetime-report.html');
+    assert.equal(upsell.price, '14,900원');
+  }
+});
+
 test('오늘의 운세는 참고 지수와 비유임을 명시한다', () => {
   const result = getTodayFortune(birth, new Date(2026, 8, 20));
   assert.match(result.scoreNote, /참고 지수/);

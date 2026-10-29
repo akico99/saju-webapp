@@ -1,12 +1,12 @@
 'use strict';
 /* 무료 미니 리딩 3종 — LLM 없이 엔진 값과 고정 해석표만으로 만든다(비용 0, 즉시 응답).
-   오늘의 운세·인생 그래프처럼 "결제 없이 먼저 보는" 입구이고, 각각 3,900원 심층 리딩 하나로
-   이어진다. 무료라고 허접하면 안 된다는 기준: 표에서 고르되 이 사람의 기둥·오행·신살에
+   오늘의 운세·인생 그래프처럼 "결제 없이 먼저 보는" 입구이며 평생사주로 이어진다.
+   표에서 고르되 이 사람의 기둥·오행·신살에
    실제로 근거한 문장만 나오고, 없는 걸 지어내지 않는다(귀인이 없으면 없다고 말한다).
 
-   noble   사주 속 귀인      → 대인관계·인복 심층 리딩
-   balance 내 오행 밸런스     → 내 사주 첫 풀이
-   charm   타고난 매력       → 애정·결혼운 심층 리딩 */
+   noble   사주 속 귀인
+   balance 내 오행 밸런스
+   charm   타고난 매력 */
 const { computeSaju } = require('./index');
 const { grade } = require('./counts');
 
@@ -106,7 +106,7 @@ function readNoble(r) {
   return {
     kind: 'noble', title: '사주 속 귀인', headline, lead, found, hourUnknown, pillars: pillarStrip(r),
     note: hourUnknown ? '태어난 시각이 없어 시주(자녀·말년·아랫사람 자리)는 보지 못했습니다.' : null,
-    upsell: { lead: '귀인이 어느 자리에 있는지는 알았어요. 그 인연을 실제로 어떻게 만나고 지키는지, 사람 관계 전체의 구조를 보려면요.', name: '대인관계·인복 심층 리딩', price: '3,900원', href: '/quick.html?topic=relationship' }
+    upsell: { lead: '사주 전체의 흐름과 여러 주제를 더 살펴보고 싶다면 평생사주를 확인해 보세요.', name: '평생사주 100p', price: '14,900원', href: '/lifetime-report.html' }
   };
 }
 
@@ -165,7 +165,7 @@ function readBalance(r) {
     lead: `${total}글자 중 ${iga(strongestNames)} ${strongestAll.length > 1 ? '각각 ' : ''}${strongest.count}개로 가장 많고${lacking.length ? `, ${eunneun(lacking.map((l) => l.ko).join('·'))} 0개입니다` : ', 빠진 기운은 없습니다'}. 글자 수만으로 기운의 좋고 나쁨을 단정하지 않습니다.`,
     bars, total, hourUnknown: pillars.length === 3, strongest: strongestAll[0], strongestAll, lacking,
     weakest: weakest && weakest.el !== strongest.el ? { ...weakest, text: `${eunneun(weakest.ko)} 있긴 하지만 ${weakest.count}개로 얇습니다. 없는 건 아니라 의식하면 쓸 수 있는 자리입니다.` } : null,
-    upsell: { lead: '기운의 많고 적음은 봤어요. 이 균형이 성격과 기질로 어떻게 나타나고, 전체를 한 줄로 뭐라고 하는지까지 보려면요.', name: '내 사주 첫 풀이', price: '3,900원', href: '/quick.html?topic=intro' }
+    upsell: { lead: '오행을 포함해 사주 전체의 기질과 흐름을 더 살펴보고 싶다면 평생사주를 확인해 보세요.', name: '평생사주 100p', price: '14,900원', href: '/lifetime-report.html' }
   };
 }
 
@@ -220,7 +220,7 @@ function readCharm(r) {
     base: { ilgan: `${ilgan.char}(${ilgan.ko})`, ohaeng: ilgan.ohaeng, text: base },
     found,
     note: pillarsOf(r).length === 3 ? '태어난 시각이 없어 시주는 보지 못했습니다.' : null,
-    upsell: { lead: '어떻게 보이는지는 알았어요. 그 매력이 실제 인연으로 이어지는 시기와, 같은 지점에서 자꾸 엇갈리는 이유까지 보려면요.', name: '애정·결혼운 심층 리딩', price: '3,900원', href: '/quick.html?topic=love' }
+    upsell: { lead: '사주 전체의 기질과 인연을 포함한 여러 주제를 더 살펴보고 싶다면 평생사주를 확인해 보세요.', name: '평생사주 100p', price: '14,900원', href: '/lifetime-report.html' }
   };
 }
 

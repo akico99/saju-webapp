@@ -67,7 +67,14 @@ app.use((req, res, next) => {
   // 새 궁합(두 사람의 궁합)이 열리면 예전 궁합(4,900원) 페이지는 새 궁합으로 안내한다.
   // 결제 뒤 돌아오는 주소(?jobId=)는 예전 주문 결과를 보여야 하므로 그대로 둔다.
   if (compatV2Config.enabled && req.method === 'GET' && /^\/compat\.html$/i.test(requestPath) && !('jobId' in req.query)) {
-    return res.redirect(302, '/couple.html' + (req.query.from ? '?from=' + encodeURIComponent(String(req.query.from)) : ''));
+    const query = req.originalUrl.includes('?') ? req.originalUrl.slice(req.originalUrl.indexOf('?')) : '';
+    return res.redirect(302, '/couple.html' + query);
+  }
+  // 기존 궁합 웹툰은 4,900원 구상품의 샘플과 사양을 소개한다. 새 상품이 열리면
+  // 광고 쿼리를 보존해 새 상품으로 안내하고, 예전 샘플을 새 상품처럼 소개하지 않는다.
+  if (compatV2Config.enabled && req.method === 'GET' && /^\/webtoon\/compat\.html$/i.test(requestPath)) {
+    const query = req.originalUrl.includes('?') ? req.originalUrl.slice(req.originalUrl.indexOf('?')) : '';
+    return res.redirect(302, '/couple.html' + query);
   }
   // 장면형 읽기 화면 파일은 켜기 전까지 404다. 궁합 페이지는 /api/scene-reader로 켜짐을 확인한 뒤에만 불러온다.
   if (!sceneReaderConfig.enabled && (/^\/reading-(?:view\.(?:js|css)|model-[a-z0-9-]+\.js)$/i.test(requestPath) || /^\/reading-assets(?:\/|$)/i.test(requestPath))) {

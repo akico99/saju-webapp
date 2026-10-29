@@ -95,15 +95,9 @@ test('직업·적성운 웹툰은 승인된 4구간과 실물 증거를 순서�
 
 test('직업·적성운 웹툰의 상품·추적·샘플 링크가 서비스와 일치한다', () => {
   const html = read('webtoon/career.html');
-  const points = fs.readFileSync(path.join(__dirname, '..', 'src/db/points.js'), 'utf8');
-  const quick = read('quick.html');
-  assert.match(points, /deep_career/);
-  assert.match(points, /deep_career[^\n]*3900|3900[^\n]*deep_career/);
-  // 심층 리딩은 2026-10 판매 종료 — 웹툰의 직업·적성운 링크는 quick.html이 신년운세로 안내한다.
-  assert.match(quick, /career: '\/new-year\.html'/);
-  assert.match(html, /<strong class="ticket-price">3,900<small>원<\/small><\/strong>/);
-  assert.match(html, /<span class="cta-price">3,900원<\/span>/);
-  assert.match(html, /href="\/quick\.html\?topic=career&amp;from=career-webtoon"/);
+  assert.doesNotMatch(html, /3,900|quick\.html\?topic=career/);
+  assert.match(html, /판매를 종료/);
+  assert.match(html, /href="\/\?from=career-webtoon"/);
   assert.equal((html.match(/googletagmanager\.com\/gtag\/js/g) || []).length, 1);
   assert.equal((html.match(/<script src="\/track\.js"><\/script>/g) || []).length, 1);
   assert.doesNotMatch(html, /fbq\(|kakaoPixel|META_PIXEL_ID|KAKAO_PIXEL_ID/);
