@@ -1,0 +1,71 @@
+/* 무료 인생 그래프 전용. 다른 편의 공통 스타일은 바꾸지 않는다. */
+.graph-story .story{padding-bottom:0}
+.graph-story .story-header{position:relative;z-index:2}
+.graph-story .headline .big{font-size:clamp(32px,9vw,42px)}
+.graph-story .headline .lead{font-size:16px}
+.graph-story .s-problem{padding-top:22px;background:var(--paper);isolation:isolate}
+.graph-story .reader-thought{margin:18px 0 0;justify-content:center;min-height:0;padding:0}
+.graph-story .reader-thought .thought{font-size:24px;line-height:1.15}
+.graph-story .art-reader{height:275px;margin-top:8px;background:linear-gradient(var(--paper),var(--night))}
+.graph-story .art-reader img{height:100%;object-fit:cover;object-position:center bottom;mask-image:linear-gradient(transparent,#000 12%,#000 83%,transparent)}
+.graph-story .art-reader .sfx{top:80px;right:15%;font-size:25px;color:var(--ink)}
+.graph-story .s-problem>.caption{position:relative;z-index:2;width:max-content;max-width:calc(100% - 46px);margin:-8px auto 0;white-space:normal;font-size:15px}
+.graph-story .s-problem::after{content:"";display:block;height:22px;background:var(--night)}
+.graph-story .s-turn{padding-top:28px;background:var(--night)}
+.graph-story .s-turn::before,.graph-story .s-close::before{display:none}
+.graph-story .turn-scene{position:relative;margin-top:6px;height:300px;background:linear-gradient(var(--night),var(--paper-2))}
+.graph-story .art-turn{height:100%;margin:0}
+.graph-story .art-turn img{height:100%;object-fit:cover;object-position:50% bottom;mask-image:linear-gradient(transparent,#000 12%,#000 86%,transparent)}
+.graph-story .cloud-bubble{position:absolute;margin:0;width:auto;min-height:0;padding:13px 17px;font-size:22px;line-height:1.18;background:#fffdf8;color:var(--ink);border:2px dashed var(--ink);border-radius:46% 48% 42% 45%;box-shadow:none;white-space:normal}
+.graph-story .turn-scene>.cloud-bubble{left:18px;top:8px;max-width:76%;transform:rotate(-3deg)}
+.graph-story .name-tag{position:absolute;right:15px;bottom:10px;font-family:var(--f-hand);font-size:23px;color:var(--ink)}
+.graph-story .turn-scene>.sfx{left:28px;bottom:52px;font-size:26px;color:var(--ink)}
+.graph-story .s-service{background:var(--paper-2);padding-top:28px}
+.graph-story .s-service::before{display:none}
+.graph-story .graph-perks{padding:8px 20px 0}
+.graph-story .graph-perk{padding:25px 0 30px;border-bottom:1px dashed #c8b893;text-align:center}
+.graph-story .graph-perk:last-child{border:0;padding-bottom:8px}
+.graph-story .perk-num{font-family:var(--f-hanja);font-size:12px;letter-spacing:.16em;color:#7c5b22;margin:0 0 10px}
+.graph-story .graph-perk h3{font-family:var(--f-display);font-size:28px;line-height:1.3;margin:0 0 10px;font-weight:400;word-break:keep-all}
+.graph-story .graph-perk>p{line-height:1.7}
+.graph-story .evidence-origin{font-size:12px;color:#5e584e;line-height:1.6;margin:14px 0 10px}
+.graph-story .graph-proof{margin:0 -8px;background:#fffaf0}
+.graph-story .graph-proof img,.graph-story .input-proof img,.graph-story .sample-original img{display:block;width:100%;height:auto}
+.graph-story figcaption:not(.caption){font-size:12px;color:#61594e;text-align:center;margin-top:6px}
+.graph-story .sample-score{display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:6px;margin:16px 0;padding:16px 0;border-top:1px solid #cdbf9c;border-bottom:1px solid #cdbf9c;font-size:13px}
+.graph-story .sample-score strong{grid-row:span 2;font-family:var(--f-display);font-size:36px;font-weight:400;color:#2f6a5e}
+.graph-story .sample-score strong span{font-family:Pretendard,sans-serif;font-size:14px;color:#61594e}
+.graph-story .score-note{font-size:12px;line-height:1.7;color:#61594e;margin:12px 0}
+.graph-story .sample-link{font-size:13px;color:#414f68;text-decoration:underline;display:inline-block;line-height:1.6;max-width:100%;padding:5px 0}
+.graph-story .proof-excerpt{margin:14px 0;padding:18px;text-align:left;background:#fffdf6;border-left:3px solid #a78443;border-radius:0;box-shadow:none}
+.graph-story .proof-excerpt .excerpt-label{font-size:12px;color:#61594e;margin:0 0 8px}
+.graph-story .proof-excerpt blockquote{font-family:var(--f-hanja);font-weight:700;font-size:23px;line-height:1.55;margin:0 0 22px;word-break:keep-all}
+.graph-story .proof-excerpt p[data-source]{font-size:18px;line-height:1.7;margin:0;word-break:keep-all}
+.graph-story .sample-original{margin:18px 0;font-size:13px;text-align:left}
+.graph-story .sample-original summary{padding:12px 0;text-decoration:underline;cursor:pointer}
+.graph-story .input-proof{max-width:310px;margin:20px auto 0}
+.graph-story .art-explain{height:245px;margin:0;background:var(--paper-2)}
+.graph-story .art-explain img{height:245px;object-fit:cover;object-position:center bottom;mask-image:linear-gradient(transparent,#000 15%,#000 83%,transparent)}
+.graph-story .art-explain .caption{position:absolute;top:15px;left:18px;max-width:62%;font-size:17px;white-space:normal}
+.graph-story .s-close{padding-top:85px;padding-bottom:calc(120px + env(safe-area-inset-bottom));background:linear-gradient(var(--paper-2),var(--night) 75px,var(--night));color:#fff9ef}
+.graph-story .close-scene{height:345px;position:relative}
+.graph-story .art-close{margin:0;height:100%}
+.graph-story .art-close img{height:100%;object-fit:cover;object-position:center bottom;mask-image:linear-gradient(transparent,#000 12%,#000 83%,transparent)}
+.graph-story .close-scene .cloud-bubble{top:5px;left:20px;max-width:75%;font-size:22px}
+.graph-story .close-copy{padding:4px 20px;text-align:center}
+.graph-story .close-copy .score-note{color:#d0cbbe}
+.graph-story .brand-name{font-family:var(--f-hanja);font-weight:900;font-size:24px;margin:30px 0 0}
+.graph-story .cta-bar{max-width:480px;left:50%;transform:translateX(-50%);box-sizing:border-box}
+.graph-story .cta{font-size:16px;line-height:1.4;padding:15px 10px;width:100%;box-sizing:border-box;white-space:normal}
+@media(max-width:370px){.graph-story .art-reader{height:255px}.graph-story .turn-scene{height:280px}.graph-story .cloud-bubble{font-size:21px}.graph-story .graph-perks{padding-left:18px;padding-right:18px}.graph-story .art-explain .caption{font-size:16px}}
+@media(prefers-reduced-motion:reduce){.graph-story *, .graph-story *::before,.graph-story *::after{animation:none!important;transition:none!important}.graph-story .hl{background-size:100% 100%!important}}
+
+/* 실제 390px 육안 검수 보완: 얼굴과 문구 분리, 원문 대비 확보. */
+.graph-story .art-reader img{object-position:center 60%}
+.graph-story .art-turn img{object-position:center 55%}
+.graph-story .art-explain img{object-position:center 65%}
+.graph-story .art-close img{object-position:center 50%}
+.graph-story .turn-scene>.cloud-bubble{max-width:205px;font-size:21px;left:14px}
+.graph-story .reader-thought .thought::before{right:25%;bottom:-18px}
+.graph-story .reader-thought .thought::after{right:19%;bottom:-30px}
+.graph-story .proof-excerpt blockquote{color:var(--ink)}
