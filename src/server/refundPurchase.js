@@ -11,8 +11,12 @@
 const orders = require('../db/orders');
 const points = require('../db/points');
 const cardPayments = require('../db/cardPayments');
-const { cancelPayment, lookupPayment, latestCanceledAt } = require('./tossPayments');
+const { cancelPayment, lookupPayment, latestCanceledAt, isCancelInProgress } = require('./tossPayments');
 const { notifyCardCancelFailure } = require('../email/cardCancelAlert');
+
+/** 이 프로세스가 지금 토스에 취소를 보내 놓고 답을 기다리는 카드 결제 id. 서버 시작 때 복구 작업이
+    같은 결제를 '취소 중'으로 보고 같은 키로 또 취소하지 않게 한다(recoverPaidPayments가 확인한다). */
+const refundInFlight = new Set();
 
 async function refundPurchase(userId, amount, reason, jobId) {
   try {
@@ -23,7 +27,15 @@ async function refundPurchase(userId, amount, reason, jobId) {
       return { method: 'balance' };
     }
     points.recordCardRefund(userId, reason, jobId);
-    const result = await cancelPayment(card.payment_key, reason, card.cancel_idempotency_key);
+    refundInFlight.add(card.id);
+    let result;
+    try {
+      result = await cancelPayment(card.payment_key, reason, card.cancel_idempotency_key);
+    } finally {
+      refundInFlight.delete(card.id);
+    }
+    // 앞선 같은 취소가 처리 중이면 '취소 중'으로 두고 다음 점검의 조회로 확정한다.
+    if (isCancelInProgress(result)) return { method: 'card', ok: false, pending: true };
     const detail = result.ok ? reason : `${reason} / 취소 실패 — 수동 환불 필요: ${(result.data && result.data.message) || result.status}`;
     cardPayments.finishRefund(card, result.ok, detail, latestCanceledAt(result.data));
     if (!result.ok) {
@@ -57,4 +69,4 @@ async function retryCancellation(row) {
   return { ok: result.ok, error: result.ok ? undefined : '토스 취소 요청에 실패했습니다.' };
 }
 
-module.exports = { refundPurchase, retryCancellation };
+module.exports = { refundPurchase, retryCancellation, refundInFlight };

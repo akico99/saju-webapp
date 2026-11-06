@@ -48,4 +48,13 @@ function cancelPayment(paymentKey, reason, idempotencyKey) {
     .catch((err) => ({ ok: false, status: 0, data: { message: err.message } }));
 }
 
-module.exports = { CLIENT_KEY, SECRET_KEY, TEST_MODE, confirmPayment, lookupPayment, cancelPayment, latestCanceledAt };
+/** 같은 멱등 키의 앞선 취소 요청이 아직 처리 중이라는 응답 — 실패가 아니다. 결과는 앞선 요청이 내거나
+    다음 결제 점검(1분 간격)의 조회가 확정한다. 2026-11-06 이 응답을 실패로 적어 이미 취소된 결제가
+    cancel_failed로 남은 일이 있었다. */
+function isCancelInProgress(result) {
+  if (!result || result.ok) return false;
+  const d = result.data || {};
+  return /IDEMPOTENT|PROCESSING/i.test(String(d.code || '')) || /처리\s*중/.test(String(d.message || ''));
+}
+
+module.exports = { CLIENT_KEY, SECRET_KEY, TEST_MODE, confirmPayment, lookupPayment, cancelPayment, latestCanceledAt, isCancelInProgress };

@@ -7,9 +7,10 @@
    'error'로 종료한다. */
 const orders = require('../db/orders');
 const points = require('../db/points');
-const { refundPurchase } = require('../server/refundPurchase');
+const { refundPurchase, refundInFlight } = require('../server/refundPurchase');
 const cardPayments = require('../db/cardPayments');
-const { lookupPayment, cancelPayment, latestCanceledAt } = require('../server/tossPayments');
+const { lookupPayment, cancelPayment, latestCanceledAt, isCancelInProgress } = require('../server/tossPayments');
+const { notifyCardCancelFailure } = require('../email/cardCancelAlert');
 const { resolveProduct } = require('../server/products');
 const newYearConfig = require('../config/newYear');
 
@@ -58,6 +59,8 @@ function paymentProduct(productKey) {
 async function recoverPaidPayments(startProduct = resolveProduct, recoverablePayments = cardPayments.listRecoverable()) {
   for (let row of recoverablePayments) {
     if (row.status === 'canceling') {
+      // 이 프로세스가 방금 보낸 취소가 아직 답을 기다리는 중이다 — 그 요청이 결과를 적는다.
+      if (refundInFlight.has(row.id)) continue;
       const check = await lookupPayment(row.order_id);
       if (!check.ok) continue;
       if (check.data.status === 'PARTIAL_CANCELED') {
@@ -66,7 +69,9 @@ async function recoverPaidPayments(startProduct = resolveProduct, recoverablePay
         cardPayments.finishRefund(row, true, '토스 결제 조회 결과 이미 취소됨', latestCanceledAt(check.data));
       } else if (check.data.status === 'DONE') {
         const result = await cancelPayment(row.payment_key, row.error || '재시작 후 결제 취소 복구', row.cancel_idempotency_key);
+        if (isCancelInProgress(result)) continue; // 다음 점검에서 조회로 확정한다
         cardPayments.finishRefund(row, result.ok, result.ok ? '재시작 후 취소 복구 완료' : (result.data && result.data.message) || result.status, latestCanceledAt(result.data));
+        if (!result.ok) notifyCardCancelFailure(row, `재시작 후 취소 복구 실패 — 수동 환불 필요: ${(result.data && result.data.message) || result.status}`);
       }
       continue;
     }

@@ -162,6 +162,43 @@ test('partial provider cancellation remains visible for outstanding balance revi
   } finally { global.fetch = oldFetch; }
 });
 
+test('restart refund and the payment recovery loop racing on one card end canceled, not cancel_failed', async () => {
+  // 2026-11-06 실제 사례: 재시작 직후 환불이 토스 취소를 보내는 동안 결제 복구 작업이 같은 결제를
+  // '취소 중'으로 보고 같은 멱등 키로 다시 취소했고, 토스의 "처리 중" 응답이 cancel_failed로 남았다.
+  const userId = newUser();
+  const { jobId, orderId } = cardPurchase(userId);
+  const { recoverPaidPayments } = require('../src/jobs/recoverPendingOrders');
+  const oldFetch = global.fetch;
+  let releaseFirst;
+  const calls = [];
+  global.fetch = async (url) => {
+    const u = String(url);
+    calls.push(u);
+    if (u.includes('/orders/')) return { ok: true, status: 200, json: async () => ({ status: 'DONE' }) };
+    if (calls.filter((c) => c.endsWith('/cancel')).length === 1) {
+      await new Promise((r) => { releaseFirst = r; });
+      return { ok: true, status: 200, json: async () => ({ cancels: [{ canceledAt: '2026-11-06T22:23:56+09:00' }] }) };
+    }
+    return { ok: false, status: 409, json: async () => ({ code: 'IDEMPOTENT_REQUEST_PROCESSING', message: '이전 멱등 요청이 처리중입니다.' }) };
+  };
+  try {
+    const refund = refundPurchase(userId, PRICE, '재시작 복구', jobId);
+    await new Promise((r) => setImmediate(r));
+    await recoverPaidPayments(undefined, [cardPayments.findByOrderId(orderId)]);
+    assert.equal(cardPayments.findByOrderId(orderId).status, 'canceling', 'recovery leaves an in-flight cancel alone');
+    // 다른 프로세스가 보낸 취소라 이 프로세스가 모르는 경우에도 "처리 중" 응답은 실패로 적지 않는다.
+    const { refundInFlight } = require('../src/server/refundPurchase');
+    refundInFlight.clear();
+    await recoverPaidPayments(undefined, [cardPayments.findByOrderId(orderId)]);
+    assert.equal(cardPayments.findByOrderId(orderId).status, 'canceling', 'a processing answer is not a failure');
+    releaseFirst();
+    await refund;
+    const row = cardPayments.findByOrderId(orderId);
+    assert.equal(row.status, 'canceled');
+    assert.ok(row.canceled_at);
+  } finally { global.fetch = oldFetch; }
+});
+
 test('an order paid without a card is returned to the ledger as before', async () => {
   const userId = newUser();
   users.adjustPointBalance(userId, PRICE);
