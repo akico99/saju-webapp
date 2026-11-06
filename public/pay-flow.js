@@ -45,10 +45,16 @@
 
   /* 로그인으로 넘어갔다 와도 입력이 남아 있게 — 비로그인으로 제출하면 서버가 401을 준다. 그때 폼 값을
      sessionStorage(이 탭에만, 탭을 닫으면 사라짐)에 적어두고 로그인 페이지로 보낸다. 로그인 뒤 같은
-     페이지로 돌아오면 한 번만 다시 채우고 지운다. 비밀번호·파일 칸은 담지 않는다. */
+     페이지로 돌아오면 한 번만 다시 채우고 지운다. 비밀번호·파일 칸은 담지 않는다.
+
+     결제 버튼을 눌러서 넘어간 경우(toLogin(form, { continueCheckout: true }))에는 돌아와서 결제를 이어 간다.
+     로그인이 확인될 때만 잇는다 — 로그인하지 않고 뒤로 가기로 돌아왔는데 다시 제출하면 로그인 페이지로
+     또 튕겨 나가기 때문이다. 폼 제출이 곧 결제인 페이지는 여기서 폼을 다시 제출하고, 무료 결과를 먼저
+     여는 페이지(form.dataset.payContinue = 'manual')는 PayFlow.continueAfterLogin()으로 직접 잇는다. */
   const RESUME_KEY = (path) => 'form:resume:' + path;
   const RESUME_TTL_MS = 30 * 60 * 1000;
   const SKIP_TYPES = new Set(['password', 'file', 'submit', 'button', 'reset', 'image']);
+  let continuePromise = Promise.resolve(false);
 
   function snapshot(form) {
     return Array.from(form.elements)
@@ -58,14 +64,29 @@
         : { n: el.name, v: el.value });
   }
 
-  function toLogin(form) {
+  function toLogin(form, opts) {
+    const cont = !!(opts && opts.continueCheckout);
     try {
       if (form && form.id) {
         sessionStorage.setItem(RESUME_KEY(location.pathname),
-          JSON.stringify({ at: Date.now(), formId: form.id, fields: snapshot(form) }));
+          JSON.stringify({ at: Date.now(), formId: form.id, fields: snapshot(form), cont }));
       }
     } catch (e) { /* 저장 못 해도 로그인 이동은 그대로 */ }
     location.href = '/login.html?redirect=' + encodeURIComponent(location.pathname + location.search) + '&reason=checkout';
+  }
+
+  async function loggedIn() {
+    try {
+      const me = await fetch('/api/auth/me', { cache: 'no-store' }).then((r) => r.json());
+      return !!(me && me.user);
+    } catch (e) { return false; }
+  }
+
+  /** 로그인 복귀 뒤 결제를 이어 가야 하면 true(한 번만). 복원이 끝난 뒤(load 이후)에 부른다. */
+  function continueAfterLogin() {
+    const p = continuePromise;
+    continuePromise = Promise.resolve(false);
+    return p;
   }
 
   function restoreForm() {
@@ -106,7 +127,9 @@
     const note = document.createElement('p');
     note.className = 'form-resume-note';
     note.setAttribute('role', 'status');
-    note.textContent = '로그인 전에 입력하신 내용을 그대로 불러왔어요. 확인하고 버튼을 다시 눌러 주세요.';
+    note.textContent = saved.cont
+      ? '로그인 전에 입력하신 내용을 그대로 불러왔어요. 결제를 이어서 진행할게요.'
+      : '로그인 전에 입력하신 내용을 그대로 불러왔어요. 확인하고 버튼을 다시 눌러 주세요.';
     note.style.cssText = 'margin:10px 0;padding:10px 12px;border-radius:10px;background:var(--accent-soft, rgba(4,51,109,.07));font-size:13px;line-height:1.6;';
     if (submit && submit.parentNode) {
       submit.parentNode.insertBefore(note, submit);
@@ -114,11 +137,21 @@
     } else {
       form.prepend(note);
     }
+
+    if (!saved.cont) return;
+    continuePromise = loggedIn().then((ok) => {
+      if (!ok) note.textContent = '로그인 전에 입력하신 내용을 그대로 불러왔어요. 로그인한 뒤 버튼을 다시 눌러 주세요.';
+      return ok;
+    });
+    if (form.dataset.payContinue === 'manual') return;
+    continueAfterLogin().then((ok) => {
+      if (ok && form.isConnected) form.requestSubmit();
+    });
   }
 
   // 각 페이지 스크립트가 폼을 초기화한 뒤에 채워야 덮어쓰이지 않는다.
   if (document.readyState === 'complete') setTimeout(restoreForm, 0);
   else window.addEventListener('load', () => setTimeout(restoreForm, 0));
 
-  window.PayFlow = { checkout, stash, resume, onInsufficient, toLogin };
+  window.PayFlow = { checkout, stash, resume, onInsufficient, toLogin, continueAfterLogin };
 })();

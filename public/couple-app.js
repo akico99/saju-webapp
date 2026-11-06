@@ -14,6 +14,8 @@ window.LOVE_READING_ART = {"greeting":"/couple-assets/cover.webp","greeting-comi
   // 읽기 화면의 장 그림 — 공용 모델은 연애 리포트 제목으로 장면을 고르므로 이 상품의 제목에 맞춰 다시 정한다.
   const SCENE_OF = [[/한 줄 답/, 'greeting'], [/끌리는/, 'empathy'], [/잘 맞는/, 'conversation'], [/부딪히는/, 'distance'], [/연락|대화/, 'thinking'], [/12개월 흐름/, 'meeting'], [/지키는|행동/, 'cheer'], [/앞으로 12개월|월별/, 'new-start']];
   const form = document.getElementById('coupleForm');
+  // 로그인 복귀 뒤 결제 잇기는 무료 결과를 다시 연 다음 이 파일이 직접 한다(pay-flow.js가 폼을 제출하지 않게).
+  form.dataset.payContinue = 'manual';
   const steps = Array.from(form.querySelectorAll('.stage-step'));
   const wizardProgress = document.getElementById('wizardProgress');
   const backBtn = document.getElementById('backBtn');
@@ -395,7 +397,7 @@ window.LOVE_READING_ART = {"greeting":"/couple-assets/cover.webp","greeting-comi
       const data = await res.json().catch(() => ({}));
       if (res.ok) return startPaid(data.jobId);
       if (data.code === 'already_pending' && data.jobId) return startPaid(data.jobId);
-      if (res.status === 401) { PayFlow.toLogin(form); return; }
+      if (res.status === 401) { PayFlow.toLogin(form, { continueCheckout: true }); return; }
       if (res.status === 402) { await PayFlow.onInsufficient('couple', b, data, showError); return; }
       showError(data.error || '요청을 처리하지 못했어요.');
     } catch (e) {
@@ -603,7 +605,10 @@ window.LOVE_READING_ART = {"greeting":"/couple-assets/cover.webp","greeting-comi
       const b = body();
       if (!b.relation || !b.aGender || !b.bGender || !b.aYear || !b.bYear) return;
       syncButtons(b);
-      if (await preview(b)) document.getElementById('resumeNote').classList.remove('hidden');
+      if (!(await preview(b))) return;
+      // 결제 버튼을 눌러 로그인하러 갔던 경우 — 로그인이 확인되면 결제 확인까지 이어서 누른다.
+      if (await PayFlow.continueAfterLogin()) { openCheckout(); checkoutConfirm.click(); return; }
+      document.getElementById('resumeNote').classList.remove('hidden');
     }, 60));
   }
 })();

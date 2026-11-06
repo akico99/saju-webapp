@@ -8,6 +8,8 @@ window.LOVE_READING_ART = {"greeting":"/reunion-assets/cover.webp","greeting-com
    유료 읽기 화면은 연애 상품의 LoveReadingModel/LoveReadingView를 그대로 쓴다. */
 (function () {
   const form = document.getElementById('reunionForm');
+  // 로그인 복귀 뒤 결제 잇기는 무료 결과를 다시 연 다음 이 파일이 직접 한다(pay-flow.js가 폼을 제출하지 않게).
+  form.dataset.payContinue = 'manual';
   const steps = Array.from(form.querySelectorAll('.stage-step'));
   const total = steps.length;
   const wizardProgress = document.getElementById('wizardProgress');
@@ -333,7 +335,7 @@ window.LOVE_READING_ART = {"greeting":"/reunion-assets/cover.webp","greeting-com
       const data = await res.json().catch(() => ({}));
       if (res.ok) return startPaid(data.jobId);
       if (data.code === 'already_pending' && data.jobId) return startPaid(data.jobId);
-      if (res.status === 401) { PayFlow.toLogin(form); return; }
+      if (res.status === 401) { PayFlow.toLogin(form, { continueCheckout: true }); return; }
       if (res.status === 402) { await PayFlow.onInsufficient('reunion', b, data, showError); return; }
       showError(data.error || '요청을 처리하지 못했어요.');
     } catch (e) {
@@ -504,7 +506,10 @@ window.LOVE_READING_ART = {"greeting":"/reunion-assets/cover.webp","greeting-com
       const b = body();
       if (!b.aGender || !b.bGender || !b.aYear || !b.bYear || !b.since || !b.initiator || !b.contact) return;
       syncAll();
-      if (await preview(b)) document.getElementById('resumeNote').classList.remove('hidden');
+      if (!(await preview(b))) return;
+      // 결제 버튼을 눌러 로그인하러 갔던 경우 — 로그인이 확인되면 결제 확인까지 이어서 누른다.
+      if (await PayFlow.continueAfterLogin()) { openCheckout(); confirmBtn.click(); return; }
+      document.getElementById('resumeNote').classList.remove('hidden');
     }, 60));
   }
 })();

@@ -10,6 +10,8 @@ window.LOVE_READING_ART = {"greeting":"/new-year-assets/cover.webp","greeting-co
 (function () {
   const YEAR = 2027;
   const form = document.getElementById('newYearForm');
+  // 로그인 복귀 뒤 결제 잇기는 무료 결과를 다시 연 다음 이 파일이 직접 한다(pay-flow.js가 폼을 제출하지 않게).
+  form.dataset.payContinue = 'manual';
   const steps = Array.from(form.querySelectorAll('.stage-step'));
   const wizardProgress = document.getElementById('wizardProgress');
   const backBtn = document.getElementById('backBtn');
@@ -442,7 +444,7 @@ window.LOVE_READING_ART = {"greeting":"/new-year-assets/cover.webp","greeting-co
       const data = await res.json().catch(() => ({}));
       if (res.ok) return startPaid(data.jobId);
       if (data.code === 'already_pending' && data.jobId) return startPaid(data.jobId);
-      if (res.status === 401) { PayFlow.toLogin(form); return; }
+      if (res.status === 401) { PayFlow.toLogin(form, { continueCheckout: true }); return; }
       if (res.status === 402) { await PayFlow.onInsufficient('newyear', b, data, showError); return; }
       showError(data.error || '요청을 처리하지 못했어요.');
     } catch (e) {
@@ -650,7 +652,10 @@ window.LOVE_READING_ART = {"greeting":"/new-year-assets/cover.webp","greeting-co
       const b = body();
       if (!b.gender || !b.year) return;
       syncButtons(b);
-      if (await preview(b)) document.getElementById('resumeNote').classList.remove('hidden');
+      if (!(await preview(b))) return;
+      // 결제 버튼을 눌러 로그인하러 갔던 경우 — 로그인이 확인되면 결제 확인까지 이어서 누른다.
+      if (await PayFlow.continueAfterLogin()) { openCheckout(); checkoutConfirm.click(); return; }
+      document.getElementById('resumeNote').classList.remove('hidden');
     }, 60));
   }
 })();
