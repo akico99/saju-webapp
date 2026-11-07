@@ -19,6 +19,7 @@ const { HttpError } = require('../httpError');
 const { requireAuth } = require('../middleware/auth');
 const { paymentPrepareLimiter } = require('../middleware/rateLimit');
 const { CLIENT_KEY, SECRET_KEY, TEST_MODE, confirmPayment, lookupPayment, cancelPayment, latestCanceledAt } = require('../tossPayments');
+const { notifyPurchase } = require('../../email/purchaseAlert');
 const newYearConfig = require('../../config/newYear');
 const loveTimingConfig = require('../../config/loveTiming');
 
@@ -182,6 +183,7 @@ router.post('/pay/confirm', requireAuth, async (req, res) => {
     if (!cardPayments.claimPaidStart(paid)) return res.status(202).json({ error: '결제는 확인됐고 리포트 시작을 확인하고 있어요. 마이페이지에서 잠시 후 확인해 주세요.', code: 'start_pending', retry: true });
     const payload = await resolved.start(row.user_id, form, { cardPaymentId: paid.id });
     cardPayments.setJob(paid, payload.jobId);
+    notifyPurchase(paid);
     return res.json({ payment: summarize(paid), jobId: payload.jobId, page: resolved.page, payload });
   } catch (e) {
     // 승인은 됐지만 상품을 시작하지 못했다. 상품이 이미 차감까지 한 뒤 실패했다면 그쪽에서

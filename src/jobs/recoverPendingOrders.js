@@ -11,6 +11,7 @@ const { refundPurchase, refundInFlight } = require('../server/refundPurchase');
 const cardPayments = require('../db/cardPayments');
 const { lookupPayment, cancelPayment, latestCanceledAt, isCancelInProgress } = require('../server/tossPayments');
 const { notifyCardCancelFailure } = require('../email/cardCancelAlert');
+const { notifyPurchase } = require('../email/purchaseAlert');
 const { resolveProduct } = require('../server/products');
 const newYearConfig = require('../config/newYear');
 
@@ -105,6 +106,7 @@ async function recoverPaidPayments(startProduct = resolveProduct, recoverablePay
       if (!product) throw new Error('상품을 찾을 수 없습니다.');
       const started = await product.start(row.user_id, form, { cardPaymentId: row.id });
       cardPayments.setJob(row, started.jobId);
+      notifyPurchase(row);
     } catch (err) {
       const detail = `결제 복구 중 상품 시작 실패: ${err.message}`;
       const cancel = cardPayments.claimCancellationWithCreditReversal(cardPayments.findById(row.id), detail);
