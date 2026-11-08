@@ -114,7 +114,8 @@
 
       const tossPayments = TossPayments(cfg.clientKey);
       // customerKey는 회원 식별용 — 이메일을 그대로 쓰지 않고 서버 id 기반 문자열을 쓴다.
-      const widgets = tossPayments.widgets({ customerKey: 'user_' + me.user.id });
+      // 비회원 결제는 토스 안내대로 ANONYMOUS로 초기화한다(내부용 계정 번호를 결제사에 넘기지 않는다).
+      const widgets = tossPayments.widgets({ customerKey: me.user.isGuest ? TossPayments.ANONYMOUS : 'user_' + me.user.id });
       await widgets.setAmount({ currency: 'KRW', value: order.amountKrw });
       await Promise.all([
         widgets.renderPaymentMethods({ selector: '#payment-method', variantKey: 'DEFAULT' }),
