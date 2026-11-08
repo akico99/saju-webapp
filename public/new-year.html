@@ -161,7 +161,7 @@
       <div class="reading-specimen"><span class="specimen-label">풀이 형식 예시 · 개인 분석 결과가 아닙니다</span><span class="specimen-chapter">第三章 · 가장 좋은 세 달</span><h3>미뤄 둔 일을 꺼내기 좋은 달,<br>언제쯤일까요?</h3><p>흐름이 좋은 달에는 준비해 둔 일을 밖으로 꺼내 보이는 쪽이 힘을 받아요. 결과를 서두르기보다 시작을 분명히 하는 데 쓰면 좋아요.</p><div class="sample-rule"></div><span class="specimen-chapter">달력에 적어 둘 장면</span><p>그 달 첫 주에 미뤄 둔 제안서나 계획을 한 사람에게 먼저 보여 주고 의견을 들어 보세요.</p><div class="love-sample-action"><b>이 달의 작은 실천</b><p>한 해 목표 중 하나를 골라 첫 단계를 날짜와 함께 적어 두세요.</p></div></div>
       <p class="sample-footnote">실제 리포트는 입력한 사주에 따라 달라집니다.</p>
     </section>
-    <section class="scope-section"><p class="love-eyebrow">먼저 읽고, 더 궁금할 때</p><h2>사주 분석은 무료.<br>선택은 천천히 하세요.</h2><div class="scope-card"><span class="scope-tag">가입 없이 무료</span><h3>내 2027년 무료 사주 분석</h3><p>2027년 한 줄 · 분기 흐름 네 칸<br>내 사주표 · 일간과 오행의 균형</p><a href="#startLove">무료 사주 분석부터 읽기 ↑</a></div><div class="scope-card full"><span class="scope-tag">아홉 장의 전체 풀이</span><h3>2027 신년운세 <b data-ny-price>14,900원</b></h3><p>가장 좋은 세 달과 조심할 달부터<br>재물·일·애정·생활 리듬, 열두 달의 할 일까지.</p><div class="delivery-facts"><span>단건 결제</span><span>웹 리포트 + PDF 이메일</span><span>보관함에서 다시 읽기</span></div><small>전체 풀이 결제 시 로그인이 필요합니다.</small></div></section>
+    <section class="scope-section"><p class="love-eyebrow">먼저 읽고, 더 궁금할 때</p><h2>사주 분석은 무료.<br>선택은 천천히 하세요.</h2><div class="scope-card"><span class="scope-tag">가입 없이 무료</span><h3>내 2027년 무료 사주 분석</h3><p>2027년 한 줄 · 분기 흐름 네 칸<br>내 사주표 · 일간과 오행의 균형</p><a href="#startLove">무료 사주 분석부터 읽기 ↑</a></div><div class="scope-card full"><span class="scope-tag">아홉 장의 전체 풀이</span><h3>2027 신년운세 <b data-ny-price>14,900원</b></h3><p>가장 좋은 세 달과 조심할 달부터<br>재물·일·애정·생활 리듬, 열두 달의 할 일까지.</p><div class="delivery-facts"><span>단건 결제</span><span>웹 리포트 + PDF 이메일</span><span>보관함에서 다시 읽기</span></div><small>회원가입 없이 바로 결제할 수 있어요.</small></div></section>
     <section class="love-detail love-faq" aria-labelledby="faqTitle">
       <p class="love-eyebrow">궁금한 점을 모았어요</p><h2 id="faqTitle">시작하기 전에</h2>
       <details><summary>무료로 어디까지 볼 수 있나요?</summary><p>2027년을 한 줄로 요약한 흐름, 분기 흐름 네 칸, 내 사주표와 일간·오행의 균형을 볼 수 있습니다. 전체 풀이에서는 가장 좋은 세 달과 조심할 달, 네 주제, 분기별 할 것·피할 것, 열두 달 상세 흐름을 이어 읽습니다.</p></details>
@@ -309,15 +309,26 @@
   <section class="checkout-delivery" aria-labelledby="deliveryTitle">
     <h3 id="deliveryTitle">PDF는 어디로 보내 드릴까요?</h3>
     <label for="deliveryEmail">받으실 이메일</label>
-    <input id="deliveryEmail" name="deliveryEmail" form="newYearForm" type="email" autocomplete="email" maxlength="254" placeholder="you@example.com" required aria-describedby="deliveryHelp">
-    <p id="deliveryHelp">결제 후 완성된 전체 풀이를 PDF로 보내요. 주소를 한 번 더 확인해 주세요. 웹에서도 같은 내용을 읽을 수 있어요.</p>
-    <label class="delivery-consent"><input type="checkbox" id="deliveryConsent" name="deliveryConsent" form="newYearForm" required><span>입력한 이메일을 구매한 PDF 전달에 사용하는 데 동의합니다. 발송·재전송을 위해 30일 보관 후 삭제하며, 광고에는 사용하지 않습니다.</span></label>
+    <input id="deliveryEmail" name="deliveryEmail" form="newYearForm" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" maxlength="254" placeholder="you@example.com" required aria-describedby="deliveryHelp">
+    <div class="email-domains" aria-label="메일 주소 끝 고르기"><button type="button" data-domain="naver.com">@naver.com</button><button type="button" data-domain="gmail.com">@gmail.com</button><button type="button" data-domain="kakao.com">@kakao.com</button><button type="button" data-domain="daum.net">@daum.net</button></div>
+    <p class="delivery-echo" id="deliveryEcho" hidden></p>
+    <p id="deliveryHelp">회원가입 없이 결제돼요. 결제가 끝나면 이 화면에서 바로 읽고, 같은 내용을 이 주소로 PDF로 보내 드려요.</p>
+    <div class="checkout-consent">
+      <label class="consent-all"><input type="checkbox" id="agreeAll"><span>필수 항목에 모두 동의</span></label>
+      <details class="consent-items" id="consentItems"><summary>동의 항목 5개 보기</summary>
+      <label class="delivery-consent"><input type="checkbox" data-agree name="agreeOrder"><span>[필수] 주문 내용(2027 신년운세 · <span data-ny-price>14,900원</span>)을 확인했어요. 결제 즉시 생성이 시작되는 디지털 콘텐츠라 단순 변심 취소는 제한되고, 생성에 실패하면 전액 자동 취소돼요.</span></label>
+      <label class="delivery-consent"><input type="checkbox" id="deliveryConsent" name="deliveryConsent" form="newYearForm" data-agree required><span>[필수] 입력한 이메일을 구매한 PDF 전달에 쓰는 데 동의해요. 발송·재전송을 위해 30일 보관 후 삭제하며 광고에는 쓰지 않아요.</span></label>
+      <label class="delivery-consent"><input type="checkbox" data-agree name="agreePrivacy"><span>[필수] 개인정보 수집·이용에 동의해요. 출생정보·이메일·결제 기록을 리포트 생성·전달과 결제·환불 처리에 쓰고, 결제 기록은 법령에 따라 5년 보관해요. 동의하지 않으면 구매할 수 없어요. <a href="/privacy.html" target="_blank" rel="noopener">자세히</a></span></label>
+      <label class="delivery-consent"><input type="checkbox" data-agree name="agreeTerms"><span>[필수] <a href="/terms.html" target="_blank" rel="noopener">이용약관</a>에 동의해요</span></label>
+      <label class="delivery-consent"><input type="checkbox" data-agree name="agreeAge"><span>[필수] 만 14세 이상이에요</span></label>
+      </details>
+    </div>
     <p id="deliveryError" role="alert" hidden></p>
   </section>
   <div class="checkout-total"><span>상품 금액</span><strong data-ny-price>14,900원</strong></div>
   <p class="checkout-terms">판매처 사주보는 수달 · 정기결제 없음<br><a href="/terms.html" target="_blank" rel="noopener">이용약관</a><span aria-hidden="true"> · </span><a href="/privacy.html" target="_blank" rel="noopener">개인정보처리방침</a></p>
   <button type="button" id="checkoutConfirm" class="checkout-confirm">전체 풀이 구매하기</button>
-  <p class="checkout-footnote">로그인 후 보유 포인트를 사용하거나 카드 결제로 이어집니다.</p>
+  <p class="checkout-footnote">다음 화면에서 카드·간편결제 중 결제 수단을 고르면 바로 결제돼요.</p>
 </dialog>
 
 <section class="love-guide" aria-labelledby="loveGuideTitle">
@@ -332,6 +343,7 @@
 <script src="/love-reading-view.js"></script>
 <script src="/saju-chart.js"></script>
 <script src="/free-extras.js"></script>
+<script src="/guest-checkout.js"></script>
 <script src="/new-year-app.js"></script>
 <script src="/birth-prefill.js"></script>
 </body>

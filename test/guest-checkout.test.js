@@ -11,6 +11,9 @@ const path = require('node:path');
 const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'saju-guest-checkout-'));
 process.env.SAJU_DB_PATH = path.join(tmpDir, 'test.db');
 process.env.LOVE_TIMING_ENABLED = 'true';
+process.env.NEWYEAR_ENABLED = 'true';
+process.env.REUNION_ENABLED = 'true';
+process.env.COMPAT_V2_ENABLED = 'true';
 process.env.TOSS_SECRET_KEY = 'test_sk_dummy';
 
 const express = require('express');
@@ -34,6 +37,7 @@ test.before(async () => {
   await new Promise((resolve) => server.once('listening', resolve));
   baseUrl = 'http://127.0.0.1:' + server.address().port;
 });
+
 test.after(async () => {
   await new Promise((resolve) => server.close(resolve));
   db.close();
@@ -175,3 +179,44 @@ test('세션 없이 돌아온 비회원 결제가 토스 승인에 실패하면 
   assert.equal(cardPayments.findByOrderId(row.order_id).status, 'ready');
 });
 
+const PERSONS = {
+  aName: '지우', aGender: '여', aYear: '1995', aMonth: '5', aDay: '15', aCalendar: '양력', aHour: '14', aMinute: '30', aHourUnknown: false,
+  bName: '민준', bGender: '남', bYear: '1993', bMonth: '11', bDay: '2', bCalendar: '양력', bHour: '', bMinute: '', bHourUnknown: true
+};
+const OTHER_PRODUCTS = [
+  ['newyear', 'new_year_2027', { deliveryEmail: 'ny@example.test', deliveryConsent: true, name: '도현', gender: '남', year: '1990', month: '3', day: '8', calendar: '양력', hour: '7', minute: '20', hourUnknown: false }],
+  ['reunion', 'reunion_v2', { ...PERSONS, since: 'm6', initiator: 'mutual', contact: 'cut', deliveryEmail: 're@example.test', deliveryConsent: true }],
+  ['couple', 'compat_v2', { ...PERSONS, relation: 'dating', deliveryEmail: 'co@example.test', deliveryConsent: true }]
+];
+
+test('신년운세·재회·두 사람의 궁합도 로그인 없이 구매 창 한 번으로 주문된다', async () => {
+  for (const [product, productKey, productForm] of OTHER_PRODUCTS) {
+    const call = client();
+    const refused = await call('POST', '/api/pay/start', { product, form: productForm, ...AGREE, agreePrivacy: false });
+    assert.equal(refused.status, 400, product);
+    const res = await call('POST', '/api/pay/start', { product, form: productForm, ...AGREE });
+    assert.equal(res.status, 200, product + ' ' + JSON.stringify(res.data));
+    assert.equal(res.data.guest, true, product);
+    assert.equal(res.data.productKey, productKey);
+    assert.equal(res.data.amountKrw, 14900, product);
+    const mine = await call('GET', '/api/pay/mine');
+    const order = mine.data.payments.find((p) => p.orderId === res.data.orderId);
+    assert.equal(order.orderAgreed, true, product);
+    assert.equal(order.customerEmail, productForm.deliveryEmail, product);
+  }
+});
+
+test('세 상품 화면은 같은 비회원 구매 창을 쓰고 로그인 안내를 남기지 않는다', () => {
+  const pub = (f) => fs.readFileSync(path.join(__dirname, '..', 'public', f), 'utf8');
+  for (const [slug, product] of [['new-year', 'newyear'], ['reunion', 'reunion'], ['couple', 'couple']]) {
+    const html = pub(slug + '.html');
+    const js = pub(slug + '-app.js');
+    assert.ok(html.indexOf('/guest-checkout.js') > 0 && html.indexOf('/guest-checkout.js') < html.indexOf('/' + slug + '-app.js'), slug + ': 구매 창 스크립트를 상품 스크립트보다 먼저 싣는다');
+    assert.equal((html.match(/data-agree/g) || []).length, 5, slug + ': 필수 동의 다섯 칸');
+    for (const id of ['agreeAll', 'consentItems', 'deliveryEcho', 'deliveryError']) assert.ok(html.includes('id="' + id + '"'), slug + ' #' + id);
+    assert.match(html, /id="deliveryConsent" name="deliveryConsent" form="[a-zA-Z]+Form" data-agree/, slug);
+    assert.doesNotMatch(html, /결제 시 로그인이 필요|결제에는 로그인이 필요|보유 포인트/, slug);
+    assert.match(js, new RegExp("GuestCheckout\\.mount\\(\\{[^}]*product: '" + product + "'"), slug);
+    assert.doesNotMatch(js, /continueCheckout: true|onInsufficient/, slug);
+  }
+});

@@ -286,7 +286,6 @@ window.LOVE_READING_ART = {"greeting":"/reunion-assets/cover.webp","greeting-com
   });
 
   /* ---------- 구매 ---------- */
-  function showError(msg) { errorBlock.textContent = msg; errorBlock.classList.remove('hidden'); errorBlock.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
   const sheet = document.getElementById('checkoutSheet');
   const confirmBtn = document.getElementById('checkoutConfirm');
   let trigger = null, purchasing = false;
@@ -313,38 +312,8 @@ window.LOVE_READING_ART = {"greeting":"/reunion-assets/cover.webp","greeting-com
     e.preventDefault();
     PayFlow.toLogin(form);
   });
-  confirmBtn.addEventListener('click', async () => {
-    if (purchasing) return;
-    const email = field('deliveryEmail');
-    const deliveryError = document.getElementById('deliveryError');
-    const badEmail = !email.value.trim() || !email.checkValidity();
-    if (badEmail || !field('deliveryConsent').checked) {
-      deliveryError.textContent = badEmail ? 'PDF를 받을 이메일을 정확히 입력해 주세요.' : 'PDF 전달을 위한 이메일 사용에 동의해 주세요.';
-      deliveryError.hidden = false;
-      (badEmail ? email : field('deliveryConsent')).focus();
-      return;
-    }
-    deliveryError.hidden = true;
-    purchasing = true;
-    sheet.close();
-    errorBlock.classList.add('hidden');
-    const b = body();
-    [unlockBtn, stickyUnlock, confirmBtn].forEach((x) => { x.disabled = true; });
-    try {
-      const res = await fetch('/api/reunion', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok) return startPaid(data.jobId);
-      if (data.code === 'already_pending' && data.jobId) return startPaid(data.jobId);
-      if (res.status === 401) { PayFlow.toLogin(form, { continueCheckout: true }); return; }
-      if (res.status === 402) { await PayFlow.onInsufficient('reunion', b, data, showError); return; }
-      showError(data.error || '요청을 처리하지 못했어요.');
-    } catch (e) {
-      showError('요청 실패: ' + e.message);
-    } finally {
-      [unlockBtn, stickyUnlock, confirmBtn].forEach((x) => { x.disabled = false; });
-      purchasing = false;
-    }
-  });
+  // 구매 창 — 이메일과 필수 동의 한 번으로 로그인 없이 결제 페이지로 간다(guest-checkout.js).
+  GuestCheckout.mount({ sheet: sheet, confirmBtn: confirmBtn, form, product: 'reunion', priceLabel: price, body, onPending: startPaid });
 
   /* ---------- 결과 ---------- */
   function appendRich(node, s) {

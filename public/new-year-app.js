@@ -35,6 +35,7 @@ window.LOVE_READING_ART = {"greeting":"/new-year-assets/cover.webp","greeting-co
   }
 
   /* ---------- 가격 — 서버 설정(/api/newyear/config)이 유일한 기준 ---------- */
+  let guestCheckout = null; // 아래 구매 창 연결 뒤에 채운다. 가격이 늦게 오면 결제 버튼 문구를 다시 쓴다.
   function applyPrice(priceKrw) {
     const price = priceKrw.toLocaleString('ko-KR') + '원';
     document.querySelectorAll('[data-ny-price]').forEach((node) => { node.textContent = price; });
@@ -44,6 +45,8 @@ window.LOVE_READING_ART = {"greeting":"/new-year-assets/cover.webp","greeting-co
     window.POINT_NOTICE_PRICE = priceKrw;
     window.POINT_NOTICE_LABEL = '2027 신년운세 전체 풀이';
     window.POINT_NOTICE_DELIVERY = '결제 후 자동 생성되어 웹과 PDF 이메일로 제공됩니다. 생성 시간은 상황에 따라 달라질 수 있습니다';
+    window.POINT_NOTICE_GUEST = true;
+    if (guestCheckout) guestCheckout.reset();
     const s = document.createElement('script');
     s.src = '/point-notice.js';
     document.body.appendChild(s);
@@ -383,11 +386,6 @@ window.LOVE_READING_ART = {"greeting":"/new-year-assets/cover.webp","greeting-co
   });
 
   /* ---------- 구매 시트 ---------- */
-  function showError(msg) {
-    errorBlock.textContent = msg;
-    errorBlock.classList.remove('hidden');
-    errorBlock.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }
   const checkoutSheet = document.getElementById('checkoutSheet');
   const checkoutConfirm = document.getElementById('checkoutConfirm');
   let checkoutTrigger = null;
@@ -420,41 +418,11 @@ window.LOVE_READING_ART = {"greeting":"/new-year-assets/cover.webp","greeting-co
     e.preventDefault();
     PayFlow.toLogin(form);
   });
-  checkoutConfirm.addEventListener('click', async () => {
-    if (purchasing) return;
-    const deliveryEmail = field('deliveryEmail');
-    const deliveryError = document.getElementById('deliveryError');
-    const badEmail = !deliveryEmail.value.trim() || !deliveryEmail.checkValidity();
-    if (badEmail || !field('deliveryConsent').checked) {
-      deliveryError.textContent = badEmail ? 'PDF를 받을 이메일을 정확히 입력해 주세요.' : 'PDF 전달을 위한 이메일 사용에 동의해 주세요.';
-      deliveryError.hidden = false;
-      (badEmail ? deliveryEmail : field('deliveryConsent')).focus();
-      return;
-    }
-    deliveryError.hidden = true;
-    purchasing = true;
-    closeCheckout();
-    errorBlock.classList.add('hidden');
-    const b = body();
-    unlockBtn.disabled = true;
-    document.getElementById('stickyUnlock').disabled = true;
-    checkoutConfirm.disabled = true;
-    try {
-      const res = await fetch('/api/newyear', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok) return startPaid(data.jobId);
-      if (data.code === 'already_pending' && data.jobId) return startPaid(data.jobId);
-      if (res.status === 401) { PayFlow.toLogin(form, { continueCheckout: true }); return; }
-      if (res.status === 402) { await PayFlow.onInsufficient('newyear', b, data, showError); return; }
-      showError(data.error || '요청을 처리하지 못했어요.');
-    } catch (e) {
-      showError('요청 실패: ' + e.message);
-    } finally {
-      unlockBtn.disabled = false;
-      document.getElementById('stickyUnlock').disabled = false;
-      checkoutConfirm.disabled = false;
-      purchasing = false;
-    }
+  // 구매 창 — 이메일과 필수 동의 한 번으로 로그인 없이 결제 페이지로 간다(guest-checkout.js).
+  guestCheckout = GuestCheckout.mount({
+    sheet: checkoutSheet, confirmBtn: checkoutConfirm, form, product: 'newyear',
+    priceLabel: () => document.getElementById('newYearPrice').textContent || '14,900원',
+    body, onPending: startPaid
   });
 
   /* ---------- 유료 결과 ---------- */
