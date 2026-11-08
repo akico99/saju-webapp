@@ -14,10 +14,12 @@ const express = require('express');
 const users = require('../../db/users');
 const cardPayments = require('../../db/cardPayments');
 const consents = require('../../db/consents');
+const orders = require('../../db/orders');
+const { parseDelivery } = require('../../db/reportDelivery');
 const { resolveProduct } = require('../products');
 const { HttpError } = require('../httpError');
 const { requireAuth } = require('../middleware/auth');
-const { paymentPrepareLimiter } = require('../middleware/rateLimit');
+const { paymentPrepareLimiter, paymentStartLimiter } = require('../middleware/rateLimit');
 const { CLIENT_KEY, SECRET_KEY, TEST_MODE, confirmPayment, lookupPayment, cancelPayment, latestCanceledAt } = require('../tossPayments');
 const { notifyPurchase } = require('../../email/purchaseAlert');
 const newYearConfig = require('../../config/newYear');
@@ -82,15 +84,77 @@ router.post('/pay/agree', requireAuth, (req, res) => {
   res.json({ ok: true });
 });
 
+/* 구매 창 하나로 끝내는 결제 시작 — 로그인하지 않아도 된다(비회원 결제).
+   상품 화면의 구매 창에서 받은 수신 이메일과 필수 동의(이용약관·개인정보·만 14세·주문 내용)를 한 번에 기록하고
+   주문을 만든다. 로그인하지 않은 손님에게는 내부용 비회원 계정(users.createGuestUser)을 붙여 이 브라우저 세션에
+   연결한다 — 결제·생성·환불·결과 보기가 모두 user_id 기준이라 같은 경로를 그대로 쓴다.
+   주문 동의가 이미 남아 있으므로 결제 페이지(pay.html)는 동의를 다시 묻지 않고 결제수단만 보여 준다. */
+const START_PRODUCTS = new Set(['love', 'newyear', 'reunion', 'couple']);
+router.post('/pay/start', paymentStartLimiter, (req, res) => {
+  const body = req.body || {};
+  const { product, form, attribution } = body;
+  if (!START_PRODUCTS.has(product)) return res.status(400).json({ error: '알 수 없는 상품입니다.' });
+  if (!consents.signupAgreed(body) || body.agreeOrder !== true) {
+    return res.status(400).json({ error: '필수 항목에 모두 동의해 주세요.', code: 'consent_required' });
+  }
+  const resolved = resolveProduct(product, form);
+  if (!resolved) return res.status(400).json({ error: '알 수 없는 상품입니다.' });
+  try { parseDelivery(form); } catch (e) { return res.status(400).json({ error: e.message }); }
+
+  let user = req.session.userId ? users.findById(req.session.userId) : null;
+  if (user && user.status === 'suspended') return res.status(403).json({ error: '이용이 제한된 계정입니다. 문의: sooky2001@gmail.com' });
+  if (user) {
+    const pending = orders.findPendingByUserAndProduct(user.id, resolved.productKey);
+    if (pending) return res.status(409).json({ error: '이미 만들고 있는 리포트가 있어요. 완료될 때까지 잠시만 기다려 주세요.', code: 'already_pending', jobId: pending.job_id });
+  }
+  const finish = () => {
+    if (!consents.hasSignupConsent(user.id)) consents.recordSignupConsents(user.id, req);
+    const row = cardPayments.create({
+      userId: user.id, amountKrw: resolved.price, orderName: resolved.label, testMode: TEST_MODE,
+      productKey: resolved.productKey, form, attribution
+    });
+    consents.recordOrderConsent(user.id, row.order_id, req);
+    res.json({ orderId: row.order_id, orderName: row.order_name, amountKrw: row.amount_krw, page: resolved.page, productKey: row.product_key, guest: users.isGuest(user), testMode: TEST_MODE });
+  };
+  if (user) return finish();
+  user = users.createGuestUser();
+  req.session.regenerate((err) => {
+    if (err) return res.status(500).json({ error: '결제를 준비하지 못했어요. 다시 시도해 주세요.' });
+    req.session.userId = user.id;
+    finish();
+  });
+});
+
+/* 결제 승인 요청의 접근 확인. 보통은 주문을 만든 브라우저 세션으로 돌아온다. 비회원 주문은 카드사·간편결제 앱을
+   다녀오며 다른 브라우저로 돌아와 세션이 없을 수 있다 — 그때는 토스가 결제자에게만 돌려주는 paymentKey를 가진
+   요청만 받고(이미 키가 기록된 주문은 그 키와 같아야 한다), 승인이 확인된 뒤에만 이 브라우저를 그 주문에 연결한다. */
+function confirmAccess(req, res, next) {
+  const { orderId, paymentKey } = req.body || {};
+  const row = orderId ? cardPayments.findByOrderId(orderId) : null;
+  const sessionUserId = req.session && req.session.userId;
+  const owner = row && row.user_id !== sessionUserId ? users.findById(row.user_id) : null;
+  if (owner && users.isGuest(owner) && owner.status !== 'suspended' && typeof paymentKey === 'string' && paymentKey &&
+      (!row.payment_key || row.payment_key === paymentKey)) {
+    req.guestOwnerId = row.user_id;
+    return next();
+  }
+  return requireAuth(req, res, next);
+}
+
 // successUrl에서 돌아온 뒤 — 승인하고, 바로 상품을 시작한다.
-router.post('/pay/confirm', requireAuth, async (req, res) => {
+router.post('/pay/confirm', confirmAccess, async (req, res) => {
   const { paymentKey, orderId, amount } = req.body;
   if (!orderId) return res.status(400).json({ error: '결제 정보가 올바르지 않습니다.' });
 
   const row = cardPayments.findByOrderId(orderId);
-  if (!row || row.user_id !== req.session.userId) return res.status(404).json({ error: '주문을 찾을 수 없습니다.' });
+  if (!row || (row.user_id !== req.session.userId && row.user_id !== req.guestOwnerId)) return res.status(404).json({ error: '주문을 찾을 수 없습니다.' });
+  // 결제가 확인된 응답만 이 브라우저를 비회원 주문에 연결한다(세션이 이미 그 주문의 것이면 그대로 보낸다).
+  const adopt = (send) => {
+    if (!req.guestOwnerId || req.session.userId === req.guestOwnerId) return send();
+    req.session.regenerate((err) => { if (!err) req.session.userId = req.guestOwnerId; send(); });
+  };
   // 새로고침/동시 요청은 같은 주문 한 번만 승인하고 시작한다.
-  if (row.status === 'paid') return res.json({ payment: summarize(row), jobId: row.job_id, page: pageOf(row), alreadyConfirmed: true });
+  if (row.status === 'paid') return adopt(() => res.json({ payment: summarize(row), jobId: row.job_id, page: pageOf(row), alreadyConfirmed: true }));
   if (row.status === 'confirming') return res.status(202).json({ error: '결제 확인이 진행 중입니다. 같은 주문으로 다시 확인해 주세요.', code: 'confirmation_pending', retry: true });
   const retryingUncertain = row.status === 'reconcile_pending';
   if (row.status !== 'ready' && !retryingUncertain) return res.status(409).json({ error: '이미 처리된 주문입니다.', code: row.status });
@@ -172,7 +236,7 @@ router.post('/pay/confirm', requireAuth, async (req, res) => {
   if (!paid) {
     const current = cardPayments.findByOrderId(orderId);
     if (current && current.status === 'paid') {
-      return res.json({ payment: summarize(current), jobId: current.job_id, page: pageOf(current), alreadyConfirmed: true });
+      return adopt(() => res.json({ payment: summarize(current), jobId: current.job_id, page: pageOf(current), alreadyConfirmed: true }));
     }
     return res.status(202).json({ error: '결제 상태를 계속 확인하고 있습니다. 같은 주문으로 다시 확인해 주세요.', code: 'confirmation_pending', retry: true });
   }
@@ -180,11 +244,11 @@ router.post('/pay/confirm', requireAuth, async (req, res) => {
   const resolved = resolveProduct(productOf(row.product_key), form);
   try {
     if (!resolved) throw new HttpError(400, { error: '알 수 없는 상품입니다.' });
-    if (!cardPayments.claimPaidStart(paid)) return res.status(202).json({ error: '결제는 확인됐고 리포트 시작을 확인하고 있어요. 마이페이지에서 잠시 후 확인해 주세요.', code: 'start_pending', retry: true });
+    if (!cardPayments.claimPaidStart(paid)) return adopt(() => res.status(202).json({ error: '결제는 확인됐고 리포트 시작을 확인하고 있어요. 마이페이지에서 잠시 후 확인해 주세요.', code: 'start_pending', retry: true }));
     const payload = await resolved.start(row.user_id, form, { cardPaymentId: paid.id });
     cardPayments.setJob(paid, payload.jobId);
     notifyPurchase(paid);
-    return res.json({ payment: summarize(paid), jobId: payload.jobId, page: resolved.page, payload });
+    return adopt(() => res.json({ payment: summarize(paid), jobId: payload.jobId, page: resolved.page, payload }));
   } catch (e) {
     // 승인은 됐지만 상품을 시작하지 못했다. 상품이 이미 차감까지 한 뒤 실패했다면 그쪽에서
     // refundPurchase가 이 결제를 선점해 카드 취소를 진행 중이다 — 그때는 두 번 취소하지 않는다.
@@ -207,8 +271,20 @@ router.post('/pay/confirm', requireAuth, async (req, res) => {
 });
 
 router.get('/pay/mine', requireAuth, (req, res) => {
-  res.json({ payments: cardPayments.listByUser(req.session.userId).map(summarize) });
+  // 결제 페이지가 쓰는 두 값 — 구매 창에서 주문 동의를 이미 받았는지(받았으면 다시 묻지 않는다),
+  // 토스 영수증을 보낼 주소(구매 창에서 받은 수신 이메일). 아직 결제하지 않은 주문에만 주소를 싣는다.
+  res.json({ payments: cardPayments.listByUser(req.session.userId).map((row) => Object.assign(summarize(row), {
+    orderAgreed: consents.hasOrderConsent(row.user_id, row.order_id),
+    customerEmail: row.status === 'ready' ? deliveryEmailOf(row) : null
+  })) });
 });
+
+function deliveryEmailOf(row) {
+  try {
+    const f = JSON.parse(row.form_json || '{}');
+    return typeof f.deliveryEmail === 'string' && f.deliveryEmail.trim() ? f.deliveryEmail.trim().slice(0, 254) : null;
+  } catch (e) { return null; }
+}
 
 // product_key → resolveProduct의 product 종류 (폼은 원장에 보관된 것을 그대로 쓴다)
 function productOf(productKey) {

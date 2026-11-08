@@ -24,7 +24,7 @@ function startServer() {
   });
 }
 
-test('모바일 상품 소개에서 실제 무료 해석, 재입력, 로그인까지 연결된다', { timeout: 60000 }, async () => {
+test('모바일 상품 소개에서 실제 무료 해석, 재입력, 가입 없는 결제 페이지까지 연결된다', { timeout: 60000 }, async () => {
   const { child, port } = await startServer();
   let browser;
   try {
@@ -36,7 +36,7 @@ test('모바일 상품 소개에서 실제 무료 해석, 재입력, 로그인�
     let purchases = 0;
     page.on('pageerror', (error) => errors.push(error.message));
     await page.setRequestInterception(true);
-    page.on('request', (req) => { if(req.url() === base + '/api/love') purchases++; return req.url().startsWith(base) ? req.continue() : req.abort(); });
+    page.on('request', (req) => { if(req.url() === base + '/api/pay/start') purchases++; return req.url().startsWith(base) ? req.continue() : req.abort(); });
     // 상품 목록 시안은 메인(/)으로 옮겨 갔다. 메인의 넘침을 보고, 상황별 진입 주소로 바로 들어간다.
     await page.goto(base + '/', { waitUntil: 'networkidle0' });
     for (const width of [320, 390, 1280]) {
@@ -122,18 +122,24 @@ test('모바일 상품 소개에서 실제 무료 해석, 재입력, 로그인�
     await page.click('#checkoutConfirm');
     assert.equal(purchases,0,'이메일과 동의 없이는 구매하지 않는다');
     await page.type('#deliveryEmail','fictional@example.test');
+    assert.match(await page.$eval('#deliveryEcho',e=>e.textContent),/fictional@example\.test/);
+    await page.click('#consentItems summary');
     await page.click('#deliveryConsent');
+    await page.click('#checkoutConfirm');
+    assert.equal(purchases,0,'필수 동의를 모두 하기 전에는 구매하지 않는다');
+    assert.match(await page.$eval('#deliveryError',e=>e.textContent),/동의/);
+    await page.click('#agreeAll');
+    assert.equal(await page.$$eval('#checkoutSheet [data-agree]',es=>es.every(e=>e.checked)),true);
+    assert.equal(await page.$eval('#deliveryError',e=>e.hidden),true,'모두 동의하면 오류 문구가 사라진다');
+    await page.click('#consentItems summary');
+    await page.screenshot({path:path.join(os.tmpdir(),'love-guest-checkout.png'),fullPage:false});
     await Promise.all([page.waitForNavigation(), page.click('#checkoutConfirm')]);
     assert.equal(purchases,1);
-    assert.match(page.url(), /login\.html/);
-    await page.goto(base+'/love.html',{waitUntil:'networkidle0'});
-    await page.waitForSelector('#freeReader .lr-reader',{visible:true});
-    assert.equal(await page.$eval('[name=readingFocus]',e=>e.value),'timing');
-    assert.equal(await page.$eval('[name=hourUnknown]',e=>e.checked),true);
-    assert.equal(await page.$eval('#resumeNote',e=>e.classList.contains('hidden')),false);
-    assert.equal(await page.$eval('#deliveryEmail',e=>e.value),'fictional@example.test');
-    assert.equal(await page.$eval('#deliveryConsent',e=>e.checked),true);
-    assert.equal(purchases,1,'복귀만으로 재구매 요청이 발생하면 안 됨');
+    assert.match(page.url(), /\/pay\.html\?orderId=/, '로그인 없이 결제 페이지로 바로 간다');
+    // 테스트는 외부(토스) 스크립트를 막으므로 결제수단 위젯은 뜨지 않는다. 주문 금액과 동의 상태만 본다.
+    await page.waitForFunction(()=>/동의했어요/.test(document.getElementById('payConsent').textContent));
+    assert.equal(await page.$eval('#orderAmount',e=>e.textContent),'14,900원');
+    assert.equal(await page.$$eval('#payConsent input[type=checkbox]',es=>es.length),0,'결제 페이지에서 동의를 다시 묻지 않는다');
     assert.deepEqual(errors, []);
   } finally {
     if (browser) await browser.close();

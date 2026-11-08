@@ -115,6 +115,18 @@
     });
   }
 
+  /* 결제 페이지에서 '결제하기'를 눌러 토스 결제창을 여는 순간. 결제 시작(InitiateCheckout = 결제 페이지 도착)과
+     구매 사이에서 손님이 결제창 앞에서 멈췄는지, 결제창 안(카드 인증)에서 멈췄는지 가르는 기준이 된다. 주문당 한 번만. */
+  function addPaymentInfo(p) {
+    if (!p || !p.orderId) return;
+    var key = 'so_payinfo_' + p.orderId;
+    try { if (sessionStorage.getItem(key)) return; sessionStorage.setItem(key, '1'); } catch (e) {}
+    when(function () {
+      ga('event', 'add_payment_info', { currency: 'KRW', value: p.value, items: [item(p)] });
+      meta('track', 'AddPaymentInfo', { content_ids: [p.productKey], value: p.value, currency: 'KRW' });
+    });
+  }
+
   function signUp(method) {
     when(function () {
       ga('event', 'sign_up', { method: method || 'email' });
@@ -170,6 +182,6 @@
     });
   }
 
-  window.SoTrack = { attribution: attribution, viewItem: viewItem, beginCheckout: beginCheckout, purchase: purchase, signUp: signUp, freeResult: freeResult, unlockClick: unlockClick };
+  window.SoTrack = { attribution: attribution, viewItem: viewItem, beginCheckout: beginCheckout, addPaymentInfo: addPaymentInfo, purchase: purchase, signUp: signUp, freeResult: freeResult, unlockClick: unlockClick };
 })();
 

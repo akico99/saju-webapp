@@ -11,6 +11,7 @@ function toPublicUser(row) {
     name: row.name,
     gender: row.gender,
     emailVerified: !!row.email_verified,
+    isGuest: row.provider === 'guest',
     birth: row.birth_year ? {
       year: row.birth_year, month: row.birth_month, day: row.birth_day,
       hour: row.birth_hour, minute: row.birth_minute,
@@ -80,6 +81,19 @@ function findById(id) {
   return stmts.findById.get(id);
 }
 
+/* 비회원 결제 — 가입 없이 결제하는 손님에게 내부용 계정을 붙인다. 결제·생성·환불·결과 보기 코드가 모두
+   user_id를 기준으로 움직이므로, 같은 경로를 그대로 쓰기 위해서다. 로그인 수단(비밀번호·소셜)은 없고
+   이 브라우저 세션으로만 쓴다. 이메일 칸은 받을 수 없는 내부 주소로 채운다 — 손님이 적은 수신 이메일은
+   주문의 PDF 전달 정보(report_delivery)에만 둔다(기존 회원 이메일과 겹쳐도 충돌하지 않게). */
+const GUEST_EMAIL_DOMAIN = 'guest.sajusudal.local';
+function createGuestUser() {
+  const token = crypto.randomBytes(12).toString('hex');
+  return createSocialUser({ email: 'guest_' + token + '@' + GUEST_EMAIL_DOMAIN, name: null, provider: 'guest', providerId: token, emailVerified: false });
+}
+function isGuest(row) {
+  return !!row && row.provider === 'guest';
+}
+
 function adjustPointBalance(userId, delta) {
   stmts.adjustBalance.run(delta, userId);
 }
@@ -129,8 +143,9 @@ function setStatus(id, status) {
 }
 
 function adminStats() {
-  const totalUsers = db.prepare('SELECT COUNT(*) AS c FROM users').get().c;
-  const todaySignups = db.prepare("SELECT COUNT(*) AS c FROM users WHERE date(created_at) = date('now')").get().c;
+  // 비회원 결제용 내부 계정(provider='guest')은 가입이 아니므로 회원 수에서 뺀다.
+  const totalUsers = db.prepare("SELECT COUNT(*) AS c FROM users WHERE provider <> 'guest'").get().c;
+  const todaySignups = db.prepare("SELECT COUNT(*) AS c FROM users WHERE provider <> 'guest' AND date(created_at) = date('now')").get().c;
   // 실제로 결제되고 취소되지 않은 카드 결제만 센다(테스트 결제 제외).
   // 탈퇴한 회원의 결제는 계정과 분리된 보존 기록(retained_transactions)에 남아 있으므로 함께 센다.
   const totalRevenue = db.prepare(`
@@ -154,5 +169,5 @@ function updateBirth(id, { gender, birthYear, birthMonth, birthDay, birthHour, b
 module.exports = {
   createUser, findByEmail, findById, adjustPointBalance, updateBirth, toPublicUser,
   findByProvider, createSocialUser, updatePasswordHash, markEmailVerified,
-  listAll, countAll, setStatus, adminStats, toAdminUser
+  listAll, countAll, setStatus, adminStats, toAdminUser, createGuestUser, isGuest, GUEST_EMAIL_DOMAIN
 };

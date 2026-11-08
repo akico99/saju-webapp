@@ -20,6 +20,11 @@
 
   fetch('/api/auth/me').then((r) => r.json()).then((data) => {
     if (!data.user) {
+      // 비회원 결제를 여는 상품(window.POINT_NOTICE_GUEST)은 로그인을 권하지 않는다.
+      if (window.POINT_NOTICE_GUEST) {
+        el.innerHTML = `${topic} <b>${price.toLocaleString('ko-KR')}원</b>(카드·간편결제)이에요. 회원가입 없이 바로 결제할 수 있어요.`;
+        return;
+      }
       el.innerHTML = `${topic} <b>${price.toLocaleString('ko-KR')}원</b>(카드 결제)이에요. <a href="/login.html?redirect=${encodeURIComponent(location.pathname + location.search)}">로그인하고 계속하기 →</a>`;
       return;
     }

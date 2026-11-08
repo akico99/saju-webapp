@@ -88,15 +88,16 @@
 
       // 동의 칸은 주문 정보를 읽자마자 그린다 — 결제위젯이 늦게 떠도 먼저 읽고 체크할 수 있게.
       // 결제 버튼은 위젯 준비와 필수 동의가 둘 다 끝나야 켜진다.
+      // 상품 화면의 구매 창에서 이미 동의한 주문(비회원 결제 포함)은 다시 묻지 않는다.
       const payLabel = order.amountKrw.toLocaleString('ko-KR') + '원 결제하기';
       const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-      let consentOk = false;
+      let consentOk = !!order.orderAgreed;
       let widgetReady = false;
       const syncPayBtn = () => {
         payBtn.disabled = !(consentOk && widgetReady);
         payBtn.textContent = !consentOk ? '필수 항목에 동의해 주세요' : widgetReady ? payLabel : '결제 준비 중...';
       };
-      const consent = ConsentBlock.mount(document.getElementById('payConsent'), (ok) => { consentOk = ok; syncPayBtn(); }, {
+      const consent = order.orderAgreed ? null : ConsentBlock.mount(document.getElementById('payConsent'), (ok) => { consentOk = ok; syncPayBtn(); }, {
         signup: !!me.needsConsent,
         extra: [{
           name: 'agreeOrder',
@@ -108,6 +109,7 @@
           </ul>`
         }]
       });
+      if (order.orderAgreed) document.getElementById('payConsent').textContent = '주문 내용과 필수 약관에 동의했어요. 결제 수단을 고르고 결제해 주세요.';
       syncPayBtn();
 
       const tossPayments = TossPayments(cfg.clientKey);
@@ -122,22 +124,27 @@
       syncPayBtn();
 
       payBtn.addEventListener('click', async () => {
-        if (!consent.isValid()) return;
+        if (consent && !consent.isValid()) return;
         payBtn.disabled = true;
         payBtn.textContent = '결제창 여는 중...';
         errorBox.classList.add('hidden');
         try {
-          const agreed = await fetch('/api/pay/agree', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(Object.assign({ orderId: order.orderId }, consent.values()))
-          });
-          if (!agreed.ok) throw new Error((await agreed.json().catch(() => ({}))).error || '동의 기록에 실패했어요.');
+          if (consent) {
+            const agreed = await fetch('/api/pay/agree', {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(Object.assign({ orderId: order.orderId }, consent.values()))
+            });
+            if (!agreed.ok) throw new Error((await agreed.json().catch(() => ({}))).error || '동의 기록에 실패했어요.');
+          }
+          if (window.SoTrack && SoTrack.addPaymentInfo) SoTrack.addPaymentInfo({ orderId: order.orderId, value: order.amountKrw, productKey: order.productKey });
+          // 토스 영수증은 구매 창에서 받은 수신 이메일로 보낸다. 비회원의 내부용 주소는 넘기지 않는다.
+          const customerEmail = order.customerEmail || (me.user.isGuest ? undefined : me.user.email);
           await widgets.requestPayment({
             orderId: order.orderId,
             orderName: order.orderName,
             successUrl: location.origin + '/pay-success.html',
             failUrl: location.origin + '/pay-fail.html',
-            customerEmail: me.user.email,
+            customerEmail,
             customerName: me.user.name || '고객'
           });
         } catch (e) {

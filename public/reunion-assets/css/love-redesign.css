@@ -209,3 +209,13 @@ body.love-page :is(h1,h2,h3,h4,.bubble .q,.lr-bt,.lr-lead,.lr-toc-btn,.lr-flips-
 body.love-page .scope-card.full h3{flex-wrap:wrap;row-gap:2px}
 @media(max-width:360px){body.love-page .lr-flip-hint{padding:7px 10px}body.love-page .lr-flip-hint::before{content:none}body.love-page .lr-flip-rank{width:22px;font-size:30px}}
 @media(max-width:340px){body.love-page .lr-reader .lr-paper,body.love-page .lr-paid .lr-paper,body.love-page .lr-reader .lr-month-reading{padding-left:20px;padding-right:20px}body.love-page .lr-reader .lr-art-inline{margin-left:-20px!important;margin-right:-20px!important}body.love-page .lr-paid p.lr-lead,body.love-page .lr-reader .lr-toc{margin-left:20px;margin-right:20px}body.love-page .lr-reader p.lr-lead{padding-left:20px;padding-right:20px}}
+/* 비회원 결제 — 구매 창 한 곳에서 이메일·필수 동의·결제 진행을 끝낸다 */
+.love-page .email-domains{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0}
+.love-page .email-domains button{min-height:36px;padding:6px 11px;border-radius:999px;border:1px solid #917d80;background:transparent;color:#f3eeef;font:inherit;font-size:13px;line-height:1.2;box-shadow:none;margin:0;width:auto}
+.love-page .checkout-delivery .delivery-echo{margin:10px 0 0;font-weight:700;color:#fff;word-break:break-all}
+.love-page .checkout-consent{display:grid;gap:12px;margin-top:16px;padding-top:16px;border-top:1px solid #49505a}
+.love-page .checkout-consent .consent-all{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:700;color:#fff}
+.love-page .checkout-consent .consent-all input{width:22px;height:22px;flex:none;margin:0;accent-color:#b77983}
+.love-page .checkout-consent a{color:inherit;text-decoration:underline}
+.love-page .checkout-consent .consent-items summary{cursor:pointer;font-size:13px;color:#d8cecf;text-decoration:underline;margin:0 0 4px}
+.love-page .checkout-consent .consent-items[open]{display:grid;gap:12px}

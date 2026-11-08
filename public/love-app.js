@@ -1,7 +1,7 @@
 'use strict';
 /* 연애 시기 리포트 화면 — 대화형 입력 → 무료 사주 분석(/api/love/preview, 개인 소개는 /api/love/intro로
-   나중에 채운다) → 잠금 해제(/api/love,
-   로그인·카드 결제는 pay-flow.js) → 결과(/api/status/:jobId).
+   나중에 채운다) → 구매 창(이메일·필수 동의 한 번) → /api/pay/start(로그인 없이 주문, 비회원은 내부 계정)
+   → 결제 페이지(pay.html, 결제수단만) → 결과(/api/status/:jobId).
    입력값은 한 <form id="loveForm"> 안에 모두 있다. 그래야 로그인으로 넘어갈 때 PayFlow.toLogin이
    통째로 저장하고, 돌아와서 복원한 뒤 무료 사주 분석을 다시 열 수 있다.
    서버 응답 문자열은 innerHTML로 넣지 않는다(textContent). 예외는 서버가 엔진 숫자만으로 만든
@@ -348,11 +348,6 @@
   });
 
   /* ---------- 잠금 해제(결제) ---------- */
-  function showError(msg) {
-    errorBlock.textContent = msg;
-    errorBlock.classList.remove('hidden');
-    errorBlock.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }
   const checkoutSheet = document.getElementById('checkoutSheet');
   const checkoutConfirm = document.getElementById('checkoutConfirm');
   let checkoutTrigger = null;
@@ -386,40 +381,72 @@
     e.preventDefault();
     PayFlow.toLogin(form);
   });
+  /* 구매 창 — 이메일 한 칸과 필수 동의(전체 동의 한 번)만 받고 바로 결제 페이지로 간다. 로그인·가입을 거치지 않는다. */
+  const agreeItems = Array.from(checkoutSheet.querySelectorAll('[data-agree]'));
+  const agreeAll = document.getElementById('agreeAll');
+  const deliveryInput = field('deliveryEmail');
+  const deliveryEcho = document.getElementById('deliveryEcho');
+  const confirmLabel = price + ' 결제하기';
+  checkoutConfirm.textContent = confirmLabel;
+  const consentError = document.getElementById('deliveryError');
+  const syncAgreeAll = () => {
+    agreeAll.checked = agreeItems.every((i) => i.checked);
+    if (agreeAll.checked && consentError.textContent.includes('동의')) consentError.hidden = true;
+  };
+  agreeAll.addEventListener('change', () => { agreeItems.forEach((i) => { i.checked = agreeAll.checked; }); syncAgreeAll(); });
+  agreeItems.forEach((i) => i.addEventListener('change', syncAgreeAll));
+  // 결제 직전에 받을 주소를 한 번 더 크게 보여 준다 — 오타로 PDF를 못 받는 일을 줄인다.
+  const syncEcho = () => {
+    const v = deliveryInput.value.trim();
+    deliveryEcho.hidden = !v;
+    deliveryEcho.textContent = v ? 'PDF 받을 주소: ' + v : '';
+  };
+  deliveryInput.addEventListener('input', syncEcho);
+  checkoutSheet.querySelectorAll('[data-domain]').forEach((b) => b.addEventListener('click', () => {
+    const local = deliveryInput.value.trim().split('@')[0];
+    if (local) deliveryInput.value = local + '@' + b.dataset.domain;
+    syncEcho();
+    deliveryInput.focus();
+  }));
+  syncEcho();
+  syncAgreeAll();
+  const resetConfirm = () => { purchasing = false; checkoutConfirm.disabled = false; checkoutConfirm.textContent = confirmLabel; };
+  // 결제 페이지에서 뒤로 돌아오면(bfcache) 버튼을 다시 쓸 수 있게 둔다.
+  window.addEventListener('pageshow', (e) => { if (e.persisted) resetConfirm(); });
   checkoutConfirm.addEventListener('click', async () => {
     if (purchasing) return;
     const deliveryEmail = field('deliveryEmail');
     const deliveryError = document.getElementById('deliveryError');
-    if (!deliveryEmail.value.trim() || !deliveryEmail.checkValidity() || !field('deliveryConsent').checked) {
-      deliveryError.textContent = !deliveryEmail.value.trim() || !deliveryEmail.checkValidity() ? 'PDF를 받을 이메일을 정확히 입력해 주세요.' : 'PDF 전달을 위한 이메일 사용에 동의해 주세요.';
+    const emailOk = !!deliveryEmail.value.trim() && deliveryEmail.checkValidity();
+    const missing = agreeItems.find((i) => !i.checked);
+    if (!emailOk || missing) {
+      deliveryError.textContent = !emailOk ? 'PDF를 받을 이메일을 정확히 입력해 주세요.' : '필수 항목에 모두 동의해 주세요.';
       deliveryError.hidden = false;
-      (!deliveryEmail.value.trim() || !deliveryEmail.checkValidity() ? deliveryEmail : field('deliveryConsent')).focus();
+      if (emailOk) document.getElementById('consentItems').open = true;
+      (!emailOk ? deliveryEmail : missing).focus();
       return;
     }
     deliveryError.hidden = true;
     purchasing = true;
-    closeCheckout();
-    errorBlock.classList.add('hidden');
-    const b = body();
-    unlockBtn.disabled = true;
-    document.getElementById('stickyUnlock').disabled = true;
     checkoutConfirm.disabled = true;
+    checkoutConfirm.textContent = '결제 준비 중...';
+    const agree = {};
+    agreeItems.forEach((i) => { if (i.name && i.name !== 'deliveryConsent') agree[i.name] = i.checked; });
     try {
-      const res = await fetch('/api/love', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) });
+      const res = await fetch('/api/pay/start', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(Object.assign({ product: 'love', form: body(), attribution: window.SoTrack ? SoTrack.attribution() : null }, agree))
+      });
       const data = await res.json().catch(() => ({}));
-      if (res.ok) return startPaid(data.jobId);
-      if (data.code === 'already_pending' && data.jobId) return startPaid(data.jobId);
-      if (res.status === 401) { PayFlow.toLogin(form, { continueCheckout: true }); return; }
-      if (res.status === 402) { await PayFlow.onInsufficient('love', b, data, showError); return; }
-      showError(data.error || '요청을 처리하지 못했어요.');
+      if (res.ok && data.orderId) { location.href = '/pay.html?orderId=' + encodeURIComponent(data.orderId); return; }
+      if (data.code === 'already_pending' && data.jobId) { resetConfirm(); closeCheckout(); startPaid(data.jobId); return; }
+      deliveryError.textContent = data.error || '결제를 준비하지 못했어요. 다시 시도해 주세요.';
+      deliveryError.hidden = false;
     } catch (e) {
-      showError('요청 실패: ' + e.message);
-    } finally {
-      unlockBtn.disabled = false;
-      document.getElementById('stickyUnlock').disabled = false;
-      checkoutConfirm.disabled = false;
-      purchasing = false;
+      deliveryError.textContent = '연결이 불안정해요. 잠시 후 다시 눌러 주세요.';
+      deliveryError.hidden = false;
     }
+    resetConfirm();
   });
 
   /* ---------- 결과 ---------- */

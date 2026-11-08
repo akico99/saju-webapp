@@ -94,6 +94,13 @@ const resendVerificationLimiter = makeCombinedLimiter({
   message: '인증 메일 요청이 너무 많습니다. 잠시 후 다시 시도해주세요.'
 });
 
+// 비회원 결제 시작은 로그인 없이 계정(내부용)과 주문을 만든다. 소스 IP별 15분 20회로 묶는다.
+const paymentStartLimiter = makeLimiter({
+  max: 20, windowMs: 15 * 60 * 1000,
+  keyFn: (req) => 'pay-start:ip:' + req.ip,
+  message: '결제 요청이 너무 많습니다. 15분 후 다시 시도해주세요.'
+});
+
 // 계정 탈퇴 확인 메일은 로그인한 회원 기준으로 시간당 5번, 확인(비밀번호·코드 입력)은 15분에 15번까지.
 // 코드 자체의 오답 횟수 제한(5회)은 DB에서 따로 건다.
 const accountDeletionRequestLimiter = makeLimiter({
@@ -111,5 +118,5 @@ const accountDeletionConfirmLimiter = makeLimiter({
 module.exports = {
   adminLoginLimiter, userLoginLimiter, signupLimiter, forgotPasswordLimiter,
   accountDeletionRequestLimiter, accountDeletionConfirmLimiter,
-  paymentPrepareLimiter, resendVerificationLimiter
+  paymentPrepareLimiter, resendVerificationLimiter, paymentStartLimiter
 };

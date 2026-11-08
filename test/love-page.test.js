@@ -27,7 +27,9 @@ test('연애 시기 화면 스크립트는 문법 오류가 없고 결제 흐름
   const js = read('love-app.js');
   new vm.Script(js, { filename: 'love-app.js' });
   assert.match(js, /PayFlow\.toLogin\(form\)/);
-  assert.match(js, /PayFlow\.onInsufficient\('love'/);
+  // 구매 창은 로그인 없이 결제를 시작한다(비회원 결제). 로그인 페이지로 보내는 경로가 남아 있으면 안 된다.
+  assert.match(js, /\/api\/pay\/start/);
+  assert.doesNotMatch(js, /continueCheckout: true/);
   assert.match(js, /PayFlow\.resume\(\)/);
   assert.match(js, /\/api\/love\/preview/);
   assert.doesNotMatch(js, /innerHTML\s*=\s*[^'"`;]*(name|reading\.)/); // 사용자·응답 문자열을 innerHTML로 넣지 않는다
