@@ -138,7 +138,7 @@ test('모바일 상품 소개에서 실제 무료 해석, 재입력, 가입 없�
     assert.match(page.url(), /\/pay\.html\?orderId=/, '로그인 없이 결제 페이지로 바로 간다');
     // 테스트는 외부(토스) 스크립트를 막으므로 결제수단 위젯은 뜨지 않는다. 주문 금액과 동의 상태만 본다.
     await page.waitForFunction(()=>/동의했어요/.test(document.getElementById('payConsent').textContent));
-    assert.equal(await page.$eval('#orderAmount',e=>e.textContent),'19,900원');
+    assert.equal(await page.$eval('#orderAmount',e=>e.textContent),'14,900원');
     assert.equal(await page.$$eval('#payConsent input[type=checkbox]',es=>es.length),0,'결제 페이지에서 동의를 다시 묻지 않는다');
     assert.deepEqual(errors, []);
   } finally {

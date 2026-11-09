@@ -45,8 +45,8 @@ const result = JSON.parse(execFileSync(process.execPath, ['-e', `
 
 test('켜진 상품은 2027년과 설정 가격을 알려 주고 결제 레지스트리에 같은 가격으로 오른다', () => {
   assert.equal(result.config.year, 2027);
-  assert.equal(result.config.priceKrw, 19900);
-  assert.deepEqual(result.product, { key: 'new_year_2027', price: 19900 });
+  assert.equal(result.config.priceKrw, 14900);
+  assert.deepEqual(result.product, { key: 'new_year_2027', price: 14900 });
 });
 
 test('무료 첫 장은 로그인 없이 한 줄·분기 네 칸·사주표·오행을 준다', () => {

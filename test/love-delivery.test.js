@@ -52,7 +52,7 @@ test('재시작 시 남은 완료 주문을 복구하고 30일 지난 수신 주
   assert.equal(sent,1);assert.equal(delivery.get('recovered').status,'sent');
   db.prepare("UPDATE report_delivery SET consent_at=datetime('now','-31 days') WHERE job_id='recovered'").run();
   const cards = require('../src/db/cardPayments');
-  const card = cards.create({userId:user.id,amountKrw:19900,orderName:'test',testMode:true,productKey:'love_timing',form:{deliveryEmail:'old@example.test',deliveryConsent:true,name:'test'}});
+  const card = cards.create({userId:user.id,amountKrw:14900,orderName:'test',testMode:true,productKey:'love_timing',form:{deliveryEmail:'old@example.test',deliveryConsent:true,name:'test'}});
   db.prepare("UPDATE card_payments SET created_at=datetime('now','-31 days') WHERE id=?").run(card.id);
   delivery.cleanup();
   assert.equal(delivery.get('recovered'),undefined);

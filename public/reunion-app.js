@@ -27,7 +27,7 @@ window.LOVE_READING_ART = {"greeting":"/reunion-assets/cover.webp","greeting-com
     initiator: { me: '내가 먼저', them: '그 사람이 먼저', mutual: '서로' },
     contact: { sometimes: '가끔 연락해요', cut: '연락이 끊겼어요', blocked: '차단됐어요' }
   };
-  const PRICE = 19900;
+  const PRICE = 14900;
   let step = 0;
   let startYm = null;
   let disposePaidReader = null;

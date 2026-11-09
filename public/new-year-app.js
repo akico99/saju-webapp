@@ -421,7 +421,7 @@ window.LOVE_READING_ART = {"greeting":"/new-year-assets/cover.webp","greeting-co
   // 구매 창 — 이메일과 필수 동의 한 번으로 로그인 없이 결제 페이지로 간다(guest-checkout.js).
   guestCheckout = GuestCheckout.mount({
     sheet: checkoutSheet, confirmBtn: checkoutConfirm, form, product: 'newyear',
-    priceLabel: () => document.getElementById('newYearPrice').textContent || '19,900원',
+    priceLabel: () => document.getElementById('newYearPrice').textContent || '14,900원',
     body, onPending: startPaid
   });
 

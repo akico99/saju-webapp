@@ -56,13 +56,13 @@ test('꺼진 연애 시기 리포트는 판매·결제 준비·추적 카탈로�
   assert.equal(off.sellable, false);
   assert.equal(off.catalog, null);
   assert.equal(off.resolved, null);
-  assert.equal(off.price, 19900); // 가격 조회(환불·복구)는 꺼져 있어도 된다
+  assert.equal(off.price, 14900); // 가격 조회(환불·복구)는 꺼져 있어도 된다
 });
 
-test('켜진 연애 시기 리포트는 19,900원 상품으로 결제 준비된다', () => {
+test('켜진 연애 시기 리포트는 14,900원 상품으로 결제 준비된다', () => {
   assert.equal(on.sellable, true);
-  assert.deepEqual(on.catalog, { name: '연애 시기 리포트', price: 19900 });
-  assert.deepEqual(on.resolved, { productKey: 'love_timing', price: 19900, label: '연애 시기 리포트 — 수달', page: '/love.html', hasStart: true });
+  assert.deepEqual(on.catalog, { name: '연애 시기 리포트', price: 14900 });
+  assert.deepEqual(on.resolved, { productKey: 'love_timing', price: 14900, label: '연애 시기 리포트 — 수달', page: '/love.html', hasStart: true });
 });
 
 test('켜진 연애 시기 리포트는 페이지·스크립트·스타일이 열리고 유료 API는 로그인을 요구한다', () => {

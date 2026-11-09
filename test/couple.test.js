@@ -35,7 +35,7 @@ test('무료 사주 분석은 두 사람의 기둥·끌림·보완과 함께 좋
   assert.ok(p.pull.points.length >= 2);
   assert.ok(p.clash.points.length >= 1);
   assert.ok(p.complement.headline);
-  assert.equal(p.price, 19900);
+  assert.equal(p.price, 14900);
   // 계절 이름(예: "2026년 11월~2027년 1월")과 시작 달은 연애 상품처럼 공개한다. 그 밖에는 달 이름이 없어야 한다.
   const { seasons, seasonLead, startYm, third, ...rest } = p;
   assert.equal(third.label, label(timing.top3[2]), '3위 달은 공개한다');

@@ -8,7 +8,7 @@ window.LOVE_READING_ART = {"greeting":"/couple-assets/cover.webp","greeting-comi
    예외는 서버가 엔진 숫자만으로 만든 12개월 막대(result_visual)뿐이다.
    유료 결과는 연애 리포트와 같은 읽기 화면(LoveReadingView)을 쓴다. */
 (function () {
-  const PRICE = 19900;
+  const PRICE = 14900;
   const RELATION_LABEL = { some: '썸', dating: '연애 중', married: '부부·예비부부', crush: '짝사랑' };
   const CHAPTERS = ['서로 끌리는 이유', '잘 맞는 결', '부딪히는 지점과 푸는 법', '연락·대화 방식', '두 사람의 흐름이 함께 좋은 세 달과 앞으로 3년', '관계를 지키는 행동', '앞으로 12개월, 달마다 흐름과 행동'];
   // 읽기 화면의 장 그림 — 공용 모델은 연애 리포트 제목으로 장면을 고르므로 이 상품의 제목에 맞춰 다시 정한다.

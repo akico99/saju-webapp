@@ -6,7 +6,7 @@
   /* ---------- 공개된 대표 상품만 보이기 ----------
      서버 설정(/api/products/available)을 따른다. 응답을 못 받으면 HTML 기본값(연애·신년 표시, 재회 숨김,
      궁합은 예전 4,900원 페이지)을 그대로 둔다. */
-  var COUPLE = { title: '두 사람의 궁합', desc: '서로 끌리는 이유와 앞으로 12개월', price: '19,900원 · 웹 + PDF', menu: '두 사람의 궁합 · 궁합' };
+  var COUPLE = { title: '두 사람의 궁합', desc: '서로 끌리는 이유와 앞으로 12개월', price: '14,900원 · 웹 + PDF', menu: '두 사람의 궁합 · 궁합' };
   function withQuery(path, legacy) {
     var q = (legacy || '').split('?')[1];
     return q ? path + '?' + q : path;

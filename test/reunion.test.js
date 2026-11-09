@@ -51,7 +51,7 @@ test('무료 첫 장은 두 사람의 네 기둥·끌림·부딪힘·계절만 �
   const t = R.buildReunionTiming(a, b, NOW);
   assert.ok(!json.includes(t.top3[0].year + '년 ' + t.top3[0].month + '월 '));
   assert.match(p.safety, /약속하지 않/);
-  assert.equal(p.price, 19900);
+  assert.equal(p.price, 14900);
   const blocked = R.buildReunionPreview({ me: ME, them: THEM, story: BLOCKED }, NOW);
   assert.equal(blocked.story.boundary, true);
   assert.match(blocked.safety, /연락을 권하지 않/);
@@ -225,5 +225,5 @@ test('설정: 새 상품 키는 옛 재회 점수표와 겹치지 않는 reunion
   const c = require('../src/config/reunion');
   assert.equal(c.productKey, 'reunion_v2');
   assert.equal(c.product, 'reunion');
-  assert.equal(c.priceKrw, 19900);
+  assert.equal(c.priceKrw, 14900);
 });

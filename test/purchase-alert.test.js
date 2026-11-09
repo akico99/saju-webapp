@@ -86,8 +86,8 @@ test('리포트 시작에 실패해 자동 취소되는 결제는 알리지 않�
 });
 
 test('테스트 결제는 제목에 표시하고, 유입 기록이 없어도 보낸다', () => {
-  const mail = buildPurchaseAlert({ order_id: 'o-test', order_name: '인연의 시기', amount_krw: 19900, test_mode: 1, method: '카드', attribution: null });
-  assert.match(mail.subject, /^\[사주보는 수달\] \(테스트 결제\) 결제 19,900원 · 인연의 시기$/);
+  const mail = buildPurchaseAlert({ order_id: 'o-test', order_name: '인연의 시기', amount_krw: 14900, test_mode: 1, method: '카드', attribution: null });
+  assert.match(mail.subject, /^\[사주보는 수달\] \(테스트 결제\) 결제 14,900원 · 인연의 시기$/);
   assert.match(mail.html, /유입\(마지막\)<\/b> 기록 없음/);
 });
 

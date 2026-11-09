@@ -265,7 +265,7 @@ test('retained payment facts contain no direct account or report data', async ()
 
   const first = rows.find((r) => r.order_ref === acct.payment.order_id);
   assert.equal(first.product_key, 'full');
-  assert.equal(first.amount_krw, 19900);
+  assert.equal(first.amount_krw, 14900);
   assert.equal(first.payment_status, 'paid');
   assert.equal(first.supply_status, 'delivered');
   assert.equal(first.approved_at, '2026-03-03 20:06:07');

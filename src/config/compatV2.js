@@ -1,5 +1,5 @@
 'use strict';
-/* 두 사람의 궁합(새 궁합 상품, 19,900원) 공개 스위치. 기존 /compat.html(4,900원 PDF)과는 별개 상품이다.
+/* 두 사람의 궁합(새 궁합 상품, 14,900원) 공개 스위치. 기존 /compat.html(4,900원 PDF)과는 별개 상품이다.
    환경변수 COMPAT_V2_ENABLED를 켰을 때만 페이지·API·결제가 열린다(운영 기본값은 꺼짐). */
 const enabled = /^(1|true|yes|on)$/i.test(String(process.env.COMPAT_V2_ENABLED || '').trim());
 
@@ -11,4 +11,4 @@ const RELATIONS = Object.freeze({
   crush: { label: '짝사랑', guide: '읽는 사람이 그 사람을 혼자 좋아하는 단계입니다. 그 사람은 아직 마음을 모를 수 있습니다. 상대의 마음을 단정하지 말고, 부담을 주지 않는 다가감, 상대의 반응과 거리를 존중하는 기준, 거절도 하나의 답이라는 점을 분명히 하세요. 몰래 살피기·반복 연락·집착을 부추기지 마세요.' }
 });
 
-module.exports = { enabled, productKey: 'compat_v2', priceKrw: 19900, label: '두 사람의 궁합', page: '/couple.html', RELATIONS };
+module.exports = { enabled, productKey: 'compat_v2', priceKrw: 14900, label: '두 사람의 궁합', page: '/couple.html', RELATIONS };

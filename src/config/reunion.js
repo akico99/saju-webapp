@@ -4,4 +4,4 @@
    결제 상품 종류 이름(resolveProduct의 product)은 'reunion'이다. */
 const enabled = /^(1|true|yes|on)$/i.test(String(process.env.REUNION_ENABLED || '').trim());
 
-module.exports = { enabled, productKey: 'reunion_v2', product: 'reunion', priceKrw: 19900, label: '다시, 우리 — 재회 리포트', title: '다시, 우리', page: '/reunion.html' };
+module.exports = { enabled, productKey: 'reunion_v2', product: 'reunion', priceKrw: 14900, label: '다시, 우리 — 재회 리포트', title: '다시, 우리', page: '/reunion.html' };

@@ -218,6 +218,3 @@ body.love-page .scope-card.full h3{flex-wrap:wrap;row-gap:2px}
 .love-page .checkout-consent a{color:inherit;text-decoration:underline}
 .love-page .checkout-consent .consent-items summary{cursor:pointer;font-size:13px;color:#dfc7ce;text-decoration:underline;margin:0 0 4px}
 .love-page .checkout-consent .consent-items[open]{display:grid;gap:12px}
-/* 출시 기념가 안내 — 끝나는 날과 그 뒤 가격을 함께 적는다(줄 긋기 할인 표시는 쓰지 않는다) */
-.love-page .launch-tag{display:inline-block;margin-left:6px;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,.12);font-size:12px;font-weight:700;letter-spacing:0;vertical-align:middle}
-.love-page .checkout-launch{margin:-8px 0 14px;font-size:13px;line-height:1.6;color:#f3d9a4;text-align:right;word-break:keep-all}

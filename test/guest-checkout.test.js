@@ -82,7 +82,7 @@ test('로그인하지 않은 손님은 구매 창 한 번으로 주문이 만들
   const res = await call('POST', '/api/pay/start', { product: 'love', form, ...AGREE, attribution: { first: { utm_source: 'meta' } } });
   assert.equal(res.status, 200);
   assert.equal(res.data.guest, true);
-  assert.equal(res.data.amountKrw, 19900);
+  assert.equal(res.data.amountKrw, 14900);
   assert.ok(res.setCookie, '이 브라우저 세션을 비회원 주문에 연결한다');
 
   const row = cardPayments.findByOrderId(res.data.orderId);
@@ -125,7 +125,7 @@ test('로그인한 회원은 자기 계정으로 주문하고 비회원 계정�
 
 function guestPaidOrder(paymentKey) {
   const guest = users.createGuestUser();
-  const row = cardPayments.create({ userId: guest.id, amountKrw: 19900, orderName: '연애 시기 리포트', testMode: true, productKey: 'love_timing', form, attribution: null });
+  const row = cardPayments.create({ userId: guest.id, amountKrw: 14900, orderName: '연애 시기 리포트', testMode: true, productKey: 'love_timing', form, attribution: null });
   cardPayments.markPaidAndCredit(row, { paymentKey, method: '카드', approvedAt: '2026-11-09T10:00:00+09:00' });
   return { guest, row: cardPayments.findByOrderId(row.order_id) };
 }
@@ -151,7 +151,7 @@ test('카드 앱을 다녀와 세션이 없어도, 결제 키가 맞는 비회�
 
 test('회원 주문은 결제 키만으로 다른 브라우저에 연결되지 않는다', async () => {
   const member = users.createUser({ email: 'member-no-adopt@example.com', passwordHash: 'x' });
-  const row = cardPayments.create({ userId: member.id, amountKrw: 19900, orderName: '연애 시기 리포트', testMode: true, productKey: 'love_timing', form, attribution: null });
+  const row = cardPayments.create({ userId: member.id, amountKrw: 14900, orderName: '연애 시기 리포트', testMode: true, productKey: 'love_timing', form, attribution: null });
   cardPayments.markPaidAndCredit(row, { paymentKey: 'pk-member', method: '카드' });
   const res = await client()('POST', '/api/pay/confirm', { paymentKey: 'pk-member', orderId: row.order_id, amount: row.amount_krw });
   assert.equal(res.status, 401);
@@ -198,7 +198,7 @@ test('신년운세·재회·두 사람의 궁합도 로그인 없이 구매 창 
     assert.equal(res.status, 200, product + ' ' + JSON.stringify(res.data));
     assert.equal(res.data.guest, true, product);
     assert.equal(res.data.productKey, productKey);
-    assert.equal(res.data.amountKrw, 19900, product);
+    assert.equal(res.data.amountKrw, 14900, product);
     const mine = await call('GET', '/api/pay/mine');
     const order = mine.data.payments.find((p) => p.orderId === res.data.orderId);
     assert.equal(order.orderAgreed, true, product);

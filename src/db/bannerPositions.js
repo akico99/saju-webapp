@@ -96,11 +96,9 @@ function cleanBanner(raw, fallback) {
     overlay: OVERLAYS.includes(v.overlay) ? v.overlay : (def.overlay || 'strong'),
     blocks: blocks.slice(0, 12)
   };
-  // 관리자가 저장한 문구도 연결된 상품의 현재 가격과 맞춘다(평생사주 29,900원, 대표 4종 19,900원).
+  // 관리자가 저장한 문구도 연결된 평생사주 상품의 현재 가격과 맞춘다.
   if (/(?:^|\/)(?:lifetime-report|premium)\.html(?:[?#]|$)/i.test(banner.href)) {
-    banner.blocks = banner.blocks.map((b) => ({ ...b, text: b.text.replace(/1[48],900|1[48]900/g, (price) => price.includes(',') ? '29,900' : '29900') }));
-  } else if (/(?:^|\/)(?:love|new-year|reunion|couple)\.html(?:[?#]|$)/i.test(banner.href)) {
-    banner.blocks = banner.blocks.map((b) => ({ ...b, text: b.text.replace(/14,900|14900/g, (price) => price.includes(',') ? '19,900' : '19900') }));
+    banner.blocks = banner.blocks.map((b) => ({ ...b, text: b.text.replace(/14,900|14900/g, (price) => price === '14900' ? '18900' : '18,900') }));
   }
   return banner;
 }

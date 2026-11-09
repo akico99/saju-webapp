@@ -53,7 +53,7 @@ test('무료 첫 장에는 달별 점수와 달 이름이 없다', () => {
   assert.deepEqual(Object.keys(p.seasons[0]).sort(), ['avg', 'label', 'level']);
   assert.deepEqual(p.situation, { key: 'some', label: '썸' });
   assert.ok(p.locked.includes(SITUATIONS.some.actionTitle));
-  assert.equal(p.price, 19900);
+  assert.equal(p.price, 14900);
   assert.equal(p.pillars.length, 4);
   assert.ok(p.balance.bars.length === 5 && p.charm.base.text);
 });
