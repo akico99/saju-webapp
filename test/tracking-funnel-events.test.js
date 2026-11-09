@@ -11,10 +11,10 @@ const source = fs.readFileSync(path.join(__dirname, '../public/track.js'), 'utf8
 const CONFIG = {
   attributionEnabled: true, metaPixelId: 'test_pixel', kakaoPixelId: null,
   products: {
-    love_timing: { name: '연애 시기 리포트', price: 14900 },
-    reunion_v2: { name: '다시, 우리 — 재회 리포트', price: 14900 },
-    compat_v2: { name: '두 사람의 궁합', price: 14900 },
-    new_year_2027: { name: '2027년 신년운세', price: 14900 }
+    love_timing: { name: '연애 시기 리포트', price: 19900 },
+    reunion_v2: { name: '다시, 우리 — 재회 리포트', price: 19900 },
+    compat_v2: { name: '두 사람의 궁합', price: 19900 },
+    new_year_2027: { name: '2027년 신년운세', price: 19900 }
   }
 };
 
@@ -41,7 +41,7 @@ for (const [p, key] of [['/love.html', 'love_timing'], ['/reunion.html', 'reunio
     const vc = b.fb.filter((e) => e[1] === 'ViewContent');
     assert.equal(vc.length, 1);
     assert.deepEqual([...vc[0][2].content_ids], [key]);
-    assert.equal(vc[0][2].value, 14900);
+    assert.equal(vc[0][2].value, 19900);
     assert.equal(vc[0][2].currency, 'KRW');
   });
 }
@@ -71,7 +71,7 @@ test('잠금 해제 클릭은 상품 가격과 함께 UnlockClick 맞춤 이벤�
   await b.settle();
   const clicks = b.fb.filter((e) => e[0] === 'trackCustom' && e[1] === 'UnlockClick');
   assert.equal(clicks.length, 1);
-  assert.equal(clicks[0][2].value, 14900);
+  assert.equal(clicks[0][2].value, 19900);
   assert.equal(b.ga.filter((e) => e[1] === 'unlock_click').length, 1);
 });
 

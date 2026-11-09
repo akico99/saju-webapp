@@ -18,7 +18,7 @@ test('연애 시기 페이지는 입력·무료 첫 장·잠금 해제·결과 �
   }
   for (const src of ['/point-notice.js', '/pay-flow.js', '/love-app.js']) assert.ok(html.includes(`src="${src}"`), src);
   assert.ok(html.indexOf('/point-notice.js') < html.indexOf('/love-app.js'));
-  assert.match(html, /window\.POINT_NOTICE_PRICE = 14900/);
+  assert.match(html, /window\.POINT_NOTICE_PRICE = 19900/);
   assert.match(html, /href="\/love\.css"/);
   for (const m of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)) new vm.Script(m[1], { filename: 'love.html' });
 });

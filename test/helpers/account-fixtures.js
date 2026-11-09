@@ -74,7 +74,7 @@ function seedPurchase(m, user, opts = {}) {
   const tag = (opts.tag || 'x' + seq + 'x') + (opts.suffix || '');
   const jobId = 'job-' + user.id + '-' + seq;
   const payment = m.cardPayments.create({
-    userId: user.id, amountKrw: 14900, orderName: '평생사주 리포트', testMode: !!opts.testMode, productKey: 'full',
+    userId: user.id, amountKrw: 19900, orderName: '평생사주 리포트', testMode: !!opts.testMode, productKey: 'full',
     form: { name: FORM_NAME + tag }, attribution: null
   });
   m.cardPayments.markPaidAndCredit(payment, { paymentKey: PAYMENT_KEY + tag, method: '카드', approvedAt: opts.approvedAt || '2026-03-04T05:06:07+09:00' });

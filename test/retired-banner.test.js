@@ -20,7 +20,7 @@ test('저장된 배너가 없는 새 환경의 기본 배너는 판매 중인 �
   assert.deepEqual(Array.from(module.exports.readBanners(), (b) => b.href), ['life-graph.html', 'lifetime-report.html']);
 });
 
-test('저장된 평생사주 배너 텍스트의 옛 가격만 새 가격으로 보이고 다른 상품은 유지한다', () => {
+test('저장된 배너 텍스트의 옛 가격은 연결된 상품의 현재 가격으로 보인다(평생사주 29,900원, 대표 4종 19,900원)', () => {
   const module = { exports: {} };
   const source = fs.readFileSync('src/db/bannerPositions.js', 'utf8');
   const saved = [
@@ -30,6 +30,6 @@ test('저장된 평생사주 배너 텍스트의 옛 가격만 새 가격으로 
   const sandbox = { module, exports: module.exports, __dirname: 'src/db', require: (name) => name === 'fs' ? { readFileSync() { return JSON.stringify(saved); } } : require(name) };
   vm.runInNewContext(source, sandbox);
   const banners = module.exports.readBanners();
-  assert.equal(banners[0].blocks[0].text, '평생사주 18,900원');
-  assert.equal(banners[1].blocks[0].text, '연애 14,900원');
+  assert.equal(banners[0].blocks[0].text, '평생사주 29,900원');
+  assert.equal(banners[1].blocks[0].text, '연애 19,900원');
 });

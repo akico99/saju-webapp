@@ -53,7 +53,7 @@ test('무료 첫 장은 로그인 없이 바로 응답한다', () => {
   const r = result.ok.body.reading;
   assert.equal(r.situation.label, '솔로');
   assert.equal(r.seasons.length, 4);
-  assert.equal(r.price, 14900);
+  assert.equal(r.price, 19900);
 });
 
 test('무료 첫 장은 성별·생년월일이 없으면 400과 안내를 준다', () => {

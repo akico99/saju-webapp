@@ -49,7 +49,7 @@ async function adminCall() {
 
 const insertRetained = (ref, until) => m.db.prepare(
   "INSERT INTO retained_transactions (order_ref, product_key, amount_krw, payment_status, supply_status, payment_ref_digest, transaction_at, approved_at, retention_until, retention_basis) " +
-  "VALUES (?, 'full', 14900, 'paid', 'delivered', 'digest', '2021-01-01 00:00:00', '2021-01-01 00:00:00', ?, 'ecommerce_decree_art6_payment_supply_5y')"
+  "VALUES (?, 'full', 19900, 'paid', 'delivered', 'digest', '2021-01-01 00:00:00', '2021-01-01 00:00:00', ?, 'ecommerce_decree_art6_payment_supply_5y')"
 ).run(ref, until);
 
 test('retained transactions expire at their configured legal deadline', () => {

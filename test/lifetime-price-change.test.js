@@ -11,16 +11,16 @@ const { resolveProduct } = require('../src/server/products');
 const { productCatalog } = require('../src/server/routes/tracking');
 const { recoverPendingOrders } = require('../src/jobs/recoverPendingOrders');
 
-test('새 평생사주 결제와 광고 상품 가격은 18,900원이고 다른 상품 가격은 유지된다', () => {
-  assert.equal(m.points.PRICES.full, 18900);
-  assert.equal(resolveProduct('full', {}).price, 18900);
-  assert.equal(productCatalog().full.price, 18900);
-  assert.equal(m.points.PRICES.love_timing, 14900);
-  assert.equal(m.points.PRICES.reunion_v2, 14900);
-  assert.equal(m.points.PRICES.compat_v2, 14900);
+test('평생사주는 29,900원, 대표 4종(연애·재회·두 사람의 궁합)은 19,900원으로 결제된다', () => {
+  assert.equal(m.points.PRICES.full, 29900);
+  assert.equal(resolveProduct('full', {}).price, 29900);
+  assert.equal(productCatalog().full.price, 29900);
+  assert.equal(m.points.PRICES.love_timing, 19900);
+  assert.equal(m.points.PRICES.reunion_v2, 19900);
+  assert.equal(m.points.PRICES.compat_v2, 19900);
 });
 
-test('결제 준비 API는 요청 금액을 무시하고 평생사주 18,900원을 주문에 기록한다', async () => {
+test('결제 준비 API는 요청 금액을 무시하고 평생사주 29,900원을 주문에 기록한다', async () => {
   const { user } = fixtures.seedAccount(m, { noPayment: true });
   const app = express();
   app.use(express.json());
@@ -37,8 +37,8 @@ test('결제 준비 API는 요청 금액을 무시하고 평생사주 18,900원�
       req.on('error', reject); req.end(body);
     });
     assert.equal(response.status, 200);
-    assert.equal(response.body.amountKrw, 18900);
-    assert.equal(m.cardPayments.findByOrderId(response.body.orderId).amount_krw, 18900);
+    assert.equal(response.body.amountKrw, 29900);
+    assert.equal(m.cardPayments.findByOrderId(response.body.orderId).amount_krw, 29900);
   } finally { server.closeAllConnections(); server.close(); }
 });
 
@@ -94,14 +94,14 @@ test('이미 취소된 카드 주문은 재시작 때 잔액으로 중복 환불
   assert.equal(m.db.prepare("SELECT COUNT(*) AS n FROM point_transactions WHERE ref_type='refund' AND ref_id=?").get('canceled-old-job').n, 0);
 });
 
-test('평생사주 안내와 검색 정보는 18,900원을 표시한다', () => {
+test('평생사주 안내와 검색 정보는 29,900원을 표시한다', () => {
   for (const file of ['public/lifetime-report.html', 'public/premium.html', 'public/webtoon/lifetime.html']) {
     const html = fs.readFileSync(file, 'utf8');
-    assert.match(html, /18,900/);
-    assert.doesNotMatch(html, /14,900|14900/);
+    assert.match(html, /29,900/);
+    assert.doesNotMatch(html, /18,900|18900|14,900|14900/);
   }
   const home = fs.readFileSync('public/index.html', 'utf8');
-  assert.match(home, /평생사주 100p · 18,900원/);
-  assert.match(home, /<em>18,900원 · PDF<\/em>/);
-  assert.match(home, /14,900원 · 웹 \+ PDF/);
+  assert.match(home, /평생사주 100p · 29,900원/);
+  assert.match(home, /<em>29,900원 · PDF<\/em>/);
+  assert.match(home, /19,900원 · 웹 \+ PDF/);
 });
