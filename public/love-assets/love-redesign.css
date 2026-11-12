@@ -218,3 +218,21 @@ body.love-page .scope-card.full h3{flex-wrap:wrap;row-gap:2px}
 .love-page .checkout-consent a{color:inherit;text-decoration:underline}
 .love-page .checkout-consent .consent-items summary{cursor:pointer;font-size:13px;color:#dfc7ce;text-decoration:underline;margin:0 0 4px}
 .love-page .checkout-consent .consent-items[open]{display:grid;gap:12px}
+/* 무료 결과 첫 화면의 세 달 카드(love-app.js hookCard): 1·2위 잠금, 3위 공개, 유료 예시, 바로 결제 버튼 */
+body.love-page .lr-reader .love-hook{margin-top:0;padding:22px 18px 20px;background:linear-gradient(#2a0f17,#1c0b0f);border-color:#6b2c40}
+body.love-page .lr-reader .love-hook h3.lr-sub{margin-bottom:14px}
+body.love-page .love-hook-months{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+body.love-page .love-hook-months li{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:4px 12px;padding:13px 14px;border-radius:10px;background:#160709;border:1px solid #3f1a22}
+body.love-page .love-hook-rank{font-size:13px;font-weight:800;color:#ff8799;min-width:2.4em}
+body.love-page .love-hook-date{font-size:16px;font-weight:700;color:#fff1eb;letter-spacing:-.01em}
+body.love-page .love-hook-months li.is-locked .love-hook-date{color:transparent;text-shadow:0 0 9px #f2a7b3;user-select:none}
+body.love-page .love-hook-lock,body.love-page .love-hook-free{font-size:12px;color:#cf9da8;white-space:nowrap}
+body.love-page .love-hook-free{color:#ffd166}
+body.love-page .love-hook-months li.is-open{border-color:#8a5a2b;background:#1f0d0c}
+body.love-page .lr-reader p.love-hook-text{grid-column:1/-1;margin:6px 0 0;padding:0;font-size:14px;line-height:1.7;color:#ecd6d2;text-align:left}
+body.love-page .love-hook-sample{margin:16px 0 0;padding:14px 14px 12px;border-left:3px solid #ef5368;background:#2a1118;border-radius:8px}
+body.love-page .love-hook-sample-label{display:block;font-size:12px;line-height:1.5;color:#cf9da8;margin-bottom:6px}
+body.love-page .lr-reader .love-hook-sample p{margin:0;padding:0;font-size:14px;line-height:1.75;color:#fff1eb;text-align:left}
+body.love-page .lr-reader button.love-hook-cta{display:block;width:100%;min-height:55px;margin:18px 0 0;border:0;border-radius:9px;background:#ef3e54;color:#fff;font:700 16px/1.4 Pretendard,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;cursor:pointer}
+body.love-page .lr-reader p.love-hook-note{text-align:center;margin-top:10px;font-size:13px}
+body.love-page .lr-reader p.lr-lead:has(+ .love-hook){padding-bottom:18px}

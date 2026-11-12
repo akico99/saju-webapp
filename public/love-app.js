@@ -51,7 +51,7 @@
   const price = brand.product.priceKrw.toLocaleString('ko-KR') + '원';
   document.querySelectorAll('[data-love-price]').forEach((node) => { node.textContent = price; });
   unlockBtn.textContent = price + '으로 전체 풀이 열기';
-  document.getElementById('stickyUnlock').textContent = '전체 풀이 확인 · ' + price;
+  document.getElementById('stickyUnlock').textContent = '1·2위 두 달 보기 · ' + price;
   document.getElementById('characterDisclosure').textContent = brand.character.disclosure;
   brand.product.chapters.forEach((title) => document.getElementById('productChapters').appendChild(el('li', null, title)));
   const portrait = document.getElementById('characterPortrait');
@@ -220,23 +220,87 @@
   }
 
   /* ---------- 무료 사주 분석 ---------- */
-  // 세 번째로 강한 달 카드와 AI 개인 소개 칸. 소개는 나중에 채워지고, 실패하면 칸이 사라진다.
+  // 전체 풀이 예시 — public/love-assets/reading-example.json(가상 인물 '수달')의 유료 본문
+  // '인연 신호가 강한 세 달' 1위 달 문단에서 그대로 뗀 조각이다. … 은 생략 표시. 날짜가 든 문장은 빼서
+  // 손님이 자기 1위 달로 오해하지 않게 한다. test/love-free-hook.test.js가 조각마다 원문에 있는지 확인한다.
+  const PAID_SAMPLE = ['표현하고 드러내는 기운과 연인을 뜻하는 별이 동시에 들어오는데', '이 달엔 두 가지를 해 보세요. 첫째, 마음을 돌려 말하지 말고 좋아하는 감정을 직접 표현해 보는 거예요.', '요일과 시간을 정한 다음 만남을 제안해서, 관계에 규칙을 만들어 보세요.'];
+
+  /* 결과 첫 화면의 세 달 카드. 광고가 묻는 "강한 세 달"에 바로 답한다: 1·2위는 잠그고, 3위는 공개해
+     계산이 실제로 있다는 증거로 쓰고, 바로 아래에 결제 버튼을 둔다. 1·2위의 연·월은 서버가 보내지
+     않으므로 여기서도 만들 수 없다(흐림은 장식 글자). */
+  function hookCard(third) {
+    const box = el('section', 'lr-panel love-hook');
+    box.dataset.free = 'hook';
+    box.appendChild(el('h3', 'lr-sub', '인연 신호가 가장 강한 세 달'));
+    const list = el('ol', 'love-hook-months');
+    ['1위', '2위'].forEach((rank) => {
+      const li = el('li', 'is-locked');
+      li.append(el('span', 'love-hook-rank', rank));
+      const date = el('b', 'love-hook-date', '●●●●년 ●●월');
+      date.setAttribute('aria-hidden', 'true');
+      li.append(date, el('span', 'love-hook-lock', '전체 풀이에서 공개'));
+      list.appendChild(li);
+    });
+    const open = el('li', third && third.label ? 'is-open' : 'is-locked');
+    open.append(el('span', 'love-hook-rank', '3위'));
+    if (third && third.label) {
+      open.append(el('b', 'love-hook-date', third.label), el('span', 'love-hook-free', '무료 공개'));
+      if (third.text) open.append(el('p', 'love-hook-text', third.text));
+    } else {
+      open.append(el('b', 'love-hook-date', '●●●●년 ●●월'), el('span', 'love-hook-lock', '전체 풀이에서 공개'));
+    }
+    list.appendChild(open);
+    box.appendChild(list);
+    const sample = el('div', 'love-hook-sample');
+    sample.append(el('span', 'love-hook-sample-label', '전체 풀이 예시 · 가상 인물 ‘수달’의 1위 달 · 개인 결과 아님'));
+    sample.append(el('p', null, PAID_SAMPLE.join(' … ') + ' …'));
+    box.appendChild(sample);
+    const cta = el('button', 'love-hook-cta', '1·2위 두 달과 할 일 보기 · ' + price);
+    cta.type = 'button';
+    cta.dataset.unlockFrom = 'hook';
+    cta.addEventListener('click', openCheckout);
+    box.appendChild(cta);
+    box.appendChild(el('p', 'lr-note love-hook-note', '회원가입 없이 결제 · 결제 후 바로 이 화면에서 읽고, PDF도 이메일로 보내 드려요'));
+    return box;
+  }
+
+  // 세 달 카드(맨 위)와 AI 개인 소개 칸. 소개는 나중에 채워지고, 실패하면 칸이 사라진다.
   function addFreeExtras(r, b) {
     if (!window.FreeExtras) return;
     const intro = FreeExtras.introCard('/api/love/intro', { ...b, deliveryEmail: undefined }, { title: (b.name ? b.name + '님은' : '당신은') + ' 이런 사람이에요' });
-    const third = FreeExtras.thirdCard(r.third, { title: '인연 신호가 세 번째로 강한 달', rankLabel: '좋은 세 달 중 3위' });
     const reader = document.querySelector('#freeReader:not(.hidden) .lr-reader');
     if (reader) {
       const lead = reader.querySelector('.lr-lead');
-      if (lead) lead.after(intro); else reader.prepend(intro);
-      // 3위 달 카드는 1·2위 잠금 카드 바로 앞에 둔다(잠금 카드가 "세 번째 달을 봤다면"으로 이어진다).
-      const seasonsCh = reader.querySelector('[data-chapter-id="seasons"]');
-      const lock = seasonsCh && seasonsCh.querySelector('.lr-teaser');
-      if (third) { if (lock) lock.before(third); else (seasonsCh || reader).appendChild(third); }
+      const hook = hookCard(r.third);
+      if (lead) lead.after(hook); else reader.prepend(hook);
+      hook.after(intro);
+      // 계절 장의 1·2위 잠금 카드는 맨 위 세 달 카드와 같은 내용이라 뺀다.
+      const timingLock = reader.querySelector('[data-chapter-id="seasons"] .lr-teaser[data-lock-kind="timing"]');
+      if (timingLock) timingLock.remove();
     } else {
+      const third = FreeExtras.thirdCard(r.third, { title: '인연 신호가 세 번째로 강한 달', rankLabel: '좋은 세 달 중 3위' });
       document.getElementById('freeLead').after(intro);
       if (third) document.getElementById('seasons').after(third);
     }
+  }
+
+  /* 무료 결과를 어디까지 읽었는지(25·50·75·100%). 결제 버튼까지 가기 전에 어디서 나가는지 보려는 것.
+     표시마다 세션당 한 번(track.js)만 보낸다. 출생정보는 싣지 않는다. */
+  let readDepthBound = false;
+  function watchReadDepth() {
+    if (readDepthBound || !window.SoTrack || !SoTrack.readDepth) return;
+    readDepthBound = true;
+    const marks = [25, 50, 75, 100];
+    let next = 0;
+    const onScroll = () => {
+      if (freeResult.classList.contains('hidden')) return;
+      const box = freeResult.getBoundingClientRect();
+      if (box.height <= 0) return;
+      const seen = (window.innerHeight - box.top) / box.height * 100;
+      while (next < marks.length && seen >= marks[next]) { SoTrack.readDepth('love_timing', marks[next]); next++; }
+      if (next >= marks.length) window.removeEventListener('scroll', onScroll);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
   }
 
   function renderFree(r, b) {
@@ -296,7 +360,7 @@
 
     if (window.LoveReadingModel && window.LoveReadingView) {
       if (disposeFreeReader) disposeFreeReader();
-      disposeFreeReader = enhanceReading('freeReader', 'legacyFreeReading', () => window.LoveReadingModel.buildFree(r, b), { onUnlock: openCheckout });
+      disposeFreeReader = enhanceReading('freeReader', 'legacyFreeReading', () => window.LoveReadingModel.buildFree(r, b), { onUnlock: openCheckout, maxArt: 3 });
       if (window.SajuChart) SajuChart.replace(document.querySelector('#freeReader .lr-profile'), r.chart);
     }
     addFreeExtras(r, b);
@@ -306,6 +370,7 @@
     document.getElementById('stage').classList.add('hidden');
     freeResult.classList.remove('hidden');
     if (window.SoTrack && SoTrack.freeResult) SoTrack.freeResult('love_timing');
+    watchReadDepth();
     toTop();
   }
 
@@ -352,11 +417,22 @@
   const checkoutConfirm = document.getElementById('checkoutConfirm');
   let checkoutTrigger = null;
   let purchasing = false;
+  // 어느 버튼으로 구매 창을 열었는지: 맨 위 세 달 카드(hook)·잠금 카드(teaser_*)·아래 고정 버튼(sticky)·맨 아래 상자(bottom).
+  function unlockSource(node) {
+    if (!node || !node.closest) return 'other';
+    if (node.id === 'stickyUnlock') return 'sticky';
+    if (node.id === 'unlockBtn') return 'bottom';
+    const from = node.closest('[data-unlock-from]');
+    if (from) return from.dataset.unlockFrom;
+    const lock = node.closest('[data-lock-kind]');
+    return lock ? 'teaser_' + lock.dataset.lockKind : 'other';
+  }
   function openCheckout(event) {
     if (purchasing || checkoutSheet.open) return;
     checkoutTrigger = event && event.currentTarget instanceof HTMLElement ? event.currentTarget : document.activeElement;
+    const origin = event && event.currentTarget instanceof HTMLElement && event.currentTarget !== freeResult ? event.currentTarget : event && event.target;
     checkoutSheet.showModal();
-    if (window.SoTrack && SoTrack.unlockClick) SoTrack.unlockClick('love_timing');
+    if (window.SoTrack && SoTrack.unlockClick) SoTrack.unlockClick('love_timing', unlockSource(origin));
     document.body.classList.add('checkout-open');
     document.getElementById('closeCheckout').focus({ preventScroll: true });
   }

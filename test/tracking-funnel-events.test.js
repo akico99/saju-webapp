@@ -80,6 +80,29 @@ test('상품 키가 없으면 아무것도 보내지 않는다', async () => {
   const before = b.fb.length;
   b.track.freeResult();
   b.track.unlockClick('');
+  b.track.readDepth('', 50);
   await b.settle();
   assert.equal(b.fb.length, before);
+});
+
+test('잠금 해제 클릭은 구매 창을 연 버튼 위치를 함께 보내고, 이상한 값은 other로 둔다', async () => {
+  const b = await page('/love.html');
+  b.track.unlockClick('love_timing', 'hook');
+  b.track.unlockClick('new_year_2027', '<script>');
+  await b.settle();
+  const clicks = b.fb.filter((e) => e[0] === 'trackCustom' && e[1] === 'UnlockClick');
+  assert.deepEqual(clicks.map((e) => e[2].unlock_from), ['hook', 'other']);
+  assert.deepEqual(b.ga.filter((e) => e[1] === 'unlock_click').map((e) => e[2].unlock_from), ['hook', 'other']);
+});
+
+test('무료 결과 읽은 깊이는 25·50·75·100만, 표시마다 세션당 한 번 보낸다', async () => {
+  const b = await page('/love.html');
+  b.track.readDepth('love_timing', 25);
+  b.track.readDepth('love_timing', 25);
+  b.track.readDepth('love_timing', 100);
+  b.track.readDepth('love_timing', 60);
+  await b.settle();
+  const reads = b.fb.filter((e) => e[0] === 'trackCustom' && /^FreeRead/.test(e[1])).map((e) => e[1]);
+  assert.deepEqual(reads, ['FreeRead25', 'FreeRead100']);
+  assert.equal(b.ga.filter((e) => e[1] === 'free_read_depth').length, 2);
 });

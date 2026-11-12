@@ -173,15 +173,27 @@
       kakao(function (k) { if (k.participation) k.participation('free_result'); });
     });
   }
-  function unlockClick(key) {
+  /* from: 구매 창을 연 버튼 위치(hook·teaser_*·sticky·bottom). 세션의 첫 클릭만 보내므로 사람 수와 첫 버튼을 센다. */
+  function unlockClick(key, from) {
     if (!key || !onceInSession('so_unlock_' + key)) return;
     when(function () {
       var p = productInfo(key);
-      ga('event', 'unlock_click', { currency: 'KRW', value: p.value, items: [item(p)] });
-      meta('trackCustom', 'UnlockClick', { content_ids: [key], content_name: p.name, value: p.value, currency: 'KRW' });
+      var where = typeof from === 'string' && /^[a-z_]{1,24}$/.test(from) ? from : 'other';
+      ga('event', 'unlock_click', { currency: 'KRW', value: p.value, unlock_from: where, items: [item(p)] });
+      meta('trackCustom', 'UnlockClick', { content_ids: [key], content_name: p.name, value: p.value, currency: 'KRW', unlock_from: where });
     });
   }
 
-  window.SoTrack = { attribution: attribution, viewItem: viewItem, beginCheckout: beginCheckout, addPaymentInfo: addPaymentInfo, purchase: purchase, signUp: signUp, freeResult: freeResult, unlockClick: unlockClick };
+  /* 무료 결과를 어디까지 읽었는지. 이벤트 관리자에서 바로 읽히도록 표시마다 이름을 나눈다(FreeRead25·50·75·100). */
+  var DEPTHS = { 25: 1, 50: 1, 75: 1, 100: 1 };
+  function readDepth(key, pct) {
+    if (!key || !DEPTHS[pct] || !onceInSession('so_read_' + key + '_' + pct)) return;
+    when(function () {
+      ga('event', 'free_read_depth', { percent: pct, item_id: key });
+      meta('trackCustom', 'FreeRead' + pct, { content_ids: [key] });
+    });
+  }
+
+  window.SoTrack = { attribution: attribution, viewItem: viewItem, beginCheckout: beginCheckout, addPaymentInfo: addPaymentInfo, purchase: purchase, signUp: signUp, freeResult: freeResult, unlockClick: unlockClick, readDepth: readDepth };
 })();
 

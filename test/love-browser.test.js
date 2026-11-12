@@ -80,6 +80,24 @@ test('모바일 상품 소개에서 실제 무료 해석, 재입력, 가입 없�
     await page.waitForSelector('#freeReader .lr-reader', { visible: true });
     assert.equal(await page.$eval('#legacyFreeReading', e => getComputedStyle(e).display), 'none');
     assert.ok(await page.$$eval('#freeReader .lr-chapter', es => es.length) >= 5);
+    // 결과 첫 화면: 제목 바로 아래 세 달 카드(1·2위 잠금, 3위 공개)와 결제 버튼이 두 화면 안에 있다.
+    const hook = await page.$eval('#freeReader .love-hook', (e) => ({
+      ranks: [...e.querySelectorAll('.love-hook-rank')].map((n) => n.textContent),
+      locked: e.querySelectorAll('li.is-locked').length,
+      ctaTop: e.querySelector('.love-hook-cta').getBoundingClientRect().top + scrollY,
+      afterLead: e.previousElementSibling && e.previousElementSibling.classList.contains('lr-lead')
+    }));
+    assert.deepEqual(hook.ranks, ['1위', '2위', '3위']);
+    assert.equal(hook.locked, 2);
+    assert.ok(hook.afterLead);
+    assert.ok(hook.ctaTop < 844 * 2, '세 달 카드의 결제 버튼은 두 화면 안에 있다: ' + hook.ctaTop);
+    assert.equal(await page.$('#freeReader [data-chapter-id="seasons"] .lr-teaser[data-lock-kind="timing"]'), null);
+    assert.ok(await page.$$eval('#freeReader .lr-art', (es) => es.length) <= 3);
+    assert.match(await page.$eval('#stickyUnlock', (e) => e.textContent), /^1·2위 두 달 보기 · /);
+    await page.click('#freeReader .love-hook-cta');
+    assert.equal(await page.$eval('#checkoutSheet', (e) => e.open), true);
+    await page.click('#closeCheckout');
+    await page.waitForFunction(() => !document.querySelector('#checkoutSheet').open);
     for (const width of [320, 390, 1280]) {
       await page.setViewport({ width, height: 844 });
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'free result overflow at ' + width);

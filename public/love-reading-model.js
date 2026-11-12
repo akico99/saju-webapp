@@ -131,7 +131,9 @@
       { id:'seasons', title:'계절의 흐름', displayTitle:'마음이 움직일 시간도\n다가오고 있을까요?', scene:'meeting', speech:'이제,\n다가올 열두 달을\n펼쳐볼게요.', featured:focus==='timing', blocks:splitBlocks(r.seasonLead) },
       { id:'whole-reading', title:'무료 요약과 전체 풀이', displayTitle:'당신의 이야기는\n아직 끝나지 않았어요.', scene:'cheer', speech:'언제, 어떤 사람과,\n어떻게 시작할지.', featured:focus==='action', blocks:[] }
     ];
-    return { kind:'free', title:name + '님,\n다음 인연은\n어디쯤 왔을까요?', lead:r.strongCount > 0 ? '앞으로 12개월, 인연 신호가 강한 달은 ' + r.strongCount + '번.' : '앞으로 12개월, 나의 인연 흐름을 읽어봐요.', name:clean(p.name), situation, focus, chapters, original:r, facts:{ pillars:Array.isArray(r.pillars) ? r.pillars : [], note:clean(r.note), balance, seasons:Array.isArray(r.seasons) ? r.seasons : [], seasonLead:clean(r.seasonLead), locked } };
+    // 강한 달의 개수(예: 12개월 중 7번)는 "언제"라는 질문을 흐리게 해서 첫 문장에 쓰지 않는다. 바로 아래
+    // 세 달 카드(1·2위 잠금, 3위 공개)로 이어지는 문장으로 둔다.
+    return { kind:'free', title:name + '님,\n다음 인연은\n어디쯤 왔을까요?', lead:r.strongCount > 0 ? '앞으로 12개월 중 인연 신호가 가장 강한 세 달을 골랐어요.' : '앞으로 12개월 중 흐름이 가장 나은 세 달을 골랐어요.', name:clean(p.name), situation, focus, chapters, original:r, facts:{ pillars:Array.isArray(r.pillars) ? r.pillars : [], note:clean(r.note), balance, seasons:Array.isArray(r.seasons) ? r.seasons : [], seasonLead:clean(r.seasonLead), locked } };
   }
 
   const known = [

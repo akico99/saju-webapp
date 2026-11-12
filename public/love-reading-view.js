@@ -298,7 +298,8 @@
     }
     var facts = model.facts || {};
     var st = store(kind === 'paid' ? opts.reportId : '');
-    var budget = { left: MAX_ART };
+    // opts.maxArt: 그림 수 상한(기본 10). 무료 결과는 같은 그림이 되풀이되며 길어지지 않게 줄여 쓴다.
+    var budget = { left: Math.max(0, Math.min(MAX_ART, num(opts.maxArt, MAX_ART))) };
     var listeners = [];
     container.replaceChildren();
 
