@@ -2,7 +2,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { computeSaju } = require('../src/engine/index');
-const { buildLoveTiming, buildLovePreview, SITUATIONS, situationOf, validateBirth } = require('../src/engine/loveTiming');
+const { buildLoveTiming, buildLovePreview, SITUATIONS, situationOf, validateBirth, firstHintLabel } = require('../src/engine/loveTiming');
 
 const birth = { year: 1995, month: 5, day: 15, hour: 14, minute: 30, gender: '여', isLunar: false };
 const OCT = new Date('2026-10-10T03:00:00Z'); // KST 2026-10-10 12:00 — 15일 이전이면 이번 달부터
@@ -62,6 +62,33 @@ test('시각을 모르면 시주 없이 만들고 안내를 붙인다', () => {
   const p = buildLovePreview({ ...birth, hour: null }, 'single', OCT);
   assert.equal(p.pillars.length, 3);
   assert.ok(p.note);
+});
+
+test('1위 달의 구간 안내는 앞 3개월·6개월·7~12개월로만 나뉜다', () => {
+  const expect = { 0: '앞으로 3개월 안', 2: '앞으로 3개월 안', 3: '앞으로 6개월 안', 5: '앞으로 6개월 안', 6: '앞으로 7~12개월 사이', 11: '앞으로 7~12개월 사이' };
+  for (const [index, label] of Object.entries(expect)) assert.equal(firstHintLabel(Number(index)), label, 'index ' + index);
+});
+
+test('무료 첫 장은 1위 달의 구간만 알리고 연·월·점수는 싣지 않는다', () => {
+  for (const now of [OCT, LATE_OCT, NOV]) {
+    const p = buildLovePreview(birth, 'some', now);
+    const top = buildLoveTiming(computeSaju(birth), '여', now).top3[0];
+    assert.deepEqual(Object.keys(p.firstHint), ['label']);
+    assert.equal(p.firstHint.label, firstHintLabel(top.index));
+    const json = JSON.stringify(p);
+    // 계절 칸 이름("2026년 11월~2027년 1월")의 앞 달은 1위 달 공개가 아니므로 '~'가 이어지는 경우는 뺀다.
+    assert.doesNotMatch(json, new RegExp(top.year + '년 ' + top.month + '월(?![~0-9])'), '1위 달 이름이 응답에 있다');
+    assert.doesNotMatch(json, /"(year|month)":/);
+  }
+});
+
+test('1위 달 구간 문구가 어느 표본에서도 구간 세 가지 중 하나다', () => {
+  const labels = new Set();
+  for (let i = 0; i < 40; i++) {
+    const b = { year: 1975 + (i % 30), month: 1 + (i % 12), day: 1 + (i % 28), hour: i % 24, minute: 0, gender: i % 2 ? '남' : '여', isLunar: false };
+    labels.add(buildLovePreview(b, 'single', OCT).firstHint.label);
+  }
+  for (const l of labels) assert.ok(['앞으로 3개월 안', '앞으로 6개월 안', '앞으로 7~12개월 사이'].includes(l), l);
 });
 
 test('상황과 성별이 없으면 한국어 오류를 낸다', () => {

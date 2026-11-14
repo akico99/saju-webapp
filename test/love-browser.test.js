@@ -91,6 +91,19 @@ test('모바일 상품 소개에서 실제 무료 해석, 재입력, 가입 없�
     assert.equal(hook.locked, 2);
     assert.ok(hook.afterLead);
     assert.ok(hook.ctaTop < 844 * 2, '세 달 카드의 결제 버튼은 두 화면 안에 있다: ' + hook.ctaTop);
+    // 판매 첫 화면: 첫 문장과 1위 행이 같은 구간을 알려 주고, 이어 읽을 내용은 질문으로 답한다.
+    const sales = await page.$eval('#freeReader', (e) => ({
+      lead: e.querySelector('.lr-lead').textContent,
+      first: e.querySelector('.love-hook-months li').textContent,
+      h4: e.querySelector('.love-hook-offer h4').textContent,
+      asks: [...e.querySelectorAll('.love-hook-includes li b')].map((n) => n.textContent)
+    }));
+    const band = /앞으로 (3개월 안|6개월 안|7~12개월 사이)/.exec(sales.lead);
+    assert.ok(band, '첫 문장에 구간이 있다: ' + sales.lead);
+    assert.match(sales.lead, /^테스트님의 인연 신호가 가장 (강한|나은) 달은 .+에 있어요\. 정확한 달과 그달에 할 일은 전체 풀이에서 알려 드려요\.$/);
+    assert.ok(sales.first.includes(band[0] + ' · 정확한 달은 전체 풀이'), '1위 행 힌트: ' + sales.first);
+    assert.equal(sales.h4, '전체 풀이에서 답해 드려요');
+    assert.deepEqual(sales.asks, ['1위 달은 정확히 몇 월이고, 그달엔 뭘 해야 할까?', '처음 끌리는 사람과 오래 갈 사람, 같은 사람일까?', '테스트님이 사람을 만나기 쉬운 자리는 어디일까?']);
     assert.equal(await page.$('#freeReader [data-chapter-id="seasons"] .lr-teaser[data-lock-kind="timing"]'), null);
     assert.ok(await page.$$eval('#freeReader .lr-art', (es) => es.length) <= 3);
     assert.match(await page.$eval('#stickyUnlock', (e) => e.textContent), /14,900원/);

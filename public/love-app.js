@@ -229,7 +229,9 @@
   /* 결과 첫 화면의 세 달 카드. 광고가 묻는 "강한 세 달"에 바로 답한다: 1·2위는 잠그고, 3위는 공개해
      계산이 실제로 있다는 증거로 쓰고, 바로 아래에 결제 버튼을 둔다. 1·2위의 연·월은 서버가 보내지
      않으므로 여기서도 만들 수 없다(흐림은 장식 글자). */
-  function hookCard(third) {
+  function hookCard(third, firstHint, name) {
+    const who = String(name || '').trim();
+    const hintLabel = firstHint && typeof firstHint.label === 'string' ? firstHint.label.trim() : '';
     const box = el('section', 'lr-panel love-hook');
     box.dataset.free = 'hook';
     box.appendChild(el('h3', 'lr-sub', '인연 신호가 가장 강한 세 달'));
@@ -239,7 +241,8 @@
       li.append(el('span', 'love-hook-rank', rank));
       const date = el('b', 'love-hook-date', '●●●●년 ●●월');
       date.setAttribute('aria-hidden', 'true');
-      li.append(date, el('span', 'love-hook-lock', '전체 풀이에서 공개'));
+      const hinted = rank === '1위' && hintLabel;
+      li.append(date, el('span', 'love-hook-lock' + (hinted ? ' is-hint' : ''), hinted ? hintLabel + ' · 정확한 달은 전체 풀이' : '전체 풀이에서 공개'));
       list.appendChild(li);
     });
     const open = el('li', third && third.label ? 'is-open' : 'is-locked');
@@ -256,12 +259,12 @@
     offer.append(el('p', 'love-hook-free-scope', third && third.label
       ? '지금 보는 사주표·매력·오행 균형·계절 흐름과 3위 달은 무료예요.'
       : '지금 보는 사주표·매력·오행 균형·계절 흐름은 무료예요.'));
-    offer.append(el('h4', null, '전체 풀이에서 이어 읽을 내용'));
+    offer.append(el('h4', null, '전체 풀이에서 답해 드려요'));
     const includes = el('ul', 'love-hook-includes');
     [
-      ['세 달과 12개월의 흐름', '1·2위 달부터 달마다 살펴볼 점과 해볼 일까지'],
-      ['끌리는 사람과 반복되는 패턴', '만남의 자리와 조심할 관계의 신호'],
-      ['지금 상황에 맞는 행동 제안', '내 사주와 연애 상황을 바탕으로 이어지는 해석']
+      ['1위 달은 정확히 몇 월이고, 그달엔 뭘 해야 할까?', '1·2위 달과 그달에 해볼 일 두 가지'],
+      ['처음 끌리는 사람과 오래 갈 사람, 같은 사람일까?', '나에게 끌리는 사람과 내가 끌리는 사람'],
+      [(who ? who + '님이' : '내가') + ' 사람을 만나기 쉬운 자리는 어디일까?', '만남이 생기기 쉬운 자리와 조심할 신호']
     ].forEach(([title, text]) => {
       const row = el('li'); row.append(el('b', null, title), el('span', null, text)); includes.append(row);
     });
@@ -292,7 +295,7 @@
     const reader = document.querySelector('#freeReader:not(.hidden) .lr-reader');
     if (reader) {
       const lead = reader.querySelector('.lr-lead');
-      const hook = hookCard(r.third);
+      const hook = hookCard(r.third, r.firstHint, b.name);
       if (lead) lead.after(hook); else reader.prepend(hook);
       hook.after(intro);
       // 계절 장의 1·2위 잠금 카드는 맨 위 세 달 카드와 같은 내용이라 뺀다.
@@ -329,7 +332,10 @@
     document.getElementById('foldedText').textContent =
       `${SITUATION_LABEL[b.situation] || ''} · ${b.year}.${b.month}.${b.day}${b.calendar === '음력' ? ' (음력)' : ''} · ${b.gender}`;
     document.getElementById('freeTitle').textContent = `${who}님의 무료 사주 분석`;
-    document.getElementById('freeLead').textContent = r.strongCount > 0
+    const hintLabel = r.firstHint && typeof r.firstHint.label === 'string' ? r.firstHint.label.trim() : '';
+    document.getElementById('freeLead').textContent = hintLabel
+      ? `${String(b.name || '').trim() ? String(b.name).trim() + '님의' : '당신의'} 인연 신호가 가장 ${r.strongCount > 0 ? '강한' : '나은'} 달은 ${hintLabel}에 있어요. 정확한 달과 그달에 할 일은 전체 풀이에서 알려 드려요.`
+      : r.strongCount > 0
       ? `앞으로 12개월 중 인연 신호가 강한 달이 ${r.strongCount}번 있어요. 그중 세 번째로 강한 달은 아래에서 먼저 보여 드리고, 가장 강한 두 달은 전체 풀이에서 알려 드릴게요.`
       : '앞으로 12개월은 잔잔한 흐름이 길어요. 그래도 그중 나은 세 달은 분명히 있어요. 세 번째 달은 아래에서, 가장 나은 두 달은 전체 풀이에서 알려 드릴게요.';
 

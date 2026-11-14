@@ -133,7 +133,12 @@
     ];
     // 강한 달의 개수(예: 12개월 중 7번)는 "언제"라는 질문을 흐리게 해서 첫 문장에 쓰지 않는다. 바로 아래
     // 세 달 카드(1·2위 잠금, 3위 공개)로 이어지는 문장으로 둔다.
-    return { kind:'free', title:name + '님,\n다음 인연은\n어디쯤 왔을까요?', lead:r.strongCount > 0 ? '앞으로 12개월 중 인연 신호가 가장 강한 세 달을 골랐어요.' : '앞으로 12개월 중 흐름이 가장 나은 세 달을 골랐어요.', name:clean(p.name), situation, focus, chapters, original:r, facts:{ pillars:Array.isArray(r.pillars) ? r.pillars : [], note:clean(r.note), balance, seasons:Array.isArray(r.seasons) ? r.seasons : [], seasonLead:clean(r.seasonLead), locked } };
+    const hintLabel = clean(r.firstHint && r.firstHint.label).trim();
+    const owner = clean(p.name).trim() ? clean(p.name).trim() + '님의' : '당신의';
+    const lead = hintLabel
+      ? owner + ' 인연 신호가 가장 ' + (r.strongCount > 0 ? '강한' : '나은') + ' 달은 ' + hintLabel + '에 있어요. 정확한 달과 그달에 할 일은 전체 풀이에서 알려 드려요.'
+      : (r.strongCount > 0 ? '앞으로 12개월 중 인연 신호가 가장 강한 세 달을 골랐어요.' : '앞으로 12개월 중 흐름이 가장 나은 세 달을 골랐어요.');
+    return { kind:'free', title:name + '님,\n다음 인연은\n어디쯤 왔을까요?', lead, name:clean(p.name), situation, focus, chapters, original:r, facts:{ pillars:Array.isArray(r.pillars) ? r.pillars : [], note:clean(r.note), balance, seasons:Array.isArray(r.seasons) ? r.seasons : [], seasonLead:clean(r.seasonLead), locked } };
   }
 
   const known = [

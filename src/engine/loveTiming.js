@@ -121,6 +121,13 @@ function lockedTitles(situation) {
   ];
 }
 
+/* 1위 달이 어디쯤 있는지만 알리는 구간 문구. 연·월·점수는 싣지 않는다(index 0 = 이번 달). */
+function firstHintLabel(index) {
+  if (index <= 2) return '앞으로 3개월 안';
+  if (index <= 5) return '앞으로 6개월 안';
+  return '앞으로 7~12개월 사이';
+}
+
 function buildLovePreview(birth, situationKey, now = new Date()) {
   const situation = situationOf(situationKey);
   if (birth.gender !== '여' && birth.gender !== '남') throw new Error('성별을 골라 주세요. 연애운 계산에 쓰여요.');
@@ -145,6 +152,8 @@ function buildLovePreview(birth, situationKey, now = new Date()) {
     seasonLead: `계절로 묶어 보면 ${best.label}의 흐름이 가장 고르게 좋아요. 인연 신호가 가장 강한 한 달은 이 계절 밖에 있을 수도 있어서, 1·2위 두 달은 전체 풀이에서 알려 드려요.`,
     // 상위 세 달 중 3위만 공개한다. 1·2위의 연·월·점수는 싣지 않는다.
     third: describeThird(timing.top3[2], birth.gender, 'love'),
+    // 1위 달은 구간("앞으로 6개월 안")까지만 알린다. 정확한 달은 전체 풀이에서만 연다.
+    firstHint: { label: firstHintLabel(timing.top3[0].index) },
     startYm: `${timing.months[0].year}-${timing.months[0].month}`,
     strongCount: timing.strongCount,
     note: charm.note,
@@ -153,4 +162,4 @@ function buildLovePreview(birth, situationKey, now = new Date()) {
   };
 }
 
-module.exports = { SITUATIONS, STRONG, buildLoveTiming, buildLovePreview, situationOf, seoulYearMonth, levelOf, validateBirth };
+module.exports = { SITUATIONS, STRONG, buildLoveTiming, buildLovePreview, firstHintLabel, situationOf, seoulYearMonth, levelOf, validateBirth };
