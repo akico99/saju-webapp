@@ -73,6 +73,15 @@
   document.getElementById('startLove').addEventListener('click', enterInput);
   document.getElementById('startLoveBottom').addEventListener('click', enterInput);
   document.getElementById('startLoveDock').addEventListener('click', enterInput);
+  // 히어로 버튼이 보이는 동안에는 같은 문구의 하단 고정 바를 숨기고(포커스·클릭도 막는다), 스크롤로 벗어나면 보인다.
+  // IntersectionObserver가 없으면 기존처럼 항상 보인다.
+  const dock = document.querySelector('.landing-dock');
+  if (dock && 'IntersectionObserver' in window) {
+    new IntersectionObserver((entries) => {
+      const heroVisible = entries[entries.length - 1].isIntersecting;
+      dock.hidden = heroVisible;
+    }).observe(document.getElementById('startLove'));
+  }
   const concern = new URLSearchParams(location.search).get('concern');
   if (Object.prototype.hasOwnProperty.call(SITUATION_LABEL, concern)) {
     field('situation').value = concern;

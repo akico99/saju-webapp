@@ -48,6 +48,13 @@ test('모바일 상품 소개에서 실제 무료 해석, 재입력, 가입 없�
     await page.screenshot({ path: path.join(os.tmpdir(), 'love-home-first-screen.png'), fullPage: false });
     await page.goto(base + '/love.html?concern=some', { waitUntil: 'networkidle0' });
     assert.equal(await page.$eval('[name=situation]', e => e.value), 'some');
+    // 첫 화면에서는 히어로 버튼만 보이고 고정 바는 숨겨진다(클릭·포커스도 받지 않는다). 아래로 스크롤하면 고정 바가 나온다.
+    await page.waitForFunction(() => document.querySelector('.landing-dock').hidden === true);
+    assert.equal(await page.$eval('.landing-dock', e => getComputedStyle(e).display), 'none');
+    assert.equal(await page.$eval('#startLove', e => { const r = e.getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight; }), true);
+    await page.evaluate(() => window.scrollTo(0, document.getElementById('startLove').getBoundingClientRect().bottom + scrollY + 80));
+    await page.waitForFunction(() => document.querySelector('.landing-dock').hidden === false);
+    assert.notEqual(await page.$eval('.landing-dock', e => getComputedStyle(e).display), 'none');
     await page.click('#startLoveDock');
     assert.equal(await page.$eval('.landing-dock', e => getComputedStyle(e).display), 'none');
     await page.click('#closeInput');
