@@ -9,15 +9,20 @@ const { buildFree } = require('../public/love-reading-model');
 const example = require('../public/love-assets/reading-example.json');
 const app = fs.readFileSync(path.join(__dirname, '../public/love-app.js'), 'utf8');
 
-test('세 달 카드의 유료 예시는 가상 인물 예시 원문 조각 그대로다', () => {
+test('세 달 카드의 유료 예시는 가상 인물 ‘서연’ 쉬운 말 샘플의 1위 달 원문 조각 그대로다', () => {
   const m = /const PAID_SAMPLE = (\[[^\n]+\]);/.exec(app);
   assert.ok(m, 'PAID_SAMPLE 배열이 있어야 한다');
   const pieces = JSON.parse(m[1].replace(/'/g, '"'));
   assert.ok(pieces.length >= 2);
-  const source = example.paid.replace(/\*\*/g, '').replace(/\s+/g, ' ');
+  const report = require('../docs/preview/love-generated-plain-some.json').report.replace(/\*\*/g, '');
+  // 1위 달 문단: 첫 달 제목 줄(2027년 4월) 다음부터 두 번째 달 제목 줄 전까지
+  const first = report.split(/\n\d{4}년 \d{1,2}월\n/)[1];
+  assert.ok(first, '1위 달 문단이 있어야 한다');
+  const source = first.replace(/\s+/g, ' ');
   for (const p of pieces) assert.ok(source.includes(p), '원문에 없는 조각: ' + p);
   for (const p of pieces) assert.ok(!/\d{4}년\s*\d{1,2}월/.test(p), '예시에 날짜를 넣지 않는다: ' + p);
-  assert.match(app, /가상 인물 ‘수달’의 1위 달 · 개인 결과 아님/);
+  assert.match(app, /가상 인물 ‘서연’의 1위 달 · 개인 결과 아님/);
+  assert.ok(!app.includes('연인을 뜻하는 별'));
 });
 
 test('쉬운 말 응답(plain)은 매력·연애 습관·계절 장으로, 이전 응답은 기존 장 구성으로 만든다', () => {

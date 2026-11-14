@@ -230,10 +230,10 @@
   }
 
   /* ---------- 무료 사주 분석 ---------- */
-  // 전체 풀이 예시 — public/love-assets/reading-example.json(가상 인물 '수달')의 유료 본문
+  // 전체 풀이 예시 — docs/preview/love-generated-plain-some.json(가상 인물 '서연')의 report 유료 본문
   // '인연 신호가 강한 세 달' 1위 달 문단에서 그대로 뗀 조각이다. … 은 생략 표시. 날짜가 든 문장은 빼서
   // 손님이 자기 1위 달로 오해하지 않게 한다. test/love-free-hook.test.js가 조각마다 원문에 있는지 확인한다.
-  const PAID_SAMPLE = ['표현하고 드러내는 기운과 연인을 뜻하는 별이 동시에 들어오는데', '이 달엔 두 가지를 해 보세요. 첫째, 마음을 돌려 말하지 말고 좋아하는 감정을 직접 표현해 보는 거예요.', '요일과 시간을 정한 다음 만남을 제안해서, 관계에 규칙을 만들어 보세요.'];
+  const PAID_SAMPLE = ['마음을 말로 꺼내기 쉬워져서 썸이 분명해지기 쉬운 달이에요.', '첫째, 그동안 돌려 말했던 마음을 한 번은 직접 말로 꺼내 보세요.'];
 
   /* 결과 첫 화면의 세 달 카드. 광고가 묻는 "강한 세 달"에 바로 답한다: 1·2위는 잠그고, 3위는 공개해
      계산이 실제로 있다는 증거로 쓰고, 바로 아래에 결제 버튼을 둔다. 1·2위의 연·월은 서버가 보내지
@@ -281,11 +281,11 @@
     box.append(offer);
     const sample = el('details', 'love-hook-sample');
     sample.append(el('summary', null, '실제 생성된 풀이 문장 미리보기'));
-    sample.append(el('span', 'love-hook-sample-label', '전체 풀이 예시 · 가상 인물 ‘수달’의 1위 달 · 개인 결과 아님'));
-    sample.append(el('h5', null, '흐름을 해석하고'));
+    sample.append(el('span', 'love-hook-sample-label', '전체 풀이 예시 · 가상 인물 ‘서연’의 1위 달 · 개인 결과 아님'));
+    sample.append(el('h5', null, '한 줄 요약'));
     sample.append(el('blockquote', null, PAID_SAMPLE[0] + ' …'));
-    sample.append(el('h5', null, '해볼 일을 제안해요'));
-    sample.append(el('blockquote', null, PAID_SAMPLE.slice(1).join(' … ') + ' …'));
+    sample.append(el('h5', null, '해볼 일은 이렇게 제안해요'));
+    sample.append(el('blockquote', null, PAID_SAMPLE[1] + ' …'));
     sample.append(el('p', 'love-hook-sample-source', '실제 AI 생성 원문 일부 발췌 · 날짜와 중간 문장 생략. 실제 구매 후기나 연애 결과를 보장하는 사례는 아닙니다.'));
     box.appendChild(sample);
     const cta = el('button', 'love-hook-cta', '12개월 연애 풀이 전체 보기 · ' + price);
