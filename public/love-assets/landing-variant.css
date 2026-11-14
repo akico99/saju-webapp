@@ -1,0 +1,9 @@
+/* 랜딩 풀이 미리보기 스트립(유료 리포트 실물 화면 3장). 히어로 영역은 건드리지 않는다. */
+body.love-page .paid-peek{margin:30px -24px 0}
+body.love-page .paid-peek-label{margin:0 24px 12px;font-size:13px;line-height:1.5;color:#c39aa3;text-align:left}
+body.love-page .paid-strip{display:flex;gap:12px;overflow-x:auto;padding:0 24px 8px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scroll-padding:0 24px}
+body.love-page .paid-strip figure{flex:0 0 min(62vw,260px);margin:0;scroll-snap-align:start}
+body.love-page .paid-strip img{display:block;width:100%;height:auto;aspect-ratio:720/1519}
+body.love-page .paid-strip figcaption{margin-top:8px;font-size:13px;line-height:1.5;color:#e7cfd0;text-align:center;word-break:keep-all}
+body.love-page .paid-peek-note{margin:6px 24px 0;font-size:12px;line-height:1.6;color:#a98890;text-align:left}
+
