@@ -54,17 +54,57 @@
     window.fbq('track', 'PageView');
   }
 
-  function loadKakao(id, done) {
+  // 한 광고 사업자의 외부 스크립트가 대기해도 다른 사업자의 이벤트를 막지 않는다.
+  var kakaoState = 'off', kakaoQueue = [];
+  function loadKakao(id) {
+    kakaoState = 'loading';
     var s = document.createElement('script');
     s.async = true; s.src = 'https://t1.daumcdn.net/kas/static/kp.js';
-    s.onload = function () { try { window.kakaoPixel(id).pageView(); } catch (e) {} done(); };
-    s.onerror = done;
+    s.onload = function () {
+      if (kakaoState !== 'loading') return;
+      kakaoState = typeof window.kakaoPixel === 'function' ? 'ready' : 'failed';
+      if (kakaoState === 'ready') { try { window.kakaoPixel(id).pageView(); } catch (e) {} }
+      var pending = kakaoQueue; kakaoQueue = [];
+      if (kakaoState === 'ready') pending.forEach(kakao);
+    };
+    s.onerror = function () { if (kakaoState === 'loading') { kakaoState = 'failed'; kakaoQueue = []; } };
     document.head.appendChild(s);
   }
 
-  function kakao(fn) { if (cfg && cfg.kakaoPixelId && window.kakaoPixel) { try { fn(window.kakaoPixel(cfg.kakaoPixelId)); } catch (e) {} } }
-  function meta() { if (cfg && cfg.metaPixelId && window.fbq) { try { window.fbq.apply(null, arguments); } catch (e) {} } }
-  function ga() { if (window.gtag) { try { window.gtag.apply(null, arguments); } catch (e) {} } }
+  function kakao(fn) {
+    if (kakaoState === 'loading') { if (kakaoQueue.length < 100) kakaoQueue.push(fn); return; }
+    if (kakaoState === 'ready' && cfg && cfg.kakaoPixelId && window.kakaoPixel) { try { fn(window.kakaoPixel(cfg.kakaoPixelId)); } catch (e) {} }
+  }
+  function token(v) { return typeof v === 'string' && /^[a-zA-Z0-9_-]{1,80}$/.test(v) ? v : null; }
+  function eventData(key, data) {
+    if (!token(key) || !cfg || cfg.attributionEnabled !== true) return data;
+    var attr = attribution(), last = attr && (attr.last || attr.first), creative = token(last && last.utm_content);
+    if (creative) data.creative_id = creative;
+    // 화면 버전을 상품별로 보관해 같은 탭의 결제 화면으로 잇는다. 개인 식별자는 추가하지 않는다.
+    var product = document.querySelector && document.querySelector('meta[name="so-product-key"]');
+    var version = document.querySelector && document.querySelector('meta[name="so-page-version"]');
+    var current = product && product.content === key && version && token(version.content);
+    try {
+      if (current) sessionStorage.setItem('so_page_version_' + key, current);
+      current = current || token(sessionStorage.getItem('so_page_version_' + key));
+    } catch (e) {}
+    if (current) data.page_version = current;
+    return data;
+  }
+  function meta() {
+    if (cfg && cfg.metaPixelId && window.fbq) { try {
+      var args = Array.prototype.slice.call(arguments), data = args[2];
+      if (data && data.content_ids) args[2] = eventData(data.content_ids[0], data);
+      window.fbq.apply(null, args);
+    } catch (e) {} }
+  }
+  function ga() {
+    if (window.gtag) { try {
+      var args = Array.prototype.slice.call(arguments), data = args[2];
+      if (data) args[2] = eventData(data.item_id || (data.items && data.items[0] && data.items[0].item_id), data);
+      window.gtag.apply(null, args);
+    } catch (e) {} }
+  }
 
   fetch('/api/tracking-config', { credentials: 'same-origin' }).then(function (r) { return r.json(); }).then(function (c) {
     cfg = c || {};
@@ -72,8 +112,8 @@
     if (cfg.attributionEnabled === true) captureAttribution();
     else { LS.remove('so_attr_first'); LS.remove('so_attr_last'); }
     if (cfg.metaPixelId) loadMeta(cfg.metaPixelId);
-    if (cfg.kakaoPixelId) loadKakao(cfg.kakaoPixelId, function () { flush(); autoViewItem(); });
-    else { flush(); autoViewItem(); }
+    if (cfg.kakaoPixelId) loadKakao(cfg.kakaoPixelId);
+    flush(); autoViewItem();
   }).catch(function () { cfg = {}; flush(); });
 
   function when(fn) { ready ? fn() : queue.push(fn); }
@@ -173,7 +213,14 @@
       kakao(function (k) { if (k.participation) k.participation('free_result'); });
     });
   }
-  /* from: 구매 창을 연 버튼 위치(hook·teaser_*·sticky·bottom). 세션의 첫 클릭만 보내므로 사람 수와 첫 버튼을 센다. */
+  function inputStart(key) {
+    if (!key || !onceInSession('so_input_' + key)) return;
+    when(function () {
+      ga('event', 'input_start', { item_id: key });
+      meta('trackCustom', 'InputStart', { content_ids: [key] });
+    });
+  }
+  /* from: 구매 창을 연 버튼 위치. 브라우저 세션 첫 클릭이며 고유 사람 수를 뜻하지 않는다. */
   function unlockClick(key, from) {
     if (!key || !onceInSession('so_unlock_' + key)) return;
     when(function () {
@@ -184,7 +231,7 @@
     });
   }
 
-  /* 무료 결과를 어디까지 읽었는지. 이벤트 관리자에서 바로 읽히도록 표시마다 이름을 나눈다(FreeRead25·50·75·100). */
+  /* 무료 결과 스크롤 도달 위치(완독 여부 아님). 기존 FreeRead25·50·75·100 이름은 유지한다. */
   var DEPTHS = { 25: 1, 50: 1, 75: 1, 100: 1 };
   function readDepth(key, pct) {
     if (!key || !DEPTHS[pct] || !onceInSession('so_read_' + key + '_' + pct)) return;
@@ -194,6 +241,6 @@
     });
   }
 
-  window.SoTrack = { attribution: attribution, viewItem: viewItem, beginCheckout: beginCheckout, addPaymentInfo: addPaymentInfo, purchase: purchase, signUp: signUp, freeResult: freeResult, unlockClick: unlockClick, readDepth: readDepth };
+  window.SoTrack = { attribution: attribution, viewItem: viewItem, beginCheckout: beginCheckout, addPaymentInfo: addPaymentInfo, purchase: purchase, signUp: signUp, inputStart: inputStart, freeResult: freeResult, unlockClick: unlockClick, readDepth: readDepth };
 })();
 

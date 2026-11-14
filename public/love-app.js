@@ -62,6 +62,7 @@
     portrait.src = brand.character.portrait;
   }
   function enterInput() {
+    if (window.SoTrack && SoTrack.inputStart) SoTrack.inputStart('love_timing');
     landing.classList.add('hidden');
     stage.classList.remove('hidden');
     show(step);
