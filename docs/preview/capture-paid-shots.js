@@ -1,6 +1,6 @@
 'use strict';
 // 개발용: 가상 인물 예시(reading-example.json)의 유료 읽기 화면을 390x844(@2x)로 찍어 docs/preview/paid-shots-source/ 에 원본 PNG로 저장한다.
-// 사용: node docs/preview/capture-paid-shots.js   (결과 webp는 docs/preview/make-paid-webp.js 가 만든다)
+// 샘플: plain(기본, 쉬운 말 '서연') 또는 legacy(예전 '수달'). 사용: node docs/preview/capture-paid-shots.js [plain|legacy]   (결과 webp는 docs/preview/make-paid-webp.js 가 만든다)
 const puppeteer = require('puppeteer');
 const fs = require('node:fs'), path = require('node:path');
 const { start } = require('./serve-example.js');
@@ -14,7 +14,8 @@ const SCENES = [
 ];
 (async () => {
   fs.mkdirSync(out, { recursive: true });
-  const server = await start(4520);
+  const sample = process.argv[2] || 'plain';
+  const server = await start(4520, sample);
   const browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
   await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2 });
@@ -26,6 +27,8 @@ const SCENES = [
     document.head.appendChild(css);
     const b = document.createElement('div'); b.className = 'paid-band'; b.textContent = band; document.body.appendChild(b);
   }, BAND);
+  await page.evaluate(async () => { document.querySelectorAll('img').forEach((i) => { i.loading = 'eager'; }); await Promise.all([...document.images].map((i) => i.decode().catch(() => {}))); });
+  await new Promise((r) => setTimeout(r, 800));
   const result = [];
   for (const s of SCENES) {
     const y = await page.evaluate((sel, off) => { const e = document.querySelector(sel); return Math.max(0, Math.round(e.getBoundingClientRect().top + scrollY + off)); }, s.sel, s.offset);
