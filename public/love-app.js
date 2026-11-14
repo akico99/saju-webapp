@@ -253,7 +253,9 @@
     list.appendChild(open);
     box.appendChild(list);
     const offer = el('div', 'love-hook-offer');
-    offer.append(el('p', 'love-hook-free-scope', '지금 보는 사주표·매력·계절 흐름과 3위 달은 무료예요.'));
+    offer.append(el('p', 'love-hook-free-scope', third && third.label
+      ? '지금 보는 사주표·매력·오행 균형·계절 흐름과 3위 달은 무료예요.'
+      : '지금 보는 사주표·매력·오행 균형·계절 흐름은 무료예요.'));
     offer.append(el('h4', null, '전체 풀이에서 이어 읽을 내용'));
     const includes = el('ul', 'love-hook-includes');
     [

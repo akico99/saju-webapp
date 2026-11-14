@@ -81,3 +81,17 @@ test('소재·버전 표기에 이메일이나 자유 입력 문자열을 그대
   const b = await browser({ config: { ...CONFIG, kakaoPixelId: null }, search: '?utm_content=person%40example.com', metadata: { 'so-product-key': 'love_timing', 'so-page-version': '<script>' } });
   for (const e of b.ga) { assert.equal(e[2].creative_id, undefined); assert.equal(e[2].page_version, undefined); }
 });
+
+test('예전 방문에 남은 광고 소재는 광고 주소 없이 다시 들어온 새 세션의 이벤트에 붙지 않는다', async () => {
+  const local = new Map([['so_attr_first', JSON.stringify({ utm_content: 'L1_old' })], ['so_attr_last', JSON.stringify({ utm_content: 'L1_old' })]]);
+  const b = await browser({ config: { ...CONFIG, kakaoPixelId: null }, search: '', local });
+  for (const e of b.ga) assert.equal(e[2].creative_id, undefined, e[1]);
+  assert.equal(b.ga.find(e => e[1] === 'generate_lead')[2].page_version, 'love-value-v5');
+});
+
+test('다른 상품 광고로 들어온 소재 이름은 같은 탭의 연애 이벤트에 붙지 않는다', async () => {
+  const local = new Map(), session = new Map();
+  await browser({ config: { ...CONFIG, kakaoPixelId: null }, pathname: '/reunion.html', search: '?utm_content=R1_reunion', metadata: { 'so-product-key': 'reunion_v2', 'so-page-version': 'reunion-v1' }, local, session });
+  const love = await browser({ config: { ...CONFIG, kakaoPixelId: null }, search: '', local, session });
+  for (const e of love.ga) assert.equal(e[2].creative_id, undefined, e[1]);
+});

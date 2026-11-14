@@ -78,16 +78,21 @@
   function token(v) { return typeof v === 'string' && /^[a-zA-Z0-9_-]{1,80}$/.test(v) ? v : null; }
   function eventData(key, data) {
     if (!token(key) || !cfg || cfg.attributionEnabled !== true) return data;
-    var attr = attribution(), last = attr && (attr.last || attr.first), creative = token(last && last.utm_content);
-    if (creative) data.creative_id = creative;
-    // 화면 버전을 상품별로 보관해 같은 탭의 결제 화면으로 잇는다. 개인 식별자는 추가하지 않는다.
+    // 소재 이름과 화면 버전은 그 상품 페이지에 들어온 같은 탭에서만 잇는다. 예전 방문이나 다른 상품 광고의
+    // 소재가 붙지 않게 장기 유입값(so_attr_*)은 쓰지 않는다. 개인 식별자는 추가하지 않는다.
     var product = document.querySelector && document.querySelector('meta[name="so-product-key"]');
     var version = document.querySelector && document.querySelector('meta[name="so-page-version"]');
-    var current = product && product.content === key && version && token(version.content);
+    var here = !!(product && product.content === key);
+    var current = here && version && token(version.content);
+    var landed = here && token(new URLSearchParams(location.search).get('utm_content'));
+    var creative = null;
     try {
       if (current) sessionStorage.setItem('so_page_version_' + key, current);
+      if (landed) sessionStorage.setItem('so_creative_' + key, landed);
       current = current || token(sessionStorage.getItem('so_page_version_' + key));
+      creative = token(sessionStorage.getItem('so_creative_' + key));
     } catch (e) {}
+    if (creative) data.creative_id = creative;
     if (current) data.page_version = current;
     return data;
   }
