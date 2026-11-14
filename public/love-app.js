@@ -51,7 +51,7 @@
   const price = brand.product.priceKrw.toLocaleString('ko-KR') + '원';
   document.querySelectorAll('[data-love-price]').forEach((node) => { node.textContent = price; });
   unlockBtn.textContent = price + '으로 전체 풀이 열기';
-  document.getElementById('stickyUnlock').textContent = '1·2위 두 달 보기 · ' + price;
+  document.getElementById('stickyUnlock').textContent = '12개월 연애 풀이 전체 보기 · ' + price;
   document.getElementById('characterDisclosure').textContent = brand.character.disclosure;
   brand.product.chapters.forEach((title) => document.getElementById('productChapters').appendChild(el('li', null, title)));
   const portrait = document.getElementById('characterPortrait');
@@ -252,16 +252,34 @@
     }
     list.appendChild(open);
     box.appendChild(list);
-    const sample = el('div', 'love-hook-sample');
+    const offer = el('div', 'love-hook-offer');
+    offer.append(el('p', 'love-hook-free-scope', '지금 보는 사주표·매력·계절 흐름과 3위 달은 무료예요.'));
+    offer.append(el('h4', null, '전체 풀이에서 이어 읽을 내용'));
+    const includes = el('ul', 'love-hook-includes');
+    [
+      ['세 달과 12개월의 흐름', '1·2위 달부터 달마다 살펴볼 점과 해볼 일까지'],
+      ['끌리는 사람과 반복되는 패턴', '만남의 자리와 조심할 관계의 신호'],
+      ['지금 상황에 맞는 행동 제안', '내 사주와 연애 상황을 바탕으로 이어지는 해석']
+    ].forEach(([title, text]) => {
+      const row = el('li'); row.append(el('b', null, title), el('span', null, text)); includes.append(row);
+    });
+    offer.append(includes);
+    box.append(offer);
+    const sample = el('details', 'love-hook-sample');
+    sample.append(el('summary', null, '실제 생성된 풀이 문장 미리보기'));
     sample.append(el('span', 'love-hook-sample-label', '전체 풀이 예시 · 가상 인물 ‘수달’의 1위 달 · 개인 결과 아님'));
-    sample.append(el('p', null, PAID_SAMPLE.join(' … ') + ' …'));
+    sample.append(el('h5', null, '흐름을 해석하고'));
+    sample.append(el('blockquote', null, PAID_SAMPLE[0] + ' …'));
+    sample.append(el('h5', null, '해볼 일을 제안해요'));
+    sample.append(el('blockquote', null, PAID_SAMPLE.slice(1).join(' … ') + ' …'));
+    sample.append(el('p', 'love-hook-sample-source', '실제 AI 생성 원문 일부 발췌 · 날짜와 중간 문장 생략. 실제 구매 후기나 연애 결과를 보장하는 사례는 아닙니다.'));
     box.appendChild(sample);
-    const cta = el('button', 'love-hook-cta', '1·2위 두 달과 할 일 보기 · ' + price);
+    const cta = el('button', 'love-hook-cta', '12개월 연애 풀이 전체 보기 · ' + price);
     cta.type = 'button';
     cta.dataset.unlockFrom = 'hook';
     cta.addEventListener('click', openCheckout);
     box.appendChild(cta);
-    box.appendChild(el('p', 'lr-note love-hook-note', '회원가입 없이 결제 · 결제 후 바로 이 화면에서 읽고, PDF도 이메일로 보내 드려요'));
+    box.appendChild(el('p', 'lr-note love-hook-note', '회원가입 없이 단건 결제 · 생성이 끝나면 이 화면에서 읽고, 같은 내용을 PDF 이메일로 받아요.'));
     return box;
   }
 
@@ -285,7 +303,7 @@
     }
   }
 
-  /* 무료 결과를 어디까지 읽었는지(25·50·75·100%). 결제 버튼까지 가기 전에 어디서 나가는지 보려는 것.
+  /* 무료 결과의 스크롤 도달 위치(25·50·75·100%). 완독 여부나 고유 사람 수를 뜻하지 않는다.
      표시마다 세션당 한 번(track.js)만 보낸다. 출생정보는 싣지 않는다. */
   let readDepthBound = false;
   function watchReadDepth() {

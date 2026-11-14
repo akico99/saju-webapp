@@ -236,3 +236,17 @@ body.love-page .lr-reader .love-hook-sample p{margin:0;padding:0;font-size:14px;
 body.love-page .lr-reader button.love-hook-cta{display:block;width:100%;min-height:55px;margin:18px 0 0;border:0;border-radius:9px;background:#ef3e54;color:#fff;font:700 16px/1.4 Pretendard,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;cursor:pointer}
 body.love-page .lr-reader p.love-hook-note{text-align:center;margin-top:10px;font-size:13px}
 body.love-page .lr-reader p.lr-lead:has(+ .love-hook){padding-bottom:18px}
+/* 무료 범위와 전체 풀이의 차이. 샘플은 읽을 때 펼쳐 첫 구매 안내를 지나치게 밀지 않는다. */
+body.love-page .love-hook-offer{margin-top:20px;padding-top:18px;border-top:1px solid #70414d}
+body.love-page .lr-reader p.love-hook-free-scope{margin:0 0 14px;padding:0;text-align:left;font-size:14px;line-height:1.65;color:#e4c8ce}
+body.love-page .love-hook-offer h4{margin:0 0 12px;font-size:17px;line-height:1.5;color:#fff1eb}
+body.love-page .love-hook-includes{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+body.love-page .love-hook-includes li{display:grid;gap:2px;padding-left:12px;border-left:2px solid #e8b579}
+body.love-page .love-hook-includes b{font-size:15px;line-height:1.6;color:#ffe0bb}
+body.love-page .love-hook-includes span{font-size:14px;line-height:1.6;color:#ebcfd4;word-break:keep-all;overflow-wrap:break-word}
+body.love-page .love-hook-sample summary{font-size:15px;font-weight:700;line-height:1.6;color:#fff1eb;cursor:pointer;padding:2px 0}
+body.love-page .love-hook-sample summary:focus-visible{outline:2px solid #ffd166;outline-offset:5px}
+body.love-page .love-hook-sample[open] summary{margin-bottom:14px}
+body.love-page .love-hook-sample h5{margin:14px 0 6px;font-size:14px;line-height:1.5;color:#ffe0bb}
+body.love-page .love-hook-sample blockquote{margin:0;padding:0;font-size:15px;line-height:1.8;color:#fff1eb;text-align:left;word-break:keep-all;overflow-wrap:break-word}
+body.love-page .lr-reader p.love-hook-sample-source{font-size:12px;line-height:1.65;color:#d9b4bf;margin-top:14px}

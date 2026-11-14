@@ -93,7 +93,18 @@ test('모바일 상품 소개에서 실제 무료 해석, 재입력, 가입 없�
     assert.ok(hook.ctaTop < 844 * 2, '세 달 카드의 결제 버튼은 두 화면 안에 있다: ' + hook.ctaTop);
     assert.equal(await page.$('#freeReader [data-chapter-id="seasons"] .lr-teaser[data-lock-kind="timing"]'), null);
     assert.ok(await page.$$eval('#freeReader .lr-art', (es) => es.length) <= 3);
-    assert.match(await page.$eval('#stickyUnlock', (e) => e.textContent), /^1·2위 두 달 보기 · /);
+    assert.match(await page.$eval('#stickyUnlock', (e) => e.textContent), /14,900원/);
+    // 결과 샘플을 열어 읽고 닫아도 구매 동작과 무료로 공개한 달이 유지된다.
+    const sample = '#freeReader .love-hook-sample';
+    assert.equal(await page.$eval(sample, e => e.tagName), 'DETAILS');
+    assert.equal(await page.$eval(sample, e => e.open), false);
+    await page.click(sample + ' summary');
+    assert.equal(await page.$eval(sample, e => e.open), true);
+    assert.ok(await page.$eval(sample, e => e.textContent.includes('개인 결과 아님')));
+    assert.equal(await page.$$eval(sample + ' blockquote', es => es.length), 2);
+    await page.click(sample + ' summary');
+    assert.equal(await page.$eval(sample, e => e.open), false);
+    assert.equal(await page.$$eval('#freeReader .love-hook-months .is-open', es => es.length), 1);
     await page.click('#freeReader .love-hook-cta');
     assert.equal(await page.$eval('#checkoutSheet', (e) => e.open), true);
     await page.click('#closeCheckout');
