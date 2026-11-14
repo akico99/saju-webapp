@@ -6,7 +6,7 @@ body.love-page .app,body.love-page.done .app{max-width:480px;margin:auto;backgro
 .love-page .love-header{height:58px;padding:0 20px;background:#090b0e;border-bottom:1px solid #1a2027;color:#d6c7c9}
 .love-page .love-header a{color:#d6c9cb;font-size:12px}.love-page .love-wordmark{font-weight:700}.love-page .love-wordmark span{color:#aa9c9e;font-size:10px}
 .love-page .love-editorial{position:relative;padding:0 0 20px;background:#090b0e;color:#fff}
-.love-page .love-portrait-wrap{height:min(82svh,690px);min-height:480px;max-height:690px;border-radius:0;overflow:hidden;background:#090b0e}
+.love-page .love-portrait-wrap{width:100%;aspect-ratio:auto;height:min(62svh,690px);min-height:480px;max-height:690px;border-radius:0;overflow:hidden;background:#090b0e}
 .love-page .love-portrait-wrap img{width:100%;height:100%;object-fit:cover;object-position:center 28%}
 .love-page .love-portrait-wrap::after{content:'';position:absolute;inset:0;background:linear-gradient(#090b0e44,transparent 24%,transparent 45%,#090b0e 100%);pointer-events:none}
 .love-page .cover-tag{z-index:2;left:24px;top:22px;border:1px solid #9a727988;background:#0d1014d9;color:#e4ced2;padding:7px 10px;font-size:10px;font-weight:700;letter-spacing:.06em}
@@ -107,6 +107,11 @@ body.love-page .cover-title p{line-height:1.6}
 body.love-page .cover-byline{font-size:13px;color:#d4bfc3}
 body.love-page .hero-promise{font-size:14px;color:#daced0}
 body.love-page .love-meta{font-size:14px;line-height:1.6;color:#cec0c3}
+body.love-page .hero-sample{margin:0;padding:2px 24px 18px;text-align:center}
+body.love-page #characterPortrait{object-fit:cover;object-position:center 28%}
+body.love-page .hero-sample blockquote{margin:0;padding:0;font-size:15px;line-height:1.65;color:#eadcde;word-break:keep-all;overflow-wrap:break-word}
+body.love-page .hero-sample figcaption{margin-top:8px;font-size:12px;line-height:1.5;color:#b9a9ac}
+body.love-page .wizard-kicker.wizard-greet{font-size:12px;margin:-6px 0 14px;color:#b6a4a7}
 body.love-page .product-nav a{font-size:14px}
 body.love-page :is(.chapter-label,.love-eyebrow){font-size:13px;font-weight:700}
 body.love-page .thoughts p{font-size:17px;line-height:1.75;color:#e1d7d8}

@@ -46,3 +46,32 @@ test('세 달 카드는 구간 안내와 질문형 목록을 textContent로만 �
   assert.ok(start > 0 && end > start);
   assert.ok(!/innerHTML|insertAdjacentHTML/.test(app.slice(start, end)));
 });
+
+const loveHtml = fs.readFileSync(path.join(__dirname, '../public/love.html'), 'utf8');
+
+test('랜딩 첫 화면의 예시 인용은 가상 인물 예시 원문 그대로이고 가격은 첫 화면에 없다', () => {
+  const hero = /<div class="love-editorial">([\s\S]*?)<\/div>\s*<nav class="product-nav"/.exec(loveHtml);
+  assert.ok(hero, '히어로 영역이 있어야 한다');
+  const quote = /<blockquote[^>]*>([\s\S]*?)<\/blockquote>/.exec(hero[1]);
+  assert.ok(quote, '히어로에 예시 인용이 있어야 한다');
+  const pieces = quote[1].replace(/[“”]/g, '').split('…').map((s) => s.trim()).filter(Boolean);
+  assert.equal(pieces.length, 2);
+  const answer = example.paid.split('## 한 줄 답')[1].split('## ')[0].replace(/\*\*/g, '').replace(/\s+/g, ' ');
+  for (const p of pieces) assert.ok(answer.includes(p), '한 줄 답 문단에 없는 조각: ' + p);
+  assert.match(hero[1], /전체 풀이 예시 · 가상 인물 · 개인 결과 아님/);
+  assert.match(hero[1], /무료 사주 분석 · 회원가입 없이/);
+  assert.doesNotMatch(hero[1], /14,900|data-love-price|나의 매력/);
+});
+
+test('첫 화면에서 가격을 뺀 뒤에도 상품 상자와 결제 창의 14,900원은 그대로다', () => {
+  assert.match(loveHtml, /<h3>인연의 시기 <b data-love-price>14,900원<\/b><\/h3>/);
+  assert.match(loveHtml, /<strong data-love-price>14,900원<\/strong>/);
+  assert.match(loveHtml, /id="stickyUnlock">12개월 연애 풀이 전체 보기 · 14,900원</);
+  assert.match(loveHtml, /<div class="checkout-total"><span>상품 금액<\/span><strong data-love-price>14,900원<\/strong>/);
+});
+
+test('입력 첫 단계는 안내자 대사로 시작한다', () => {
+  const step = /<fieldset class="stage-step" data-step="0">([\s\S]*?)<\/fieldset>/.exec(loveHtml)[1];
+  const hello = step.indexOf('어서 와요. 지금부터 당신의 연애 흐름을 읽어 볼게요.');
+  assert.ok(hello > 0 && hello < step.indexOf('먼저, 성별을 알려 주세요.'));
+});
