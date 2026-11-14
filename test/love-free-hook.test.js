@@ -20,6 +20,31 @@ test('세 달 카드의 유료 예시는 가상 인물 예시 원문 조각 그�
   assert.match(app, /가상 인물 ‘수달’의 1위 달 · 개인 결과 아님/);
 });
 
+test('쉬운 말 응답(plain)은 매력·연애 습관·계절 장으로, 이전 응답은 기존 장 구성으로 만든다', () => {
+  const { buildLovePreview } = require('../src/engine/loveTiming');
+  const live = buildLovePreview({ year: 1995, month: 5, day: 15, hour: null, minute: 0, gender: '여', isLunar: false }, 'some', new Date('2026-11-14T03:00:00Z'));
+  const m = buildFree(live, { name: '수진', situation: 'some' });
+  assert.equal(m.plainFree, true);
+  assert.deepEqual(m.chapters.map((c) => c.id), ['charm', 'balance', 'seasons', 'whole-reading']);
+  assert.equal(m.facts.situation.title, '썸을 연애로 바꾸려면');
+  assert.ok(m.facts.charmFound.length >= 1 && m.facts.pillars.length >= 3, '원본 값은 사주 원본 보기에 쓰려고 그대로 넘긴다');
+  const body = JSON.stringify(m.chapters.map((c) => [c.displayTitle, c.blocks, c.cards]));
+  assert.doesNotMatch(body, /일간|비견|겁재|장성|역마|지장간|12운성|오행|[丙辛乙午巳亥]/);
+  const old = buildFree({ ...example.free }, { name: '수진', situation: 'some' });
+  assert.ok(!old.plainFree);
+  assert.deepEqual(old.chapters.map((c) => c.id), ['welcome', 'charm', 'evidence', 'balance', 'seasons', 'whole-reading']);
+});
+
+test('실물 화면 줄은 세 장의 경로를 걸고, 불러오지 못하면 그 장과 줄을 뺀다', () => {
+  for (const n of [1, 2, 3]) assert.ok(app.includes('/love-assets/preview/paid-' + n + '.webp'));
+  const s = app.indexOf('function previewStrip');
+  const body = app.slice(s, app.indexOf('function addFreeExtras'));
+  assert.match(body, /addEventListener\('error'/);
+  assert.match(body, /box\.remove\(\)/);
+  assert.ok(!/innerHTML/.test(body));
+  for (const n of [1, 2, 3]) assert.ok(fs.existsSync(path.join(__dirname, '../public/love-assets/preview/paid-' + n + '.webp')), 'paid-' + n + '.webp');
+});
+
 test('무료 결과 첫 문장은 1위 달이 있는 구간을 알려 주고 정확한 달은 전체 풀이로 미룬다', () => {
   const firstHint = { label: '앞으로 6개월 안' };
   const strong = buildFree({ ...example.free, strongCount: 7, firstHint }, { name: '수진', situation: 'single' });

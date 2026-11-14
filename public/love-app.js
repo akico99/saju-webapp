@@ -266,8 +266,8 @@
     box.appendChild(list);
     const offer = el('div', 'love-hook-offer');
     offer.append(el('p', 'love-hook-free-scope', third && third.label
-      ? '지금 보는 사주표·매력·오행 균형·계절 흐름과 3위 달은 무료예요.'
-      : '지금 보는 사주표·매력·오행 균형·계절 흐름은 무료예요.'));
+      ? '지금 보는 매력·연애 습관·계절 흐름과 3위 달은 무료예요.'
+      : '지금 보는 매력·연애 습관·계절 흐름은 무료예요.'));
     offer.append(el('h4', null, '전체 풀이에서 답해 드려요'));
     const includes = el('ul', 'love-hook-includes');
     [
@@ -297,7 +297,34 @@
     return box;
   }
 
-  // 세 달 카드(맨 위)와 AI 개인 소개 칸. 소개는 나중에 채워지고, 실패하면 칸이 사라진다.
+  /* 유료 리포트 실물 화면 3장. 가로로 넘겨 본다. 파일이 없거나 불러오지 못하면 그 장을, 모두 실패하면 줄 전체를 뺀다. */
+  const PREVIEW_SHOTS = [
+    ['/love-assets/preview/paid-1.webp', '전체 풀이 예시 화면: 인연 신호가 강한 세 달과 그달에 할 일'],
+    ['/love-assets/preview/paid-2.webp', '전체 풀이 예시 화면: 앞으로 12개월 연애 흐름 그래프'],
+    ['/love-assets/preview/paid-3.webp', '전체 풀이 예시 화면: 나에게 끌리는 사람과 해볼 일']
+  ];
+  function previewStrip() {
+    const box = el('section', 'love-preview-strip');
+    box.dataset.free = 'preview';
+    box.appendChild(el('h4', null, '전체 풀이는 이렇게 보여요'));
+    const row = el('div', 'love-preview-row');
+    row.tabIndex = 0;
+    row.setAttribute('role', 'group');
+    row.setAttribute('aria-label', '전체 풀이 예시 화면 3장, 옆으로 넘겨 보세요');
+    PREVIEW_SHOTS.forEach(([src, alt]) => {
+      const fig = el('figure', 'love-preview-shot');
+      const img = document.createElement('img');
+      img.alt = alt; img.loading = 'lazy'; img.decoding = 'async'; img.src = src;
+      img.addEventListener('error', () => { fig.remove(); if (!row.children.length) box.remove(); });
+      fig.appendChild(img);
+      row.appendChild(fig);
+    });
+    box.appendChild(row);
+    box.appendChild(el('p', 'love-preview-note', '전체 풀이 예시 화면 · 가상 인물'));
+    return box;
+  }
+
+  // 세 달 카드(맨 위), 실물 화면 3장, AI 개인 소개 칸. 소개는 나중에 채워지고, 실패하면 칸이 사라진다.
   function addFreeExtras(r, b) {
     if (!window.FreeExtras) return;
     const intro = FreeExtras.introCard('/api/love/intro', { ...b, deliveryEmail: undefined }, { title: (b.name ? b.name + '님은' : '당신은') + ' 이런 사람이에요' });
@@ -306,7 +333,9 @@
       const lead = reader.querySelector('.lr-lead');
       const hook = hookCard(r.third, r.firstHint, b.name);
       if (lead) lead.after(hook); else reader.prepend(hook);
-      hook.after(intro);
+      const shots = previewStrip();
+      hook.after(shots);
+      shots.after(intro);
       // 계절 장의 1·2위 잠금 카드는 맨 위 세 달 카드와 같은 내용이라 뺀다.
       const timingLock = reader.querySelector('[data-chapter-id="seasons"] .lr-teaser[data-lock-kind="timing"]');
       if (timingLock) timingLock.remove();

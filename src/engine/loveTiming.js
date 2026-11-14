@@ -9,7 +9,7 @@
 const { computeSaju } = require('./index');
 const { monthlyFlow } = require('./monthlyFlow');
 const { readBalance, readCharm } = require('./freeReadings');
-const { describeThird } = require('./monthPlain');
+const { describeThirdPlain, buildPlain } = require('./lovePlain');
 const loveTimingConfig = require('../config/loveTiming');
 const { Lunar } = require('lunar-javascript');
 
@@ -151,10 +151,12 @@ function buildLovePreview(birth, situationKey, now = new Date()) {
     // 경우든 같은 문장을 써서 1위 달의 위치도 흘리지 않는다.
     seasonLead: `계절로 묶어 보면 ${best.label}의 흐름이 가장 고르게 좋아요. 인연 신호가 가장 강한 한 달은 이 계절 밖에 있을 수도 있어서, 1·2위 두 달은 전체 풀이에서 알려 드려요.`,
     // 상위 세 달 중 3위만 공개한다. 1·2위의 연·월·점수는 싣지 않는다.
-    third: describeThird(timing.top3[2], birth.gender, 'love'),
+    third: describeThirdPlain(timing.top3[2], birth.gender),
     // 1위 달은 구간("앞으로 6개월 안")까지만 알린다. 정확한 달은 전체 풀이에서만 연다.
     firstHint: { label: firstHintLabel(timing.top3[0].index) },
     startYm: `${timing.months[0].year}-${timing.months[0].month}`,
+    // 쉬운 말 버전(매력·연애 습관·상황별 안내). 화면 본문은 이것을 쓰고, 위의 원본 값은 '사주 원본 보기'에만 쓴다.
+    plain: buildPlain({ charm, balance }, situationKey),
     strongCount: timing.strongCount,
     note: charm.note,
     locked: lockedTitles(situation),

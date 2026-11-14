@@ -228,7 +228,7 @@
   }
 
   // 잠금된 개인 결과를 미리 생성하거나 DOM에 싣지 않는다.
-  function lockedPreview(title, description, type, unlock) {
+function lockedPreview(title, description, type, unlock, rows) {
     var card = el('div', 'lr-panel lr-teaser lr-teaser-inline');
     card.dataset.lockKind = type || 'person';
     card.appendChild(el('strong', 'lr-teaser-title', title));
@@ -239,7 +239,7 @@
       for(var d=0;d<12;d++) calendar.appendChild(el('i'));
       veiled.appendChild(calendar);
     } else {
-      ['분위기와 표현 방식','서로 끌리는 이유','관계를 이어갈 단서'].forEach(function(label){
+(arr(rows).length ? rows : ['분위기와 표현 방식','서로 끌리는 이유','관계를 이어갈 단서']).forEach(function(label){
         var row=el('div','lr-hidden-row'); row.appendChild(el('span',null,label)); row.appendChild(el('i')); veiled.appendChild(row);
       });
     }
@@ -251,13 +251,89 @@
     return card;
   }
 
-  function reportContents(budget, unlock) {
+  // 쉬운 말 무료 결과: 매력 카드(쉬운 제목 · 연애에서 보이는 모습 · 조심할 점). 모두 textContent로만 넣는다.
+  function charmCards(items, headline) {
+    items = arr(items); if (!items.length) return null;
+    var box = el('div', 'lr-plain-cards');
+    if (headline) box.appendChild(el('p', 'lr-plain-cards-head', headline));
+    items.forEach(function (it) {
+      it = it || {};
+      var card = el('article', 'lr-plain-card');
+      card.appendChild(el('h3', 'lr-plain-card-title', it.title));
+      var a = el('p', 'lr-plain-row'); a.appendChild(el('b', null, '이렇게 보여요')); a.appendChild(el('span', null, it.shows)); card.appendChild(a);
+      var c = el('p', 'lr-plain-row is-caution'); c.appendChild(el('b', null, '조심할 점')); c.appendChild(el('span', null, it.caution)); card.appendChild(c);
+      box.appendChild(card);
+    });
+    return box;
+  }
+
+  // 계절 흐름 4칸을 탭 없이 한눈에 비교하는 막대 네 개.
+  function seasonBars(seasons) {
+    seasons = arr(seasons); if (!seasons.length) return null;
+    var best = 0; seasons.forEach(function (s, i) { if (num(s && s.avg, 0) > num(seasons[best] && seasons[best].avg, 0)) best = i; });
+    var box = el('div', 'lr-panel lr-season-bars');
+    box.appendChild(el('h3', 'lr-sub', '계절별 인연 흐름'));
+    var row = el('div', 'lr-sbars'); row.setAttribute('role', 'list');
+    seasons.forEach(function (s, i) {
+      s = s || {};
+      var col = el('div', 'lr-sbar lv-' + str(s.level) + (i === best ? ' is-best' : '')); col.setAttribute('role', 'listitem');
+      var meter = el('span', 'lr-sbar-meter'); var fill = el('i'); fill.style.height = Math.max(12, Math.min(100, num(s.avg, 0))) + '%'; meter.appendChild(fill);
+      col.appendChild(meter);
+      col.appendChild(el('b', null, str(s.level)));
+      var parts = str(s.label).split('~');
+      var lab = el('small'); lab.appendChild(document.createTextNode(parts[0] + (parts[1] ? '~' : '')));
+      if (parts[1]) { lab.appendChild(document.createElement('br')); lab.appendChild(document.createTextNode(parts[1])); }
+      col.appendChild(lab);
+      row.appendChild(col);
+    });
+    box.appendChild(row);
+    return box;
+  }
+
+  // 사주 원본(사주표·오행 글자 수·신살 원문). 용어는 여기에만 둔다. 기본 접힘.
+  function sajuOriginal(facts) {
+    var d = el('details', 'lr-details lr-saju-original');
+    d.appendChild(el('summary', null, '사주 원본 보기'));
+    d.appendChild(el('p', 'lr-note', '위 풀이를 만든 사주 원본이에요. 사주 용어를 아는 분이 확인할 수 있게 그대로 두었어요.'));
+    var holder = el('div', 'lr-profile');
+    var pillars = arr(facts.pillars);
+    if (pillars.length) {
+      var grid = el('div', 'lr-pillars');
+      pillars.forEach(function (p) {
+        p = p || {};
+        var box = el('div', 'lr-pillar' + (p.key === 'day' ? ' is-day' : ''));
+        box.appendChild(el('span', null, p.key === 'day' ? '일주 · 나' : str(p.ko)));
+        box.appendChild(el('b', null, p.hanja)); box.appendChild(el('small', null, p.ganzi));
+        grid.appendChild(box);
+      });
+      holder.appendChild(grid);
+    }
+    d.appendChild(holder);
+    if (facts.note) d.appendChild(el('p', 'lr-note', str(facts.note)));
+    var bal = balanceChart(facts.balance); if (bal) { bal.classList.add('lr-orig-balance'); d.appendChild(bal); }
+    var found = arr(facts.charmFound);
+    if (found.length) {
+      var list = el('div', 'lr-orig-charm');
+      found.forEach(function (f) {
+        f = f || {};
+        var item = el('div', 'lr-orig-item');
+        item.appendChild(el('b', null, str(f.title) + (f.pillarKo ? ' · ' + str(f.pillarKo) : '')));
+        if (f.core) item.appendChild(el('p', null, str(f.core)));
+        if (f.shadow) item.appendChild(el('p', null, str(f.shadow)));
+        list.appendChild(item);
+      });
+      d.appendChild(list);
+    }
+    return d;
+  }
+
+  function reportContents(budget, unlock, compact) {
     var wrap=el('section','lr-contents');
     wrap.appendChild(el('p','lr-eyebrow','THE FULL STORY'));
     wrap.appendChild(el('h3','lr-contents-title','이 안에 담긴,\n당신의 일곱 가지 이야기.'));
     var groups=[['01','인연이 움직이는 시간','meeting',['인연 신호가 강한 세 달','앞으로 12개월, 달마다 흐름과 행동']],['02','서로를 알아보는 순간','explain',['나에게 끌리는 사람과 내가 끌리는 사람','만남이 생기기 쉬운 자리']],['03','되풀이하지 않을 사랑','thinking',['반복되기 쉬운 연애 패턴','조심할 관계의 신호']],['04','지금, 내가 할 수 있는 일','cheer',['지금 연애 상황에 맞는 행동 제안']]];
     groups.forEach(function(g){
-      var card=el('article','lr-content-card'); var a=art(g[2],'',budget); if(a)card.appendChild(a);
+      var card=el('article','lr-content-card'); var a=compact?null:art(g[2],'',budget);
       var text=el('div','lr-content-copy'); text.appendChild(el('span','lr-eyebrow','PART '+g[0])); text.appendChild(el('h4',null,g[1]));
       var ul=el('ul');g[3].forEach(function(t){ul.appendChild(el('li',null,t));});text.appendChild(ul);card.appendChild(text);wrap.appendChild(card);
     });
@@ -293,7 +369,7 @@
     var kind = model.kind === 'paid' ? 'paid' : 'free';
     var chapters = arr(model.chapters);
     if(kind==='free') {
-      var order=['welcome','charm','seasons','evidence','balance','whole-reading'];
+      var order=model.plainFree?['charm','balance','seasons','whole-reading']:['welcome','charm','seasons','evidence','balance','whole-reading'];
       chapters=chapters.slice().sort(function(a,b){return order.indexOf(a.id)-order.indexOf(b.id);});
     }
     var facts = model.facts || {};
@@ -303,7 +379,7 @@
     var listeners = [];
     container.replaceChildren();
 
-    var reader = el('div', 'lr-reader lr-' + kind);
+    var reader = el('div', 'lr-reader lr-' + kind + (kind === 'free' && model.plainFree ? ' lr-plain' : ''));
     reader.setAttribute('role', 'region');
     reader.setAttribute('aria-label', str(model.title) || '연애 리포트');
     if (model.title) reader.appendChild(el('h1', 'lr-main-title', model.title));
@@ -361,7 +437,7 @@
       var cut = LANDSCAPE[sc0] ? (i % 2 ? 'lr-cut-inset' : 'lr-cut-wide') : (i % 2 ? 'lr-cut-tall' : 'lr-cut-wide');
       sec.classList.add('lr-tone-' + (i % 2));
       var a = art(sc0, LABELS[sc0] || '', budget, cut);
-      sec.appendChild(sectionHead(c.displayTitle || titles[i], kind==='free' ? Math.max(0,i-1) : i));
+sec.appendChild(sectionHead(c.displayTitle || titles[i], kind==='free' && !c.plain ? Math.max(0,i-1) : i));
       if (c.featured) sec.appendChild(el('p','lr-focus-note','먼저 궁금해하셨던 이야기'));
       if (a) { sec.classList.add('has-art'); sec.appendChild(a); }
 
@@ -429,25 +505,32 @@
       var extra = null;
       if (kind === 'free') {
         if (ids[i] === 'welcome') { extra = pillarsDetails(arr(facts.pillars), str(facts.note)); if(extra) {extra.open=true; extra.classList.add('lr-profile');} }
-        else if (ids[i] === 'balance') extra = balanceChart(facts.balance);
-        else if (ids[i] === 'seasons') extra = seasonPicker(arr(facts.seasons));
-        else if (i === chapters.length - 1) extra = lockedList(arr(facts.locked));
+        else if (ids[i] === 'balance') extra = c.plain ? null : balanceChart(facts.balance);
+        else if (ids[i] === 'seasons') extra = c.plain ? seasonBars(arr(facts.seasons)) : seasonPicker(arr(facts.seasons));
+        else if (i === chapters.length - 1) extra = c.plain ? null : lockedList(arr(facts.locked));
       } else {
         if (ids[i] === 'months') extra = monthPicker(arr(model.months));
         else if (allBlocks.some(function (b) { return b.type === 'action'; })) extra = checklist({ id: ids[i], blocks: allBlocks }, st);
       }
       if (extra) sec.appendChild(extra);
-      if (kind === 'free' && ids[i] === 'charm') {
+      if (kind === 'free' && ids[i] === 'charm' && c.plain) {
+        var cc = charmCards(c.cards, c.cardsTitle); if (cc) sec.appendChild(cc);
+        sec.appendChild(lockedPreview('나에게 끌리는 사람은?', '나에게 끌리는 사람과 내가 끌리는 사람, 그 차이를 전체 풀이에서 읽어요.', 'person', opts.onUnlock, ['나에게 끌리는 사람', '내가 끌리는 사람', '만남이 생기기 쉬운 자리']));
+      } else if (kind === 'free' && ids[i] === 'charm') {
         sec.appendChild(lockedPreview('나에게 끌리는 사람은?', '내가 끌리는 사람과 나에게 끌리는 사람. 그 차이까지 이어서 살펴봐요.','person',opts.onUnlock));
       }
-      if (kind === 'free' && ids[i] === 'seasons') {
+      if (kind === 'free' && ids[i] === 'seasons' && c.plain) {
+        var sp = facts.situation;
+        if (sp && sp.title) sec.appendChild(lockedPreview(sp.title, sp.line, 'situation', opts.onUnlock, sp.rows));
+      } else if (kind === 'free' && ids[i] === 'seasons') {
         sec.appendChild(lockedPreview('가장 강한 두 달은 언제일까요?', '세 번째 달을 봤다면, 이제 1·2위 두 달과 월별 흐름, 그때 해볼 일을 알아볼 차례예요.','timing',opts.onUnlock));
       }
-      if(kind==='free' && ids[i]==='balance') sec.appendChild(lockedPreview('반복되는 관계를 바꾸려면', '되풀이되는 패턴과 조심할 신호, 지금 상황에 맞는 행동을 전체 풀이에서 읽어요.','action',opts.onUnlock));
-      if(kind==='free' && ids[i]==='whole-reading') sec.appendChild(reportContents(budget,opts.onUnlock));
+      if(kind==='free' && ids[i]==='balance') sec.appendChild(c.plain ? lockedPreview('반복되는 연애 패턴, 어떻게 바꿀까요?', '내가 되풀이하는 연애 패턴과 조심할 사람, 지금 해볼 일을 전체 풀이에서 읽어요.','action',opts.onUnlock,['반복되는 연애 패턴','조심할 사람의 신호','지금 상황에 맞는 행동']) : lockedPreview('반복되는 관계를 바꾸려면', '되풀이되는 패턴과 조심할 신호, 지금 상황에 맞는 행동을 전체 풀이에서 읽어요.','action',opts.onUnlock));
+      if(kind==='free' && ids[i]==='whole-reading') sec.appendChild(reportContents(budget,opts.onUnlock,!!c.plain));
       reader.appendChild(sec);
     });
 
+    if (kind === 'free' && model.plainFree) reader.appendChild(sajuOriginal(facts));
     if (kind === 'paid' && model.original) {
       var od = el('details', 'lr-details lr-original');
       od.appendChild(el('summary', null, '원문 그대로 보기'));

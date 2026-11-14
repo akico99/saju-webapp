@@ -97,6 +97,23 @@
   const scenes = [[/한 줄 답|인사|표지/,'greeting'],[/매력|특징|끌리는 사람/,'empathy'],[/자리|만남/,'conversation'],[/패턴/,'distance'],[/조심|신호/,'caution'],[/실천|행동|할 일/,'cheer'],[/월별|12개월/,'new-start']];
   function scene(title, id) { return sceneById[id] || (scenes.find(([re]) => re.test(title)) || [])[1] || 'explain'; }
 
+  // 쉬운 말 무료 결과(서버가 plain을 보냈을 때). 사주표·오행 글자 수·신살 원문은 facts로 넘겨 '사주 원본 보기'에서만 쓴다.
+  // plain이 없는 이전 응답은 위의 기존 장 구성을 그대로 쓴다.
+  function buildFreePlain(r, p, plain, c0) {
+    const charm = r.charm || {}, charmPlain = plain.charm || {}, habit = plain.habit || {};
+    const base = charm.base && charm.base.text;
+    const habitBlocks = [];
+    if (clean(habit.headline)) habitBlocks.push({ type:'prose', text:'**' + clean(habit.headline) + '**' });
+    (Array.isArray(habit.lines) ? habit.lines : []).forEach(t => { if (clean(t)) habitBlocks.push({ type:'prose', text:clean(t) }); });
+    const chapters = [
+      { id:'charm', plain:true, title:'당신이 가진 연애의 매력', displayTitle:'사람들이 당신에게\n끌리는 이유', featured:c0.focus === 'person', blocks:splitBlocks(base), cards:Array.isArray(charmPlain.items) ? charmPlain.items : [], cardsTitle:clean(charmPlain.headline) },
+      { id:'balance', plain:true, title:'내 연애 습관', displayTitle:'사랑할 때,\n나는 어떤 사람일까요?', featured:c0.focus === 'pattern', blocks:habitBlocks },
+      { id:'seasons', plain:true, title:'계절의 흐름', displayTitle:'마음이 움직일 시기는\n언제쯤일까요?', featured:c0.focus === 'timing', blocks:splitBlocks(r.seasonLead) },
+      { id:'whole-reading', plain:true, title:'무료 요약과 전체 풀이', displayTitle:'당신의 이야기는\n아직 끝나지 않았어요.', featured:c0.focus === 'action', blocks:[] }
+    ];
+    return { kind:'free', plainFree:true, title:c0.name + '님,\n다음 인연은\n어디쯤 왔을까요?', lead:c0.lead, name:clean(p.name), situation:c0.situation, focus:c0.focus, chapters, original:r, facts:{ pillars:Array.isArray(r.pillars) ? r.pillars : [], note:clean(r.note), balance:r.balance || {}, charmFound:Array.isArray(charm.found) ? charm.found : [], seasons:Array.isArray(r.seasons) ? r.seasons : [], seasonLead:clean(r.seasonLead), locked:Array.isArray(r.locked) ? r.locked : [], situation:plain.situation && plain.situation.title ? { title:clean(plain.situation.title), line:clean(plain.situation.line), rows:Array.isArray(plain.situation.rows) ? plain.situation.rows : [] } : null } };
+  }
+
   function buildFree(reading, person) {
     const r = reading || {}, p = person || {}, charm = r.charm || {}, balance = r.balance || {};
     const name = clean(p.name).trim() || '고객';
@@ -138,6 +155,8 @@
     const lead = hintLabel
       ? owner + ' 인연 신호가 가장 ' + (r.strongCount > 0 ? '강한' : '나은') + ' 달은 ' + hintLabel + '에 있어요. 정확한 달과 그달에 할 일은 전체 풀이에서 알려 드려요.'
       : (r.strongCount > 0 ? '앞으로 12개월 중 인연 신호가 가장 강한 세 달을 골랐어요.' : '앞으로 12개월 중 흐름이 가장 나은 세 달을 골랐어요.');
+    const plain = r.plain && typeof r.plain === 'object' ? r.plain : null;
+    if (plain) return buildFreePlain(r, p, plain, { name, situation, focus, lead });
     return { kind:'free', title:name + '님,\n다음 인연은\n어디쯤 왔을까요?', lead, name:clean(p.name), situation, focus, chapters, original:r, facts:{ pillars:Array.isArray(r.pillars) ? r.pillars : [], note:clean(r.note), balance, seasons:Array.isArray(r.seasons) ? r.seasons : [], seasonLead:clean(r.seasonLead), locked } };
   }
 

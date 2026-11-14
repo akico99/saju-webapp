@@ -256,3 +256,47 @@ body.love-page .love-hook-sample[open] summary{margin-bottom:14px}
 body.love-page .love-hook-sample h5{margin:14px 0 6px;font-size:14px;line-height:1.5;color:#ffe0bb}
 body.love-page .love-hook-sample blockquote{margin:0;padding:0;font-size:15px;line-height:1.8;color:#fff1eb;text-align:left;word-break:keep-all;overflow-wrap:break-word}
 body.love-page .lr-reader p.love-hook-sample-source{font-size:12px;line-height:1.65;color:#d9b4bf;margin-top:14px}
+
+/* ===== 쉬운 말 무료 결과(lr-plain): 매력 카드·계절 막대·실물 화면 줄·사주 원본 ===== */
+body.love-page .lr-plain .lr-chapter{padding-bottom:12px}
+body.love-page .lr-plain .lr-head{padding:34px 24px 10px}
+body.love-page .lr-plain .lr-num{margin-bottom:10px}
+body.love-page .lr-plain h2.lr-title{font-size:23px;line-height:1.45}
+body.love-page .lr-plain .lr-paper{padding-top:4px}
+body.love-page .lr-plain .lr-paper p.lr-pt{margin-bottom:12px}
+body.love-page .lr-plain .lr-chapter>.lr-panel{margin-top:16px}
+body.love-page .lr-plain-cards{margin:14px 24px 0;display:grid;gap:10px}
+body.love-page .lr-plain-cards-head{margin:0;font-size:15px;font-weight:700;color:#ffb3bb;line-height:1.5}
+body.love-page .lr-plain-card{background:#211013;border:1px solid #462027;border-radius:12px;padding:16px 16px 14px}
+body.love-page .lr-plain-card h3.lr-plain-card-title{margin:0 0 8px;font-size:17px;line-height:1.5;color:#fff1eb}
+body.love-page .lr-plain-row{display:grid;gap:2px;margin:0 0 8px;font-size:15px;line-height:1.65;color:#f3dedb}
+body.love-page .lr-plain-row:last-child{margin-bottom:0}
+body.love-page .lr-plain-row b{font-size:12px;letter-spacing:.04em;color:#ff8799}
+body.love-page .lr-plain-row.is-caution b{color:#e8b579}
+body.love-page .lr-plain-row span{word-break:keep-all;overflow-wrap:break-word}
+body.love-page .lr-sbars{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;align-items:end}
+body.love-page .lr-sbar{display:grid;justify-items:center;gap:6px;text-align:center}
+body.love-page .lr-sbar-meter{display:flex;align-items:flex-end;width:100%;max-width:56px;height:120px;border-radius:8px;background:#160709;overflow:hidden}
+body.love-page .lr-sbar-meter i{display:block;width:100%;background:#8a4a55;border-radius:8px 8px 0 0}
+body.love-page .lr-sbar.lv-강함 .lr-sbar-meter i{background:#ef5368}
+body.love-page .lr-sbar.lv-보통 .lr-sbar-meter i{background:#b87a4e}
+body.love-page .lr-sbar.is-best .lr-sbar-meter{outline:2px solid #ffd166}
+body.love-page .lr-sbar b{font-size:14px;color:#fff1eb}
+body.love-page .lr-sbar small{font-size:12px;line-height:1.45;color:#d6b8bd;word-break:keep-all}
+body.love-page .love-preview-strip{margin:16px 0 0;padding:0}
+body.love-page .love-preview-strip h4{margin:0 24px 10px;font-size:17px;line-height:1.5;color:#fff1eb}
+body.love-page .love-preview-row{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding:2px 24px 8px;-webkit-overflow-scrolling:touch}
+body.love-page .love-preview-shot{flex:0 0 auto;width:min(62vw,236px);margin:0;scroll-snap-align:start;border-radius:14px;overflow:hidden;border:1px solid #462027;background:#160709}
+body.love-page .love-preview-shot img{display:block;width:100%;height:auto}
+body.love-page .love-preview-note{margin:4px 24px 0;font-size:12px;line-height:1.5;color:#c2a0a5}
+body.love-page .lr-saju-original{margin-top:22px}
+body.love-page .lr-saju-original summary{cursor:pointer;font-size:14px;color:#d6b8bd}
+body.love-page .lr-saju-original .lr-orig-item{margin-top:12px;font-size:13px;line-height:1.6;color:#cfb1b6}
+body.love-page .lr-saju-original .lr-orig-item p{margin:2px 0 0;font-size:13px}
+body.love-page .lr-reader .free-intro p.lr-pt{font-size:16px;font-weight:500;line-height:1.7;margin:0 0 10px;text-align:left;color:#fbefec}
+body.love-page .lr-reader .free-intro h3.lr-sub{margin-bottom:12px}
+body.love-page .lr-plain .lr-contents{padding-top:18px}
+body.love-page .lr-plain h3.lr-contents-title{font-size:20px;margin:8px 0 16px}
+body.love-page .lr-plain .lr-content-card{margin-bottom:10px}
+body.love-page .lr-plain .lr-content-copy{padding:14px 16px}
+body.love-page .lr-plain [data-chapter-id=whole-reading]>.lr-head{padding-top:22px;padding-bottom:0}

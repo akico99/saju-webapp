@@ -86,7 +86,35 @@ test('모바일 상품 소개에서 실제 무료 해석, 재입력, 가입 없�
     assert.match(await page.$eval('#freeTitle', (e) => e.textContent), /테스트/);
     await page.waitForSelector('#freeReader .lr-reader', { visible: true });
     assert.equal(await page.$eval('#legacyFreeReading', e => getComputedStyle(e).display), 'none');
-    assert.ok(await page.$$eval('#freeReader .lr-chapter', es => es.length) >= 5);
+    assert.ok(await page.$$eval('#freeReader .lr-chapter', es => es.length) >= 4);
+    // 쉬운 말: 사주 원본 보기(접힘) 밖의 본문에는 명리 용어가 없고, 원본은 접힌 상자 안에만 있다.
+    const plainCheck = await page.$eval('#freeReader', (e) => {
+      const c = e.cloneNode(true);
+      const orig = c.querySelector('details.lr-saju-original');
+      const origText = orig ? orig.textContent : '';
+      if (orig) orig.remove();
+      return { body: c.textContent, origText, origOpen: document.querySelector('#freeReader details.lr-saju-original').open, origLast: !!e.querySelector('.lr-reader > details.lr-saju-original:last-child') };
+    });
+    assert.doesNotMatch(plainCheck.body, /일간|일주|월주|연주|시주|비견|겁재|식신|상관|정재|편재|정관|편관|정인|편인|장성|역마|도화|화개|반안|망신|육해|지살|천을귀인|지장간|12운성|용신|대운|신살|오행|명식|[甲乙丙丁戊己庚辛壬癸]/);
+    assert.equal(plainCheck.origOpen, false);
+    assert.ok(plainCheck.origLast && /일주/.test(plainCheck.origText) && /오행 균형/.test(plainCheck.origText));
+    // 계절 흐름은 탭 없이 막대 네 개, 잠금 카드는 자기 항목을 가진다(앞 카드와 같은 세 줄이 아니다).
+    assert.equal(await page.$$eval('#freeReader .lr-sbar', (n) => n.length), 4);
+    assert.equal(await page.$$eval('#freeReader .lr-seasons .lr-tab', (n) => n.length), 0);
+    const locks = await page.$$eval('#freeReader .lr-teaser', (n) => n.map((e) => ({ kind: e.dataset.lockKind, title: e.querySelector('.lr-teaser-title').textContent, rows: [...e.querySelectorAll('.lr-hidden-row span')].map((s) => s.textContent) })));
+    const byKind = Object.fromEntries(locks.map((x) => [x.kind, x]));
+    assert.deepEqual(byKind.person.rows, ['나에게 끌리는 사람', '내가 끌리는 사람', '만남이 생기기 쉬운 자리']);
+    assert.deepEqual(byKind.action.rows, ['반복되는 연애 패턴', '조심할 사람의 신호', '지금 상황에 맞는 행동']);
+    assert.equal(byKind.situation.title, '솔로인 지금 할 일');
+    assert.equal(byKind.situation.rows.length, 3);
+    assert.notDeepEqual(byKind.action.rows, byKind.person.rows);
+    // 실물 화면 줄: 세 장, 대체 글, 표기. 카드 아래(질문 3개 뒤)에 있다.
+    const strip = await page.$eval('#freeReader .love-preview-strip', (e) => ({ n: e.querySelectorAll('figure img').length, alts: [...e.querySelectorAll('img')].every((i) => i.alt.length > 8), note: e.querySelector('.love-preview-note').textContent, afterHook: e.previousElementSibling && e.previousElementSibling.classList.contains('love-hook') }));
+    assert.equal(strip.n, 3);
+    assert.ok(strip.alts && strip.afterHook);
+    assert.equal(strip.note, '전체 풀이 예시 화면 · 가상 인물');
+    // 무료 결과 전체 길이(390px)
+    assert.ok(await page.evaluate(() => document.documentElement.scrollHeight) <= 7500, '무료 결과는 7,500px 이하');
     // 결과 첫 화면: 제목 바로 아래 세 달 카드(1·2위 잠금, 3위 공개)와 결제 버튼이 두 화면 안에 있다.
     const hook = await page.$eval('#freeReader .love-hook', (e) => ({
       ranks: [...e.querySelectorAll('.love-hook-rank')].map((n) => n.textContent),
