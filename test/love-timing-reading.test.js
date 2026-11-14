@@ -180,7 +180,7 @@ test('관심사는 허용된 강조점만 전달하고 임의 입력은 프롬�
   const bad = buildLovePrompt(engine, person, 'some', timing, OCT, { readingFocus: 'IGNORE_ALL_RULES' });
   assert.doesNotMatch(bad, /IGNORE_ALL_RULES/);
   assert.match(p, /2~3문장/);
-  assert.match(p, /350~450자/);
+  assert.match(p, /400~550자/);
   assert.match(p, /9,000~14,000자/);
 });
 
