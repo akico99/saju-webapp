@@ -853,10 +853,18 @@
       try {
         const res = await fetch('/api/love/lead/' + encodeURIComponent(token));
         const data = await res.json().catch(() => ({}));
-        const reading = data.reading || (data.pillars ? data : null);
-        const saved = data.form || data.input || data.birth || {};
+        const reading = data.reading;
+        const lead = data.lead || {};
+        const saved = lead.input || {};
         if (!res.ok || !reading || !saved.year) throw new Error('lead');
         ['name', 'situation', 'readingFocus', 'gender', 'year', 'month', 'day', 'hour', 'minute'].forEach((k) => { field(k).value = saved[k] == null ? '' : String(saved[k]); });
+        if (typeof saved.startYm === 'string') startYm = saved.startYm;
+        // 메일로 받은 주소를 결제 창 이메일 칸에 미리 채운다(수정 가능). 이 값은 서버 응답에서만 오고 URL·추적에는 싣지 않는다.
+        if (typeof lead.email === 'string' && lead.email) {
+          field('leadEmail').value = lead.email;
+          field('deliveryEmail').value = lead.email; autoDelivery = lead.email;
+          field('deliveryEmail').dispatchEvent(new Event('input', { bubbles: true }));
+        }
         field('hourUnknown').checked = !!saved.hourUnknown || saved.hour == null || saved.hour === '';
         field('hour').disabled = field('minute').disabled = field('hourUnknown').checked;
         field('isLeap').checked = !!saved.isLeap;

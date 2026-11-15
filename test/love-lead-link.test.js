@@ -22,7 +22,8 @@ function startServer() {
 }
 
 const TOKEN = 'a'.repeat(40);
-const saved = { name: '서연', situation: 'some', readingFocus: '', gender: '여', calendar: '양력', isLeap: false, year: 1995, month: 5, day: 15, hour: null, minute: 0, hourUnknown: true };
+// 서버(GET /api/love/lead/:token)가 주는 입력과 같은 모양: 폼 필드명, 시각 모름은 빈 문자열.
+const saved = { situation: 'some', name: '서연', gender: '여', year: 1995, month: 5, day: 15, hour: '', minute: '', hourUnknown: true, calendar: '양력', isLeap: false, startYm: '2026-11' };
 
 test('메일 링크로 들어오면 입력 단계 없이 저장된 입력으로 무료 결과를 그리고, 만료 토큰은 안내만 보인다', { timeout: 60000 }, async () => {
   const { child, port } = await startServer();
@@ -34,16 +35,17 @@ test('메일 링크로 들어오면 입력 단계 없이 저장된 입력으로 
     for (const mode of ['ok', 'expired']) {
       const page = await browser.newPage();
       await page.setViewport({ width: 390, height: 844 });
-      const errors = []; const calls = [];
+      const errors = []; const calls = []; const bodies = [];
       page.on('pageerror', (e) => errors.push(e.message));
       await page.setRequestInterception(true);
       page.on('request', (req) => {
         const u = req.url();
         if (!u.startsWith(base)) return req.abort();
         calls.push(u.replace(base, ''));
+        bodies.push({ url: u.replace(base, ''), body: req.postData() || '' });
         if (u === base + '/api/love/lead/' + TOKEN) {
           return mode === 'ok'
-            ? req.respond({ status: 200, contentType: 'application/json', body: JSON.stringify({ reading, form: saved }) })
+            ? req.respond({ status: 200, contentType: 'application/json', body: JSON.stringify({ reading, lead: { email: 'fictional@naver.com', input: saved } }) })
             : req.respond({ status: 404, contentType: 'application/json', body: JSON.stringify({ error: '만료된 링크예요.' }) });
         }
         return req.continue();
@@ -60,6 +62,10 @@ test('메일 링크로 들어오면 입력 단계 없이 저장된 입력으로 
         // 결제 창도 저장된 입력으로 그대로 열린다.
         await page.click('#freeReader .love-hook-cta');
         assert.equal(await page.$eval('#checkoutSheet', (e) => e.open), true);
+        assert.equal(await page.$eval('#deliveryEmail', (e) => e.value), 'fictional@naver.com', '결제 창 이메일은 메일로 받은 주소로 미리 채워진다');
+        const intro = bodies.find((x) => x.url === '/api/love/intro');
+        if (intro) { assert.match(intro.body, /서연/); assert.ok(!/fictional/.test(intro.body), '개인 소개 요청에 이메일이 없다'); }
+        assert.ok(!/fictional/.test(page.url()));
       } else {
         await page.waitForSelector('#loveLanding .love-resume', { visible: true, timeout: 20000 });
         assert.equal(await page.$eval('#freeResult', (e) => e.classList.contains('hidden')), true);
