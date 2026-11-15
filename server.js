@@ -29,6 +29,12 @@ const deliverReports = () => deliverPendingLoveReports().catch(() => console.err
 deliverReports();
 setInterval(deliverReports, 60000).unref();
 
+// 무료 연애 분석 이메일(결과 메일·판매 메일) — 10분마다 대상을 확인한다. 판매 메일은 한국 시간 10~20시에만 나간다.
+const { deliverLoveLeadMails } = require('./src/jobs/deliverLoveLeads');
+const deliverLoveLeads = () => deliverLoveLeadMails().catch(() => console.error('[연애 메일] 발송 작업 실패'));
+setTimeout(deliverLoveLeads, 30 * 1000).unref();
+setInterval(deliverLoveLeads, 10 * 60 * 1000).unref();
+
 // DB 외부(관리자 메일함) 백업 — 부팅 2분 후 1회, 이후 24시간마다 반복. 배포가 잦은
 // 시기엔 배포할 때마다 최신 백업이 하나씩 쌓이고, 안정화된 뒤에는 하루 한 번씩 쌓인다.
 if (process.env.RESEND_API_KEY) {

@@ -116,7 +116,7 @@ const accountDeletionConfirmLimiter = makeLimiter({
 });
 
 module.exports = {
-  adminLoginLimiter, userLoginLimiter, signupLimiter, forgotPasswordLimiter,
+  makeLimiter, adminLoginLimiter, userLoginLimiter, signupLimiter, forgotPasswordLimiter,
   accountDeletionRequestLimiter, accountDeletionConfirmLimiter,
   paymentPrepareLimiter, resendVerificationLimiter, paymentStartLimiter
 };

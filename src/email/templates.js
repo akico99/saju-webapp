@@ -74,4 +74,4 @@ function accountDeletionCodeEmail({ code, ttlMinutes }) {
   `);
 }
 
-module.exports = { passwordResetEmail, verifyEmailEmail, accountDeletionCodeEmail };
+module.exports = { passwordResetEmail, verifyEmailEmail, accountDeletionCodeEmail, wrap, COLORS };

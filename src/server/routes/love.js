@@ -13,7 +13,7 @@ const { renderPdf } = require('../../pdf/renderPdf');
 const delivery = require('../../db/reportDelivery');
 const { deliverLoveReport } = require('../../email/loveReport');
 const { computeSaju } = require('../../engine/index');
-const { buildLovePreview, situationOf, validateBirth } = require('../../engine/loveTiming');
+const { buildLovePreview, buildLoveTiming, situationOf, validateBirth } = require('../../engine/loveTiming');
 const { generateLoveReading, toPlainText } = require('../../llm/loveTimingReading');
 const { recordForReview } = require('../reviewRecord');
 const { introHandler, loveFacts } = require('../../llm/freeIntro');
@@ -23,8 +23,12 @@ const points = require('../../db/points');
 const orders = require('../../db/orders');
 const { refundPurchase } = require('../refundPurchase');
 const { requireAuth } = require('../middleware/auth');
+const { makeLimiter } = require('../middleware/rateLimit');
 const { HttpError, handle } = require('../httpError');
 const loveTimingConfig = require('../../config/loveTiming');
+const loveLeads = require('../../db/loveLeads');
+const { sendResultNow } = require('../../jobs/deliverLoveLeads');
+const { handleUnsubscribe } = require('./loveUnsubscribe');
 
 const router = express.Router();
 
@@ -57,15 +61,83 @@ function parseBody(body) {
   return parsed;
 }
 
-router.post('/love/preview', (req, res) => {
+// 시간 주입(테스트) — 앱이 loveNow를 주면 그 시각을, 아니면 지금을 쓴다.
+const nowOf = (req) => (req.app.locals.loveNow ? req.app.locals.loveNow() : new Date());
+
+// 이메일을 받는 새 흐름(leadFlow 2)의 요청만 IP별로 제한한다 — 남의 주소로 메일을 쏟아 보내는 일을 막는다.
+const leadLimiter = makeLimiter({
+  max: 60, windowMs: 60 * 60 * 1000,
+  keyFn: (req) => 'love-lead:' + req.ip,
+  message: '요청이 너무 많아요. 잠시 뒤에 다시 시도해 주세요.'
+});
+const leadFlowLimit = (req, res, next) => (req.body && req.body.leadFlow === 2 ? leadLimiter(req, res, next) : next());
+
+// leadFlow 2 요청의 이메일·동의 검사. 실패하면 한국어 메시지로 던진다.
+function parseLead(body) {
+  const email = loveLeads.normalizeEmail(body.leadEmail);
+  if (!email) throw new Error('결과를 받을 이메일을 정확히 입력해 주세요.');
+  if (body.agreeLeadPrivacy !== true) throw new Error('개인정보 수집·이용에 동의해 주세요.');
+  return { email, marketing: body.agreeMarketing === true };
+}
+
+// 저장된 입력을 폼 요청과 같은 모양으로 되돌린다 — 메일 링크로 들어온 화면이 입력 단계를 건너뛰고 쓴다.
+function leadInput(row, birth) {
+  return {
+    situation: row.situation, name: row.name, gender: birth.gender,
+    year: birth.year, month: birth.month, day: birth.day,
+    hour: birth.hour == null ? '' : birth.hour, minute: birth.hour == null ? '' : birth.minute,
+    hourUnknown: birth.hour == null, calendar: birth.isLunar ? '음력' : '양력', isLeap: !!birth.isLeap,
+    startYm: row.start_ym
+  };
+}
+
+router.post('/love/preview', leadFlowLimit, (req, res) => {
   let parsed;
   try { parsed = parseBody(req.body); } catch (e) { return res.status(400).json({ error: e.message }); }
+  let leadIn = null;
+  if (req.body && req.body.leadFlow === 2) {
+    try { leadIn = parseLead(req.body); } catch (e) { return res.status(400).json({ error: e.message }); }
+  }
+  const now = nowOf(req);
+  let reading;
   try {
-    res.json({ reading: { ...buildLovePreview(parsed.birth, parsed.situation), chart: sajuChartHtml(computeSaju(parsed.birth)) } });
+    reading = { ...buildLovePreview(parsed.birth, parsed.situation, now), chart: sajuChartHtml(computeSaju(parsed.birth)) };
   } catch (e) {
-    res.status(400).json({ error: '명식 계산 실패: ' + e.message });
+    return res.status(400).json({ error: '명식 계산 실패: ' + e.message });
+  }
+  if (!leadIn) return res.json({ reading });
+  // 이메일은 부가 기능이다 — 저장이 실패해도 결과는 그대로 보여 준다.
+  let lead = { saved: false, emailQueued: false };
+  try {
+    const top1 = buildLoveTiming(computeSaju(parsed.birth), parsed.birth.gender, now).top3[0];
+    const saved = loveLeads.upsert({
+      email: leadIn.email, name: parsed.name, birth: parsed.birth, situation: parsed.situation,
+      startYm: reading.startYm, top1Ym: top1.year + '-' + String(top1.month).padStart(2, '0'), marketing: leadIn.marketing
+    }, now);
+    lead = { saved: true, emailQueued: saved.resultQueued };
+    if (saved.resultQueued && req.app.locals.loveMailInline !== false) setImmediate(() => sendResultNow(saved.id).catch(() => {}));
+  } catch (e) {
+    console.error('[연애 메일] 저장 실패');
+  }
+  res.json({ reading, lead });
+});
+
+// 메일의 '결과 다시 보기' 링크 — 저장된 입력으로 무료 결과를 다시 만든다. 없거나 지난 토큰은 404.
+router.get('/love/lead/:token', (req, res) => {
+  res.set({ 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' });
+  const now = nowOf(req);
+  const row = loveLeads.findByToken(req.params.token, now);
+  if (!row) return res.status(404).json({ error: '메일 링크가 만료되었거나 찾을 수 없어요.' });
+  try {
+    const birth = JSON.parse(row.birth_json);
+    const reading = { ...buildLovePreview(birth, row.situation, now), chart: sajuChartHtml(computeSaju(birth)) };
+    res.json({ reading, lead: { email: row.email, input: leadInput(row, birth) } });
+  } catch (e) {
+    res.status(404).json({ error: '메일 링크가 만료되었거나 찾을 수 없어요.' });
   }
 });
+
+router.get('/love/unsubscribe', handleUnsubscribe);
 
 // 무료 사주 분석의 개인 소개 — 미리보기와 같은 입력을 받는다. 캐시·한도·실패 처리는 freeIntro가 맡는다.
 router.post('/love/intro', introHandler((body) => {
@@ -104,6 +176,8 @@ async function startLove(userId, body) {
   let jobDir;
   try {
     delivery.create(jobId, email);
+    // 같은 이메일로 받은 무료 분석 판매 메일을 멈춘다(결제가 끝난 주문에서만 이 줄에 닿는다).
+    try { loveLeads.markPurchasedByEmail(email); } catch (_) { /* 부가 기능 */ }
     jobDir = path.join(OUTPUT_ROOT, jobId);
     fs.mkdirSync(jobDir, { recursive: true });
   } catch (e) {

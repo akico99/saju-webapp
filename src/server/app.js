@@ -119,6 +119,8 @@ app.get('/report-visuals.css', (req, res) => {
 // 연결한다). src/server/routes/banners.js 참고.
 app.use('/banners', express.static(path.join(__dirname, '..', '..', 'data', 'uploads', 'banners')));
 app.use('/api', generateRouter);
+// 광고 메일 수신 거부 — 연애 기능 스위치와 상관없이 항상 열려 있다.
+app.use(require('./routes/loveUnsubscribe'));
 app.use('/api', statusRouter);
 app.use('/api', downloadRouter);
 app.use('/api', compatRouter);
