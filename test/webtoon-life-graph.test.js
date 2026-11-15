@@ -17,7 +17,7 @@ test('무료 그래프 소개는 결과 보기로 연결되고 샘플 단위를 
   assert.match(html,/원본에서 1년 흐름 선택/);
   assert.match(html,/가상 인물/);
   assert.match(html,/원문 발췌·모바일 재배치/);
-  assert.doesNotMatch(html,/990원|3초|AI가 분석|맞춤 풀이|18,900원/);
+  assert.doesNotMatch(html,/990원|3초|AI가 분석|맞춤 풀이|29,900원/);
   assert.equal((html.match(/src="\/track.js"/g)||[]).length,1);
   assert.equal((html.match(/googletagmanager.com\/gtag\/js/g)||[]).length,1);
   assert.doesNotMatch(html,/fbq\(|kakaoPixel\(/);

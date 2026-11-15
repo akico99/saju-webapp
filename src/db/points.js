@@ -22,7 +22,7 @@ const PRICES = {
   // 택일 리포트 (LLM + PDF)
   date_select_moving: 3900, date_select_opening: 3900, date_select_wedding: 3900, date_select_birth: 3900,
   // 관계 · 전체
-  compat: 4900, full: 18900,
+  compat: 4900, full: 29900,
   // 연애 시기 리포트 — 구조 개편 첫 대표 상품. 공개 전에는 아래에서 SELLABLE에서 뺀다.
   [loveTimingConfig.productKey]: loveTimingConfig.priceKrw,
   // 재회(옛 990원 점수표 'reunion'과 섞이지 않게 새 키)·새 궁합(기존 4,900원 'compat'과 별개)
