@@ -100,9 +100,9 @@
     steps.forEach((s, k) => { s.hidden = k !== i; });
     wizardProgress.style.width = ((i + 1) / steps.length * 100) + '%';
     wizardProgress.parentElement.setAttribute('aria-valuenow', String(i + 1));
-    document.getElementById('wizardCount').textContent = String(i + 1).padStart(2, '0') + ' / 07';
+    document.getElementById('wizardCount').textContent = String(i + 1).padStart(2, '0') + ' / ' + String(steps.length).padStart(2, '0');
     if (i === 4) renderFocusChoices();
-    if (i === 6) renderReview();
+    if (i === 7) renderReview();
     backBtn.disabled = i === 0;
     stageError.hidden = true;
     const first = steps[i].querySelector('input:not([type=hidden]):not([type=checkbox])');
@@ -131,11 +131,33 @@
       const mi = field('minute').value;
       if (mi !== '' && !intIn(mi, 0, 59)) return '태어난 분은 0~59로 적어 주세요. 모르면 비워 두세요.';
     }
+    if (i === 6) {
+      const em = field('leadEmail').value.trim();
+      if (!em || em.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) return '이메일을 정확히 입력해 주세요. 결과를 보낼 주소예요.';
+      if (!field('agreeLeadPrivacy').checked) return '[필수] 개인정보 수집·이용에 동의해 주세요. 동의하지 않으면 무료 분석을 볼 수 없어요.';
+    }
     return null;
   }
+  // 결과 받을 이메일을 결제 창의 PDF 받을 이메일 칸에 미리 채운다. 사용자가 직접 고친 값은 덮어쓰지 않는다.
+  let autoDelivery = '';
+  function syncDeliveryFromLead() {
+    const d = field('deliveryEmail'), v = field('leadEmail').value.trim();
+    if (!v || (d.value && d.value !== autoDelivery)) return;
+    d.value = v; autoDelivery = v;
+    d.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+  form.querySelectorAll('[data-lead-domain]').forEach((b) => b.addEventListener('click', () => {
+    const input = field('leadEmail'), local = input.value.trim().split('@')[0];
+    if (local) input.value = local + '@' + b.dataset.leadDomain;
+    input.focus();
+  }));
   function next() {
     const err = validate(step);
     if (err) return stageFail(err);
+    if (step === 6) {
+      syncDeliveryFromLead();
+      if (window.SoTrack && SoTrack.emailSubmit) SoTrack.emailSubmit('love_timing');
+    }
     if (step < steps.length - 1) show(step + 1);
   }
 
@@ -181,7 +203,8 @@
       ['태어난 시각', field('hourUnknown').checked ? '시각 모름' : field('hour').value.padStart(2,'0') + ':' + (field('minute').value || '0').padStart(2,'0'), 2],
       ['지금의 연애', SITUATION_LABEL[field('situation').value] || '', 3],
       ['먼저 볼 이야기', focusLabel(), 4],
-      ['이름', name || '입력하지 않음', 5]
+      ['이름', name || '입력하지 않음', 5],
+      ['결과 받을 이메일', field('leadEmail').value.trim(), 6]
     ];
     const box = document.getElementById('wizardReview'); box.replaceChildren();
     rows.forEach(([label, value, to]) => {
@@ -439,16 +462,29 @@
     toTop();
   }
 
+  // 무료 분석 요청 본문. 이메일 단계를 거친 경우에만 leadFlow를 싣는다(없으면 서버는 이전 방식으로 처리한다).
+  // 이메일은 이 요청 본문에만 있고 URL·추적 이벤트·로그로 보내지 않는다. 결제용 칸(deliveryEmail)은 따로 보낸다.
+  function previewPayload(b) {
+    const p = Object.assign({}, b);
+    delete p.deliveryEmail; delete p.deliveryConsent;
+    const email = field('leadEmail').value.trim();
+    if (email && field('agreeLeadPrivacy').checked) {
+      Object.assign(p, { leadFlow: 2, leadEmail: email, agreeLeadPrivacy: true, agreeMarketing: field('agreeMarketing').checked });
+    }
+    return p;
+  }
   async function preview(b) {
     const btn = document.getElementById('previewBtn');
     btn.disabled = true;
     btn.textContent = '당신의 사주를 읽고 있어요…';
     form.setAttribute('aria-busy', 'true');
     try {
-      const res = await fetch('/api/love/preview', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) });
+      const res = await fetch('/api/love/preview', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(previewPayload(b)) });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || '무료 사주 분석을 만들지 못했어요. 잠시 뒤 다시 시도해 주세요.');
       renderFree(data.reading, b);
+      // 결과 요약 메일을 보냈다면 알려 준다. 메일은 부가라서 실패해도 결과는 그대로 보여 준다.
+      document.getElementById('leadNote').classList.toggle('hidden', !(data.lead && data.lead.emailQueued === true));
       return true;
     } catch (e) {
       stageFail(e.message);
@@ -809,6 +845,32 @@
       setCalendar(b.calendar || '양력');
     };
     syncButtons(body());
+    // 메일 링크(love.html?lead=토큰)로 들어오면 서버에 저장된 입력으로 무료 결과를 바로 다시 그린다.
+    // 입력 단계와 이메일 단계는 건너뛴다. 토큰이 없거나 만료되면 처음 화면에 안내만 붙인다.
+    const leadToken = new URLSearchParams(location.search).get('lead');
+    if (leadToken && /^[A-Za-z0-9_-]{16,128}$/.test(leadToken)) openLeadLink(leadToken);
+    async function openLeadLink(token) {
+      try {
+        const res = await fetch('/api/love/lead/' + encodeURIComponent(token));
+        const data = await res.json().catch(() => ({}));
+        const reading = data.reading || (data.pillars ? data : null);
+        const saved = data.form || data.input || data.birth || {};
+        if (!res.ok || !reading || !saved.year) throw new Error('lead');
+        ['name', 'situation', 'readingFocus', 'gender', 'year', 'month', 'day', 'hour', 'minute'].forEach((k) => { field(k).value = saved[k] == null ? '' : String(saved[k]); });
+        field('hourUnknown').checked = !!saved.hourUnknown || saved.hour == null || saved.hour === '';
+        field('hour').disabled = field('minute').disabled = field('hourUnknown').checked;
+        field('isLeap').checked = !!saved.isLeap;
+        setCalendar(saved.calendar || (saved.isLunar ? '음력' : '양력'));
+        const b = body();
+        syncButtons(b);
+        renderFree(reading, b);
+        document.getElementById('leadNote').classList.add('hidden');
+      } catch (e) {
+        const note = el('p', 'love-resume', '메일 링크가 만료되었거나 찾을 수 없어요. 아래에서 무료 분석을 새로 받아 보세요.');
+        note.setAttribute('role', 'alert');
+        landing.prepend(note);
+      }
+    }
     // 로그인하고 돌아오면 pay-flow.js가 load 직후 입력값을 복원하고 폼 안에 안내문(.form-resume-note)을
     // 남긴다. 그 표시가 있을 때만 단계를 다시 묻지 않고 무료 사주 분석을 바로 연다.
     window.addEventListener('load', () => setTimeout(async () => {

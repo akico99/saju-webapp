@@ -37,6 +37,8 @@ test('모바일 상품 소개에서 실제 무료 해석, 재입력, 가입 없�
     page.on('pageerror', (error) => errors.push(error.message));
     await page.setRequestInterception(true);
     page.on('request', (req) => { if(req.url() === base + '/api/pay/start') purchases++; return req.url().startsWith(base) ? req.continue() : req.abort(); });
+    const seen = [];
+    page.on('request', (req) => { seen.push({ url: req.url(), body: req.postData() || '' }); });
     // 상품 목록 시안은 메인(/)으로 옮겨 갔다. 메인의 넘침을 보고, 상황별 진입 주소로 바로 들어간다.
     await page.goto(base + '/', { waitUntil: 'networkidle0' });
     for (const width of [320, 390, 1280]) {
@@ -81,6 +83,33 @@ test('모바일 상품 소개에서 실제 무료 해석, 재입력, 가입 없�
     await page.click('[data-focus="timing"]');
     await page.type('[name="name"]', '테스트');
     await page.click('[data-step="5"] [data-next]');
+    // 결과 전 이메일 단계: 이메일·필수 동의 없이는 못 넘어가고, 건너뛰기가 없다.
+    await page.waitForSelector('[data-step="6"]:not([hidden]) input[name="leadEmail"]', { visible: true });
+    assert.match(await page.$eval('#wizardCount', (e) => e.textContent), /^07 \/ 08$/);
+    assert.equal(await page.$('[data-step="6"] .wizard-skip'), null, '이메일 단계에는 건너뛰기가 없다');
+    const stepText = await page.$eval('[data-step="6"]', (e) => e.textContent);
+    assert.ok(stepText.includes('[필수] 개인정보 수집·이용: 이메일·이름(별명)·생년월일시·성별·연애 상황을 무료 분석 결과 전달과 메일 링크로 결과 다시 보기에 씁니다. 30일 뒤 삭제합니다. 동의하지 않으면 무료 분석을 볼 수 없어요.'));
+    assert.ok(stepText.includes('[선택] 광고성 정보 수신: 1위 달 시작 알림과 전체 풀이 안내를 이메일로 받아요. 언제든 메일 아래 링크로 그만 받을 수 있어요. 동의하면 위 정보를 수신 거부 또는 마지막 알림 뒤 30일까지(최대 13개월) 보관합니다.'));
+    assert.ok(stepText.includes('만 14세 이상만 이용할 수 있어요.'));
+    assert.equal(await page.$eval('input[name="agreeMarketing"]', (e) => e.checked), false, '광고성 정보 수신은 기본으로 체크되어 있지 않다');
+    await page.click('[data-step="6"] [data-next]');
+    assert.match(await page.$eval('#stageError', (e) => e.textContent), /이메일/);
+    await page.type('input[name="leadEmail"]', 'not-an-email');
+    await page.click('[data-step="6"] [data-next]');
+    assert.match(await page.$eval('#stageError', (e) => e.textContent), /이메일을 정확히/);
+    await page.$eval('input[name="leadEmail"]', (e) => { e.value = ''; });
+    await page.type('input[name="leadEmail"]', 'fictional');
+    await page.click('[data-lead-domain="naver.com"]');
+    assert.equal(await page.$eval('input[name="leadEmail"]', (e) => e.value), 'fictional@naver.com');
+    await page.click('[data-step="6"] [data-next]');
+    assert.match(await page.$eval('#stageError', (e) => e.textContent), /개인정보 수집·이용에 동의/);
+    assert.equal(await page.$eval('[data-step="6"]', (e) => e.hidden), false, '동의 없이는 다음 단계로 가지 않는다');
+    await page.click('input[name="agreeLeadPrivacy"]');
+    await page.screenshot({ path: path.join(os.tmpdir(), 'love-email-step.png'), fullPage: false });
+    await page.click('[data-step="6"] [data-next]');
+    await page.waitForSelector('[data-step="7"]:not([hidden]) #previewBtn', { visible: true });
+    assert.ok(await page.evaluate(() => sessionStorage.getItem('so_email_love_timing')), 'EmailSubmit은 이메일 단계를 통과할 때 한 번 기록된다');
+    assert.ok((await page.$eval('#wizardReview', (e) => e.textContent)).includes('fictional@naver.com'));
     await page.click('#previewBtn');
     await page.waitForFunction(() => !document.getElementById('freeResult').classList.contains('hidden'));
     assert.match(await page.$eval('#freeTitle', (e) => e.textContent), /테스트/);
@@ -174,6 +203,7 @@ test('모바일 상품 소개에서 실제 무료 해석, 재입력, 가입 없�
     await page.click('[data-situation="single"]');
     await page.click('[data-focus="timing"]');
     await page.click('[data-step="5"] [data-next]');
+    await page.click('[data-step="6"] [data-next]');
     await page.click('#previewBtn');
     await page.waitForFunction(() => !document.getElementById('freeResult').classList.contains('hidden'), { timeout: 8000 }).catch(async (e) => {
       const state = await page.evaluate(() => ({ steps: [...document.querySelectorAll('.stage-step')].map((s) => s.hidden), err: document.getElementById('stageError').textContent, errHidden: document.getElementById('stageError').hidden, stage: document.getElementById('stage').className, free: document.getElementById('freeResult').className, body: document.body.className }));
@@ -198,8 +228,21 @@ test('모바일 상품 소개에서 실제 무료 해석, 재입력, 가입 없�
     assert.equal(purchases,0,'구매 확인 전에는 유료 API를 호출하면 안 됨');
     await page.click('#checkoutConfirm');
     assert.equal(purchases,0,'이메일과 동의 없이는 구매하지 않는다');
-    await page.type('#deliveryEmail','fictional@example.test');
-    assert.match(await page.$eval('#deliveryEcho',e=>e.textContent),/fictional@example\.test/);
+    assert.equal(await page.$eval('#deliveryEmail', (e) => e.value), 'fictional@naver.com', '결제 창 이메일 칸은 결과 받을 이메일로 미리 채워진다');
+    assert.match(await page.$eval('#deliveryEcho',e=>e.textContent),/fictional@naver\.com/);
+    // 이메일은 무료 분석 요청 본문에만 있고, URL·다른 요청에는 없다. 구버전 필드 없이도 결과는 이미 그려졌다.
+    const previewReq = seen.find((r) => r.url === base + '/api/love/preview');
+    const sent = JSON.parse(previewReq.body);
+    assert.equal(sent.leadFlow, 2);
+    assert.equal(sent.leadEmail, 'fictional@naver.com');
+    assert.equal(sent.agreeLeadPrivacy, true);
+    assert.equal(sent.agreeMarketing, false);
+    assert.equal(sent.deliveryEmail, undefined);
+    for (const r of seen) {
+      assert.ok(!/fictional/.test(r.url), '이메일이 URL에 있다: ' + r.url);
+      if (r.url !== base + '/api/love/preview' && r.url !== base + '/api/pay/start') assert.ok(!/fictional/.test(r.body), '이메일이 다른 요청에 실렸다: ' + r.url);
+    }
+    assert.ok(!/fictional/.test(page.url()));
     await page.click('#consentItems summary');
     await page.click('#deliveryConsent');
     await page.click('#checkoutConfirm');

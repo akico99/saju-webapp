@@ -94,8 +94,8 @@
       <span class="wizard-brand">여울의 연애 이야기</span>
       <button type="button" id="closeInput" aria-label="상품 소개로 돌아가기">×</button>
     </div>
-    <div class="wizard-progress" role="progressbar" aria-label="입력 진행" aria-valuemin="1" aria-valuemax="7" aria-valuenow="1"><span id="wizardProgress"></span></div>
-    <p class="wizard-count" id="wizardCount">01 / 07</p>
+    <div class="wizard-progress" role="progressbar" aria-label="입력 진행" aria-valuemin="1" aria-valuemax="8" aria-valuenow="1"><span id="wizardProgress"></span></div>
+    <p class="wizard-count" id="wizardCount">01 / 08</p>
     <form id="loveForm" class="stage-body" novalidate>
       <input type="hidden" name="situation" value="">
       <input type="hidden" name="gender" value="">
@@ -155,9 +155,24 @@
         <legend class="wizard-sr">이름 또는 별명</legend>
         <p class="wizard-kicker">거의 다 왔어요</p>
         <p class="bubble"><span class="q">뭐라고 불러 드릴까요?</span><small>당신의 풀이에 적을 이름이에요.<br>별명도, 빈칸도 괜찮아요.</small></p>
-        <div class="answer"><input type="text" name="name" maxlength="20" placeholder="이름 또는 별명" autocomplete="nickname" aria-label="이름 또는 별명"><button type="button" class="go" data-next>입력한 내용 확인하기</button></div>
+        <div class="answer"><input type="text" name="name" maxlength="20" placeholder="이름 또는 별명" autocomplete="nickname" aria-label="이름 또는 별명"><button type="button" class="go" data-next>다음</button></div>
       </fieldset>
       <fieldset class="stage-step" data-step="6" hidden>
+        <legend class="wizard-sr">결과 받을 이메일</legend>
+        <p class="wizard-kicker">결과를 보기 전, 마지막이에요</p>
+        <p class="bubble"><span class="q">결과를 받을 이메일을 알려 주세요.</span><small>무료 분석 보기 전에 이메일만 확인할게요.<br>결과를 메일로도 보내 드리고, 메일 링크로 언제든 다시 볼 수 있어요.</small></p>
+        <div class="answer">
+          <input type="email" name="leadEmail" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" maxlength="254" placeholder="you@example.com" aria-label="결과 받을 이메일" aria-describedby="leadHelp">
+          <div class="email-domains" aria-label="메일 주소 끝 고르기"><button type="button" data-lead-domain="naver.com">@naver.com</button><button type="button" data-lead-domain="gmail.com">@gmail.com</button><button type="button" data-lead-domain="kakao.com">@kakao.com</button><button type="button" data-lead-domain="daum.net">@daum.net</button></div>
+          <div class="lead-consent">
+            <label class="lead-agree"><input type="checkbox" name="agreeLeadPrivacy"><span>[필수] 개인정보 수집·이용: 이메일·이름(별명)·생년월일시·성별·연애 상황을 무료 분석 결과 전달과 메일 링크로 결과 다시 보기에 씁니다. 30일 뒤 삭제합니다. 동의하지 않으면 무료 분석을 볼 수 없어요. <a href="/privacy.html" target="_blank" rel="noopener">자세히</a></span></label>
+            <label class="lead-agree"><input type="checkbox" name="agreeMarketing"><span>[선택] 광고성 정보 수신: 1위 달 시작 알림과 전체 풀이 안내를 이메일로 받아요. 언제든 메일 아래 링크로 그만 받을 수 있어요. 동의하면 위 정보를 수신 거부 또는 마지막 알림 뒤 30일까지(최대 13개월) 보관합니다.</span></label>
+          </div>
+          <button type="button" class="go" data-next>다음</button>
+        </div>
+        <p class="wizard-footnote" id="leadHelp">만 14세 이상만 이용할 수 있어요.</p>
+      </fieldset>
+      <fieldset class="stage-step" data-step="7" hidden>
         <legend class="wizard-sr">입력 확인</legend>
         <p class="wizard-kicker">이제 당신의 이야기를 펼칠게요</p>
         <p class="bubble"><span class="q" id="reviewTitle">이 정보로 읽어 드릴까요?</span><small>생년월일과 시각을 한 번 더 확인해 주세요.</small></p>
@@ -174,6 +189,7 @@
       <span id="foldedText"></span>
       <button type="button" id="redoBtn">다시 입력</button>
     </div>
+    <p class="love-resume hidden" id="leadNote" role="status">결과 요약을 입력하신 이메일로도 보냈어요. 메일의 링크로 언제든 다시 볼 수 있어요.</p>
     <p class="love-resume hidden" id="resumeNote" role="status">로그인 전에 보던 무료 사주 분석을 다시 열었어요. 아래에서 이어서 결제할 수 있어요.</p>
 
     <div id="freeReader" class="hidden"></div>

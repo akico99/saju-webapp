@@ -35,6 +35,20 @@ test('카카오 스크립트가 대기 중이어도 Meta와 GA의 상품·무료
   assert.deepEqual(b.kakao, []);
 });
 
+test('이메일 단계 통과(EmailSubmit/email_submit)는 세션당 한 번이고 이메일 값을 싣지 않는다', async () => {
+  const b = await browser({ config: { ...CONFIG, kakaoPixelId: null } });
+  assert.equal(typeof b.track.emailSubmit, 'function');
+  b.track.emailSubmit('love_timing', 'person@example.test'); b.track.emailSubmit('love_timing');
+  assert.equal(b.ga.filter(e => e[1] === 'email_submit').length, 1);
+  assert.equal(b.meta.filter(e => e[1] === 'EmailSubmit').length, 1);
+  assert.equal(b.meta.find(e => e[1] === 'EmailSubmit')[0], 'trackCustom');
+  assert.equal(b.ga.find(e => e[1] === 'email_submit')[2].creative_id, 'L1_timing_v4');
+  const everything = JSON.stringify([b.ga, b.meta, [...b.local], [...b.session]]);
+  assert.ok(!/person@example|@/.test(everything.replace(/"[^"]*mail\.com"/g, '')), '이메일 값이 이벤트·저장소에 없다');
+  b.track.emailSubmit(); // 상품 키 없으면 무시
+  assert.equal(b.ga.filter(e => e[1] === 'email_submit').length, 1);
+});
+
 test('늦게 로드된 카카오는 대기한 행동을 한 번만 받고 다른 플랫폼은 중복되지 않는다', async () => {
   const b = await browser();
   b.loadKakao(); b.loadKakao();

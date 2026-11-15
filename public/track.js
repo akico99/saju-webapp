@@ -225,6 +225,14 @@
       meta('trackCustom', 'InputStart', { content_ids: [key] });
     });
   }
+  /* 무료 분석 직전 이메일 단계를 통과했을 때(EmailSubmit). 이메일 주소는 받지도 싣지도 않는다. 세션당 한 번. */
+  function emailSubmit(key) {
+    if (!key || !onceInSession('so_email_' + key)) return;
+    when(function () {
+      ga('event', 'email_submit', { item_id: key });
+      meta('trackCustom', 'EmailSubmit', { content_ids: [key] });
+    });
+  }
   /* from: 구매 창을 연 버튼 위치. 브라우저 세션 첫 클릭이며 고유 사람 수를 뜻하지 않는다. */
   function unlockClick(key, from) {
     if (!key || !onceInSession('so_unlock_' + key)) return;
@@ -246,6 +254,6 @@
     });
   }
 
-  window.SoTrack = { attribution: attribution, viewItem: viewItem, beginCheckout: beginCheckout, addPaymentInfo: addPaymentInfo, purchase: purchase, signUp: signUp, inputStart: inputStart, freeResult: freeResult, unlockClick: unlockClick, readDepth: readDepth };
+  window.SoTrack = { attribution: attribution, viewItem: viewItem, beginCheckout: beginCheckout, addPaymentInfo: addPaymentInfo, purchase: purchase, signUp: signUp, inputStart: inputStart, emailSubmit: emailSubmit, freeResult: freeResult, unlockClick: unlockClick, readDepth: readDepth };
 })();
 

@@ -301,3 +301,15 @@ body.love-page .lr-plain h3.lr-contents-title{font-size:20px;margin:8px 0 16px}
 body.love-page .lr-plain .lr-content-card{margin-bottom:10px}
 body.love-page .lr-plain .lr-content-copy{padding:14px 16px}
 body.love-page .lr-plain [data-chapter-id=whole-reading]>.lr-head{padding-top:22px;padding-bottom:0}
+
+/* ===== 결과 전 이메일 단계 ===== */
+.love-page .answer input[type=email]{width:100%;background:transparent;border:0;border-bottom:1px solid #766645;border-radius:0;height:64px;color:#fcf7ec;box-shadow:none;padding:8px 2px;text-align:left;font-size:21px;min-width:0;margin:0;font-family:inherit;outline:none}
+.love-page .answer input[type=email]::placeholder{color:#867c67;font-size:19px}
+.love-page .answer input[type=email]:focus{border-color:#efcf8f;box-shadow:none}
+.love-page .lead-consent{display:grid;gap:10px;margin:16px 0 18px}
+.love-page .lead-agree{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.65;color:#d5cec0;text-align:left}
+.love-page .lead-agree input{flex:none;width:20px;height:20px;margin:2px 0 0;accent-color:#dcb466}
+.love-page .lead-agree a{color:#ede2cc}
+body.love-page .lead-agree{font-size:14px}
+body.love-page .lead-agree span{word-break:keep-all;overflow-wrap:break-word}
+body.love-page #leadNote{margin-top:10px}
