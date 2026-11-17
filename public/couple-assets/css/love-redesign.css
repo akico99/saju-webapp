@@ -313,3 +313,8 @@ body.love-page .lr-plain [data-chapter-id=whole-reading]>.lr-head{padding-top:22
 body.love-page .lead-agree{font-size:14px}
 body.love-page .lead-agree span{word-break:keep-all;overflow-wrap:break-word}
 body.love-page #leadNote{margin-top:10px}
+body.love-page .lr-plain-lock{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:2px 0 0;padding-top:8px;border-top:1px dashed #2c5351;font-size:14px;line-height:1.5;color:#e8b579}
+body.love-page .lr-plain-lock i{font-style:normal;letter-spacing:.12em;color:#c4baa5;filter:blur(3px);user-select:none}
+body.love-page .lr-reader .free-intro-lock{margin-top:12px;padding:14px;border-radius:10px;background:#142726;border:1px dashed #356261;text-align:left}
+body.love-page .lr-reader .free-intro-lock-text{margin:0 0 10px;padding:0;font-size:15px;line-height:1.65;color:#f0eade;text-align:left;word-break:keep-all}
+body.love-page .lr-reader button.free-intro-lock-btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:8px 18px;border-radius:999px;border:1px solid #90794b;background:#090f0f;color:#fcf6eb;font:700 14px/1.4 inherit;cursor:pointer;margin:0;width:auto}

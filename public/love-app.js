@@ -289,8 +289,8 @@
     box.appendChild(list);
     const offer = el('div', 'love-hook-offer');
     offer.append(el('p', 'love-hook-free-scope', third && third.label
-      ? '지금 보는 매력·연애 습관·계절 흐름과 3위 달은 무료예요.'
-      : '지금 보는 매력·연애 습관·계절 흐름은 무료예요.'));
+      ? '지금 보는 매력·연애 습관 요약·계절 흐름과 3위 달은 무료예요.'
+      : '지금 보는 매력·연애 습관 요약·계절 흐름은 무료예요.'));
     offer.append(el('h4', null, '전체 풀이에서 답해 드려요'));
     const includes = el('ul', 'love-hook-includes');
     [
@@ -350,7 +350,7 @@
   // 세 달 카드(맨 위), 실물 화면 3장, AI 개인 소개 칸. 소개는 나중에 채워지고, 실패하면 칸이 사라진다.
   function addFreeExtras(r, b) {
     if (!window.FreeExtras) return;
-    const intro = FreeExtras.introCard('/api/love/intro', { ...b, deliveryEmail: undefined }, { title: (b.name ? b.name + '님은' : '당신은') + ' 이런 사람이에요' });
+    const intro = FreeExtras.introCard('/api/love/intro', { ...b, deliveryEmail: undefined }, { title: (b.name ? b.name + '님은' : '당신은') + ' 이런 사람이에요', firstOnly: { kind: 'intro', text: "이 매력이 연애에서 어디서 엇갈리는지는 전체 풀이의 '반복되기 쉬운 연애 패턴'에서 이어 읽어요", button: '이어 읽기', onUnlock: openCheckout } });
     const reader = document.querySelector('#freeReader:not(.hidden) .lr-reader');
     if (reader) {
       const lead = reader.querySelector('.lr-lead');

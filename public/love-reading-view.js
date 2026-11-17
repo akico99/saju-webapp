@@ -261,7 +261,8 @@ function lockedPreview(title, description, type, unlock, rows) {
       var card = el('article', 'lr-plain-card');
       card.appendChild(el('h3', 'lr-plain-card-title', it.title));
       var a = el('p', 'lr-plain-row'); a.appendChild(el('b', null, '이렇게 보여요')); a.appendChild(el('span', null, it.shows)); card.appendChild(a);
-      var c = el('p', 'lr-plain-row is-caution'); c.appendChild(el('b', null, '조심할 점')); c.appendChild(el('span', null, it.caution)); card.appendChild(c);
+      // 조심할 점 본문은 전체 풀이로 남기고, 실제 글 없이 흐린 점 장식만 둔다.
+      var c = el('p', 'lr-plain-lock'); c.appendChild(document.createTextNode('조심할 점 · 전체 풀이')); var dots = el('i', null, '●●●●●'); dots.setAttribute('aria-hidden', 'true'); c.appendChild(dots); card.appendChild(c);
       box.appendChild(card);
     });
     return box;

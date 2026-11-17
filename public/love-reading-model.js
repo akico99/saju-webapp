@@ -104,7 +104,7 @@
     const base = charm.base && charm.base.text;
     const habitBlocks = [];
     if (clean(habit.headline)) habitBlocks.push({ type:'prose', text:'**' + clean(habit.headline) + '**' });
-    (Array.isArray(habit.lines) ? habit.lines : []).forEach(t => { if (clean(t)) habitBlocks.push({ type:'prose', text:clean(t) }); });
+    // 무료에는 굵은 요약 한 문장만 둔다. 이어지는 설명 줄(habit.lines)은 전체 풀이의 반복되기 쉬운 연애 패턴으로 남긴다.
     const chapters = [
       { id:'charm', plain:true, title:'당신이 가진 연애의 매력', displayTitle:'사람들이 당신에게\n끌리는 이유', featured:c0.focus === 'person', blocks:splitBlocks(base), cards:Array.isArray(charmPlain.items) ? charmPlain.items : [], cardsTitle:clean(charmPlain.headline) },
       { id:'balance', plain:true, title:'내 연애 습관', displayTitle:'사랑할 때,\n나는 어떤 사람일까요?', featured:c0.focus === 'pattern', blocks:habitBlocks },

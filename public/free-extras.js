@@ -24,7 +24,8 @@
     return box;
   }
 
-  /** url: '/api/love/intro', body: 미리보기와 같은 입력, opts: { title, variant, loading } */
+  /** url: '/api/love/intro', body: 미리보기와 같은 입력, opts: { title, variant, loading, firstOnly: { text, button, kind, onUnlock } }
+      firstOnly를 주면 첫 문단만 그리고 나머지 문단은 만들지 않는다. 그 자리에 잠금 줄(text)과 버튼(button)을 둔다. */
   function introCard(url, body, opts) {
     opts = opts || {};
     const fr = opts.variant === 'fr';
@@ -43,7 +44,19 @@
         const text = data && typeof data.intro === 'string' ? data.intro.trim() : '';
         if (!text) throw new Error('empty');
         loading.remove();
-        text.split(/\n\s*\n/).forEach((p) => box.appendChild(el('p', fr ? 'love-text' : 'lr-pt', p)));
+        const paras = text.split(/\n\s*\n/);
+        const lock = opts.firstOnly;
+        (lock ? paras.slice(0, 1) : paras).forEach((p) => box.appendChild(el('p', fr ? 'love-text' : 'lr-pt', p)));
+        if (lock) {
+          const row = el('div', 'free-intro-lock');
+          row.dataset.lockKind = lock.kind || 'intro';
+          row.appendChild(el('p', 'free-intro-lock-text', lock.text));
+          const btn = el('button', 'free-intro-lock-btn', lock.button || '이어 읽기');
+          btn.type = 'button';
+          if (typeof lock.onUnlock === 'function') btn.addEventListener('click', lock.onUnlock);
+          row.appendChild(btn);
+          box.appendChild(row);
+        }
         box.appendChild(el('p', fr ? 'love-small' : 'lr-note', '타고난 사주로 읽은 성향이에요. 정해진 운명이 아니라 나를 이해하는 참고로 읽어 주세요.'));
         box.removeAttribute('aria-busy');
       })
