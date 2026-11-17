@@ -201,8 +201,33 @@ function deleteExpired(now = new Date()) {
   return db.prepare('DELETE FROM love_leads WHERE delete_after <= ?').run(now.toISOString()).changes;
 }
 
+/* 운영 점검용 집계 — 숫자만 돌려준다(이메일·이름·토큰 없음). 현재 저장돼 있는 행 기준이다(보관 기한이 지나 삭제된 행은 빠진다).
+   all은 전체, day는 최근 24시간에 일어난 일이다. 실패(재시도 한도 도달)는 시각을 따로 두지 않아 24시간 칸은 최근 24시간에 저장된 행 중 한도에 닿은 수다. */
+function stats(now = new Date()) {
+  const since = iso(now.getTime() - DAY);
+  const count = (col) => ({
+    all: db.prepare('SELECT COUNT(*) AS n FROM love_leads WHERE ' + col + ' IS NOT NULL').get().n,
+    day: db.prepare('SELECT COUNT(*) AS n FROM love_leads WHERE ' + col + ' > ?').get(since).n
+  });
+  const failed = {
+    all: db.prepare('SELECT COUNT(*) AS n FROM love_leads WHERE mail_fail_count >= ?').get(MAX_FAILS).n,
+    day: db.prepare('SELECT COUNT(*) AS n FROM love_leads WHERE mail_fail_count >= ? AND created_at > ?').get(MAX_FAILS, since).n
+  };
+  return {
+    saved: { all: db.prepare('SELECT COUNT(*) AS n FROM love_leads').get().n, day: db.prepare('SELECT COUNT(*) AS n FROM love_leads WHERE created_at > ?').get(since).n },
+    marketing: count('agree_marketing_at'),
+    result: count('result_mail_sent_at'),
+    d1: count('followup1_sent_at'),
+    d3: count('followup3_sent_at'),
+    top1: count('top1_alert_sent_at'),
+    unsubscribed: count('unsubscribed_at'),
+    purchased: count('purchased_at'),
+    failed
+  };
+}
+
 module.exports = {
   normalizeEmail, inputKey, upsert, get, findByToken, unsubscribe, markPurchasedByEmail, sweepPurchases,
-  mailCandidates, claim, markSent, markFailed, release, deleteExpired, monthStartMs, deleteAfterFor,
+  mailCandidates, claim, markSent, markFailed, release, deleteExpired, monthStartMs, deleteAfterFor, stats,
   SENT_COLUMNS, MAX_FAILS, TOKEN_RE
 };

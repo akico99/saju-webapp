@@ -8,6 +8,7 @@ const fs = require('fs');
 const zlib = require('zlib');
 const db = require('../db/index');
 const { sendEmail } = require('../email/resend');
+const loveLeads = require('../db/loveLeads');
 
 const BACKUP_EMAIL_TO = process.env.BACKUP_EMAIL_TO || 'sooky2001@gmail.com';
 const ENVELOPE_VERSION = 1;
@@ -60,6 +61,22 @@ function decryptBackupAttachment(content, keyValue) {
   return zlib.gunzipSync(Buffer.concat([decipher.update(ciphertext), decipher.final()]));
 }
 
+// 무료 분석 이메일 집계 — 숫자만 싣는다. 집계가 실패해도 백업 발송은 막지 않는다.
+const LEAD_ROWS = [
+  ['saved', '저장 행 수(무료 분석 이메일)'], ['marketing', '광고 동의'], ['result', '결과 메일 발송'],
+  ['d1', 'D+1 메일 발송'], ['d3', 'D+3 메일 발송'], ['top1', '1위 달 알림 발송'],
+  ['unsubscribed', '수신 거부'], ['purchased', '구매 표시'], ['failed', '발송 실패(재시도 한도 도달)']
+];
+function leadStatsHtml(options = {}) {
+  try {
+    const s = (options.leadStats || loveLeads.stats)(options.now || new Date());
+    const rows = LEAD_ROWS.map(([k, label]) => '<tr><td>' + label + '</td><td align="right">' + Number(s[k].all) + '</td><td align="right">' + Number(s[k].day) + '</td></tr>').join('');
+    return '<p>무료 분석 이메일 집계(개인정보 없음, 현재 저장된 행 기준)</p><table border="1" cellpadding="4" cellspacing="0"><tr><th>항목</th><th>전체</th><th>최근 24시간</th></tr>' + rows + '</table>';
+  } catch (_) {
+    return '<p>무료 분석 이메일 집계 실패</p>';
+  }
+}
+
 async function backupDbToEmail(options = {}) {
   const env = options.env || process.env;
   // Key validation precedes even the SQLite snapshot, so a missing key can never fall back to plaintext.
@@ -80,7 +97,7 @@ async function backupDbToEmail(options = {}) {
     await send({
       to: options.to || env.BACKUP_EMAIL_TO || BACKUP_EMAIL_TO,
       subject: `[사주보는 수달] DB 암호화 백업 ${dateStr}`,
-      html: `<p>app.db AES-256-GCM 암호화 백업입니다.</p><p>원본 ${(raw.length / 1024).toFixed(1)}KB → 암호화 전 압축 ${(compressed.length / 1024).toFixed(1)}KB</p>`,
+      html: `<p>app.db AES-256-GCM 암호화 백업입니다.</p><p>원본 ${(raw.length / 1024).toFixed(1)}KB → 암호화 전 압축 ${(compressed.length / 1024).toFixed(1)}KB</p>` + leadStatsHtml(options),
       attachments: [{ filename: `app-db-${dateStr}.db.enc`, content }]
     });
     return { rawBytes: raw.length, compressedBytes: compressed.length, encrypted: true };
@@ -89,4 +106,4 @@ async function backupDbToEmail(options = {}) {
   }
 }
 
-module.exports = { backupDbToEmail, parseBackupKey, createBackupEnvelope, decryptBackupAttachment };
+module.exports = { backupDbToEmail, parseBackupKey, createBackupEnvelope, decryptBackupAttachment, leadStatsHtml };
