@@ -254,6 +254,18 @@
     });
   }
 
-  window.SoTrack = { attribution: attribution, viewItem: viewItem, beginCheckout: beginCheckout, addPaymentInfo: addPaymentInfo, purchase: purchase, signUp: signUp, inputStart: inputStart, emailSubmit: emailSubmit, freeResult: freeResult, unlockClick: unlockClick, readDepth: readDepth };
+  /* 구매 창을 닫으며 고른 망설인 이유(브라우저 세션당 한 번). 픽셀 집계(stats API)는 맞춤 값을 나눠 보여 주지 않아
+     이유를 이벤트 이름에 담는다. skip은 이유를 고르지 않고 '닫기'를 누른 경우다. */
+  var EXIT_EVENTS = { price: 'ExitPrice', unclear: 'ExitUnclear', trust: 'ExitTrust', later: 'ExitLater', skip: 'ExitSkip' };
+  function checkoutExit(key, reason) {
+    var name = EXIT_EVENTS[reason];
+    if (!key || !name || !onceInSession('so_exit_' + key)) return;
+    when(function () {
+      ga('event', 'checkout_exit', { reason: reason, item_id: key });
+      meta('trackCustom', name, { content_ids: [key] });
+    });
+  }
+
+  window.SoTrack = { attribution: attribution, viewItem: viewItem, beginCheckout: beginCheckout, addPaymentInfo: addPaymentInfo, purchase: purchase, signUp: signUp, inputStart: inputStart, emailSubmit: emailSubmit, freeResult: freeResult, unlockClick: unlockClick, readDepth: readDepth, checkoutExit: checkoutExit };
 })();
 

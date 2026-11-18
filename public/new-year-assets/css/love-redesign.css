@@ -318,3 +318,22 @@ body.love-page .lr-plain-lock i{font-style:normal;letter-spacing:.12em;color:#c9
 body.love-page .lr-reader .free-intro-lock{margin-top:12px;padding:14px;border-radius:10px;background:#131928;border:1px dashed #314166;text-align:left}
 body.love-page .lr-reader .free-intro-lock-text{margin:0 0 10px;padding:0;font-size:15px;line-height:1.65;color:#f3e5db;text-align:left;word-break:keep-all}
 body.love-page .lr-reader button.free-intro-lock-btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:8px 18px;border-radius:999px;border:1px solid #9b6740;background:#090b0f;color:#fff2e8;font:700 14px/1.4 inherit;cursor:pointer;margin:0;width:auto}
+/* 구매 창: 받는 화면 예시 3장, 결제 버튼 위 안심 문구, 처음 닫을 때 한 번 묻는 망설인 이유 */
+.love-page .checkout-peek{margin:0 0 18px}
+.love-page .checkout-peek-label{font-size:13px;color:#d6c7bc;margin:0 0 8px}
+.love-page .checkout-peek-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.love-page .checkout-peek-row img{display:block;width:100%;height:150px;object-fit:cover;object-position:top;border-radius:8px;border:1px solid #454a57}
+.love-page .checkout-terms .checkout-safe{display:block;color:#fff7f0;font-weight:700;margin-bottom:4px}
+.love-page .checkout-sheet.is-asking>:not(.checkout-handle):not(.checkout-header):not(.checkout-exit){display:none}
+.love-page .checkout-sheet.is-asking .checkout-header{margin-bottom:4px}
+.love-page .checkout-sheet.is-asking .checkout-header>div{display:none}
+.love-page .checkout-sheet.is-asking #closeCheckout{margin-left:auto}
+.love-page .checkout-exit h3:focus{outline:none}
+.love-page .checkout-exit[hidden],.love-page .checkout-exit [hidden]{display:none}
+.love-page .checkout-exit{text-align:left;color:#f6eee8}
+.love-page .checkout-exit h3{font-size:21px;line-height:1.45;margin:0 0 8px;color:#fff7f0;word-break:keep-all}
+.love-page .checkout-exit-help{font-size:14px;line-height:1.6;color:#d6c7bc;margin:0 0 16px}
+.love-page .checkout-exit-reasons{display:grid;gap:10px}
+.love-page .checkout-exit-reasons button{width:100%;min-height:52px;text-align:left;padding:0 16px;border:1px solid #8d715b;border-radius:10px;background:#24272d;color:#fff7f0;font-size:16px;margin:0;box-shadow:none;cursor:pointer}
+.love-page .checkout-exit-reply p{font-size:15px;line-height:1.75;color:#f2e7df;margin:0 0 16px;word-break:keep-all}
+.love-page .checkout-exit-skip{display:block;width:100%;min-height:46px;margin:12px 0 0;background:none;border:0;color:#cfbfb3;font-size:15px;text-decoration:underline;box-shadow:none;cursor:pointer}

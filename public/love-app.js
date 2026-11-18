@@ -538,16 +538,68 @@
     document.getElementById('closeCheckout').focus({ preventScroll: true });
   }
   function closeCheckout() { checkoutSheet.close(); }
+  /* 구매 창을 처음 닫으려 할 때 한 번만 망설인 이유를 묻는다(가격·내용·신뢰·나중에). 고른 이유는 SoTrack.checkoutExit가
+     이벤트 이름으로 남겨 픽셀 집계에서 바로 센다. '닫기'를 누르면 더 묻지 않고 닫는다. 결제 준비 중에는 묻지 않는다. */
+  const exitPanel = document.getElementById('checkoutExit');
+  const exitReasons = document.getElementById('checkoutExitReasons');
+  const exitReply = document.getElementById('checkoutExitReply');
+  const exitText = document.getElementById('checkoutExitText');
+  const EXIT_REPLY = {
+    price: price + '은 한 번만 결제해요. 정기결제는 없고, 만들기에 실패하면 전액 자동으로 취소돼요. 인연 신호가 강한 세 달과 그달에 해볼 일, 앞으로 12개월 흐름까지 한 번에 받아요.',
+    unclear: '위 예시 화면처럼 인연 신호가 강한 세 달과 그달에 해볼 일, 12개월 흐름 그래프, 끌리는 사람 풀이를 받아요. 결제하면 이 화면에서 바로 읽고, 같은 내용을 PDF로도 보내 드려요.',
+    trust: '결제하면 이 화면에서 바로 읽고, 같은 내용이 PDF로 메일에 와요. 만들기에 실패하면 전액 자동으로 취소돼요. 궁금한 점은 sooky2001@gmail.com으로 물어봐 주세요.',
+    later: '결과 메일의 다시 보기 링크로 언제든 이어서 볼 수 있어요.'
+  };
+  let exitAsked = false;
+  let exitReason = null;
+  function resetExit() {
+    checkoutSheet.classList.remove('is-asking');
+    exitPanel.hidden = true;
+    exitReasons.hidden = false;
+    exitReply.hidden = true;
+  }
+  function requestClose() {
+    if (exitAsked || purchasing) { closeCheckout(); return; }
+    exitAsked = true;
+    checkoutSheet.classList.add('is-asking');
+    exitPanel.hidden = false;
+    checkoutSheet.scrollTop = 0;
+    document.getElementById('checkoutExitTitle').focus({ preventScroll: true });
+  }
+  exitReasons.querySelectorAll('[data-exit]').forEach((b) => b.addEventListener('click', () => {
+    exitReason = b.dataset.exit;
+    if (window.SoTrack && SoTrack.checkoutExit) SoTrack.checkoutExit('love_timing', exitReason);
+    exitText.textContent = EXIT_REPLY[exitReason] || '';
+    exitReasons.hidden = true;
+    exitReply.hidden = false;
+    document.getElementById('checkoutExitBack').focus({ preventScroll: true });
+  }));
+  document.getElementById('checkoutExitBack').addEventListener('click', () => {
+    resetExit();
+    if (exitReason === 'unclear') document.getElementById('checkoutPeek').scrollIntoView({ block: 'start' });
+    else checkoutSheet.scrollTop = 0;
+    checkoutConfirm.focus({ preventScroll: true });
+  });
+  document.getElementById('checkoutExitSkip').addEventListener('click', () => {
+    if (!exitReason && window.SoTrack && SoTrack.checkoutExit) SoTrack.checkoutExit('love_timing', 'skip');
+    closeCheckout();
+  });
+  checkoutSheet.addEventListener('cancel', (event) => {
+    if (exitAsked || purchasing) return;
+    event.preventDefault();
+    requestClose();
+  });
   checkoutSheet.addEventListener('close', () => {
+    resetExit();
     document.body.classList.remove('checkout-open');
     if (checkoutTrigger && checkoutTrigger.isConnected) checkoutTrigger.focus({ preventScroll: true });
   });
   checkoutSheet.addEventListener('click', (event) => {
     if (event.target !== checkoutSheet) return;
     const rect = checkoutSheet.getBoundingClientRect();
-    if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) closeCheckout();
+    if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) requestClose();
   });
-  document.getElementById('closeCheckout').addEventListener('click', closeCheckout);
+  document.getElementById('closeCheckout').addEventListener('click', requestClose);
   unlockBtn.addEventListener('click', openCheckout);
   document.getElementById('stickyUnlock').addEventListener('click', openCheckout);
   freeResult.addEventListener('love:unlock', openCheckout);

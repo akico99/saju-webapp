@@ -94,7 +94,7 @@ test('무료 결과는 소개 첫 문단만, 조심할 점·습관 설명 없이
 
 test('화면 버전과 용어 문구', () => {
   const html = fs.readFileSync(path.join(__dirname, '../public/love.html'), 'utf8');
-  assert.match(html, /<meta name="so-page-version" content="love-scope-v7">/);
+  assert.match(html, /<meta name="so-page-version" content="love-exit-v8">/);
   assert.ok(!html.includes('명리 해석을 위한 비교값'));
   assert.equal((html.match(/사주 해석을 위한 비교값/g) || []).length, 2);
 });

@@ -56,6 +56,16 @@ test('늦게 로드된 카카오는 대기한 행동을 한 번만 받고 다른
   assert.equal(b.meta.filter(e => e[1] === 'Lead').length, 1);
 });
 
+test('구매 창 망설인 이유는 이벤트 이름으로 세션당 한 번만 보내고 모르는 이유는 버린다', async () => {
+  const b = await browser({ config: { ...CONFIG, kakaoPixelId: null } });
+  b.track.checkoutExit('love_timing', 'nope');
+  assert.equal(b.ga.filter(e => e[1] === 'checkout_exit').length, 0);
+  b.track.checkoutExit('love_timing', 'price'); b.track.checkoutExit('love_timing', 'trust');
+  const exits = b.meta.filter(e => /^Exit/.test(e[1]));
+  assert.deepEqual(exits.map(e => [e[0], e[1]]), [['trackCustom', 'ExitPrice']]);
+  assert.equal(b.ga.find(e => e[1] === 'checkout_exit')[2].reason, 'price');
+});
+
 test('카카오 로드 실패는 다른 플랫폼 행동 전송을 막지 않는다', async () => {
   const b = await browser();
   b.scripts[0].onerror();

@@ -184,6 +184,21 @@ test('모바일 상품 소개에서 실제 무료 해석, 재입력, 가입 없�
     assert.equal(await page.$$eval('#freeReader .love-hook-months .is-open', es => es.length), 1);
     await page.click('#freeReader .love-hook-cta');
     assert.equal(await page.$eval('#checkoutSheet', (e) => e.open), true);
+    // 구매 창 안에 받는 화면 예시 3장과 결제 버튼 위 안심 문구가 있다.
+    assert.equal(await page.$$eval('#checkoutPeek img', (es) => es.length), 3);
+    assert.match(await page.$eval('.checkout-safe', (e) => e.textContent), /정기결제 없음.*전액 자동 취소/);
+    // 처음 닫으려 할 때 한 번만 망설인 이유를 묻는다. 이유를 고르면 짧게 답하고, 다시 보기로 구매 창에 돌아온다.
+    await page.click('#closeCheckout');
+    assert.equal(await page.$eval('#checkoutSheet', (e) => e.open), true);
+    assert.equal(await page.$eval('#checkoutExit', (e) => e.hidden), false);
+    assert.equal(await page.$eval('#checkoutConfirm', (e) => getComputedStyle(e).display), 'none');
+    assert.equal(await page.$$eval('#checkoutExitReasons [data-exit]', (es) => es.length), 4);
+    await page.click('[data-exit="price"]');
+    assert.match(await page.$eval('#checkoutExitText', (e) => e.textContent), /^14,900원은 한 번만 결제해요/);
+    await page.click('#checkoutExitBack');
+    assert.equal(await page.$eval('#checkoutExit', (e) => e.hidden), true);
+    assert.notEqual(await page.$eval('#checkoutConfirm', (e) => getComputedStyle(e).display), 'none');
+    // 한 번 물은 뒤에는 바로 닫힌다.
     await page.click('#closeCheckout');
     await page.waitForFunction(() => !document.querySelector('#checkoutSheet').open);
     for (const width of [320, 390, 1280]) {
